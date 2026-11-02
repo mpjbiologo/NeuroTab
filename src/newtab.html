@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nova guia</title>
+  <link rel="icon" href="../icons/icon32.png">
+  <link rel="stylesheet" href="newtab.css">
+</head>
+<body>
+  <div id="bg"></div>
+
+  <nav id="bar" class="bar">
+    <button id="addGroup" class="chip chip-icon" title="Novo grupo">＋</button>
+    <div id="groups" class="groups"></div>
+    <div class="bar-right">
+      <a id="openSettings" class="chip chip-icon" href="options.html" title="Configurações">⚙</a>
+    </div>
+  </nav>
+
+  <main>
+    <form id="search" class="search" hidden>
+      <input id="q" type="search" autocomplete="off" placeholder="Pesquisar…">
+    </form>
+    <section id="grid" class="grid" aria-label="Atalhos"></section>
+    <p id="empty" class="empty" hidden>Nenhum atalho neste grupo. Clique em ＋ para adicionar.</p>
+  </main>
+
+  <!-- Menu de contexto próprio -->
+  <div id="ctx" class="ctx" hidden></div>
+
+  <!-- Editar atalho -->
+  <dialog id="linkDlg" class="dlg">
+    <form method="dialog" id="linkForm">
+      <h2 id="linkDlgTitle">Novo atalho</h2>
+      <label>Endereço (URL)<input name="url" required placeholder="https://exemplo.com"></label>
+      <label>Título<input name="title" placeholder="Opcional — usa o domínio"></label>
+      <label>Grupo<select name="groupId"></select></label>
+      <div class="row">
+        <label class="grow">Cor do bloco<input name="color" type="color"></label>
+        <button type="button" id="autoColor" class="btn">Cor do ícone</button>
+      </div>
+      <div class="preview-wrap"><div id="preview" class="tile preview"><span class="pill"><img alt=""><span></span></span></div></div>
+      <div class="actions">
+        <button value="cancel" formnovalidate class="btn">Cancelar</button>
+        <button value="ok" class="btn primary">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Editar grupo -->
+  <dialog id="groupDlg" class="dlg">
+    <form method="dialog" id="groupForm">
+      <h2 id="groupDlgTitle">Novo grupo</h2>
+      <label>Nome<input name="name" required maxlength="40"></label>
+      <label>Ícone (emoji)<input name="icon" maxlength="4" placeholder="📁"></label>
+      <div id="emojiPick" class="emoji-pick"></div>
+      <div class="actions">
+        <button value="cancel" formnovalidate class="btn">Cancelar</button>
+        <button value="ok" class="btn primary">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+  <script type="module" src="newtab.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Conferir versão do manifest
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          V=$(jq -r .version manifest.json)
+          [ "v$V" = "${GITHUB_REF_NAME}" ] || { echo "manifest.json ($V) ≠ tag ($GITHUB_REF_NAME)"; exit 1; }
+
+      - name: Empacotar extensão
+        run: |
+          V=$(jq -r .version manifest.json)
+          mkdir -p dist
+          zip -r "dist/neurotab-v$V.zip" manifest.json src icons _locales LICENSE
+          echo "ZIP=dist/neurotab-v$V.zip" >> $GITHUB_ENV
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: neurotab
+          path: ${{ env.ZIP }}
+
+      - name: Publicar release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ZIP }}
+          generate_release_notes: true

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configurações — NeuroTab</title>
+  <link rel="icon" href="../icons/icon32.png">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <header>
+    <img src="../icons/icon128.png" alt="" width="44" height="44">
+    <div>
+      <h1>Configurações</h1>
+      <p class="sub">NeuroTab <span id="ver"></span> · <a href="newtab.html">voltar para a nova aba</a></p>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="geral" class="active">🏠 Geral</button>
+    <button role="tab" data-tab="fundo">🖼 Plano de fundo</button>
+    <button role="tab" data-tab="backup">💾 Importar/Exportar</button>
+    <button role="tab" data-tab="ia">🧠 IA</button>
+    <button role="tab" data-tab="apoie" class="heart">❤ Apoie</button>
+  </nav>
+
+  <main>
+    <!-- GERAL -->
+    <section id="tab-geral" class="card">
+      <div class="opt">
+        <div><b>Mostrar barra de pesquisa</b></div>
+        <label class="sw"><input type="checkbox" data-k="showSearch"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Buscador padrão</b><small>Usado na barra de pesquisa.</small></div>
+        <select data-k="searchEngine" id="engines"></select>
+      </div>
+      <div class="opt">
+        <div><b>Atalhos por linha</b><small>Quantidade de blocos em cada linha.</small></div>
+        <select data-k="columns" data-num id="cols"></select>
+      </div>
+      <div class="opt">
+        <div><b>Cantos arredondados</b><small>Raio dos blocos, em pixels.</small></div>
+        <input type="range" min="0" max="20" data-k="tileRadius" data-num>
+      </div>
+      <div class="opt">
+        <div><b>Abrir atalhos em nova aba</b></div>
+        <label class="sw"><input type="checkbox" data-k="openInNewTab"><span></span></label>
+      </div>
+      <hr>
+      <div class="opt">
+        <div><b>"Adicionar à NeuroTab" no menu do botão direito</b><small>Em qualquer página ou link. Vale na hora, sem reiniciar.</small></div>
+        <label class="sw"><input type="checkbox" data-k="showContextMenu"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Mostrar botões ＋ (novo atalho e novo grupo)</b></div>
+        <label class="sw"><input type="checkbox" data-k="showAddButtons"><span></span></label>
+      </div>
+      <hr>
+      <div class="opt">
+        <div><b>Grupos</b><small>Separar os atalhos em grupos/abas.</small></div>
+        <label class="sw"><input type="checkbox" data-k="showGroups"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Aparência dos botões de grupo</b></div>
+        <select data-k="groupStyle">
+          <option value="icon_text">Ícone e texto</option>
+          <option value="icon">Só ícone</option>
+          <option value="text">Só texto</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Posição da barra de grupos</b></div>
+        <select data-k="barPosition">
+          <option value="top">No topo</option>
+          <option value="bottom">Embaixo</option>
+        </select>
+      </div>
+      <div class="foot">
+        <button class="btn" id="reset">Restaurar padrões</button>
+        <span class="hint">As alterações são salvas automaticamente.</span>
+      </div>
+    </section>
+
+    <!-- FUNDO -->
+    <section id="tab-fundo" class="card" hidden>
+      <div class="opt">
+        <div><b>Usar imagem de fundo</b></div>
+        <label class="sw"><input type="checkbox" data-k="bgEnabled"><span></span></label>
+      </div>
+      <div class="bg-box">
+        <div id="bgPreview" class="bg-preview"><span>Sem imagem</span></div>
+        <div class="bg-actions">
+          <label class="btn primary">Escolher imagem…<input type="file" id="bgFile" accept="image/*" hidden></label>
+          <button class="btn" id="bgRemove">Remover imagem</button>
+          <small>A imagem é otimizada (até 2560 px) e fica salva só no seu navegador.</small>
+        </div>
+      </div>
+      <div class="opt">
+        <div><b>Cor de fundo</b><small>Usada sem imagem ou enquanto ela carrega.</small></div>
+        <input type="color" data-k="bgColor">
+      </div>
+      <div class="opt">
+        <div><b>Escurecer imagem</b><small>Melhora a leitura dos blocos.</small></div>
+        <input type="range" min="0" max="80" step="5" data-k="bgDim" data-num>
+      </div>
+    </section>
+
+    <!-- BACKUP -->
+    <section id="tab-backup" class="card" hidden>
+      <h2>Importar</h2>
+      <p>Aceita backups da <b>NeuroTab</b> (<code>.json</code>) e da extensão antiga <b>Speed Dial</b> (<code>.spd</code>) — grupos, atalhos, cores, ícones e plano de fundo.</p>
+      <div class="row">
+        <label class="btn primary">Escolher arquivo…<input type="file" id="importFile" accept=".spd,.json,application/json" hidden></label>
+        <label class="inline"><input type="radio" name="mode" value="replace" checked> Substituir tudo</label>
+        <label class="inline"><input type="radio" name="mode" value="merge"> Juntar com o que já existe</label>
+      </div>
+      <p id="importMsg" class="msg"></p>
+      <hr>
+      <h2>Exportar</h2>
+      <p>Salva grupos, atalhos, configurações e plano de fundo em um arquivo <code>.json</code>.</p>
+      <button class="btn" id="exportBtn">Baixar backup</button>
+      <p id="stats" class="hint"></p>
+    </section>
+
+    <!-- IA -->
+    <section id="tab-ia" class="card" hidden>
+      <h2>🧠 Segundo cérebro (em breve)</h2>
+      <p>Nas próximas versões, a NeuroTab vai guardar trechos, páginas e notas que você salvar pelo botão direito, e a IA vai:</p>
+      <ul>
+        <li>resumir e sugerir tags para cada item salvo;</li>
+        <li>buscar pelo <i>significado</i>, não só por palavras;</li>
+        <li>responder perguntas sobre as suas notas direto na nova aba.</li>
+      </ul>
+      <p>Você vai poder usar a sua própria chave (OpenAI, Anthropic ou Gemini) — guardada só no seu navegador — ou a IA local do Edge/Chrome, quando disponível.</p>
+      <p><a id="roadmapLink" target="_blank">Acompanhe o roteiro no GitHub →</a></p>
+    </section>
+
+    <!-- APOIE -->
+    <section id="tab-apoie" class="card" hidden>
+      <h2>❤ Apoie a NeuroTab</h2>
+      <p>A NeuroTab é gratuita, de código aberto e sem anúncios. Se ela é útil para você, considere apoiar o desenvolvimento.</p>
+      <div id="pixBox" class="pix" hidden>
+        <b>Pix</b>
+        <code id="pixKey"></code>
+        <button class="btn" id="pixCopy">Copiar chave</button>
+      </div>
+      <div id="donateLinks" class="donate-links"></div>
+      <p>Outras formas de ajudar:</p>
+      <ul>
+        <li><a id="starLink" target="_blank">Dê uma ⭐ no GitHub</a></li>
+        <li><a id="issueLink" target="_blank">Sugira ideias ou relate problemas</a></li>
+        <li>Indique para amigos 🙂</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <button class="btn heart-btn" id="donateBtn">❤ Doar</button>
+    <span>Feito por <span id="author"></span> · <a id="repoLink" target="_blank">código aberto</a></span>
+  </footer>
+
+  <div id="toast" class="toast" hidden></div>
+  <script type="module" src="options.js"></script>
+</body>
+</html>
