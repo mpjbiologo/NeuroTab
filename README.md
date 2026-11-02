@@ -108,9 +108,9 @@ src/config.js          Links do projeto e de doação
 **Para lançar uma versão:**
 
 1. Atualize `version` no `manifest.json` e o `CHANGELOG.md`.
-2. Rode `git tag v0.1.0 && git push --tags`.
+2. No GitHub, abra **Releases → Draft a new release**, crie a tag `vX.Y.Z` (igual à do manifest) e publique.
 
-O GitHub Actions empacota a extensão e cria a release.
+O GitHub Actions empacota a extensão e anexa o `.zip` à release.
 
 ## 📄 Licença
 
