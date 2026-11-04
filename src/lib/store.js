@@ -4,6 +4,7 @@
 export const DATA_KEY = 'nt_data';
 export const BG_KEY = 'nt_bg';
 export const ACTIVE_KEY = 'nt_active_group';
+export const BRAIN_KEY = 'nt_brain';
 export const SCHEMA_VERSION = 1;
 
 export const SEARCH_ENGINES = {
@@ -15,9 +16,34 @@ export const SEARCH_ENGINES = {
   perplexity: { name: 'Perplexity', url: 'https://www.perplexity.ai/search?q=' },
 };
 
+export const DEFAULT_WIDGETS = [
+  { id: 'capture', size: 'm' },
+  { id: 'reminders', size: 'm' },
+  { id: 'brain', size: 'm' },
+  { id: 'ask', size: 'm' },
+  { id: 'weather', size: 's' },
+  { id: 'quotes', size: 's' },
+  { id: 'shortcuts', size: 's' },
+];
+
+export const DEFAULT_AI = {
+  provider: 'gemini', // gemini | openai | anthropic | openrouter | ollama | custom
+  keys: {},
+  models: {},
+  baseUrls: {},
+  autoEnrich: true,
+};
+
 export const DEFAULT_SETTINGS = {
+  // Layout
+  dockPosition: 'left', // left | right | top | bottom
+  dockPinned: false,
+  widgets: DEFAULT_WIDGETS,
+  showClock: true,
+  userName: '',
+  // Atalhos
   columns: 6,
-  showSearch: false,
+  showSearch: true,
   searchEngine: 'google',
   showGroups: true,
   groupStyle: 'icon_text', // icon_text | icon | text
@@ -29,7 +55,26 @@ export const DEFAULT_SETTINGS = {
   bgColor: '#141418',
   bgDim: 0, // 0–80 (%)
   tileRadius: 4,
+  // Widgets
+  weather: null, // { name, lat, lon }
+  quoteCurrencies: 'USD-BRL,EUR-BRL,BTC-BRL',
+  quoteStocks: 'PETR4,VALE3,ITUB4',
+  brapiToken: '',
+  shortcutsWidgetGroup: '',
+  // IA e voz
+  ai: DEFAULT_AI,
+  voiceLang: 'pt-BR',
+  speakAnswers: false,
 };
+
+export function mergeSettings(s = {}) {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...s,
+    widgets: Array.isArray(s.widgets) ? s.widgets : DEFAULT_WIDGETS.map((w) => ({ ...w })),
+    ai: { ...DEFAULT_AI, ...(s.ai || {}), keys: { ...(s.ai?.keys || {}) }, models: { ...(s.ai?.models || {}) }, baseUrls: { ...(s.ai?.baseUrls || {}) } },
+  };
+}
 
 // Cores de bloco usadas quando não dá para extrair a cor do favicon.
 export const PALETTE = [
@@ -57,7 +102,7 @@ export function defaultData() {
       mk('GitHub', 'https://github.com/', '#2d2d2d'),
       mk('NeuroTab', 'https://github.com/mpjbiologo/NeuroTab', '#7a4e93'),
     ],
-    settings: { ...DEFAULT_SETTINGS },
+    settings: mergeSettings(),
   };
 }
 
@@ -74,7 +119,7 @@ export function normalize(d) {
       color: l.color || PALETTE[0],
       favicon: l.favicon || '',
     })),
-    settings: { ...DEFAULT_SETTINGS, ...(d.settings || {}) },
+    settings: mergeSettings(d.settings),
   };
 }
 
@@ -201,7 +246,7 @@ export function fromSpeedDialBackup(spd) {
       favicon: typeof l.favicon === 'string' && l.favicon.startsWith('data:') ? l.favicon : '',
     }));
   const o = spd.opts || {};
-  const settings = { ...DEFAULT_SETTINGS };
+  const settings = mergeSettings();
   const cols = parseInt(String(o.col_in_row || '').replace(/\D/g, ''), 10);
   if (cols >= 2 && cols <= 12) settings.columns = cols;
   if (typeof o.search_status === 'boolean') settings.showSearch = o.search_status;
@@ -214,17 +259,23 @@ export function fromSpeedDialBackup(spd) {
   if (typeof o.bg_img_status === 'boolean') settings.bgEnabled = o.bg_img_status;
   return {
     data: normalize({ groups, links, settings }),
+    brain: [],
     background: typeof o.bg === 'string' && o.bg.startsWith('data:image') ? o.bg : null,
   };
 }
 
-// Formato próprio de backup.
-export function toBackup(data, background) {
-  return { format: 'neurotab', version: SCHEMA_VERSION, exportedAt: new Date().toISOString(), data, background };
+// Formato próprio de backup. Chaves de API e tokens NÃO são exportados.
+export function toBackup(data, background, brain) {
+  const clean = structuredClone(data);
+  clean.settings.ai = { ...clean.settings.ai, keys: {} };
+  clean.settings.brapiToken = '';
+  return { format: 'neurotab', version: SCHEMA_VERSION, exportedAt: new Date().toISOString(), data: clean, background, brain: brain || [] };
 }
 
 export function parseBackup(json) {
-  if (json && json.format === 'neurotab') return { data: normalize(json.data), background: json.background || null };
+  if (json && json.format === 'neurotab') {
+    return { data: normalize(json.data), background: json.background || null, brain: Array.isArray(json.brain) ? json.brain : [] };
+  }
   if (json && Array.isArray(json.categories) && Array.isArray(json.links)) return fromSpeedDialBackup(json);
   throw new Error('Arquivo não reconhecido. Use um backup da NeuroTab (.json) ou do Speed Dial (.spd).');
 }

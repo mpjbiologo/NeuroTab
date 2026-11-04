@@ -19,62 +19,69 @@
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="geral" class="active">🏠 Geral</button>
     <button role="tab" data-tab="fundo">🖼 Plano de fundo</button>
-    <button role="tab" data-tab="backup">💾 Importar/Exportar</button>
-    <button role="tab" data-tab="ia">🧠 IA</button>
+    <button role="tab" data-tab="ia">🤖 IA e voz</button>
+    <button role="tab" data-tab="notas">📝 Notas e integrações</button>
+    <button role="tab" data-tab="backup">💾 Backup</button>
     <button role="tab" data-tab="apoie" class="heart">❤ Apoie</button>
   </nav>
 
   <main>
     <!-- GERAL -->
     <section id="tab-geral" class="card">
+      <h2>Layout</h2>
       <div class="opt">
-        <div><b>Mostrar barra de pesquisa</b></div>
+        <div><b>Posição da barra de atalhos</b><small>Os grupos ficam na barra; os atalhos abrem num painel ao passar o mouse.</small></div>
+        <select data-k="dockPosition">
+          <option value="left">Lateral esquerda</option>
+          <option value="right">Lateral direita</option>
+          <option value="top">Topo</option>
+          <option value="bottom">Rodapé</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Manter o painel de atalhos sempre aberto</b><small>Só nas posições laterais. Também dá para usar o 📌 da barra.</small></div>
+        <label class="sw"><input type="checkbox" data-k="dockPinned"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Mostrar relógio e saudação</b></div>
+        <label class="sw"><input type="checkbox" data-k="showClock"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Seu nome</b><small>Para a saudação ("Boa tarde, …").</small></div>
+        <input type="text" data-k="userName" placeholder="Opcional" class="txt">
+      </div>
+      <p class="hint">Os widgets do centro (notas, clima, cotações…) são organizados direto na nova aba, pelo botão 🧩.</p>
+      <hr>
+      <h2>Pesquisa</h2>
+      <div class="opt">
+        <div><b>Mostrar barra de pesquisa universal</b><small>Busca em atalhos, notas e na web. Atalho: Ctrl+K.</small></div>
         <label class="sw"><input type="checkbox" data-k="showSearch"><span></span></label>
       </div>
       <div class="opt">
-        <div><b>Buscador padrão</b><small>Usado na barra de pesquisa.</small></div>
+        <div><b>Buscador padrão</b></div>
         <select data-k="searchEngine" id="engines"></select>
       </div>
-      <div class="opt">
-        <div><b>Atalhos por linha</b><small>Quantidade de blocos em cada linha.</small></div>
-        <select data-k="columns" data-num id="cols"></select>
-      </div>
-      <div class="opt">
-        <div><b>Cantos arredondados</b><small>Raio dos blocos, em pixels.</small></div>
-        <input type="range" min="0" max="20" data-k="tileRadius" data-num>
-      </div>
+      <hr>
+      <h2>Atalhos</h2>
       <div class="opt">
         <div><b>Abrir atalhos em nova aba</b></div>
         <label class="sw"><input type="checkbox" data-k="openInNewTab"><span></span></label>
       </div>
-      <hr>
       <div class="opt">
-        <div><b>"Adicionar à NeuroTab" no menu do botão direito</b><small>Em qualquer página ou link. Vale na hora, sem reiniciar.</small></div>
+        <div><b>Menu "NeuroTab" no botão direito</b><small>Salvar trechos, páginas e links no cérebro, e adicionar atalhos.</small></div>
         <label class="sw"><input type="checkbox" data-k="showContextMenu"><span></span></label>
       </div>
       <div class="opt">
         <div><b>Mostrar botões ＋ (novo atalho e novo grupo)</b></div>
         <label class="sw"><input type="checkbox" data-k="showAddButtons"><span></span></label>
       </div>
-      <hr>
       <div class="opt">
-        <div><b>Grupos</b><small>Separar os atalhos em grupos/abas.</small></div>
-        <label class="sw"><input type="checkbox" data-k="showGroups"><span></span></label>
+        <div><b>Blocos por linha no widget "Atalhos"</b></div>
+        <select data-k="columns" data-num id="cols"></select>
       </div>
       <div class="opt">
-        <div><b>Aparência dos botões de grupo</b></div>
-        <select data-k="groupStyle">
-          <option value="icon_text">Ícone e texto</option>
-          <option value="icon">Só ícone</option>
-          <option value="text">Só texto</option>
-        </select>
-      </div>
-      <div class="opt">
-        <div><b>Posição da barra de grupos</b></div>
-        <select data-k="barPosition">
-          <option value="top">No topo</option>
-          <option value="bottom">Embaixo</option>
-        </select>
+        <div><b>Cantos arredondados dos blocos</b></div>
+        <input type="range" min="0" max="20" data-k="tileRadius" data-num>
       </div>
       <div class="foot">
         <button class="btn" id="reset">Restaurar padrões</button>
@@ -101,15 +108,102 @@
         <input type="color" data-k="bgColor">
       </div>
       <div class="opt">
-        <div><b>Escurecer imagem</b><small>Melhora a leitura dos blocos.</small></div>
+        <div><b>Escurecer imagem</b><small>Melhora a leitura.</small></div>
         <input type="range" min="0" max="80" step="5" data-k="bgDim" data-num>
       </div>
+    </section>
+
+    <!-- IA -->
+    <section id="tab-ia" class="card" hidden>
+      <h2>Provedor de IA</h2>
+      <p>A IA organiza suas notas (título, resumo, tags, lembretes) e responde perguntas sobre elas. As chamadas vão <b>direto do seu navegador</b> para o provedor, com a <b>sua</b> chave — a NeuroTab não tem servidor.</p>
+      <div class="opt">
+        <div><b>Provedor</b><small id="provNote"></small></div>
+        <select id="provider"></select>
+      </div>
+      <div class="opt" id="keyRow">
+        <div><b>Chave de API</b><small><a id="keyLink" target="_blank">Obter uma chave →</a></small></div>
+        <div class="keybox">
+          <input type="password" id="apiKey" class="txt wide" placeholder="Cole sua chave aqui" autocomplete="off">
+          <button class="btn" id="showKey" title="Mostrar/ocultar">👁</button>
+        </div>
+      </div>
+      <div class="opt" id="baseRow">
+        <div><b>Endereço da API</b><small>Ex.: http://localhost:11434/v1</small></div>
+        <input type="text" id="baseUrl" class="txt wide">
+      </div>
+      <div class="opt">
+        <div><b>Modelo</b><small>Clique em "Carregar" para ver os disponíveis na sua conta.</small></div>
+        <div class="keybox">
+          <input type="text" id="model" class="txt" list="modelList">
+          <datalist id="modelList"></datalist>
+          <button class="btn" id="loadModels">Carregar</button>
+        </div>
+      </div>
+      <div class="foot">
+        <button class="btn primary" id="saveAi">Salvar e testar</button>
+        <span id="aiMsg" class="msg"></span>
+      </div>
+      <div class="opt">
+        <div><b>Organizar automaticamente com IA</b><small>Ao salvar algo, a IA cria título, tags, resumo e detecta lembretes.</small></div>
+        <label class="sw"><input type="checkbox" id="autoEnrich"><span></span></label>
+      </div>
+      <p class="hint">🔒 A chave fica guardada só neste navegador e não entra no arquivo de backup.</p>
+      <hr>
+      <h2>Voz</h2>
+      <div class="opt">
+        <div><b>Idioma do ditado e da leitura</b></div>
+        <select data-k="voiceLang">
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="pt-PT">Português (Portugal)</option>
+          <option value="en-US">English (US)</option>
+          <option value="es-ES">Español</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Ler as respostas da IA em voz alta</b></div>
+        <label class="sw"><input type="checkbox" data-k="speakAnswers"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Permissão do microfone</b><small>Se o 🎤 não funcionar na nova aba, libere aqui uma vez.</small></div>
+        <button class="btn" id="micPerm">Liberar microfone</button>
+      </div>
+    </section>
+
+    <!-- NOTAS -->
+    <section id="tab-notas" class="card" hidden>
+      <h2>Importar do Google Keep</h2>
+      <p>O Google só libera a API do Keep para contas empresariais (Workspace). Para contas pessoais, a importação é feita pelo <b>Google Takeout</b>:</p>
+      <ol>
+        <li>Abra <a href="https://takeout.google.com/" target="_blank">takeout.google.com</a>, clique em <i>Desmarcar tudo</i> e marque só <b>Keep</b>.</li>
+        <li>Crie a exportação, baixe o .zip e descompacte.</li>
+        <li>Escolha a pasta <code>Takeout/Keep</code> abaixo (ou selecione os arquivos <code>.json</code>).</li>
+      </ol>
+      <div class="row">
+        <label class="btn primary">📁 Escolher pasta do Keep<input type="file" id="keepDir" webkitdirectory hidden></label>
+        <label class="btn">Selecionar arquivos .json<input type="file" id="keepFiles" accept=".json" multiple hidden></label>
+      </div>
+      <p id="keepMsg" class="msg"></p>
+      <hr>
+      <h2>Exportar notas</h2>
+      <p>Um arquivo Markdown com todas as notas — abre no Obsidian, Notion, Logseq, Google Docs ou qualquer editor.</p>
+      <button class="btn" id="exportMd">Baixar notas (.md)</button>
+      <p id="brainStats" class="hint"></p>
+      <hr>
+      <h2>Próximas integrações</h2>
+      <ul class="soon">
+        <li>☑️ <b>Google Tarefas</b> — sincronizar lembretes (funciona com contas pessoais)</li>
+        <li>📓 <b>Notion</b> — enviar notas para uma página ou banco de dados</li>
+        <li>🟣 <b>Obsidian</b> — salvar direto no seu cofre</li>
+        <li>📅 <b>Google Agenda</b> — compromissos do dia no centro da tela</li>
+      </ul>
+      <p class="hint">Quer outra? <a id="issueLink2" target="_blank">Sugira no GitHub</a>.</p>
     </section>
 
     <!-- BACKUP -->
     <section id="tab-backup" class="card" hidden>
       <h2>Importar</h2>
-      <p>Aceita backups da <b>NeuroTab</b> (<code>.json</code>) e da extensão antiga <b>Speed Dial</b> (<code>.spd</code>) — grupos, atalhos, cores, ícones e plano de fundo.</p>
+      <p>Aceita backups da <b>NeuroTab</b> (<code>.json</code>) e da extensão antiga <b>Speed Dial</b> (<code>.spd</code>).</p>
       <div class="row">
         <label class="btn primary">Escolher arquivo…<input type="file" id="importFile" accept=".spd,.json,application/json" hidden></label>
         <label class="inline"><input type="radio" name="mode" value="replace" checked> Substituir tudo</label>
@@ -118,32 +212,26 @@
       <p id="importMsg" class="msg"></p>
       <hr>
       <h2>Exportar</h2>
-      <p>Salva grupos, atalhos, configurações e plano de fundo em um arquivo <code>.json</code>.</p>
+      <p>Salva atalhos, grupos, notas, configurações e plano de fundo em um arquivo <code>.json</code>. Chaves de API não são incluídas.</p>
       <button class="btn" id="exportBtn">Baixar backup</button>
       <p id="stats" class="hint"></p>
-    </section>
-
-    <!-- IA -->
-    <section id="tab-ia" class="card" hidden>
-      <h2>🧠 Segundo cérebro (em breve)</h2>
-      <p>Nas próximas versões, a NeuroTab vai guardar trechos, páginas e notas que você salvar pelo botão direito, e a IA vai:</p>
-      <ul>
-        <li>resumir e sugerir tags para cada item salvo;</li>
-        <li>buscar pelo <i>significado</i>, não só por palavras;</li>
-        <li>responder perguntas sobre as suas notas direto na nova aba.</li>
-      </ul>
-      <p>Você vai poder usar a sua própria chave (OpenAI, Anthropic ou Gemini) — guardada só no seu navegador — ou a IA local do Edge/Chrome, quando disponível.</p>
-      <p><a id="roadmapLink" target="_blank">Acompanhe o roteiro no GitHub →</a></p>
     </section>
 
     <!-- APOIE -->
     <section id="tab-apoie" class="card" hidden>
       <h2>❤ Apoie a NeuroTab</h2>
-      <p>A NeuroTab é gratuita, de código aberto e sem anúncios. Se ela é útil para você, considere apoiar o desenvolvimento.</p>
+      <p>A NeuroTab é gratuita, de código aberto e sem anúncios. Se ela é útil para você, considere apoiar o desenvolvimento — qualquer valor ajuda.</p>
       <div id="pixBox" class="pix" hidden>
-        <b>Pix</b>
-        <code id="pixKey"></code>
-        <button class="btn" id="pixCopy">Copiar chave</button>
+        <div id="pixQr" class="qr"></div>
+        <div class="pix-info">
+          <b>Pix</b>
+          <p>Aponte a câmera do app do seu banco para o QR Code, ou copie:</p>
+          <div class="row">
+            <button class="btn primary" id="pixCopyCode">Copiar Pix copia e cola</button>
+            <button class="btn" id="pixCopyKey">Copiar chave</button>
+          </div>
+          <p class="hint">Chave: <code id="pixKey"></code></p>
+        </div>
       </div>
       <div id="donateLinks" class="donate-links"></div>
       <p>Outras formas de ajudar:</p>
@@ -157,7 +245,7 @@
 
   <footer>
     <button class="btn heart-btn" id="donateBtn">❤ Doar</button>
-    <span>Feito por <span id="author"></span> · <a id="repoLink" target="_blank">código aberto</a></span>
+    <span>Feito por <span id="author"></span> · <a id="siteLink" target="_blank">site</a> · <a id="repoLink" target="_blank">código aberto</a></span>
   </footer>
 
   <div id="toast" class="toast" hidden></div>

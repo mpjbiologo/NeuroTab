@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>NeuroTab</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="page">
+    <img id="fav" alt="">
+    <div class="pt">
+      <b id="ptitle">Esta página</b>
+      <small id="phost"></small>
+    </div>
+  </header>
+
+  <section>
+    <h3>📝 Anotação sobre esta página</h3>
+    <textarea id="note" rows="4" placeholder="Escreva uma anotação, ideia ou tarefa… (Ctrl+Enter salva)"></textarea>
+    <div class="bar">
+      <button id="grab" class="btn" title="Copiar o texto selecionado na página">✂️ Usar seleção</button>
+      <button id="remind" class="btn" title="Lembrete">⏰</button>
+      <input id="when" type="datetime-local" hidden>
+      <span class="grow"></span>
+      <span id="micSlot"></span>
+      <button id="saveNote" class="btn primary">Salvar</button>
+    </div>
+    <div class="bar">
+      <button id="savePage" class="btn">🔖 Salvar página para ler depois</button>
+    </div>
+  </section>
+
+  <section>
+    <h3>➕ Atalho</h3>
+    <div class="bar">
+      <select id="group"></select>
+      <button id="addShortcut" class="btn">Adicionar</button>
+    </div>
+    <p id="already" class="muted" hidden>✓ Esta página já está nos seus atalhos.</p>
+  </section>
+
+  <section id="existing" hidden>
+    <h3>🧠 Já salvo desta página</h3>
+    <div id="list" class="list"></div>
+  </section>
+
+  <footer>
+    <a id="openTab" href="#">Abrir NeuroTab</a>
+    <span id="msg"></span>
+    <a href="options.html" target="_blank">⚙</a>
+  </footer>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

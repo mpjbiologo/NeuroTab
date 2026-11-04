@@ -5,115 +5,138 @@
 <h1 align="center">NeuroTab</h1>
 
 <p align="center">
-  <b>Speed Dial para Edge e Chrome, com um segundo cérebro com IA a caminho.</b><br>
-  Gratuita, de código aberto, sem anúncios e sem rastreamento.
+  <b>A nova aba que pensa com você.</b><br>
+  Atalhos numa barra lateral e, no centro, um segundo cérebro com notas, lembretes, clima, cotações e IA.<br>
+  Para Edge e Chrome. Gratuita, de código aberto, sem anúncios e sem rastreamento.
 </p>
 
 <p align="center">
-  <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest"><img src="https://img.shields.io/github/v/release/mpjbiologo/NeuroTab?label=baixar&color=3b82f6" alt="Baixar"></a>
-  <img src="https://img.shields.io/badge/Manifest-V3-6f42c1" alt="Manifest V3">
-  <img src="https://img.shields.io/badge/Edge%20%7C%20Chrome-suportados-2ea44f" alt="Edge e Chrome">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/licença-MIT-lightgrey" alt="MIT"></a>
+  <a href="https://mpjbiologo.github.io/NeuroTab/"><b>🌐 Site do projeto</b></a> ·
+  <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest"><b>⬇ Baixar</b></a> ·
+  <a href="#-apoie-o-projeto"><b>❤ Apoiar</b></a>
 </p>
 
-![Nova aba da NeuroTab](docs/screenshot-novaaba.jpg)
+<p align="center">
+  <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest"><img src="https://img.shields.io/github/v/release/mpjbiologo/NeuroTab?label=vers%C3%A3o&color=7c5cff" alt="Versão"></a>
+  <img src="https://img.shields.io/badge/Manifest-V3-6f42c1" alt="Manifest V3">
+  <img src="https://img.shields.io/badge/Edge%20%7C%20Chrome-suportados-2ea44f" alt="Edge e Chrome">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-lightgrey" alt="MIT"></a>
+</p>
 
-A NeuroTab nasceu para substituir a extensão **Speed Dial**, que deixou de ser atualizada em 2022. Ela mantém o que funcionava (blocos coloridos, grupos e plano de fundo) e importa o backup antigo com tudo dentro. Nas próximas versões, vai ganhar um **segundo cérebro com IA**.
+![Nova aba da NeuroTab](docs/shot-home.jpg)
 
-## ✨ O que já faz (v0.1)
+A NeuroTab começou como substituta da extensão **Speed Dial**, que parou de ser atualizada em 2022, e importa o backup dela com tudo dentro. Na v0.2, o centro da tela virou um **segundo cérebro**: um lugar para capturar, lembrar e encontrar o que importa.
 
-- **Atalhos em blocos coloridos.** A cor é escolhida automaticamente a partir do ícone do site, e você pode mudar.
-- **Grupos/abas** com emoji. Dá para arrastar e reordenar os grupos, ou soltar um atalho sobre outro grupo para movê-lo.
-- **Arrastar e soltar:** reordene os atalhos ou solte um link vindo da barra de favoritos ou de outra aba.
-- **Menu do botão direito** em qualquer página ou link: *Adicionar à NeuroTab → grupo*.
-- **Ícone da extensão:** um clique adiciona a página atual.
-- **Plano de fundo** com imagem otimizada automaticamente, cor e opção de escurecer.
-- **Barra de pesquisa** opcional: Google, Bing, DuckDuckGo, Brave, Yandex ou Perplexity.
-- **Importa o backup do Speed Dial (`.spd`)**, incluindo grupos, atalhos, cores, ícones e fundo. Também exporta e importa o backup da própria NeuroTab (`.json`).
-- Excluir com **desfazer**, duplicar e editar atalhos.
+## ✨ Recursos
 
-![Configurações](docs/screenshot-config.jpg)
+| | |
+|---|---|
+| 🗂️ **Barra de atalhos** | Grupos com emoji à esquerda, à direita, no topo ou no rodapé. Os atalhos abrem num painel ao passar o mouse. Dá para fixar o painel, arrastar e soltar, e as cores são automáticas |
+| ⚡ **Captura rápida** | Anote digitando ou falando. Uma frase como *"me lembre amanhã às 9h de ligar para o banco"* vira lembrete sozinha |
+| 🧠 **Meu cérebro** | Notas, trechos, páginas, tarefas e ideias, com busca, filtros, tags e itens fixados |
+| ⏰ **Lembretes** | Notificações do sistema com os botões *Concluir* e *Adiar 10 min* |
+| 🤖 **Pergunte ao seu cérebro** | Chat com a IA sobre o que você salvou, com citações das fontes. Também funciona por voz |
+| ✂️ **Anotar páginas** | O ícone da extensão (ou **Alt+Shift+N**) abre um painel para anotar a página. O botão direito salva trechos, páginas e links |
+| 🔎 **Ctrl+K** | Uma busca só para atalhos, notas, web e perguntas à IA. **Shift+Enter** salva o texto como nota |
+| 🌤️📈 **Widgets** | Clima, cotações (moedas, cripto e ações da B3) e atalhos em blocos coloridos. Você escolhe a ordem e o tamanho com o 🧩 |
+| 🔁 **Importar e exportar** | Importa o Speed Dial (`.spd`) e o Google Keep (via Takeout). Exporta as notas em Markdown e faz backup completo em `.json` |
+
+<p align="center"><img src="docs/shot-panel.jpg" width="49%" alt="Painel de atalhos"> <img src="docs/shot-search.jpg" width="49%" alt="Busca universal"></p>
+
+### 🤖 IA: use a que preferir
+A IA é **opcional**. Ela organiza as notas (título, resumo, tags e lembrete) e responde perguntas sobre elas. Você usa a **sua chave**, e as chamadas vão direto do seu navegador para o provedor escolhido:
+
+- **Google Gemini** (padrão, tem camada gratuita). Para obter uma chave: [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+- **OpenAI** (ChatGPT) · **Anthropic** (Claude) · **OpenRouter** (centenas de modelos)
+- **Ollama**, que roda no seu computador, offline e sem chave. Inicie com `OLLAMA_ORIGINS="chrome-extension://*" ollama serve`
+- Qualquer API compatível com OpenAI: LM Studio, Groq, Mistral, DeepSeek…
+
+Para configurar, abra **⚙ Configurações → IA e voz**, escolha o provedor, cole a chave e clique em **Salvar e testar**.
 
 ## 📥 Instalação
 
-### Pela release (recomendado enquanto não está nas lojas)
+1. Baixe o `neurotab.zip` da [última versão](https://github.com/mpjbiologo/NeuroTab/releases/latest) e descompacte numa pasta fixa.
+2. Abra `edge://extensions` (ou `chrome://extensions`).
+3. Ative o **Modo de desenvolvedor** e clique em **Carregar sem pacote**. Escolha a pasta.
+4. Abra uma nova aba. O Edge pergunta se você quer manter a alteração: clique em **Manter alterações**.
 
-1. Baixe o `.zip` da [última versão](https://github.com/mpjbiologo/NeuroTab/releases/latest) e descompacte em uma pasta fixa. Não apague essa pasta depois.
-2. Abra `edge://extensions` (no Chrome, `chrome://extensions`).
-3. Ative o **Modo de desenvolvedor**.
-4. Clique em **Carregar sem pacote** e escolha a pasta descompactada.
-5. Abra uma nova aba. O Edge pergunta se você quer manter a alteração da nova aba: escolha **Manter alterações**.
+Para **atualizar**: baixe o zip novo, substitua os arquivos na mesma pasta e clique em ↻ na página de extensões. Seus dados são mantidos.
 
-### Pelo código-fonte
+### Vindo do Speed Dial?
+No Speed Dial antigo, vá em **Settings → Import/Export** e exporte o `.spd`. Na NeuroTab, vá em **Configurações → Backup** e escolha esse arquivo.
 
-```bash
-git clone https://github.com/mpjbiologo/NeuroTab.git
-```
-
-Depois, carregue a pasta clonada como no passo 4. O projeto não tem etapa de build: é HTML, CSS e JavaScript puros.
-
-## 🔁 Vindo do Speed Dial?
-
-1. No Speed Dial antigo, abra **Settings → Import/Export** e exporte o backup (arquivo `.spd`).
-2. Na NeuroTab, abra **⚙ Configurações → Importar/Exportar → Escolher arquivo…** e selecione o `.spd`.
-3. Pronto. Para não ter duas extensões disputando a nova aba, desative o Speed Dial antigo.
+### Notas do Google Keep
+O Google só libera a API do Keep para contas empresariais (Workspace). Para contas pessoais:
+1. Em [takeout.google.com](https://takeout.google.com/), exporte só o **Keep**.
+2. Na NeuroTab, abra **Configurações → Notas e integrações** e escolha a pasta `Takeout/Keep`.
 
 ## 🗺 Roteiro
 
 | Versão | O que vem |
 |---|---|
 | **v0.1** ✅ | Speed Dial completo e importação do `.spd` |
-| **v0.2** | 🧠 Segundo cérebro: salvar trechos e páginas pelo botão direito, notas rápidas na nova aba, tags |
-| **v0.3** | 🤖 IA: resumo automático, tags sugeridas, busca por significado e chat com as suas notas. Funciona com a sua chave (OpenAI, Anthropic ou Gemini) ou com a IA local do navegador |
-| **v0.4** | Sincronização opcional, temas, atalhos de teclado, tradução da interface |
+| **v0.2** ✅ | Segundo cérebro: widgets, captura, lembretes, IA multi-provedor, voz, Keep, anotar páginas |
+| **v0.3** | Busca por significado (embeddings), resumo do dia, "revisitar hoje", mapa de conexões entre notas |
+| **v0.4** | Google Tarefas e Agenda, Notion, Obsidian, sincronização opcional, temas, interface em inglês |
 | — | Publicação na loja de complementos do Edge e na Chrome Web Store |
 
 Ideias são bem-vindas nas [Issues](https://github.com/mpjbiologo/NeuroTab/issues).
 
 ## 🔒 Privacidade
 
-Tudo fica **no seu navegador** (`chrome.storage.local`). A NeuroTab não tem servidor, não coleta dados e não usa analytics. Quando a IA chegar, as chamadas vão direto do seu navegador para o provedor que você escolher, com a sua chave.
-
-**Permissões usadas:**
+Tudo fica **no seu navegador**. A NeuroTab não tem servidor, não pede conta e não coleta dados. A chave da IA fica só no navegador e **não entra no backup**.
 
 | Permissão | Para quê |
 |---|---|
-| `storage` / `unlimitedStorage` | Guardar atalhos e plano de fundo |
-| `contextMenus` | Mostrar "Adicionar à NeuroTab" no botão direito |
-| `activeTab` | Ler o título da página que você está adicionando |
-| `favicon` | Mostrar o ícone dos sites |
+| `storage`, `unlimitedStorage` | Guardar atalhos, notas e fundo |
+| `contextMenus` | Mostrar o menu "NeuroTab" no botão direito |
+| `activeTab`, `scripting` | Ler o título e o texto selecionado da página quando **você** clica no ícone |
+| `alarms`, `notifications` | Disparar os lembretes |
+| `favicon` | Mostrar os ícones dos sites |
+| Open-Meteo, AwesomeAPI, brapi.dev | Buscar clima e cotações |
+| Provedor de IA *(opcional)* | Pedida só quando você configura a IA |
 
 ## ❤ Apoie o projeto
 
-A NeuroTab é feita nas horas vagas. Se ela é útil para você:
+A NeuroTab é feita nas horas vagas e vai continuar gratuita. Se ela é útil para você:
 
+<img src="docs/pix.svg" width="160" align="right" alt="QR Code Pix">
+
+- **Pix:** `prof.marcosbiologo@hotmail.com`. O QR Code ao lado também funciona, assim como a aba **❤ Apoie** nas configurações
 - ⭐ Dê uma estrela no repositório
-- 🐛 [Relate problemas ou sugira ideias](https://github.com/mpjbiologo/NeuroTab/issues)
-- 💸 Faça uma doação pela aba **❤ Apoie** nas configurações da extensão
+- 🐛 [Sugira ideias ou relate problemas](https://github.com/mpjbiologo/NeuroTab/issues)
 
-> Para mantenedores: os links de doação ficam em [`src/config.js`](src/config.js) e em [`.github/FUNDING.yml`](.github/FUNDING.yml).
+<br clear="right">
 
 ## 🛠 Desenvolvimento
 
+O projeto não tem etapa de build: é HTML, CSS e JavaScript puros (módulos ES).
+
 ```
-manifest.json          Manifest V3
-src/newtab.*           Página da nova aba
-src/options.*          Configurações
-src/background.js      Service worker (menu de contexto e ícone)
-src/lib/store.js       Dados, importação do .spd, favicon e cor automática
-src/config.js          Links do projeto e de doação
-.github/workflows/     Gera o .zip e publica a release a cada tag v*
+manifest.json            Manifest V3
+src/newtab.*             Nova aba (barra de atalhos, busca, widgets)
+src/widgets/             Um arquivo por widget, registrados em index.js
+src/popup.*              Painel do ícone (anotar página)
+src/options.*            Configurações
+src/background.js        Menus, lembretes (alarms) e notificações
+src/lib/store.js         Atalhos, configurações, importação do .spd
+src/lib/brain.js         Notas, busca, lembretes em PT-BR, Keep, Markdown
+src/lib/ai.js            Provedores de IA (Gemini, OpenAI, Anthropic, OpenRouter, Ollama…)
+src/lib/pix.js           Pix copia e cola + QR Code
+src/config.js            Links do projeto e dados do Pix
+docs/                    Site do projeto (GitHub Pages)
 ```
+
+**Para criar um widget:** copie um arquivo de `src/widgets/`, exporte `{ id, title, icon, description, mount(el, ctx) }` e registre-o em `src/widgets/index.js`.
 
 **Para lançar uma versão:**
-
 1. Atualize `version` no `manifest.json` e o `CHANGELOG.md`.
-2. No GitHub, abra **Releases → Draft a new release**, crie a tag `vX.Y.Z` (igual à do manifest) e publique.
+2. No GitHub, abra **Releases → Draft a new release**, crie a tag `vX.Y.Z` e publique.
 
-O GitHub Actions empacota a extensão e anexa o `.zip` à release.
+O Actions anexa o `neurotab.zip` à release automaticamente.
 
 ## 📄 Licença
 
 [MIT](LICENSE) © Marcos de Paula Júnior
 
-*A NeuroTab é um projeto independente. Ela não tem relação com os autores da extensão "Speed Dial" nem usa código dela. Apenas lê o formato de backup para facilitar a migração.*
+*A NeuroTab é um projeto independente. Ela não tem relação com os autores da extensão "Speed Dial" nem usa código dela: apenas lê o formato de backup para facilitar a migração. O gerador de QR Code é de Kazuhiko Arase (MIT).*

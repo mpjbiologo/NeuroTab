@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NeuroTab — Speed Dial com segundo cérebro para Edge e Chrome</title>
+  <meta name="description" content="Extensão gratuita e de código aberto: atalhos, notas, lembretes, clima, cotações e IA (Gemini, ChatGPT, Claude) na nova aba do Edge e do Chrome.">
+  <meta property="og:title" content="NeuroTab — a nova aba que pensa com você">
+  <meta property="og:description" content="Atalhos, notas, lembretes e IA na nova aba. Gratuita, sem anúncios, tudo salvo no seu navegador.">
+  <meta property="og:image" content="https://mpjbiologo.github.io/NeuroTab/shot-home.jpg">
+  <link rel="icon" href="icon.png">
+  <style>
+    :root {
+      --bg: #0d0c16; --card: #161526; --line: rgba(255,255,255,.09); --text: #ecebf5; --muted: #a3a1b8;
+      --a1: #7c5cff; --a2: #2fb6d9; --ok: #42c78a;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.6; }
+    a { color: #9fb9ff; }
+    .wrap { width: min(1120px, 92vw); margin: 0 auto; }
+    nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); background: rgba(13,12,22,.72); border-bottom: 1px solid var(--line); }
+    nav .wrap { display: flex; align-items: center; gap: 22px; height: 60px; }
+    nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 750; font-size: 18px; color: var(--text); text-decoration: none; }
+    nav .brand img { width: 30px; height: 30px; }
+    nav .links { margin-left: auto; display: flex; gap: 20px; font-size: 14.5px; }
+    nav .links a { color: var(--muted); text-decoration: none; }
+    nav .links a:hover { color: #fff; }
+
+    header.hero { position: relative; overflow: hidden; padding: 84px 0 40px; text-align: center; }
+    header.hero::before {
+      content: ""; position: absolute; inset: -200px -10% auto; height: 700px; z-index: -1;
+      background: radial-gradient(40% 50% at 25% 40%, rgba(124,92,255,.45), transparent 70%),
+                  radial-gradient(40% 50% at 75% 30%, rgba(47,182,217,.35), transparent 70%),
+                  radial-gradient(35% 45% at 55% 80%, rgba(200,60,140,.28), transparent 70%);
+      filter: blur(30px);
+    }
+    .badge { display: inline-block; padding: 5px 13px; border-radius: 20px; background: rgba(255,255,255,.07); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+    h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.08; margin: 18px 0 16px; letter-spacing: -1.5px; }
+    h1 span { background: linear-gradient(90deg, var(--a1), var(--a2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lead { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 720px; margin: 0 auto 30px; }
+    .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 12px; font-weight: 650; font-size: 15.5px; text-decoration: none; border: 1px solid var(--line); color: var(--text); background: rgba(255,255,255,.06); cursor: pointer; }
+    .btn:hover { background: rgba(255,255,255,.12); }
+    .btn.primary { background: linear-gradient(135deg, var(--a1), #5a7bff); border: 0; color: #fff; box-shadow: 0 10px 30px rgba(124,92,255,.35); }
+    .btn.primary:hover { filter: brightness(1.08); }
+    .small { font-size: 13px; color: var(--muted); margin-top: 12px; }
+    .shot { margin: 46px auto 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.6); max-width: 1100px; }
+    .shot img { display: block; width: 100%; height: auto; }
+
+    section { padding: 70px 0; }
+    h2 { font-size: clamp(28px, 4vw, 38px); letter-spacing: -.5px; margin: 0 0 10px; text-align: center; }
+    .sub { text-align: center; color: var(--muted); max-width: 680px; margin: 0 auto 40px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    .feat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+    .feat .ic { font-size: 28px; }
+    .feat h3 { margin: 10px 0 6px; font-size: 17px; }
+    .feat p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; align-items: center; }
+    .split img { width: 100%; border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+    .split h3 { font-size: 26px; margin: 0 0 10px; }
+    .split ul { padding-left: 20px; color: var(--muted); }
+    .split li { margin: 6px 0; }
+    .split li b { color: var(--text); }
+
+    .steps { counter-reset: s; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .step { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px 20px 20px; }
+    .step::before { counter-increment: s; content: counter(s); position: absolute; top: -14px; left: 18px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: linear-gradient(135deg, var(--a1), var(--a2)); }
+    .step h3 { margin: 6px 0 6px; font-size: 16px; }
+    .step p { margin: 0; color: var(--muted); font-size: 14.5px; }
+    code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 5px; font-size: 13.5px; }
+
+    .ai { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .ai span { padding: 8px 14px; border-radius: 30px; border: 1px solid var(--line); background: var(--card); font-size: 14.5px; }
+
+    table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
+    td, th { padding: 12px 16px; border-bottom: 1px solid var(--line); text-align: left; font-size: 14.5px; }
+    th { color: var(--muted); font-weight: 600; }
+    tr:last-child td { border-bottom: 0; }
+
+    .donate { display: grid; grid-template-columns: auto 1fr; gap: 34px; align-items: center; background: linear-gradient(135deg, rgba(124,92,255,.16), rgba(47,182,217,.12)); border: 1px solid var(--line); border-radius: 22px; padding: 34px; }
+    .qr { background: #fff; padding: 12px; border-radius: 16px; line-height: 0; }
+    .qr img { width: 220px; height: 220px; }
+    .donate h2 { text-align: left; }
+    .donate p { color: var(--muted); }
+    .pixrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .pixkey { font-family: ui-monospace, monospace; font-size: 14px; color: #fff; }
+
+    footer { border-top: 1px solid var(--line); padding: 30px 0 50px; color: var(--muted); font-size: 14px; }
+    footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #23223a; border: 1px solid var(--line); padding: 10px 18px; border-radius: 10px; display: none; }
+
+    @media (max-width: 820px) {
+      nav .links a:not(.keep) { display: none; }
+      .split, .donate { grid-template-columns: 1fr; }
+      .donate { text-align: center; justify-items: center; }
+      .donate h2 { text-align: center; }
+      .pixrow { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a class="brand" href="#"><img src="icon.png" alt="">NeuroTab</a>
+      <div class="links">
+        <a href="#recursos">Recursos</a>
+        <a href="#instalar">Instalar</a>
+        <a href="#privacidade">Privacidade</a>
+        <a href="https://github.com/mpjbiologo/NeuroTab" target="_blank">GitHub</a>
+        <a class="keep" href="#apoie">❤ Apoie</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="wrap">
+      <span class="badge">Gratuita · Código aberto · Sem anúncios</span>
+      <h1>A nova aba que <span>pensa com você</span></h1>
+      <p class="lead">Seus atalhos numa barra lateral. No centro, um <b>segundo cérebro</b>: notas, lembretes, páginas salvas, clima, cotações e uma IA que conhece o que você guardou.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/mpjbiologo/NeuroTab/releases/latest">⬇ Baixar para Edge e Chrome</a>
+        <a class="btn" href="https://github.com/mpjbiologo/NeuroTab" target="_blank">★ Ver no GitHub</a>
+      </div>
+      <p class="small">Microsoft Edge · Google Chrome · Brave · Opera · outros baseados em Chromium</p>
+      <div class="shot"><img src="shot-home.jpg" alt="Nova aba da NeuroTab com captura rápida, lembretes, notas e clima" width="1440" height="900"></div>
+    </div>
+  </header>
+
+  <section id="recursos">
+    <div class="wrap">
+      <h2>Tudo o que importa, ao abrir uma aba</h2>
+      <p class="sub">A NeuroTab substitui a página de nova aba por um painel feito para lembrar, organizar e encontrar.</p>
+      <div class="grid">
+        <div class="feat"><div class="ic">⚡</div><h3>Captura rápida</h3><p>Anote ideias, tarefas e lembretes em segundos, digitando ou falando. "Me lembre amanhã às 9h…" vira lembrete sozinho.</p></div>
+        <div class="feat"><div class="ic">🧠</div><h3>Segundo cérebro</h3><p>Notas, trechos, páginas e ideias num só lugar, com busca, filtros, tags e fixados.</p></div>
+        <div class="feat"><div class="ic">🤖</div><h3>Pergunte às suas notas</h3><p>Converse com a IA sobre o que você salvou, com citações das fontes. Também por voz.</p></div>
+        <div class="feat"><div class="ic">⏰</div><h3>Lembretes de verdade</h3><p>Notificações do sistema na hora certa, com "Concluir" e "Adiar 10 min".</p></div>
+        <div class="feat"><div class="ic">✂️</div><h3>Anote qualquer página</h3><p>Botão direito → salvar trecho. Ou clique no ícone para anotar a página, com o texto selecionado já citado.</p></div>
+        <div class="feat"><div class="ic">🗂️</div><h3>Atalhos em barra lateral</h3><p>Grupos com emoji à esquerda, à direita, no topo ou no rodapé. Arrastar e soltar, cores automáticas.</p></div>
+        <div class="feat"><div class="ic">🌤️</div><h3>Clima e cotações</h3><p>Tempo da sua cidade, dólar, euro, bitcoin e ações da B3, sem cadastro.</p></div>
+        <div class="feat"><div class="ic">🔎</div><h3>Busca universal (Ctrl+K)</h3><p>Uma caixa para atalhos, notas, web e perguntas à IA. Shift+Enter salva como nota.</p></div>
+        <div class="feat"><div class="ic">🔁</div><h3>Importe tudo</h3><p>Traz o backup do antigo <b>Speed Dial</b> (.spd) e suas notas do <b>Google Keep</b>. Exporta em Markdown.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split">
+      <img src="shot-panel.jpg" alt="Painel de atalhos aberto na barra lateral" loading="lazy">
+      <div>
+        <h3>Seus atalhos, sem ocupar a tela</h3>
+        <ul>
+          <li><b>Passe o mouse num grupo</b> e os atalhos aparecem; tire e eles somem.</li>
+          <li><b>📌 Fixe o painel</b> se preferir os atalhos sempre à vista.</li>
+          <li><b>Arraste</b> para reordenar, ou solte sobre outro grupo para mover.</li>
+          <li><b>Solte links</b> da barra de favoritos direto no painel.</li>
+          <li>Prefere os blocos coloridos clássicos? Use o widget <b>Atalhos</b> no centro.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split">
+      <div>
+        <h3>Encontre qualquer coisa com Ctrl+K</h3>
+        <ul>
+          <li>Busca ao mesmo tempo nos <b>atalhos</b> e nas <b>notas</b>.</li>
+          <li>Enter pesquisa na web, no buscador que você escolher.</li>
+          <li>"Perguntar ao cérebro" manda a dúvida para a IA.</li>
+          <li><b>Shift+Enter</b> salva o que você digitou como nota.</li>
+          <li>🎤 Fale em vez de digitar.</li>
+        </ul>
+      </div>
+      <img src="shot-search.jpg" alt="Busca universal mostrando notas e ações" loading="lazy">
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Use a IA que você preferir</h2>
+      <p class="sub">A IA organiza as notas (título, resumo, tags e lembretes) e responde perguntas sobre elas. Você usa a sua própria chave — o Gemini tem camada gratuita.</p>
+      <div class="ai">
+        <span>✨ Google Gemini</span><span>🟢 OpenAI (ChatGPT)</span><span>🟠 Anthropic (Claude)</span><span>🔀 OpenRouter</span><span>🦙 Ollama (local, offline)</span><span>⚙️ Qualquer API compatível com OpenAI</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="instalar">
+    <div class="wrap">
+      <h2>Instale em 1 minuto</h2>
+      <p class="sub">Enquanto a NeuroTab não chega às lojas, a instalação é manual — e segura: o código é aberto.</p>
+      <div class="steps">
+        <div class="step"><h3>Baixe</h3><p>Na <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest">página de versões</a>, baixe <code>neurotab.zip</code> e descompacte numa pasta que você não vá apagar.</p></div>
+        <div class="step"><h3>Abra as extensões</h3><p>Digite <code>edge://extensions</code> (ou <code>chrome://extensions</code>) na barra de endereço.</p></div>
+        <div class="step"><h3>Modo de desenvolvedor</h3><p>Ative o botão <b>Modo de desenvolvedor</b>, depois clique em <b>Carregar sem pacote</b> e escolha a pasta.</p></div>
+        <div class="step"><h3>Abra uma nova aba</h3><p>O Edge pergunta se quer manter a nova página: clique em <b>Manter alterações</b>. Pronto!</p></div>
+      </div>
+      <p class="small" style="text-align:center">Vindo do Speed Dial? Configurações → Backup → escolha o arquivo <code>.spd</code>.</p>
+    </div>
+  </section>
+
+  <section id="privacidade">
+    <div class="wrap">
+      <h2>Seus dados são seus</h2>
+      <p class="sub">A NeuroTab não tem servidor, não tem conta e não coleta nada. Tudo fica no seu navegador.</p>
+      <table>
+        <tr><th>O quê</th><th>Onde fica</th></tr>
+        <tr><td>Atalhos, notas, lembretes e configurações</td><td>No armazenamento local do seu navegador</td></tr>
+        <tr><td>Chave da IA</td><td>Só no seu navegador — nunca vai para o backup</td></tr>
+        <tr><td>Perguntas à IA</td><td>Vão direto do seu navegador para o provedor que você escolheu</td></tr>
+        <tr><td>Clima e cotações</td><td>Consultas públicas ao Open-Meteo, AwesomeAPI e brapi.dev, sem identificação</td></tr>
+        <tr><td>Analytics, anúncios, rastreamento</td><td>Nenhum</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="apoie">
+    <div class="wrap">
+      <div class="donate">
+        <div class="qr"><img src="pix.svg" alt="QR Code Pix para apoiar a NeuroTab"></div>
+        <div>
+          <h2>❤ Apoie o projeto</h2>
+          <p>A NeuroTab é feita nas horas vagas e vai continuar gratuita e sem anúncios. Se ela é útil para você, um Pix de qualquer valor ajuda a manter o desenvolvimento — e a trazer a IA, as integrações e a publicação nas lojas.</p>
+          <p>Abra o app do seu banco e aponte a câmera para o QR Code, ou copie:</p>
+          <div class="pixrow">
+            <button class="btn primary" id="copyCode">Copiar Pix copia e cola</button>
+            <button class="btn" id="copyKey">Copiar chave</button>
+          </div>
+          <p class="small">Chave Pix: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior</p>
+          <p class="small">Outras formas de ajudar: dê uma ⭐ no <a href="https://github.com/mpjbiologo/NeuroTab">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues">sugira ideias</a> e indique para os amigos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 Marcos de Paula Júnior · Licença MIT</span>
+      <span><a href="https://github.com/mpjbiologo/NeuroTab">Código-fonte</a> · <a href="https://github.com/mpjbiologo/NeuroTab/blob/main/CHANGELOG.md">Novidades</a> · <a href="https://github.com/mpjbiologo/NeuroTab/issues">Suporte</a></span>
+    </div>
+  </footer>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const PIX_CODE = '00020126700014br.gov.bcb.pix0130prof.marcosbiologo@hotmail.com0214Apoio NeuroTab5204000053039865802BR5922MARCOS DE PAULA JUNIOR6006ITAUNA62070503***6304E215';
+    const PIX_KEY = 'prof.marcosbiologo@hotmail.com';
+    const toast = (m) => { const t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => { t.style.display = 'none'; }, 2400); };
+    const copy = async (txt, msg) => { try { await navigator.clipboard.writeText(txt); toast(msg); } catch { prompt('Copie:', txt); } };
+    document.getElementById('copyCode').onclick = () => copy(PIX_CODE, 'Pix copia e cola copiado — obrigado! ❤');
+    document.getElementById('copyKey').onclick = () => copy(PIX_KEY, 'Chave Pix copiada — obrigado! ❤');
+  </script>
+</body>
+</html>

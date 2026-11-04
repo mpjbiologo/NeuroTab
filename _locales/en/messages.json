@@ -1,5 +1,11 @@
 {
-  "extName": { "message": "NeuroTab — AI Speed Dial" },
-  "extDescription": { "message": "New tab page with your favorite sites as tiles, groups and wallpaper. Coming soon: AI second brain." },
-  "actionTitle": { "message": "Add this page to NeuroTab" }
+  "extName": {
+    "message": "NeuroTab — Speed Dial with a second brain"
+  },
+  "extDescription": {
+    "message": "New tab with shortcuts, notes, reminders, weather, quotes and AI (Gemini, ChatGPT, Claude and more). Everything stays in your browser."
+  },
+  "actionTitle": {
+    "message": "NeuroTab: note or save this page"
+  }
 }

@@ -3,7 +3,7 @@
   "name": "__MSG_extName__",
   "short_name": "NeuroTab",
   "description": "__MSG_extDescription__",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "default_locale": "pt_BR",
   "homepage_url": "https://github.com/mpjbiologo/NeuroTab",
   "icons": {
@@ -22,6 +22,7 @@
   },
   "action": {
     "default_title": "__MSG_actionTitle__",
+    "default_popup": "src/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png"
@@ -32,6 +33,32 @@
     "unlimitedStorage",
     "contextMenus",
     "activeTab",
-    "favicon"
-  ]
+    "scripting",
+    "favicon",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://api.open-meteo.com/*",
+    "https://geocoding-api.open-meteo.com/*",
+    "https://economia.awesomeapi.com.br/*",
+    "https://brapi.dev/*"
+  ],
+  "optional_host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "https://openrouter.ai/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://*/*"
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+N"
+      },
+      "description": "Anotar ou salvar a página atual"
+    }
+  }
 }

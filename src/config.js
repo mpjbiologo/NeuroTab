@@ -3,17 +3,22 @@
 export const PROJECT = {
   name: 'NeuroTab',
   repo: 'https://github.com/mpjbiologo/NeuroTab',
+  site: 'https://mpjbiologo.github.io/NeuroTab/',
   issues: 'https://github.com/mpjbiologo/NeuroTab/issues',
   author: 'Marcos de Paula Júnior',
 };
 
 export const DONATION = {
-  // Chave Pix (e-mail, telefone, CPF/CNPJ ou chave aleatória). Ex.: 'seuemail@exemplo.com'
-  pixKey: '',
-  // Links de doação. Ex.: { label: 'Ko-fi', url: 'https://ko-fi.com/seuusuario', icon: '☕' }
+  // Pix: o QR Code e o "copia e cola" são gerados automaticamente.
+  pix: {
+    key: 'prof.marcosbiologo@hotmail.com',
+    name: 'Marcos de Paula Junior', // nome do recebedor (até 25 letras, sem acento)
+    city: 'Itauna',
+    message: 'Apoio NeuroTab',
+  },
+  // Outros links. Ex.: { label: 'Ko-fi', url: 'https://ko-fi.com/seuusuario', icon: '☕' }
   links: [
     // { label: 'Ko-fi', url: '', icon: '☕' },
-    // { label: 'Buy Me a Coffee', url: '', icon: '🍵' },
     // { label: 'GitHub Sponsors', url: 'https://github.com/sponsors/mpjbiologo', icon: '💜' },
   ],
 };

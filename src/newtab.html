@@ -7,29 +7,53 @@
   <link rel="icon" href="../icons/icon32.png">
   <link rel="stylesheet" href="newtab.css">
 </head>
-<body>
+<body class="dock-left">
   <div id="bg"></div>
 
-  <nav id="bar" class="bar">
-    <button id="addGroup" class="chip chip-icon" title="Novo grupo">＋</button>
-    <div id="groups" class="groups"></div>
-    <div class="bar-right">
-      <a id="openSettings" class="chip chip-icon" href="options.html" title="Configurações">⚙</a>
+  <!-- Barra de atalhos (lateral, topo ou rodapé) -->
+  <aside id="dock" class="dock">
+    <div class="rail">
+      <div id="railGroups" class="rail-groups"></div>
+      <button id="addGroup" class="rail-btn" title="Novo grupo">＋</button>
+      <div class="rail-spacer"></div>
+      <button id="pinDock" class="rail-btn" title="Fixar painel de atalhos">📌</button>
+      <button id="editLayout" class="rail-btn" title="Organizar widgets">🧩</button>
+      <a id="openSettings" class="rail-btn" href="options.html" title="Configurações">⚙</a>
     </div>
-  </nav>
+    <div id="panel" class="panel" hidden>
+      <header class="panel-head">
+        <span id="panelTitle"></span>
+        <button id="panelAdd" class="icon-btn" title="Adicionar atalho">＋</button>
+      </header>
+      <div id="panelLinks" class="panel-links"></div>
+      <p id="panelEmpty" class="panel-empty" hidden>Nenhum atalho aqui ainda. Arraste um link para cá ou clique em ＋.</p>
+    </div>
+  </aside>
 
-  <main>
-    <form id="search" class="search" hidden>
-      <input id="q" type="search" autocomplete="off" placeholder="Pesquisar…">
-    </form>
-    <section id="grid" class="grid" aria-label="Atalhos"></section>
-    <p id="empty" class="empty" hidden>Nenhum atalho neste grupo. Clique em ＋ para adicionar.</p>
+  <main id="center">
+    <header id="hero" class="hero">
+      <div id="clock" class="clock"></div>
+      <div id="greet" class="greet"></div>
+    </header>
+
+    <div id="omniWrap" class="omni-wrap">
+      <input id="omni" type="text" autocomplete="off" spellcheck="false"
+             placeholder="Pesquisar atalhos, notas ou na web…  (Ctrl+K)">
+      <span id="omniMicSlot"></span>
+      <div id="omniResults" class="omni-results" hidden></div>
+    </div>
+
+    <div id="editBar" class="edit-bar" hidden>
+      <span>🧩 <b>Organizando widgets</b> — mude tamanho, ordem ou remova.</span>
+      <span class="grow"></span>
+      <button id="addWidget" class="btn">＋ Adicionar widget</button>
+      <button id="doneEdit" class="btn primary">Concluir</button>
+    </div>
+
+    <section id="widgets" class="widgets" aria-label="Widgets"></section>
   </main>
 
-  <!-- Menu de contexto próprio -->
-  <div id="ctx" class="ctx" hidden></div>
-
-  <!-- Editar atalho -->
+  <!-- Atalho -->
   <dialog id="linkDlg" class="dlg">
     <form method="dialog" id="linkForm">
       <h2 id="linkDlgTitle">Novo atalho</h2>
@@ -48,7 +72,7 @@
     </form>
   </dialog>
 
-  <!-- Editar grupo -->
+  <!-- Grupo -->
   <dialog id="groupDlg" class="dlg">
     <form method="dialog" id="groupForm">
       <h2 id="groupDlgTitle">Novo grupo</h2>
@@ -59,6 +83,42 @@
         <button value="cancel" formnovalidate class="btn">Cancelar</button>
         <button value="ok" class="btn primary">Salvar</button>
       </div>
+    </form>
+  </dialog>
+
+  <!-- Item do cérebro -->
+  <dialog id="itemDlg" class="dlg dlg-wide">
+    <form method="dialog" id="itemForm">
+      <div class="row">
+        <h2 class="grow" id="itemDlgTitle">Nota</h2>
+        <select name="type" class="small"></select>
+      </div>
+      <label>Título<input name="title" placeholder="Opcional"></label>
+      <label>Texto<textarea name="text" rows="8"></textarea></label>
+      <div class="row">
+        <label class="grow">Tags <small>(separadas por vírgula)</small><input name="tags"></label>
+        <label>Lembrete<input name="remindAt" type="datetime-local"></label>
+      </div>
+      <label>Link de origem<input name="url" placeholder="https://"></label>
+      <p id="itemMeta" class="meta"></p>
+      <div class="actions">
+        <label class="inline"><input type="checkbox" name="done"> Concluída</label>
+        <label class="inline"><input type="checkbox" name="pinned"> 📌 Fixar</label>
+        <span class="grow"></span>
+        <button type="button" id="itemAi" class="btn" title="Gerar título, resumo, tags e lembrete">✨ Organizar com IA</button>
+        <button type="button" id="itemDelete" class="btn danger">Excluir</button>
+        <button value="cancel" formnovalidate class="btn">Cancelar</button>
+        <button value="ok" class="btn primary">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Escolher widget -->
+  <dialog id="widgetDlg" class="dlg">
+    <form method="dialog">
+      <h2>Adicionar widget</h2>
+      <div id="widgetList" class="widget-list"></div>
+      <div class="actions"><button value="cancel" class="btn">Fechar</button></div>
     </form>
   </dialog>
 
