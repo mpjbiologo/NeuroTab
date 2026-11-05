@@ -93,6 +93,12 @@ export async function runCommand(raw, api) {
     return { reply: api.tasksText() };
   }
 
+  // Rotas: "ir para casa", "rota para o trabalho", "como chegar na academia"
+  if ((m = t.match(/^(rota|ir|como chegar|navegar|transito|trânsito)\s+(para|pro|pra|ate|até|ao|a|na|no|em)\s+(o |a )?(.+)$/))) {
+    const r = api.routeTo?.(m[4]);
+    if (r) return { reply: r };
+  }
+
   // Abrir sites
   if ((m = t.match(/^(abrir|abra|abre|ir para|vai para|acessar|entrar no|entrar na)\s+(o |a )?(.+)$/))) {
     const target = m[3].trim();

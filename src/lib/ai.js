@@ -2,6 +2,7 @@
 // para o provedor escolhido, com a chave do próprio usuário.
 import { displayTitle, searchItems, TYPES } from './brain.js';
 import { hostOf } from './store.js';
+import { aiLanguageName } from './i18n.js';
 
 export const PROVIDERS = {
   gemini: {
@@ -202,7 +203,7 @@ function nowContext() {
 
 // ---------- Organizar um item (título, resumo, tags, tipo, lembrete) ----------
 export async function enrich(settings, item) {
-  const system = `Você organiza o "segundo cérebro" de uma pessoa. Responda SOMENTE com JSON válido, em português do Brasil.
+  const system = `Você organiza o "segundo cérebro" de uma pessoa. Responda SOMENTE com JSON válido; os textos (título, resumo, tags) devem estar em ${aiLanguageName()}.
 ${nowContext()}
 Formato:
 {"titulo": "até 8 palavras", "resumo": "1 frase curta (ou vazio se o texto já for curto)", "tags": ["até 4 tags, minúsculas, sem #"], "tipo": "nota|tarefa|ideia|trecho|pagina", "lembrete": "data/hora ISO 8601 com fuso, ou null"}
@@ -242,7 +243,7 @@ export function buildContext(items, question, limit = 14) {
 
 export async function ask(settings, items, question, history = []) {
   const { found, text } = buildContext(items, question);
-  const system = `Você é o assistente do "segundo cérebro" do usuário, dentro da extensão NeuroTab. Responda em português do Brasil, de forma direta e curta (use listas quando ajudar).
+  const system = `Você é o assistente do "segundo cérebro" do usuário, dentro da extensão NeuroTab. Responda em ${aiLanguageName()}, de forma direta e curta (use listas quando ajudar).
 ${nowContext()}
 Use as notas abaixo como fonte principal e cite-as como [1], [2]… Se a resposta não estiver nas notas, diga isso em uma linha e então responda com conhecimento geral, deixando claro que não veio das notas.
 

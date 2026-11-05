@@ -1,5 +1,40 @@
 // Novidades exibidas uma vez após atualizar a extensão.
 export const WHATS_NEW = {
+  '0.4.0': {
+    pt: {
+      title: 'NeuroTab 0.4 — o mundo na sua nova aba',
+      items: [
+        ['🌤', 'Relógio + clima juntos', 'O tempo aparece ao lado da saudação. Clique nele para ver a previsão. Adicione outras cidades e veja a hora e o clima de cada uma.'],
+        ['🗺', 'Trânsito com seus lugares', 'Widget com mapa do Waze, seus locais favoritos (casa, trabalho…) e rotas salvas que abrem no Google Maps ou no Waze.'],
+        ['🖼', 'Slides de fotos', 'Fundo com fotos do seu PC, a foto do dia do Bing ou da NASA, trocando sozinhas.'],
+        ['✅', 'Hábitos, notícias e foco do dia', 'Três widgets novos: acompanhe hábitos com sequência, leia feeds RSS e defina a tarefa principal do dia.'],
+        ['🌐', 'Em português, inglês e espanhol', 'A extensão segue o idioma do navegador. Dá para trocar em Configurações → Geral.'],
+        ['🦊', 'Versão para Firefox', 'Um pacote separado está disponível no GitHub.'],
+      ],
+    },
+    en: {
+      title: 'NeuroTab 0.4 — the world in your new tab',
+      items: [
+        ['🌤', 'Clock + weather together', 'Weather now sits next to the greeting. Click it for the forecast. Add other cities to see their time and weather.'],
+        ['🗺', 'Traffic with your places', 'A widget with a Waze map, your favorite places (home, work…) and saved routes that open in Google Maps or Waze.'],
+        ['🖼', 'Photo slideshow', 'Background photos from your computer, Bing\'s photo of the day or NASA, changing on their own.'],
+        ['✅', 'Habits, news and daily focus', 'Three new widgets: track habits with streaks, read RSS feeds and set the main task of the day.'],
+        ['🌐', 'In Portuguese, English and Spanish', 'The extension follows your browser language. You can change it in Settings → General.'],
+        ['🦊', 'Firefox version', 'A separate package is available on GitHub.'],
+      ],
+    },
+    es: {
+      title: 'NeuroTab 0.4 — el mundo en tu nueva pestaña',
+      items: [
+        ['🌤', 'Reloj + clima juntos', 'El tiempo aparece junto al saludo. Haz clic para ver el pronóstico. Añade otras ciudades para ver su hora y su clima.'],
+        ['🗺', 'Tráfico con tus lugares', 'Un widget con mapa de Waze, tus lugares favoritos (casa, trabajo…) y rutas guardadas que se abren en Google Maps o Waze.'],
+        ['🖼', 'Presentación de fotos', 'Fondo con fotos de tu ordenador, la foto del día de Bing o de la NASA, cambiando solas.'],
+        ['✅', 'Hábitos, noticias y foco del día', 'Tres widgets nuevos: sigue hábitos con rachas, lee feeds RSS y define la tarea principal del día.'],
+        ['🌐', 'En portugués, inglés y español', 'La extensión sigue el idioma del navegador. Puedes cambiarlo en Configuración → General.'],
+        ['🦊', 'Versión para Firefox', 'Hay un paquete aparte disponible en GitHub.'],
+      ],
+    },
+  },
   '0.3.1': {
     title: 'NeuroTab 0.3.1 — widgets em qualquer lugar',
     items: [

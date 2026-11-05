@@ -22,7 +22,6 @@ export const DEFAULT_WIDGETS = [
   { id: 'reminders', w: 6 },
   { id: 'brain', w: 6 },
   { id: 'ask', w: 6 },
-  { id: 'weather', w: 4 },
   { id: 'clock', w: 4 },
   { id: 'quotes', w: 4 },
 ];
@@ -51,6 +50,7 @@ export const DEFAULT_SETTINGS = {
   widgets: DEFAULT_WIDGETS,
   showClock: true,
   userName: '',
+  lang: 'auto', // auto | pt-BR | en | es
   // Atalhos
   columns: 6,
   showSearch: true,
@@ -64,16 +64,24 @@ export const DEFAULT_SETTINGS = {
   bgEnabled: true,
   bgColor: '#141418',
   bgDim: 0, // 0–80 (%)
+  bgMode: 'image', // image | slides
+  slideSource: 'local', // local | bing | nasa | all
+  slideInterval: 5, // minutos
   tileRadius: 4,
   // Widgets
-  weather: null, // { name, lat, lon }
+  weather: null, // (antigo) { name, lat, lon } — migrado para places
+  places: [], // [{ id, name, region, lat, lon, tz }] — o primeiro é a cidade principal
+  heroWeather: true, // clima junto do relógio
+  heroPlaces: true, // outras cidades/fusos abaixo do relógio
+  mapPlaces: [], // [{ id, name, icon, address, lat, lon }]
+  mapRoutes: [], // [{ id, from: placeId | 'here', to: placeId, mode, name }]
   quoteCurrencies: 'USD-BRL,EUR-BRL,BTC-BRL',
   quoteStocks: 'PETR4,VALE3,ITUB4',
   brapiToken: '',
   shortcutsWidgetGroup: '',
   // IA e voz
   ai: DEFAULT_AI,
-  voiceLang: 'pt-BR',
+  voiceLang: '', // vazio = idioma da interface
   speakAnswers: false,
   ttsVoice: '',
   ttsRate: 1,
@@ -90,6 +98,9 @@ export const DEFAULT_SETTINGS = {
 };
 
 export function mergeSettings(s = {}) {
+  if (!Array.isArray(s.places) || (!s.places.length && s.weather)) {
+    s = { ...s, places: s.weather ? [{ id: 'home', name: s.weather.name, region: s.weather.region || '', lat: s.weather.lat, lon: s.weather.lon, tz: null }] : [] };
+  }
   return {
     ...DEFAULT_SETTINGS,
     ...s,
@@ -182,8 +193,15 @@ export function normalizeUrl(raw) {
   return u;
 }
 
-// Favicon via API nativa do Chromium (permissão "favicon"), com fallback.
+// Favicon via API nativa do Chromium (permissão "favicon"). No Firefox, usa o serviço do DuckDuckGo.
+const HAS_FAVICON_API = (() => {
+  try { return (chrome.runtime.getManifest().permissions || []).includes('favicon'); } catch { return false; }
+})();
+
 export function faviconUrl(pageUrl, size = 32) {
+  if (!HAS_FAVICON_API) {
+    try { return `https://icons.duckduckgo.com/ip3/${new URL(pageUrl).hostname}.ico`; } catch { return ''; }
+  }
   const u = new URL(chrome.runtime.getURL('/_favicon/'));
   u.searchParams.set('pageUrl', pageUrl);
   u.searchParams.set('size', String(size));

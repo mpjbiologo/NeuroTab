@@ -7,6 +7,8 @@ import { loadItems, saveItems, fromKeepNote, toMarkdown, trashItems, purgeTrash,
 import { voicesFor, speak } from './lib/ui.js';
 import { SOUNDS } from './lib/sounds.js';
 import { UPDATE_KEY } from './lib/update.js';
+import { SOURCES, addFiles, listLocal, clearLocal } from './lib/photos.js';
+import { initI18n, LOCALE } from './lib/i18n.js';
 import { PROVIDERS, aiConfig, requestPermission, listModels, complete } from './lib/ai.js';
 import { pixPayload, qrSvg } from './lib/pix.js';
 import { PROJECT, DONATION } from './config.js';
@@ -22,8 +24,10 @@ async function init() {
   for (const [k, e] of Object.entries(SEARCH_ENGINES)) $('#engines').add(new Option(e.name, k));
   for (let n = 2; n <= 12; n++) $('#cols').add(new Option(String(n), String(n)));
   for (const [k, v] of Object.entries(SOUNDS)) $('#timerSound').add(new Option(v, k));
+  for (const [k, v] of Object.entries(SOURCES)) $('#slideSource').add(new Option(v, k));
 
   data = await loadData();
+  initI18n(data.settings.lang);
   fillSettings();
   bindSettings();
   setupTabs();
@@ -33,11 +37,13 @@ async function init() {
   setupBackup();
   setupDonation();
   setupVoiceOptions();
+  setupPhotos();
+  renderPlaces();
   setupUpdatesOptions();
   setupCleanup();
 
   chrome.storage.onChanged.addListener(async (c, area) => {
-    if (area === 'local' && c[DATA_KEY]) { data = await loadData(); fillSettings(); showStats(); }
+    if (area === 'local' && c[DATA_KEY]) { data = await loadData(); fillSettings(); showStats(); renderPlaces(); }
   });
 }
 
@@ -72,12 +78,13 @@ function bindSettings() {
       const k = el.dataset.k;
       data.settings[k] = el.type === 'checkbox' ? el.checked : 'num' in el.dataset ? Number(el.value) : el.value;
       await saveData(data);
+      if (k === 'lang') { location.reload(); return; }
       toast('Salvo ✓');
     }, el.type === 'text' ? 500 : 0));
   }
   $('#reset').addEventListener('click', async () => {
     if (!confirm('Restaurar as configurações padrão? Atalhos, notas e chaves de IA serão mantidos.')) return;
-    const keep = { ai: data.settings.ai, brapiToken: data.settings.brapiToken, weather: data.settings.weather, widgets: data.settings.widgets };
+    const keep = { ai: data.settings.ai, brapiToken: data.settings.brapiToken, places: data.settings.places, widgets: data.settings.widgets };
     data.settings = mergeSettings({ ...DEFAULT_SETTINGS, ...keep });
     await saveData(data);
     fillSettings();
@@ -378,7 +385,7 @@ function toast(msg) {
 function setupVoiceOptions() {
   const sel = $('#ttsVoice');
   const fill = () => {
-    const lang = data.settings.voiceLang || 'pt-BR';
+    const lang = data.settings.voiceLang || LOCALE;
     const list = voicesFor(lang).sort((a, b) => (/natural|online|neural/i.test(b.name) - /natural|online|neural/i.test(a.name)) || a.name.localeCompare(b.name));
     sel.replaceChildren(new Option('Automática (melhor disponível)', ''), ...list.map((v) => new Option(`${v.name}${v.localService ? '' : ' ☁'}`, v.voiceURI)));
     sel.value = list.some((v) => v.voiceURI === data.settings.ttsVoice) ? data.settings.ttsVoice : '';
@@ -437,4 +444,41 @@ function setupCleanup() {
     msg(`✓ ${items.length} itens movidos para a lixeira. Um backup em Markdown foi baixado.`);
     showBrainStats();
   };
+}
+
+// ---------- Cidades do relógio ----------
+function renderPlaces() {
+  const box = $('#placesList');
+  if (!box) return;
+  const places = data.settings.places || [];
+  box.replaceChildren(...places.map((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'pl';
+    row.innerHTML = `<b>${i === 0 ? '⭐' : '🕐'}</b><span></span><button class="btn">Remover</button>`;
+    row.querySelector('span').textContent = `${p.name}${p.region ? ' · ' + p.region : ''}${p.tz ? ' · ' + p.tz : ''}`;
+    if (i === 0) row.querySelector('span').append(document.createElement('small'));
+    if (i === 0) row.querySelector('small').textContent = ' (principal)';
+    row.querySelector('button').onclick = async () => { data.settings.places.splice(i, 1); await saveData(data); renderPlaces(); };
+    return row;
+  }));
+  if (!places.length) box.innerHTML = '<p class="hint">Nenhuma cidade ainda. Na nova aba, clique em "📍 Definir cidade" ao lado do relógio.</p>';
+}
+
+// ---------- Fotos ----------
+function setupPhotos() {
+  const count = async () => { const n = (await listLocal()).length; $('#photoCount').textContent = n ? `${n} foto(s) guardada(s) no navegador` : 'Nenhuma foto adicionada'; };
+  count();
+  const handle = async (e) => {
+    const files = [...e.target.files];
+    e.target.value = '';
+    if (!files.length) return;
+    $('#photoCount').textContent = 'Otimizando fotos…';
+    const n = await addFiles(files, (d, t) => { $('#photoCount').textContent = `Otimizando ${d}/${t}…`; });
+    toast(`${n} foto(s) adicionada(s)`);
+    if (data.settings.bgMode !== 'slides') { data.settings.bgMode = 'slides'; data.settings.slideSource = 'local'; data.settings.bgEnabled = true; await saveData(data); fillSettings(); }
+    count();
+  };
+  $('#photoFiles').addEventListener('change', handle);
+  $('#photoDir').addEventListener('change', handle);
+  $('#photoClear').onclick = async () => { if (!confirm('Apagar todas as fotos guardadas na NeuroTab? (Os arquivos no seu computador não são afetados.)')) return; await clearLocal(); count(); };
 }

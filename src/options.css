@@ -121,3 +121,8 @@ footer {
 .cmds { margin: 8px 0 12px; font-size: 14px; }
 .cmds ul { margin: 8px 0; }
 .cmds li { margin: 4px 0; color: #444; }
+
+.items-list { display: grid; gap: 6px; margin: 4px 0 8px; }
+.items-list .pl { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; }
+.items-list .pl span { flex: 1; }
+.items-list .pl small { color: #888; }

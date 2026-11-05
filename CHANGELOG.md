@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.4.0 — 2026-11-05
+**O mundo na sua nova aba.**
+
+**Relógio e clima**
+- O clima agora fica ao lado da saudação (sem widget separado); clique para ver a previsão de 5 dias
+- Várias cidades: cada uma mostra hora local, diferença de fuso e temperatura; reordene e escolha a principal
+- O antigo ajuste de cidade do clima é migrado automaticamente
+
+**Novos widgets**
+- 🗺 **Trânsito**: mapa do Waze, locais favoritos com ícone (casa, trabalho…) buscados por endereço, rotas salvas que abrem no Google Maps ou no Waze (carro, transporte, a pé, bicicleta); comando de voz "rota para o trabalho"
+- 🖼 **Fotos**: miniatura do slide atual; o fundo pode virar **slides** com fotos do PC (guardadas no navegador), foto do dia do Bing ou da NASA
+- ✅ **Hábitos**: metas diárias, sequência de dias e semana em pontinhos
+- 📰 **Notícias**: feeds RSS/Atom com sugestões (g1, BBC Brasil, Agência Brasil, Tecnoblog…)
+- 🎯 **Foco do dia**: uma tarefa principal que reinicia a cada dia
+
+**Idiomas**
+- Extensão em português, inglês e espanhol, conforme o idioma do navegador (Configurações → Geral → Idioma)
+- A IA responde no idioma escolhido; datas e números seguem o formato local
+- Site do projeto também traduzido, com seletor PT/EN/ES
+- Comandos de voz continuam só em português
+
+**Firefox e lojas**
+- Pacote para Firefox 128+ gerado automaticamente (`neurotab-firefox.zip`)
+- Política de privacidade, textos, capturas e guia para publicar no Edge, Firefox, Opera e Chrome (`docs/store`)
+
 ## v0.3.1 — 2026-11-05
 - **Modo livre**: widgets podem ser colocados em qualquer lugar da tela (arraste pelo título), com sobreposição e camadas
 - Encaixe magnético nas bordas de outros widgets e no centro da tela, com guias visuais (Alt desliga o encaixe)

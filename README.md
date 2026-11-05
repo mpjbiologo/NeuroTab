@@ -7,7 +7,7 @@
 <p align="center">
   <b>A nova aba que pensa com você.</b><br>
   Atalhos numa barra lateral e, no centro, um segundo cérebro com notas, lembretes, clima, cotações e IA.<br>
-  Para Edge e Chrome. Gratuita, de código aberto, sem anúncios e sem rastreamento.
+  Para Edge, Chrome e Firefox, em português, inglês e espanhol. Gratuita, de código aberto, sem anúncios e sem rastreamento.
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 <p align="center">
   <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest"><img src="https://img.shields.io/github/v/release/mpjbiologo/NeuroTab?label=vers%C3%A3o&color=7c5cff" alt="Versão"></a>
   <img src="https://img.shields.io/badge/Manifest-V3-6f42c1" alt="Manifest V3">
-  <img src="https://img.shields.io/badge/Edge%20%7C%20Chrome-suportados-2ea44f" alt="Edge e Chrome">
+  <img src="https://img.shields.io/badge/Edge%20%7C%20Chrome%20%7C%20Firefox-suportados-2ea44f" alt="Edge, Chrome e Firefox">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-lightgrey" alt="MIT"></a>
 </p>
 
@@ -41,8 +41,13 @@ A NeuroTab começou como substituta da extensão **Speed Dial**, que parou de se
 | ⏱ **Relógio** | Despertador com dias da semana e soneca, timer, pomodoro e cronômetro, com som e notificação |
 | 🧮 **Calculadora** | Contas, porcentagem ("200 + 10%"), conversões (moedas, medidas, temperatura, datas) e calculadoras de saúde opcionais |
 | 🎙 **Comandos de voz** | **Alt+Shift+V** em qualquer aba: "anotar…", "me lembre amanhã às 9h…", "timer de 10 minutos", "abrir YouTube", "como está o tempo" |
+| 🌤 **Relógio e clima juntos** | O tempo fica ao lado da saudação, com previsão de 5 dias. Adicione outras cidades para ver a hora e o clima de cada fuso |
+| 🗺 **Trânsito** | Mapa do Waze, seus locais favoritos (casa, trabalho…) e rotas salvas que abrem no Google Maps ou no Waze |
+| 🖼 **Slides de fotos** | Fundo com fotos do seu PC, a foto do dia do Bing ou da NASA |
+| ✅ **Hábitos, notícias e foco** | Hábitos com sequência de dias, feeds RSS e a tarefa principal do dia |
+| 🌐 **Idiomas** | Português, inglês e espanhol, conforme o idioma do navegador (dá para trocar nas configurações). Os comandos de voz ainda são só em português |
 | 🗑 **Lixeira e limpeza** | Seleção múltipla, limpar concluídas, lixeira de 30 dias |
-| 🌤️📈🕘 **Mais widgets** | Clima, cotações, mais visitados e abas fechadas, atalhos em blocos. Arraste o canto ↘ para redimensionar e salve layouts com o 🧩. No **modo livre**, os widgets ficam em qualquer lugar da tela |
+| 📈🕘 **Mais widgets** | Clima, cotações, mais visitados e abas fechadas, atalhos em blocos. Arraste o canto ↘ para redimensionar e salve layouts com o 🧩. No **modo livre**, os widgets ficam em qualquer lugar da tela |
 | 🔁 **Importar e exportar** | Importa o Speed Dial (`.spd`) e o Google Keep (via Takeout). Exporta as notas em Markdown e faz backup completo em `.json` |
 
 <p align="center"><img src="docs/shot-panel.jpg" width="49%" alt="Painel de atalhos"> <img src="docs/shot-voice.jpg" width="49%" alt="Comando de voz"></p>
@@ -64,6 +69,9 @@ Para configurar, abra **⚙ Configurações → IA e voz**, escolha o provedor, 
 3. Ative o **Modo de desenvolvedor** e clique em **Carregar sem pacote**. Escolha a pasta.
 4. Abra uma nova aba. O Edge pergunta se você quer manter a alteração: clique em **Manter alterações**.
 
+### Firefox
+Baixe o `neurotab-firefox.zip`. Para testar, abra `about:debugging#/runtime/this-firefox` → **Carregar extensão temporária** e escolha o zip (ela some ao fechar o Firefox). Para uso permanente, instale pela loja de complementos do Firefox quando a NeuroTab for publicada lá. Requer Firefox 128 ou mais novo.
+
 Para **atualizar**: a NeuroTab avisa quando sai versão nova. Baixe o zip, substitua os arquivos na mesma pasta e clique em ↻ na página de extensões. Seus dados são mantidos.
 
 > **Despertador e timer** tocam com o navegador aberto e o computador ligado — a extensão não consegue acordar o PC.
@@ -83,15 +91,15 @@ O Google só libera a API do Keep para contas empresariais (Workspace). Para con
 | **v0.1** ✅ | Speed Dial completo e importação do `.spd` |
 | **v0.2** ✅ | Segundo cérebro: widgets, captura, lembretes, IA multi-provedor, voz, Keep, anotar páginas |
 | **v0.3** ✅ | Widgets redimensionáveis e responsivos, relógio/despertador, calculadora, navegação, lixeira, comandos de voz, aviso de atualização |
-| **v0.4** | Slide de fotos (PC e galerias), mapa de trânsito (Waze), agenda, hábitos, RSS, foco do dia, versão para Firefox, lojas |
-| **v0.5** | Google Fotos e OneDrive, palavra de ativação por voz, sincronização, busca por significado |
-| — | Publicação na loja de complementos do Edge e na Chrome Web Store |
+| **v0.4** ✅ | Relógio + clima com várias cidades e fusos, trânsito com locais e rotas, slides de fotos, hábitos, notícias RSS, foco do dia, tradução (pt/en/es), versão para Firefox, material para as lojas |
+| **v0.5** | Agenda, Google Fotos e OneDrive, comandos de voz em outros idiomas, palavra de ativação, sincronização, busca por significado |
+| — | Publicação nas lojas do Edge, Firefox, Opera e Chrome ([guia](docs/store/README.md)) |
 
 Ideias são bem-vindas nas [Issues](https://github.com/mpjbiologo/NeuroTab/issues).
 
 ## 🔒 Privacidade
 
-Tudo fica **no seu navegador**. A NeuroTab não tem servidor, não pede conta e não coleta dados. A chave da IA fica só no navegador e **não entra no backup**.
+Tudo fica **no seu navegador**. A NeuroTab não tem servidor, não pede conta e não coleta dados. A chave da IA fica só no navegador e **não entra no backup**. Detalhes na [política de privacidade](https://mpjbiologo.github.io/NeuroTab/privacy.html).
 
 | Permissão | Para quê |
 |---|---|
@@ -103,7 +111,11 @@ Tudo fica **no seu navegador**. A NeuroTab não tem servidor, não pede conta e 
 | `topSites`, `sessions`, `tabs` *(opcionais)* | Widget Navegação — pedidas só se você usar o widget |
 | GitHub API | Verificar se há versão nova |
 | `favicon` | Mostrar os ícones dos sites |
-| Open-Meteo, AwesomeAPI, brapi.dev | Buscar clima e cotações |
+| Open-Meteo, AwesomeAPI, brapi.dev | Buscar clima, cidades e cotações |
+| OpenStreetMap Nominatim | Buscar endereços dos locais do widget Trânsito |
+| Bing, NASA | Fotos do dia nos slides de fundo |
+| Feeds RSS *(opcionais)* | Pedida para cada site de notícias que você adicionar |
+| DuckDuckGo *(só no Firefox)* | Ícones dos sites, já que o Firefox não tem a API de favicons |
 | Provedor de IA *(opcional)* | Pedida só quando você configura a IA |
 
 ## ❤ Apoie o projeto

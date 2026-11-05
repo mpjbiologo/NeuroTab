@@ -8,7 +8,8 @@
   <link rel="stylesheet" href="newtab.css">
 </head>
 <body class="dock-left">
-  <div id="bg"></div>
+  <div id="bg"><div class="bgl" id="bgA"></div><div class="bgl" id="bgB"></div></div>
+  <div id="bgCredit" hidden></div>
 
   <!-- Barra de atalhos (lateral, topo ou rodapé) -->
   <aside id="dock" class="dock">
@@ -33,7 +34,12 @@
   <main id="center">
     <header id="hero" class="hero">
       <div id="clock" class="clock"></div>
-      <div id="greet" class="greet"></div>
+      <div class="hero-line">
+        <span id="greet" class="greet"></span>
+        <button id="heroWx" class="wx-pill" hidden></button>
+      </div>
+      <div id="places" class="places"></div>
+      <div id="wxPop" class="wx-pop" hidden></div>
     </header>
 
     <div id="omniWrap" class="omni-wrap">

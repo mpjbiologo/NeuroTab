@@ -9,8 +9,12 @@ export const K = {
   sound: 'nt_sound',
 };
 
-export const DAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
-export const DAY_NAMES = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+// Nomes dos dias no idioma da interface (4/jan/2026 foi domingo).
+const dayName = (i, weekday) => new Date(2026, 0, 4 + i).toLocaleDateString('pt-BR', { weekday });
+const W7 = [0, 1, 2, 3, 4, 5, 6];
+export const dayLabels = () => W7.map((i) => dayName(i, 'narrow').toUpperCase());
+export const dayNames = () => W7.map((i) => dayName(i, 'long').replace('-feira', ''));
+export const dayShort = () => W7.map((i) => dayName(i, 'short').replace('.', ''));
 
 const get = async (k, def) => (await chrome.storage.local.get(k))[k] ?? def;
 const set = (k, v) => chrome.storage.local.set({ [k]: v });
@@ -66,7 +70,7 @@ export function describeDays(days) {
   if (s === '0123456') return 'Todos os dias';
   if (s === '12345') return 'Dias úteis';
   if (s === '06') return 'Fim de semana';
-  return [...days].sort().map((d) => DAY_NAMES[d].slice(0, 3)).join(', ');
+  return [...days].sort().map((d) => dayShort()[d]).join(', ');
 }
 
 export function untilText(ts) {

@@ -4,20 +4,24 @@ import { loadItems, addItem, updateItem, displayTitle, purgeOldTrash } from './l
 import { enrich, isConfigured } from './lib/ai.js';
 import { K as CK, loadAlarms, saveAlarms, nextOccurrence, getTimer, getPomo, nextPhase, phaseMinutes } from './lib/clock.js';
 import { checkForUpdate, UPDATE_KEY, WHATSNEW_KEY } from './lib/update.js';
+import { setLang, t } from './lib/i18n.js';
+import { createPlayer } from './lib/sounds.js';
 
 const NEWTAB = chrome.runtime.getURL('src/newtab.html');
+loadData().then((d) => setLang(d.settings.lang)).catch(() => {});
 
 // ---------- Menus ----------
 async function rebuildMenus() {
   await chrome.contextMenus.removeAll();
   const data = await loadData();
+  setLang(data.settings.lang);
   if (!data.settings.showContextMenu) return;
   const all = ['page', 'link', 'selection', 'image'];
   chrome.contextMenus.create({ id: 'nt-root', title: 'NeuroTab', contexts: all });
-  chrome.contextMenus.create({ id: 'nt-clip', parentId: 'nt-root', title: '✂️ Salvar trecho no cérebro', contexts: ['selection'] });
-  chrome.contextMenus.create({ id: 'nt-page', parentId: 'nt-root', title: '🔖 Salvar página no cérebro (ler depois)', contexts: ['page'] });
-  chrome.contextMenus.create({ id: 'nt-link', parentId: 'nt-root', title: '🔗 Salvar link no cérebro', contexts: ['link'] });
-  chrome.contextMenus.create({ id: 'nt-add', parentId: 'nt-root', title: '➕ Adicionar aos atalhos', contexts: ['page', 'link'] });
+  chrome.contextMenus.create({ id: 'nt-clip', parentId: 'nt-root', title: t('✂️ Salvar trecho no cérebro'), contexts: ['selection'] });
+  chrome.contextMenus.create({ id: 'nt-page', parentId: 'nt-root', title: t('🔖 Salvar página no cérebro (ler depois)'), contexts: ['page'] });
+  chrome.contextMenus.create({ id: 'nt-link', parentId: 'nt-root', title: t('🔗 Salvar link no cérebro'), contexts: ['link'] });
+  chrome.contextMenus.create({ id: 'nt-add', parentId: 'nt-root', title: t('➕ Adicionar aos atalhos'), contexts: ['page', 'link'] });
   for (const g of data.groups) {
     chrome.contextMenus.create({ id: 'nt-g-' + g.id, parentId: 'nt-add', title: `${g.icon} ${g.name}`, contexts: ['page', 'link'] });
   }
@@ -109,10 +113,10 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   chrome.notifications.create(alarm.name, {
     type: 'basic',
     iconUrl: chrome.runtime.getURL('icons/icon128.png'),
-    title: (late ? '⏰ Lembrete atrasado — ' : '⏰ ') + displayTitle(it),
+    title: (late ? t('⏰ Lembrete atrasado —') + ' ' : '⏰ ') + displayTitle(it),
     message: (it.text && it.text !== it.title ? it.text : it.summary || '').slice(0, 250) || 'NeuroTab',
     contextMessage: new Date(it.remindAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
-    buttons: [{ title: '✅ Concluir' }, { title: '😴 Adiar 10 min' }],
+    buttons: [{ title: t('✅ Concluir') }, { title: t('😴 Adiar 10 min') }],
     requireInteraction: true,
     priority: 2,
   });
@@ -134,8 +138,8 @@ chrome.notifications.onButtonClicked.addListener(async (nid, btn) => {
   if (nid === 'timer' || nid === 'pomo') {
     await stopSound();
     if (nid === 'timer' && btn === 0) {
-      const t = await getTimer();
-      await chrome.storage.local.set({ [CK.timer]: { ...t, endAt: Date.now() + (t.duration || 60e3), pausedLeft: null } });
+      const tm = await getTimer();
+      await chrome.storage.local.set({ [CK.timer]: { ...tm, endAt: Date.now() + (tm.duration || 60e3), pausedLeft: null } });
     }
     chrome.notifications.clear(nid);
     return;
@@ -176,14 +180,23 @@ async function ensureOffscreen() {
   }
 }
 
+// Firefox: o "background" é um documento, então toca o som direto aqui.
+const directPlayer = !chrome.offscreen && typeof AudioContext !== 'undefined' ? createPlayer() : null;
+
 async function playSound(kind, opts) {
+  if (directPlayer) {
+    directPlayer.play(kind, opts || {});
+    await chrome.storage.local.set({ [CK.sound]: { playing: !!opts?.loop, kind, at: Date.now() } });
+    return;
+  }
   await ensureOffscreen();
   await chrome.runtime.sendMessage({ target: 'offscreen', type: 'play', kind, opts }).catch(() => {});
   await chrome.storage.local.set({ [CK.sound]: { playing: !!opts?.loop, kind, at: Date.now() } });
 }
 
 async function stopSound() {
-  await chrome.runtime.sendMessage({ target: 'offscreen', type: 'stop' }).catch(() => {});
+  directPlayer?.stop();
+  if (chrome.offscreen) await chrome.runtime.sendMessage({ target: 'offscreen', type: 'stop' }).catch(() => {});
   await chrome.storage.local.set({ [CK.sound]: { playing: false } });
 }
 
@@ -196,8 +209,8 @@ async function syncClock() {
     const when = al.snoozeUntil && al.snoozeUntil > Date.now() ? al.snoozeUntil : nextOccurrence(al);
     if (when) want.set('clock-' + al.id, when);
   }
-  const t = await getTimer();
-  if (t.endAt) want.set('timer', Math.max(t.endAt, Date.now() + 500));
+  const tm = await getTimer();
+  if (tm.endAt) want.set('timer', Math.max(tm.endAt, Date.now() + 500));
   const p = await getPomo();
   if (p.running && p.endAt) want.set('pomo', Math.max(p.endAt, Date.now() + 500));
   for (const a of existing) {
@@ -218,9 +231,9 @@ async function fireClockAlarm(id) {
   chrome.notifications.create('clock-' + id, {
     type: 'basic',
     iconUrl: chrome.runtime.getURL('icons/icon128.png'),
-    title: '⏰ ' + (al.label || 'Despertador'),
-    message: `São ${al.time}.`,
-    buttons: [{ title: '⏹ Parar' }, { title: '😴 Soneca 10 min' }],
+    title: '⏰ ' + (al.label || t('Despertador')),
+    message: t(`São ${al.time}.`),
+    buttons: [{ title: t('⏹ Parar') }, { title: t('😴 Soneca 10 min') }],
     requireInteraction: true,
     priority: 2,
   });
@@ -228,15 +241,15 @@ async function fireClockAlarm(id) {
 }
 
 async function fireTimer() {
-  const t = await getTimer();
-  if (!t.endAt) return;
-  await chrome.storage.local.set({ [CK.timer]: { ...t, endAt: null, pausedLeft: null, finishedAt: Date.now() } });
+  const tm = await getTimer();
+  if (!tm.endAt) return;
+  await chrome.storage.local.set({ [CK.timer]: { ...tm, endAt: null, pausedLeft: null, finishedAt: Date.now() } });
   chrome.notifications.create('timer', {
     type: 'basic',
     iconUrl: chrome.runtime.getURL('icons/icon128.png'),
-    title: '⏱ ' + (t.label || 'Timer concluído'),
-    message: 'O tempo acabou.',
-    buttons: [{ title: '🔁 Repetir' }, { title: '⏹ Parar' }],
+    title: '⏱ ' + (tm.label || t('Timer concluído')),
+    message: t('O tempo acabou.'),
+    buttons: [{ title: t('🔁 Repetir') }, { title: t('⏹ Parar') }],
     requireInteraction: true,
     priority: 2,
   });
@@ -251,8 +264,8 @@ async function firePomo() {
   n.endAt = Date.now() + phaseMinutes(n) * 60e3;
   await chrome.storage.local.set({ [CK.pomo]: n });
   const msg = n.phase === 'focus'
-    ? { t: `🍅 Foco ${n.cycle}`, m: `Pausa terminou. Hora de focar por ${n.focusMin} min.` }
-    : { t: n.phase === 'long' ? '🌿 Pausa longa' : '☕ Pausa', m: `Bom trabalho! Descanse ${phaseMinutes(n)} min.` };
+    ? { t: t(`🍅 Foco ${n.cycle}`), m: t(`Pausa terminou. Hora de focar por ${n.focusMin} min.`) }
+    : { t: t(n.phase === 'long' ? '🌿 Pausa longa' : '☕ Pausa'), m: t(`Bom trabalho! Descanse ${phaseMinutes(n)} min.`) };
   chrome.notifications.create('pomo', { type: 'basic', iconUrl: chrome.runtime.getURL('icons/icon128.png'), title: msg.t, message: msg.m, priority: 1 });
   playSound(n.phase === 'focus' ? 'digital' : 'suave', { loop: false });
 }
@@ -270,9 +283,9 @@ async function runUpdateCheck() {
         chrome.notifications.create('update', {
           type: 'basic',
           iconUrl: chrome.runtime.getURL('icons/icon128.png'),
-          title: `NeuroTab ${u.latest} disponível`,
-          message: 'Uma nova versão foi lançada. Veja as novidades e baixe.',
-          buttons: [{ title: '⬇ Baixar' }, { title: '📄 Ver novidades' }],
+          title: t(`NeuroTab ${u.latest} disponível`),
+          message: t('Uma nova versão foi lançada. Veja as novidades e baixe.'),
+          buttons: [{ title: t('⬇ Baixar') }, { title: t('📄 Ver novidades') }],
         });
         await chrome.storage.local.set({ [UPDATE_KEY]: { ...u, notifiedVersion: u.latest } });
       }

@@ -3,6 +3,7 @@ import { loadData, saveData, uid, hostOf, inspectFavicon, faviconUrl, ACTIVE_KEY
 import { addItem, loadItems, displayTitle, relTime, parseReminder, TYPES } from './lib/brain.js';
 import { isConfigured } from './lib/ai.js';
 import { micButton, toLocalInput, fromLocalInput, h } from './lib/ui.js';
+import { initI18n } from './lib/i18n.js';
 
 const $ = (s) => document.querySelector(s);
 let tab;
@@ -13,6 +14,7 @@ init();
 async function init() {
   [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   data = await loadData();
+  initI18n(data.settings.lang);
   const url = tab?.url || '';
   const web = /^(https?|file):/i.test(url);
   $('#ptitle').textContent = tab?.title || 'Página';

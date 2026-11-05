@@ -49,7 +49,8 @@ export default {
       const time = h('input', { type: 'time', value: '07:00', class: 'field', style: { width: '110px' } });
       const label = h('input', { type: 'text', placeholder: 'Nome (opcional)' });
       const sound = h('select', {}, ...Object.entries(SOUNDS).map(([k, v]) => new Option(v, k)));
-      const dayBtns = C.DAY_LABELS.map((d, i) => h('button', { class: 'day' + (days.has(i) ? ' sel' : ''), type: 'button', title: C.DAY_NAMES[i], onclick: (e) => { days.has(i) ? days.delete(i) : days.add(i); e.target.classList.toggle('sel'); } }, d));
+      const names = C.dayNames();
+      const dayBtns = C.dayLabels().map((d, i) => h('button', { class: 'day' + (days.has(i) ? ' sel' : ''), type: 'button', title: names[i], onclick: (e) => { days.has(i) ? days.delete(i) : days.add(i); e.target.classList.toggle('sel'); } }, d));
       const form = h('div', { class: 'al-form', hidden: true },
         h('div', { class: 'row-input' }, time, label),
         h('div', { class: 'days' }, ...dayBtns, h('span', { class: 'muted' }, 'nenhum = uma vez')),

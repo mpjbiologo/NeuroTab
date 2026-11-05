@@ -1,4 +1,5 @@
 // NeuroTab — utilitários de interface compartilhados.
+import { LOCALE } from './i18n.js';
 
 export const $ = (s, root = document) => root.querySelector(s);
 export const $$ = (s, root = document) => [...root.querySelectorAll(s)];
@@ -95,7 +96,8 @@ export function hasDictation() {
 }
 
 /** Ditado: chama onText(textoFinal, parcial). Retorna { stop() } ou null se não suportado. */
-export function startDictation({ lang = 'pt-BR', onText, onEnd, onError }) {
+export function startDictation({ lang, onText, onEnd, onError }) {
+  lang = lang || LOCALE;
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
     onError?.('Seu navegador não oferece reconhecimento de voz.');
@@ -139,7 +141,7 @@ export function voicesFor(lang = 'pt-BR') {
 export function speak(text, opts = 'pt-BR') {
   if (!('speechSynthesis' in window)) return Promise.resolve();
   const o = typeof opts === 'string' ? { voiceLang: opts } : opts || {};
-  const lang = o.voiceLang || 'pt-BR';
+  const lang = o.voiceLang || LOCALE;
   speechSynthesis.cancel();
   const clean = String(text).replace(/\[\d+\]/g, '').replace(/[*#`_>]/g, '').replace(/https?:\/\/\S+/g, '').slice(0, 1500);
   const u = new SpeechSynthesisUtterance(clean);
@@ -159,7 +161,7 @@ export function speak(text, opts = 'pt-BR') {
 }
 
 // Botão de microfone ligado a um campo de texto.
-export function micButton(target, { lang = 'pt-BR', onFinal, title = 'Ditar por voz' } = {}) {
+export function micButton(target, { lang, onFinal, title = 'Ditar por voz' } = {}) {
   const btn = h('button', { type: 'button', class: 'mic', title }, '🎤');
   if (!hasDictation()) { btn.hidden = true; return btn; }
   let session = null;

@@ -50,7 +50,27 @@
         <div><b>Seu nome</b><small>Para a saudação ("Boa tarde, …").</small></div>
         <input type="text" data-k="userName" placeholder="Opcional" class="txt">
       </div>
+      <div class="opt">
+        <div><b>Idioma</b><small>Automático usa o idioma do seu navegador.</small></div>
+        <select data-k="lang">
+          <option value="auto">Automático</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+      </div>
       <p class="hint">Os widgets do centro (notas, clima, cotações…) são organizados direto na nova aba, pelo botão 🧩.</p>
+      <hr>
+      <h2>Relógio e clima</h2>
+      <div class="opt">
+        <div><b>Mostrar o clima ao lado do relógio</b><small>Clique nele para ver a previsão dos próximos dias.</small></div>
+        <label class="sw"><input type="checkbox" data-k="heroWeather"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Mostrar outras cidades e fusos horários</b><small>Adicione pelo botão "＋ cidade" que aparece ao passar o mouse no relógio.</small></div>
+        <label class="sw"><input type="checkbox" data-k="heroPlaces"><span></span></label>
+      </div>
+      <div id="placesList" class="items-list"></div>
       <hr>
       <h2>Pesquisa</h2>
       <div class="opt">
@@ -119,6 +139,39 @@
           <small>A imagem é otimizada (até 2560 px) e fica salva só no seu navegador.</small>
         </div>
       </div>
+      <hr>
+      <h2>Slides de fotos</h2>
+      <div class="opt">
+        <div><b>Tipo de fundo</b></div>
+        <select data-k="bgMode">
+          <option value="image">Imagem fixa</option>
+          <option value="slides">Slides de fotos</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Origem das fotos</b><small>Bing e NASA trazem fotos novas todos os dias, sem cadastro.</small></div>
+        <select data-k="slideSource" id="slideSource"></select>
+      </div>
+      <div class="opt">
+        <div><b>Trocar a cada</b></div>
+        <select data-k="slideInterval" data-num>
+          <option value="0.5">30 segundos</option>
+          <option value="1">1 minuto</option>
+          <option value="5">5 minutos</option>
+          <option value="15">15 minutos</option>
+          <option value="60">1 hora</option>
+          <option value="1440">1 dia</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Minhas fotos</b><small id="photoCount">—</small></div>
+        <div class="keybox">
+          <label class="btn primary">＋ Fotos<input type="file" id="photoFiles" accept="image/*" multiple hidden></label>
+          <label class="btn">📁 Pasta<input type="file" id="photoDir" webkitdirectory hidden></label>
+          <button class="btn" id="photoClear">Apagar todas</button>
+        </div>
+      </div>
+      <hr>
       <div class="opt">
         <div><b>Cor de fundo</b><small>Usada sem imagem ou enquanto ela carrega.</small></div>
         <input type="color" data-k="bgColor">

@@ -108,6 +108,9 @@
       .story-grid { grid-template-columns: 1fr; }
       .game { flex-direction: column; text-align: center; }
     }
+    .lang-switch { display: flex; gap: 2px; margin-left: 14px; background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 9px; padding: 2px; }
+    .lang-switch button { border: 0; background: none; color: var(--muted); font: 600 12px inherit; padding: 5px 8px; border-radius: 7px; cursor: pointer; }
+    .lang-switch button.on { background: rgba(255,255,255,.14); color: #fff; }
     footer { border-top: 1px solid var(--line); padding: 30px 0 50px; color: var(--muted); font-size: 14px; }
     footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
     .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #23223a; border: 1px solid var(--line); padding: 10px 18px; border-radius: 10px; display: none; }
@@ -126,45 +129,46 @@
     <div class="wrap">
       <a class="brand" href="#"><img src="icon.png" alt="">NeuroTab</a>
       <div class="links">
-        <a href="#historia">A história</a>
-        <a href="#recursos">Recursos</a>
-        <a href="#instalar">Instalar</a>
-        <a href="#privacidade">Privacidade</a>
-        <a href="https://github.com/mpjbiologo/NeuroTab" target="_blank">GitHub</a>
-        <a class="keep" href="#apoie">❤ Apoie</a>
+        <a href="#historia" data-i="t100">A história</a>
+        <a href="#recursos" data-i="t101">Recursos</a>
+        <a href="#instalar" data-i="t102">Instalar</a>
+        <a href="#privacidade" data-i="t103">Privacidade</a>
+        <a href="https://github.com/mpjbiologo/NeuroTab" target="_blank" data-i="t104">GitHub</a>
+        <a class="keep" href="#apoie" data-i="t105">❤ Apoie</a>
       </div>
+      <div class="lang-switch" aria-label="Idioma"><button data-lang="pt-BR" title="Português">PT</button><button data-lang="en" title="English">EN</button><button data-lang="es" title="Español">ES</button></div>
     </div>
   </nav>
 
   <header class="hero">
     <div class="wrap">
-      <span class="badge">Gratuita · Código aberto · Sem anúncios</span>
-      <h1>A nova aba que <span>pensa com você</span></h1>
-      <p class="lead">Seus atalhos numa barra lateral. No centro, um <b>segundo cérebro</b>: notas, lembretes, páginas salvas, clima, cotações e uma IA que conhece o que você guardou.</p>
+      <span class="badge" data-i="t116">Gratuita · Código aberto · Sem anúncios</span>
+      <h1 data-i="t1">A nova aba que <span>pensa com você</span></h1>
+      <p class="lead" data-i="t30">Seus atalhos numa barra lateral. No centro, um <b>segundo cérebro</b>: notas, lembretes, páginas salvas, clima, cotações e uma IA que conhece o que você guardou.</p>
       <div class="cta">
-        <a class="btn primary" href="https://github.com/mpjbiologo/NeuroTab/releases/latest">⬇ Baixar para Edge e Chrome</a>
-        <a class="btn" href="https://github.com/mpjbiologo/NeuroTab" target="_blank">★ Ver no GitHub</a>
+        <a class="btn primary" href="https://github.com/mpjbiologo/NeuroTab/releases/latest" data-i="t106">⬇ Baixar para Edge e Chrome</a>
+        <a class="btn" href="https://github.com/mpjbiologo/NeuroTab" target="_blank" data-i="t107">★ Ver no GitHub</a>
       </div>
-      <p class="small">Microsoft Edge · Google Chrome · Brave · Opera · outros baseados em Chromium</p>
+      <p class="small" data-i="t31">Microsoft Edge · Google Chrome · Firefox · Brave · Opera · outros baseados em Chromium</p>
       <div class="shot"><img src="shot-home.jpg" alt="Nova aba da NeuroTab com captura rápida, lembretes, notas e clima" width="1440" height="900"></div>
     </div>
   </header>
 
   <section id="historia" class="story">
     <div class="wrap">
-      <h2>Como surgiu a NeuroTab</h2>
+      <h2 data-i="t2">Como surgiu a NeuroTab</h2>
       <div class="story-grid">
         <div class="story-text">
-          <p>Por anos, a primeira coisa que eu via ao abrir uma aba era o <a href="https://chromewebstore.google.com/detail/speed-dial/ejbjamhkdedinncaeiackcdehpccoejm" target="_blank" rel="noopener nofollow">Speed Dial</a>: meus sites favoritos organizados em blocos coloridos. Ele foi a inspiração direta deste projeto.</p>
-          <p>Só que o Speed Dial está <b>sem atualizações desde 2022</b>. Uma extensão que ocupa a página mais aberta do navegador e fica anos sem manutenção deixa uma lacuna de recursos e, principalmente, <b>de segurança</b>.</p>
-          <p>Ao mesmo tempo, duas ideias mudaram o jeito como eu penso a rotina no computador: o <b>segundo cérebro</b> (<i>second brain</i>), um lugar confiável para guardar tudo o que não cabe na cabeça, e os <b>assistentes no estilo JARVIS</b>, que entendem o que você diz e agem por você.</p>
-          <p>A NeuroTab nasceu do encontro dessas peças. A proposta é manter a simplicidade dos atalhos que eu já usava e somar o que faltava: notas, lembretes, voz e inteligência artificial, numa página moderna, segura e feita para a produtividade.</p>
-          <p class="sign">— Marcos de Paula Júnior, criador da NeuroTab</p>
+          <p data-i="t32">Por anos, a primeira coisa que eu via ao abrir uma aba era o <a href="https://chromewebstore.google.com/detail/speed-dial/ejbjamhkdedinncaeiackcdehpccoejm" target="_blank" rel="noopener nofollow" data-i="t108">Speed Dial</a>: meus sites favoritos organizados em blocos coloridos. Ele foi a inspiração direta deste projeto.</p>
+          <p data-i="t33">Só que o Speed Dial está <b>sem atualizações desde 2022</b>. Uma extensão que ocupa a página mais aberta do navegador e fica anos sem manutenção deixa uma lacuna de recursos e, principalmente, <b>de segurança</b>.</p>
+          <p data-i="t34">Ao mesmo tempo, duas ideias mudaram o jeito como eu penso a rotina no computador: o <b>segundo cérebro</b> (<i>second brain</i>), um lugar confiável para guardar tudo o que não cabe na cabeça, e os <b>assistentes no estilo JARVIS</b>, que entendem o que você diz e agem por você.</p>
+          <p data-i="t35">A NeuroTab nasceu do encontro dessas peças. A proposta é manter a simplicidade dos atalhos que eu já usava e somar o que faltava: notas, lembretes, voz e inteligência artificial, numa página moderna, segura e feita para a produtividade.</p>
+          <p class="sign" data-i="t36">— Marcos de Paula Júnior, criador da NeuroTab</p>
         </div>
         <div class="pillars">
-          <div class="pillar"><span>🛡️</span><div><b>Moderna e segura</b><p>Construída no padrão atual de extensões (Manifest V3), com código aberto e atualizações frequentes.</p></div></div>
-          <div class="pillar"><span>🔗</span><div><b>Integrada</b><p>IA à sua escolha, comandos de voz, clima, cotações, Google Keep e muito mais, tudo num só lugar.</p></div></div>
-          <div class="pillar"><span>🚀</span><div><b>Produtiva</b><p>Capture ideias, lembretes e tarefas no momento em que surgem, e encontre tudo depois em segundos.</p></div></div>
+          <div class="pillar"><span>🛡️</span><div><b>Moderna e segura</b><p data-i="t37">Construída no padrão atual de extensões (Manifest V3), com código aberto e atualizações frequentes.</p></div></div>
+          <div class="pillar"><span>🔗</span><div><b>Integrada</b><p data-i="t38">IA à sua escolha, comandos de voz, clima, cotações, Google Keep e muito mais, tudo num só lugar.</p></div></div>
+          <div class="pillar"><span>🚀</span><div><b>Produtiva</b><p data-i="t39">Capture ideias, lembretes e tarefas no momento em que surgem, e encontre tudo depois em segundos.</p></div></div>
         </div>
       </div>
     </div>
@@ -172,23 +176,28 @@
 
   <section id="recursos">
     <div class="wrap">
-      <h2>Tudo o que importa, ao abrir uma aba</h2>
-      <p class="sub">A NeuroTab substitui a página de nova aba por um painel feito para lembrar, organizar e encontrar.</p>
+      <h2 data-i="t3">Tudo o que importa, ao abrir uma aba</h2>
+      <p class="sub" data-i="t40">A NeuroTab substitui a página de nova aba por um painel feito para lembrar, organizar e encontrar.</p>
       <div class="grid">
-        <div class="feat"><div class="ic">⚡</div><h3>Captura rápida</h3><p>Anote ideias, tarefas e lembretes em segundos, digitando ou falando. "Me lembre amanhã às 9h…" vira lembrete sozinho.</p></div>
-        <div class="feat"><div class="ic">🧠</div><h3>Segundo cérebro</h3><p>Notas, trechos, páginas e ideias num só lugar, com busca, filtros, tags e fixados.</p></div>
-        <div class="feat"><div class="ic">🤖</div><h3>Pergunte às suas notas</h3><p>Converse com a IA sobre o que você salvou, com citações das fontes. Também por voz.</p></div>
-        <div class="feat"><div class="ic">⏰</div><h3>Lembretes de verdade</h3><p>Notificações do sistema na hora certa, com "Concluir" e "Adiar 10 min".</p></div>
-        <div class="feat"><div class="ic">✂️</div><h3>Anote qualquer página</h3><p>Botão direito → salvar trecho. Ou clique no ícone para anotar a página, com o texto selecionado já citado.</p></div>
-        <div class="feat"><div class="ic">🗂️</div><h3>Atalhos em barra lateral</h3><p>Grupos com emoji à esquerda, à direita, no topo ou no rodapé. Arrastar e soltar, cores automáticas.</p></div>
-        <div class="feat"><div class="ic">🌤️</div><h3>Clima e cotações</h3><p>Tempo da sua cidade, dólar, euro, bitcoin e ações da B3, sem cadastro.</p></div>
-        <div class="feat"><div class="ic">🔎</div><h3>Busca universal (Ctrl+K)</h3><p>Uma caixa para atalhos, notas, web e perguntas à IA. Shift+Enter salva como nota.</p></div>
-        <div class="feat"><div class="ic">🎙️</div><h3>Comandos de voz</h3><p><b>Alt+Shift+V</b> em qualquer aba: "anotar…", "timer de 10 minutos", "abrir YouTube", "como está o tempo". Você escolhe a voz.</p></div>
-        <div class="feat"><div class="ic">⏱</div><h3>Despertador e pomodoro</h3><p>Despertador com dias da semana e soneca, timer, pomodoro e cronômetro, com som e notificação.</p></div>
-        <div class="feat"><div class="ic">🧮</div><h3>Calculadora esperta</h3><p>"200 + 10%", "100 usd em brl", "10 km em milhas", "dias até 25/12" — e calculadoras de saúde opcionais.</p></div>
-        <div class="feat"><div class="ic">↔️</div><h3>Do seu jeito</h3><p>Grade organizada ou <b>modo livre</b>: arraste os widgets para qualquer lugar da tela, com encaixe magnético. Salve layouts (Trabalho, Casa).</p></div>
-        <div class="feat"><div class="ic">🗑</div><h3>Lixeira de 30 dias</h3><p>Selecione várias notas, limpe tarefas concluídas e recupere o que apagou sem querer.</p></div>
-        <div class="feat"><div class="ic">🔁</div><h3>Importe tudo</h3><p>Traz o backup do antigo <b>Speed Dial</b> (.spd) e suas notas do <b>Google Keep</b>. Exporta em Markdown.</p></div>
+        <div class="feat"><div class="ic">⚡</div><h3 data-i="t8">Captura rápida</h3><p data-i="t41">Anote ideias, tarefas e lembretes em segundos, digitando ou falando. "Me lembre amanhã às 9h…" vira lembrete sozinho.</p></div>
+        <div class="feat"><div class="ic">🧠</div><h3 data-i="t9">Segundo cérebro</h3><p data-i="t42">Notas, trechos, páginas e ideias num só lugar, com busca, filtros, tags e fixados.</p></div>
+        <div class="feat"><div class="ic">🤖</div><h3 data-i="t10">Pergunte às suas notas</h3><p data-i="t43">Converse com a IA sobre o que você salvou, com citações das fontes. Também por voz.</p></div>
+        <div class="feat"><div class="ic">⏰</div><h3 data-i="t11">Lembretes de verdade</h3><p data-i="t44">Notificações do sistema na hora certa, com "Concluir" e "Adiar 10 min".</p></div>
+        <div class="feat"><div class="ic">✂️</div><h3 data-i="t12">Anote qualquer página</h3><p data-i="t45">Botão direito → salvar trecho. Ou clique no ícone para anotar a página, com o texto selecionado já citado.</p></div>
+        <div class="feat"><div class="ic">🗂️</div><h3 data-i="t13">Atalhos em barra lateral</h3><p data-i="t46">Grupos com emoji à esquerda, à direita, no topo ou no rodapé. Arrastar e soltar, cores automáticas.</p></div>
+        <div class="feat"><div class="ic">🌤️</div><h3 data-i="t14">Clima e cotações</h3><p data-i="t47">Tempo da sua cidade, dólar, euro, bitcoin e ações da B3, sem cadastro.</p></div>
+        <div class="feat"><div class="ic">🔎</div><h3 data-i="t15">Busca universal (Ctrl+K)</h3><p data-i="t48">Uma caixa para atalhos, notas, web e perguntas à IA. Shift+Enter salva como nota.</p></div>
+        <div class="feat"><div class="ic">🎙️</div><h3 data-i="t16">Comandos de voz</h3><p data-i="t49"><b>Alt+Shift+V</b> em qualquer aba: "anotar…", "timer de 10 minutos", "abrir YouTube", "como está o tempo". Você escolhe a voz.</p></div>
+        <div class="feat"><div class="ic">⏱</div><h3 data-i="t17">Despertador e pomodoro</h3><p data-i="t50">Despertador com dias da semana e soneca, timer, pomodoro e cronômetro, com som e notificação.</p></div>
+        <div class="feat"><div class="ic">🧮</div><h3 data-i="t18">Calculadora esperta</h3><p data-i="t51">"200 + 10%", "100 usd em brl", "10 km em milhas", "dias até 25/12" — e calculadoras de saúde opcionais.</p></div>
+        <div class="feat"><div class="ic">↔️</div><h3 data-i="t19">Do seu jeito</h3><p data-i="t52">Grade organizada ou <b>modo livre</b>: arraste os widgets para qualquer lugar da tela, com encaixe magnético. Salve layouts (Trabalho, Casa).</p></div>
+        <div class="feat"><div class="ic">🗑</div><h3 data-i="t20">Lixeira de 30 dias</h3><p data-i="t53">Selecione várias notas, limpe tarefas concluídas e recupere o que apagou sem querer.</p></div>
+        <div class="feat"><div class="ic">🌍</div><h3 data-i="t117">Relógio mundial e clima</h3><p data-i="t118">Clima ao lado do relógio e outras cidades com hora local e fuso horário, como Lisboa ou Tóquio. Clique para a previsão.</p></div>
+        <div class="feat"><div class="ic">🚦</div><h3 data-i="t119">Trânsito e rotas favoritas</h3><p data-i="t120">Mapa ao vivo do Waze, seus locais (casa, trabalho…) e rotas salvas que abrem no Google Maps ou no Waze.</p></div>
+        <div class="feat"><div class="ic">🖼</div><h3 data-i="t121">Slides de fotos</h3><p data-i="t122">Suas fotos do computador, a foto do dia do Bing ou astronomia da NASA, como fundo ou num widget.</p></div>
+        <div class="feat"><div class="ic">✅</div><h3 data-i="t123">Hábitos, foco e notícias</h3><p data-i="t124">Metas diárias com sequência de dias, a prioridade do dia e manchetes dos seus sites favoritos.</p></div>
+        <div class="feat"><div class="ic">🌐</div><h3 data-i="t125">Português, inglês e espanhol</h3><p data-i="t126">A extensão e este site aparecem automaticamente no idioma do seu navegador.</p></div>
+        <div class="feat"><div class="ic">🔁</div><h3 data-i="t21">Importe tudo</h3><p data-i="t54">Traz o backup do antigo <b>Speed Dial</b> (.spd) e suas notas do <b>Google Keep</b>. Exporta em Markdown.</p></div>
       </div>
     </div>
   </section>
@@ -197,13 +206,13 @@
     <div class="wrap split">
       <img src="shot-panel.jpg" alt="Painel de atalhos aberto na barra lateral" loading="lazy">
       <div>
-        <h3>Seus atalhos, sem ocupar a tela</h3>
+        <h3 data-i="t22">Seus atalhos, sem ocupar a tela</h3>
         <ul>
-          <li><b>Passe o mouse num grupo</b> e os atalhos aparecem; tire e eles somem.</li>
-          <li><b>📌 Fixe o painel</b> se preferir os atalhos sempre à vista.</li>
-          <li><b>Arraste</b> para reordenar, ou solte sobre outro grupo para mover.</li>
-          <li><b>Solte links</b> da barra de favoritos direto no painel.</li>
-          <li>Prefere os blocos coloridos clássicos? Use o widget <b>Atalhos</b> no centro.</li>
+          <li data-i="t69"><b>Passe o mouse num grupo</b> e os atalhos aparecem; tire e eles somem.</li>
+          <li data-i="t70"><b>📌 Fixe o painel</b> se preferir os atalhos sempre à vista.</li>
+          <li data-i="t71"><b>Arraste</b> para reordenar, ou solte sobre outro grupo para mover.</li>
+          <li data-i="t72"><b>Solte links</b> da barra de favoritos direto no painel.</li>
+          <li data-i="t73">Prefere os blocos coloridos clássicos? Use o widget <b>Atalhos</b> no centro.</li>
         </ul>
       </div>
     </div>
@@ -212,13 +221,13 @@
   <section>
     <div class="wrap split">
       <div>
-        <h3>Fale com a sua nova aba</h3>
+        <h3 data-i="t23">Fale com a sua nova aba</h3>
         <ul>
-          <li><b>Alt+Shift+V</b> em qualquer aba abre a NeuroTab ouvindo.</li>
-          <li>"<b>Me lembre amanhã às 9h</b> de pagar a conta" vira lembrete com notificação.</li>
-          <li>"<b>Timer de 10 minutos</b>", "<b>iniciar pomodoro</b>", "<b>despertador às 6h30 dias úteis</b>".</li>
-          <li>"<b>Abrir YouTube</b>" usa seus atalhos; "<b>como está o tempo</b>" e "<b>dólar hoje</b>" respondem em voz alta.</li>
-          <li>Perguntas livres vão para a IA, com base nas suas notas.</li>
+          <li data-i="t74"><b>Alt+Shift+V</b> em qualquer aba abre a NeuroTab ouvindo.</li>
+          <li data-i="t75">"<b>Me lembre amanhã às 9h</b> de pagar a conta" vira lembrete com notificação.</li>
+          <li data-i="t76">"<b>Timer de 10 minutos</b>", "<b>iniciar pomodoro</b>", "<b>despertador às 6h30 dias úteis</b>".</li>
+          <li data-i="t77">"<b>Abrir YouTube</b>" usa seus atalhos; "<b>como está o tempo</b>" e "<b>dólar hoje</b>" respondem em voz alta.</li>
+          <li data-i="t78">Perguntas livres vão para a IA, com base nas suas notas.</li>
         </ul>
       </div>
       <img src="shot-voice.jpg" alt="Comando de voz na NeuroTab" loading="lazy">
@@ -228,13 +237,13 @@
   <section>
     <div class="wrap split">
       <div>
-        <h3>Encontre qualquer coisa com Ctrl+K</h3>
+        <h3 data-i="t24">Encontre qualquer coisa com Ctrl+K</h3>
         <ul>
-          <li>Busca ao mesmo tempo nos <b>atalhos</b> e nas <b>notas</b>.</li>
-          <li>Enter pesquisa na web, no buscador que você escolher.</li>
-          <li>"Perguntar ao cérebro" manda a dúvida para a IA.</li>
-          <li><b>Shift+Enter</b> salva o que você digitou como nota.</li>
-          <li>🎤 Fale em vez de digitar.</li>
+          <li data-i="t79">Busca ao mesmo tempo nos <b>atalhos</b> e nas <b>notas</b>.</li>
+          <li data-i="t80">Enter pesquisa na web, no buscador que você escolher.</li>
+          <li data-i="t81">"Perguntar ao cérebro" manda a dúvida para a IA.</li>
+          <li data-i="t82"><b>Shift+Enter</b> salva o que você digitou como nota.</li>
+          <li data-i="t83">🎤 Fale em vez de digitar.</li>
         </ul>
       </div>
       <img src="shot-search.jpg" alt="Busca universal mostrando notas e ações" loading="lazy">
@@ -243,8 +252,8 @@
 
   <section>
     <div class="wrap">
-      <h2>Use a IA que você preferir</h2>
-      <p class="sub">A IA organiza as notas (título, resumo, tags e lembretes) e responde perguntas sobre elas. Você usa a sua própria chave — o Gemini tem camada gratuita.</p>
+      <h2 data-i="t4">Use a IA que você preferir</h2>
+      <p class="sub" data-i="t55">A IA organiza as notas (título, resumo, tags e lembretes) e responde perguntas sobre elas. Você usa a sua própria chave — o Gemini tem camada gratuita.</p>
       <div class="ai">
         <span>✨ Google Gemini</span><span>🟢 OpenAI (ChatGPT)</span><span>🟠 Anthropic (Claude)</span><span>🔀 OpenRouter</span><span>🦙 Ollama (local, offline)</span><span>⚙️ Qualquer API compatível com OpenAI</span>
       </div>
@@ -253,30 +262,31 @@
 
   <section id="instalar">
     <div class="wrap">
-      <h2>Instale em 1 minuto</h2>
-      <p class="sub">Enquanto a NeuroTab não chega às lojas, a instalação é manual — e segura: o código é aberto.</p>
+      <h2 data-i="t5">Instale em 1 minuto</h2>
+      <p class="sub" data-i="t56">Enquanto a NeuroTab não chega às lojas, a instalação é manual — e segura: o código é aberto.</p>
       <div class="steps">
-        <div class="step"><h3>Baixe</h3><p>Na <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest">página de versões</a>, baixe <code>neurotab.zip</code> e descompacte numa pasta que você não vá apagar.</p></div>
-        <div class="step"><h3>Abra as extensões</h3><p>Digite <code>edge://extensions</code> (ou <code>chrome://extensions</code>) na barra de endereço.</p></div>
-        <div class="step"><h3>Modo de desenvolvedor</h3><p>Ative o botão <b>Modo de desenvolvedor</b>, depois clique em <b>Carregar sem pacote</b> e escolha a pasta.</p></div>
-        <div class="step"><h3>Abra uma nova aba</h3><p>O Edge pergunta se quer manter a nova página: clique em <b>Manter alterações</b>. Pronto!</p></div>
+        <div class="step"><h3 data-i="t25">Baixe</h3><p data-i="t57">Na <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest" data-i="t109">página de versões</a>, baixe <code>neurotab.zip</code> e descompacte numa pasta que você não vá apagar.</p></div>
+        <div class="step"><h3 data-i="t26">Abra as extensões</h3><p data-i="t58">Digite <code>edge://extensions</code> (ou <code>chrome://extensions</code>) na barra de endereço.</p></div>
+        <div class="step"><h3 data-i="t27">Modo de desenvolvedor</h3><p data-i="t59">Ative o botão <b>Modo de desenvolvedor</b>, depois clique em <b>Carregar sem pacote</b> e escolha a pasta.</p></div>
+        <div class="step"><h3 data-i="t28">Abra uma nova aba</h3><p data-i="t60">O Edge pergunta se quer manter a nova página: clique em <b>Manter alterações</b>. Pronto!</p></div>
       </div>
-      <p class="small" style="text-align:center">Vindo do Speed Dial? Configurações → Backup → escolha o arquivo <code>.spd</code>.</p>
+      <p class="small" style="text-align:center" data-i="t127">🦊 No Firefox (128+): baixe <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest/download/neurotab-firefox.zip">neurotab-firefox.zip</a> e abra <code>about:debugging</code> → Este Firefox → <b>Carregar extensão temporária</b>.</p>
+      <p class="small" style="text-align:center" data-i="t61">Vindo do Speed Dial? Configurações → Backup → escolha o arquivo <code>.spd</code>.</p>
     </div>
   </section>
 
   <section id="privacidade">
     <div class="wrap">
-      <h2>Seus dados são seus</h2>
-      <p class="sub">A NeuroTab não tem servidor, não tem conta e não coleta nada. Tudo fica no seu navegador.</p>
+      <h2 data-i="t6">Seus dados são seus</h2>
+      <p class="sub" data-i="t62">A NeuroTab não tem servidor, não tem conta e não coleta nada. Tudo fica no seu navegador.</p>
       <table>
-        <tr><th>O quê</th><th>Onde fica</th></tr>
-        <tr><td>Atalhos, notas, lembretes e configurações</td><td>No armazenamento local do seu navegador</td></tr>
-        <tr><td>Chave da IA</td><td>Só no seu navegador — nunca vai para o backup</td></tr>
-        <tr><td>Perguntas à IA</td><td>Vão direto do seu navegador para o provedor que você escolheu</td></tr>
-        <tr><td>Clima e cotações</td><td>Consultas públicas ao Open-Meteo, AwesomeAPI e brapi.dev, sem identificação</td></tr>
-        <tr><td>Comandos de voz</td><td>Reconhecimento do próprio navegador (Edge/Chrome), só enquanto você fala</td></tr>
-        <tr><td>Analytics, anúncios, rastreamento</td><td>Nenhum</td></tr>
+        <tr><th data-i="t84">O quê</th><th data-i="t85">Onde fica</th></tr>
+        <tr><td data-i="t86">Atalhos, notas, lembretes e configurações</td><td data-i="t87">No armazenamento local do seu navegador</td></tr>
+        <tr><td data-i="t88">Chave da IA</td><td data-i="t89">Só no seu navegador — nunca vai para o backup</td></tr>
+        <tr><td data-i="t90">Perguntas à IA</td><td data-i="t91">Vão direto do seu navegador para o provedor que você escolheu</td></tr>
+        <tr><td data-i="t92">Clima e cotações</td><td data-i="t93">Consultas públicas ao Open-Meteo, AwesomeAPI e brapi.dev, sem identificação</td></tr>
+        <tr><td data-i="t94">Comandos de voz</td><td data-i="t95">Reconhecimento do próprio navegador (Edge/Chrome), só enquanto você fala</td></tr>
+        <tr><td data-i="t96">Analytics, anúncios, rastreamento</td><td data-i="t97">Nenhum</td></tr>
       </table>
     </div>
   </section>
@@ -286,25 +296,25 @@
       <div class="donate">
         <div class="qr"><img src="pix.svg" alt="QR Code Pix para apoiar a NeuroTab"></div>
         <div>
-          <h2>❤ Apoie o projeto</h2>
-          <p>A NeuroTab é feita nas horas vagas e vai continuar gratuita e sem anúncios. Se ela é útil para você, um Pix de qualquer valor ajuda a manter o desenvolvimento — e a trazer a IA, as integrações e a publicação nas lojas.</p>
-          <p>Abra o app do seu banco e aponte a câmera para o QR Code, ou copie:</p>
+          <h2 data-i="t7">❤ Apoie o projeto</h2>
+          <p data-i="t63">A NeuroTab é feita nas horas vagas e vai continuar gratuita e sem anúncios. Se ela é útil para você, um Pix de qualquer valor ajuda a manter o desenvolvimento — e a trazer a IA, as integrações e a publicação nas lojas.</p>
+          <p data-i="t64">Abra o app do seu banco e aponte a câmera para o QR Code, ou copie:</p>
           <div class="pixrow">
-            <button class="btn primary" id="copyCode">Copiar Pix copia e cola</button>
-            <button class="btn" id="copyKey">Copiar chave</button>
+            <button class="btn primary" id="copyCode" data-i="t98">Copiar Pix copia e cola</button>
+            <button class="btn" id="copyKey" data-i="t99">Copiar chave</button>
           </div>
-          <p class="small">Chave Pix: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior</p>
-          <p class="small">Outras formas de ajudar: dê uma ⭐ no <a href="https://github.com/mpjbiologo/NeuroTab">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues">sugira ideias</a> e indique para os amigos.</p>
+          <p class="small" data-i="t65">Chave Pix: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior</p>
+          <p class="small" data-i="t66">Outras formas de ajudar: dê uma ⭐ no <a href="https://github.com/mpjbiologo/NeuroTab" data-i="t110">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues" data-i="t111">sugira ideias</a> e indique para os amigos.</p>
         </div>
       </div>
       <div class="game">
         <div class="game-ic">🎲</div>
         <div class="game-txt">
-          <h3>Apoie e ainda se divirta</h3>
-          <p>Conheça o <b>Clube da Sedução</b>, meu outro projeto: uma coleção de jogos para casais e grupos de amigos (Jogo da Sedução, Verdade ou Consequência, Eu Nunca e outros jogos e modos a caminho), com opções do leve ao picante. O passe começa em <b>R$ 2,99</b> e não renova sozinho. Cada assinatura ajuda a manter a NeuroTab gratuita e em evolução.</p>
-          <p class="small">Conteúdo para maiores de 18 anos.</p>
+          <h3 data-i="t29">Apoie e ainda se divirta</h3>
+          <p data-i="t67">Conheça o <b>Clube da Sedução</b>, meu outro projeto: uma coleção de jogos para casais e grupos de amigos (Jogo da Sedução, Verdade ou Consequência, Eu Nunca e outros jogos e modos a caminho), com opções do leve ao picante. O passe começa em <b>R$ 2,99</b> e não renova sozinho. Cada assinatura ajuda a manter a NeuroTab gratuita e em evolução.</p>
+          <p class="small" data-i="t68">Conteúdo para maiores de 18 anos.</p>
         </div>
-        <a class="btn primary" href="https://seduction.floot.app/" target="_blank" rel="noopener">Conhecer o Clube 🔥</a>
+        <a class="btn primary" href="https://seduction.floot.app/" target="_blank" rel="noopener" data-i="t112">Conhecer o Clube 🔥</a>
       </div>
     </div>
   </section>
@@ -312,18 +322,133 @@
   <footer>
     <div class="wrap">
       <span>© 2026 Marcos de Paula Júnior · Licença MIT</span>
-      <span><a href="https://github.com/mpjbiologo/NeuroTab">Código-fonte</a> · <a href="https://github.com/mpjbiologo/NeuroTab/blob/main/CHANGELOG.md">Novidades</a> · <a href="https://github.com/mpjbiologo/NeuroTab/issues">Suporte</a></span>
+      <span><a href="https://github.com/mpjbiologo/NeuroTab" data-i="t113">Código-fonte</a> · <a href="https://github.com/mpjbiologo/NeuroTab/blob/main/CHANGELOG.md" data-i="t114">Novidades</a> · <a href="https://github.com/mpjbiologo/NeuroTab/issues" data-i="t115">Suporte</a> · <a href="privacy.html" data-i="t128">Privacidade</a></span>
     </div>
   </footer>
   <div class="toast" id="toast"></div>
 
   <script>
+    // ---------- Tradução do site (pt-BR / en / es) ----------
+    const SITE_I18N = {
+      en: {
+        t1: 'The new tab that <span>thinks with you</span>', t2: 'How NeuroTab came about', t3: 'Everything that matters, every time you open a tab', t4: 'Use the AI you prefer', t5: 'Install in 1 minute', t6: 'Your data is yours', t7: '❤ Support the project',
+        t8: 'Quick capture', t9: 'Second brain', t10: 'Ask your notes', t11: 'Real reminders', t12: 'Annotate any page', t13: 'Shortcuts in a side bar', t14: 'Weather and quotes', t15: 'Universal search (Ctrl+K)', t16: 'Voice commands', t17: 'Alarm and pomodoro', t18: 'Smart calculator', t19: 'Your way', t20: '30-day trash', t21: 'Import everything',
+        t22: 'Your shortcuts, without taking up the screen', t23: 'Talk to your new tab', t24: 'Find anything with Ctrl+K', t25: 'Download', t26: 'Open extensions', t27: 'Developer mode', t28: 'Open a new tab', t29: 'Support and have fun too',
+        t30: 'Your shortcuts in a side bar. In the middle, a <b>second brain</b>: notes, reminders, saved pages, weather, quotes and an AI that knows what you saved.',
+        t31: 'Microsoft Edge · Google Chrome · Firefox · Brave · Opera · other Chromium-based browsers',
+        t32: 'For years, the first thing I saw when opening a tab was <a href="https://chromewebstore.google.com/detail/speed-dial/ejbjamhkdedinncaeiackcdehpccoejm" target="_blank" rel="noopener nofollow">Speed Dial</a>: my favorite sites organized in colorful tiles. It was the direct inspiration for this project.',
+        t33: 'But Speed Dial has had <b>no updates since 2022</b>. An extension that owns the most-opened page in your browser and goes years without maintenance leaves a gap in features and, above all, <b>in security</b>.',
+        t34: 'At the same time, two ideas changed the way I think about my computer routine: the <b>second brain</b>, a trusted place to keep everything that doesn\'t fit in your head, and <b>JARVIS-style assistants</b> that understand what you say and act for you.',
+        t35: 'NeuroTab was born where these pieces meet. The goal is to keep the simplicity of the shortcuts I already used and add what was missing: notes, reminders, voice and artificial intelligence, in a modern, secure page built for productivity.',
+        t36: '— Marcos de Paula Júnior, creator of NeuroTab',
+        t37: 'Built on the current extension standard (Manifest V3), open source and frequently updated.', t38: 'The AI of your choice, voice commands, weather, quotes, Google Keep and much more, all in one place.', t39: 'Capture ideas, reminders and tasks the moment they come up, and find everything later in seconds.',
+        t40: 'NeuroTab replaces the new tab page with a dashboard built to remember, organize and find.',
+        t41: 'Jot down ideas, tasks and reminders in seconds, typing or speaking. Add a time and it becomes a reminder on its own.',
+        t42: 'Notes, clips, pages and ideas in one place, with search, filters, tags and pins.', t43: 'Chat with the AI about what you saved, with source citations. By voice too.',
+        t44: 'System notifications right on time, with "Complete" and "Snooze 10 min".', t45: 'Right-click → save clip. Or click the icon to annotate the page, with the selected text already quoted.',
+        t46: 'Emoji groups on the left, right, top or bottom. Drag and drop, automatic colors.', t47: 'Weather for your city, dollar, euro, bitcoin and Brazilian stocks, no sign-up.',
+        t48: 'One box for shortcuts, notes, the web and AI questions. Shift+Enter saves as a note.', t49: '<b>Alt+Shift+V</b> on any tab opens NeuroTab listening. You choose the reading voice. (Commands currently in Portuguese.)',
+        t50: 'Alarm with weekdays and snooze, timer, pomodoro and stopwatch, with sound and notifications.', t51: '"200 + 10%", "100 usd to eur", "10 km to miles", "days until 12/25" — plus optional health calculators.',
+        t52: 'Tidy grid or <b>free mode</b>: drag widgets anywhere on the screen, with magnetic snapping. Save layouts (Work, Home).', t53: 'Select several notes, clear completed tasks and recover what you deleted by accident.',
+        t54: 'Brings in the old <b>Speed Dial</b> backup (.spd) and your <b>Google Keep</b> notes. Exports to Markdown.',
+        t55: 'The AI organizes notes (title, summary, tags and reminders) and answers questions about them. You use your own key — Gemini has a free tier.',
+        t56: 'Until NeuroTab reaches the stores, installation is manual — and safe: the code is open.',
+        t57: 'On the <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest">releases page</a>, download <code>neurotab.zip</code> and unzip it to a folder you won\'t delete.',
+        t58: 'Type <code>edge://extensions</code> (or <code>chrome://extensions</code>) in the address bar.', t59: 'Turn on <b>Developer mode</b>, then click <b>Load unpacked</b> and choose the folder.',
+        t60: 'Edge asks whether to keep the new page: click <b>Keep changes</b>. Done!', t61: 'Coming from Speed Dial? Settings → Backup → choose the <code>.spd</code> file.',
+        t62: 'NeuroTab has no server, no account and collects nothing. Everything stays in your browser.',
+        t63: 'NeuroTab is made in my spare time and will remain free and ad-free. If it is useful to you, a Pix of any amount helps keep development going — and bring the AI, integrations and store releases.',
+        t64: 'Open your banking app and point the camera at the QR code, or copy:', t65: 'Pix key: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior',
+        t66: 'Other ways to help: give it a ⭐ on <a href="https://github.com/mpjbiologo/NeuroTab">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues">suggest ideas</a> and tell your friends.',
+        t67: 'Meet <b>Clube da Sedução</b>, my other project: a collection of games for couples and groups of friends (Seduction Game, Truth or Dare, Never Have I Ever and more games and modes on the way), from mild to spicy. Passes start at <b>R$ 2.99</b> and don\'t auto-renew. Every subscription helps keep NeuroTab free and evolving. (Portuguese only.)',
+        t68: 'Adults only (18+).',
+        t69: '<b>Hover over a group</b> and its shortcuts appear; move away and they disappear.', t70: '<b>📌 Pin the panel</b> if you prefer the shortcuts always visible.', t71: '<b>Drag</b> to reorder, or drop onto another group to move.', t72: '<b>Drop links</b> from the bookmarks bar straight into the panel.', t73: 'Prefer the classic colored tiles? Use the <b>Shortcuts</b> widget in the middle.',
+        t74: '<b>Alt+Shift+V</b> on any tab opens NeuroTab listening.', t75: 'Ask for a reminder with a time and it becomes a notification.', t76: 'Start timers, the pomodoro or an alarm by voice.', t77: 'Open your shortcuts by name; ask for the weather and quotes and hear the answer.', t78: 'Free questions go to the AI, based on your notes.',
+        t79: 'Searches your <b>shortcuts</b> and <b>notes</b> at the same time.', t80: 'Enter searches the web with the engine you choose.', t81: '"Ask your brain" sends the question to the AI.', t82: '<b>Shift+Enter</b> saves what you typed as a note.', t83: '🎤 Speak instead of typing.',
+        t84: 'What', t85: 'Where it lives', t86: 'Shortcuts, notes, reminders and settings', t87: 'In your browser\'s local storage', t88: 'AI key', t89: 'Only in your browser — never in the backup', t90: 'AI questions', t91: 'Go straight from your browser to the provider you chose', t92: 'Weather and quotes', t93: 'Public requests to Open-Meteo, AwesomeAPI and brapi.dev, anonymous', t94: 'Voice commands', t95: 'The browser\'s own recognition (Edge/Chrome), only while you speak', t96: 'Analytics, ads, tracking', t97: 'None',
+        t98: 'Copy Pix code', t99: 'Copy key', t100: 'The story', t101: 'Features', t102: 'Install', t103: 'Privacy', t105: '❤ Support', t106: '⬇ Download for Edge and Chrome', t107: '★ View on GitHub', t112: 'Visit the Club 🔥', t113: 'Source code', t114: 'What\'s new', t115: 'Support', t116: 'Free · Open source · No ads', t127: '🦊 On Firefox (128+): download <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest/download/neurotab-firefox.zip">neurotab-firefox.zip</a> and open <code>about:debugging</code> → This Firefox → <b>Load Temporary Add-on</b>.', t128: 'Privacy',
+        t117: 'World clock and weather', t118: 'Weather next to the clock, plus other cities with local time and time zone, like Lisbon or Tokyo. Click for the forecast.', t119: 'Traffic and favorite routes', t120: 'Live Waze map, your places (home, work…) and saved routes that open in Google Maps or Waze.',
+        t121: 'Photo slideshow', t122: 'Your photos, Bing\'s photo of the day or NASA astronomy, as the background or in a widget.', t123: 'Habits, focus and news', t124: 'Daily goals with streaks, today\'s priority and headlines from your favorite sites.', t125: 'Portuguese, English and Spanish', t126: 'The extension and this site automatically show up in your browser\'s language.',
+      },
+      es: {
+        t1: 'La nueva pestaña que <span>piensa contigo</span>', t2: 'Cómo nació NeuroTab', t3: 'Todo lo que importa, cada vez que abres una pestaña', t4: 'Usa la IA que prefieras', t5: 'Instálala en 1 minuto', t6: 'Tus datos son tuyos', t7: '❤ Apoya el proyecto',
+        t8: 'Captura rápida', t9: 'Segundo cerebro', t10: 'Pregúntale a tus notas', t11: 'Recordatorios de verdad', t12: 'Anota cualquier página', t13: 'Accesos en barra lateral', t14: 'Clima y cotizaciones', t15: 'Búsqueda universal (Ctrl+K)', t16: 'Comandos de voz', t17: 'Alarma y pomodoro', t18: 'Calculadora inteligente', t19: 'A tu manera', t20: 'Papelera de 30 días', t21: 'Importa todo',
+        t22: 'Tus accesos, sin ocupar la pantalla', t23: 'Habla con tu nueva pestaña', t24: 'Encuentra cualquier cosa con Ctrl+K', t25: 'Descarga', t26: 'Abre las extensiones', t27: 'Modo de desarrollador', t28: 'Abre una pestaña nueva', t29: 'Apoya y además diviértete',
+        t30: 'Tus accesos en una barra lateral. En el centro, un <b>segundo cerebro</b>: notas, recordatorios, páginas guardadas, clima, cotizaciones y una IA que conoce lo que guardaste.',
+        t31: 'Microsoft Edge · Google Chrome · Firefox · Brave · Opera · otros basados en Chromium',
+        t32: 'Durante años, lo primero que veía al abrir una pestaña era <a href="https://chromewebstore.google.com/detail/speed-dial/ejbjamhkdedinncaeiackcdehpccoejm" target="_blank" rel="noopener nofollow">Speed Dial</a>: mis sitios favoritos organizados en bloques de colores. Fue la inspiración directa de este proyecto.',
+        t33: 'Pero Speed Dial lleva <b>sin actualizaciones desde 2022</b>. Una extensión que ocupa la página más abierta del navegador y pasa años sin mantenimiento deja un vacío de funciones y, sobre todo, <b>de seguridad</b>.',
+        t34: 'Al mismo tiempo, dos ideas cambiaron mi forma de ver la rutina en el ordenador: el <b>segundo cerebro</b> (<i>second brain</i>), un lugar confiable para guardar todo lo que no cabe en la cabeza, y los <b>asistentes al estilo JARVIS</b>, que entienden lo que dices y actúan por ti.',
+        t35: 'NeuroTab nació del encuentro de esas piezas. La propuesta es mantener la simplicidad de los accesos que ya usaba y sumar lo que faltaba: notas, recordatorios, voz e inteligencia artificial, en una página moderna, segura y pensada para la productividad.',
+        t36: '— Marcos de Paula Júnior, creador de NeuroTab',
+        t37: 'Construida con el estándar actual de extensiones (Manifest V3), de código abierto y con actualizaciones frecuentes.', t38: 'La IA que elijas, comandos de voz, clima, cotizaciones, Google Keep y mucho más, todo en un solo lugar.', t39: 'Captura ideas, recordatorios y tareas en el momento en que surgen, y encuentra todo después en segundos.',
+        t40: 'NeuroTab reemplaza la página de nueva pestaña por un panel hecho para recordar, organizar y encontrar.',
+        t41: 'Anota ideas, tareas y recordatorios en segundos, escribiendo o hablando. Si agregas una hora, se convierte en recordatorio solo.',
+        t42: 'Notas, fragmentos, páginas e ideas en un solo lugar, con búsqueda, filtros, etiquetas y fijados.', t43: 'Conversa con la IA sobre lo que guardaste, con citas de las fuentes. También por voz.',
+        t44: 'Notificaciones del sistema a la hora justa, con "Completar" y "Posponer 10 min".', t45: 'Clic derecho → guardar fragmento. O haz clic en el icono para anotar la página, con el texto seleccionado ya citado.',
+        t46: 'Grupos con emoji a la izquierda, a la derecha, arriba o abajo. Arrastrar y soltar, colores automáticos.', t47: 'El clima de tu ciudad, dólar, euro, bitcoin y acciones de Brasil, sin registro.',
+        t48: 'Una sola caja para accesos, notas, la web y preguntas a la IA. Shift+Enter guarda como nota.', t49: '<b>Alt+Shift+V</b> en cualquier pestaña abre NeuroTab escuchando. Tú eliges la voz. (Por ahora los comandos están en portugués.)',
+        t50: 'Alarma con días de la semana y posponer, temporizador, pomodoro y cronómetro, con sonido y notificación.', t51: '"200 + 10%", "100 usd a eur", "10 km a millas", "días hasta 25/12" — y calculadoras de salud opcionales.',
+        t52: 'Cuadrícula ordenada o <b>modo libre</b>: arrastra los widgets a cualquier lugar de la pantalla, con ajuste magnético. Guarda diseños (Trabajo, Casa).', t53: 'Selecciona varias notas, limpia tareas completadas y recupera lo que borraste sin querer.',
+        t54: 'Trae la copia del antiguo <b>Speed Dial</b> (.spd) y tus notas de <b>Google Keep</b>. Exporta a Markdown.',
+        t55: 'La IA organiza las notas (título, resumen, etiquetas y recordatorios) y responde preguntas sobre ellas. Usas tu propia clave: Gemini tiene un nivel gratuito.',
+        t56: 'Mientras NeuroTab no llega a las tiendas, la instalación es manual, y segura: el código es abierto.',
+        t57: 'En la <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest">página de versiones</a>, descarga <code>neurotab.zip</code> y descomprímelo en una carpeta que no vayas a borrar.',
+        t58: 'Escribe <code>edge://extensions</code> (o <code>chrome://extensions</code>) en la barra de direcciones.', t59: 'Activa el <b>Modo de desarrollador</b>, luego haz clic en <b>Cargar descomprimida</b> y elige la carpeta.',
+        t60: 'Edge pregunta si quieres mantener la nueva página: haz clic en <b>Conservar cambios</b>. ¡Listo!', t61: '¿Vienes de Speed Dial? Configuración → Copia de seguridad → elige el archivo <code>.spd</code>.',
+        t62: 'NeuroTab no tiene servidor, no pide cuenta y no recopila nada. Todo queda en tu navegador.',
+        t63: 'NeuroTab se hace en mis ratos libres y seguirá siendo gratuita y sin anuncios. Si te resulta útil, un Pix de cualquier monto ayuda a mantener el desarrollo y a traer la IA, las integraciones y la publicación en las tiendas.',
+        t64: 'Abre la app de tu banco y apunta la cámara al código QR, o copia:', t65: 'Clave Pix: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior',
+        t66: 'Otras formas de ayudar: dale una ⭐ en <a href="https://github.com/mpjbiologo/NeuroTab">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues">sugiere ideas</a> y recomiéndala a tus amigos.',
+        t67: 'Conoce el <b>Clube da Sedução</b>, mi otro proyecto: una colección de juegos para parejas y grupos de amigos (Juego de la Seducción, Verdad o Reto, Yo Nunca y más juegos y modos en camino), de lo suave a lo picante. El pase empieza en <b>R$ 2,99</b> y no se renueva solo. Cada suscripción ayuda a mantener NeuroTab gratuita y en evolución. (Solo en portugués.)',
+        t68: 'Contenido para mayores de 18 años.',
+        t69: '<b>Pasa el ratón por un grupo</b> y aparecen sus accesos; aléjalo y desaparecen.', t70: '<b>📌 Fija el panel</b> si prefieres los accesos siempre a la vista.', t71: '<b>Arrastra</b> para reordenar, o suelta sobre otro grupo para mover.', t72: '<b>Suelta enlaces</b> de la barra de favoritos directo en el panel.', t73: '¿Prefieres los bloques de colores clásicos? Usa el widget <b>Accesos directos</b> en el centro.',
+        t74: '<b>Alt+Shift+V</b> en cualquier pestaña abre NeuroTab escuchando.', t75: 'Pide un recordatorio con hora y se convierte en notificación.', t76: 'Inicia temporizadores, el pomodoro o una alarma por voz.', t77: 'Abre tus accesos por el nombre; pregunta por el clima y las cotizaciones y escucha la respuesta.', t78: 'Las preguntas libres van a la IA, basadas en tus notas.',
+        t79: 'Busca a la vez en tus <b>accesos</b> y en tus <b>notas</b>.', t80: 'Enter busca en la web con el buscador que elijas.', t81: '"Preguntar a tu cerebro" envía la duda a la IA.', t82: '<b>Shift+Enter</b> guarda lo que escribiste como nota.', t83: '🎤 Habla en vez de escribir.',
+        t84: 'Qué', t85: 'Dónde queda', t86: 'Accesos, notas, recordatorios y configuración', t87: 'En el almacenamiento local de tu navegador', t88: 'Clave de la IA', t89: 'Solo en tu navegador, nunca va a la copia de seguridad', t90: 'Preguntas a la IA', t91: 'Van directo de tu navegador al proveedor que elegiste', t92: 'Clima y cotizaciones', t93: 'Consultas públicas a Open-Meteo, AwesomeAPI y brapi.dev, sin identificación', t94: 'Comandos de voz', t95: 'Reconocimiento del propio navegador (Edge/Chrome), solo mientras hablas', t96: 'Analítica, anuncios, rastreo', t97: 'Ninguno',
+        t98: 'Copiar código Pix', t99: 'Copiar clave', t100: 'La historia', t101: 'Funciones', t102: 'Instalar', t103: 'Privacidad', t105: '❤ Apoya', t106: '⬇ Descargar para Edge y Chrome', t107: '★ Ver en GitHub', t112: 'Conocer el Club 🔥', t113: 'Código fuente', t114: 'Novedades', t115: 'Soporte', t116: 'Gratuita · Código abierto · Sin anuncios', t127: '🦊 En Firefox (128+): descarga <a href="https://github.com/mpjbiologo/NeuroTab/releases/latest/download/neurotab-firefox.zip">neurotab-firefox.zip</a> y abre <code>about:debugging</code> → Este Firefox → <b>Cargar complemento temporal</b>.', t128: 'Privacidad',
+        t117: 'Reloj mundial y clima', t118: 'El clima junto al reloj y otras ciudades con hora local y zona horaria, como Lisboa o Tokio. Haz clic para ver el pronóstico.', t119: 'Tráfico y rutas favoritas', t120: 'Mapa en vivo de Waze, tus lugares (casa, trabajo…) y rutas guardadas que se abren en Google Maps o Waze.',
+        t121: 'Presentación de fotos', t122: 'Tus fotos, la foto del día de Bing o astronomía de la NASA, como fondo o en un widget.', t123: 'Hábitos, enfoque y noticias', t124: 'Metas diarias con rachas, la prioridad del día y titulares de tus sitios favoritos.', t125: 'Portugués, inglés y español', t126: 'La extensión y este sitio aparecen automáticamente en el idioma de tu navegador.',
+      },
+    };
+    const SITE_TITLE = { 'pt-BR': document.title, en: 'NeuroTab — Speed Dial with a second brain for Edge and Chrome', es: 'NeuroTab — Speed Dial con segundo cerebro para Edge y Chrome' };
+    const SITE_MSG = {
+      en: { code: 'Pix code copied — thank you! ❤', key: 'Pix key copied — thank you! ❤', copy: 'Copy:' },
+      es: { code: 'Código Pix copiado, ¡gracias! ❤', key: 'Clave Pix copiada, ¡gracias! ❤', copy: 'Copia:' },
+    };
+    const ORIGINAL = {};
+    let SITE_LANG = 'pt-BR';
+    function detectLang() {
+      const saved = (() => { try { return localStorage.getItem('neurotab-lang'); } catch { return null; } })();
+      if (saved) return saved;
+      const l = (navigator.languages && navigator.languages[0]) || navigator.language || 'pt-BR';
+      return /^pt/i.test(l) ? 'pt-BR' : /^es/i.test(l) ? 'es' : 'en';
+    }
+    function applyLang(lang) {
+      SITE_LANG = lang;
+      document.documentElement.lang = lang;
+      document.title = SITE_TITLE[lang] || SITE_TITLE['pt-BR'];
+      const dict = SITE_I18N[lang] || {};
+      document.querySelectorAll('[data-i]').forEach((el) => {
+        const k = el.dataset.i;
+        if (!(k in ORIGINAL)) ORIGINAL[k] = el.innerHTML;
+        el.innerHTML = lang === 'pt-BR' ? ORIGINAL[k] : (dict[k] ?? ORIGINAL[k]);
+      });
+      document.querySelectorAll('.lang-switch button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang));
+    }
+    document.querySelectorAll('.lang-switch button').forEach((b) => b.addEventListener('click', () => {
+      try { localStorage.setItem('neurotab-lang', b.dataset.lang); } catch {}
+      applyLang(b.dataset.lang);
+    }));
+    applyLang(detectLang());
+  </script>
+  <script>
     const PIX_CODE = '00020126700014br.gov.bcb.pix0130prof.marcosbiologo@hotmail.com0214Apoio NeuroTab5204000053039865802BR5922MARCOS DE PAULA JUNIOR6006ITAUNA62070503***6304E215';
     const PIX_KEY = 'prof.marcosbiologo@hotmail.com';
     const toast = (m) => { const t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => { t.style.display = 'none'; }, 2400); };
     const copy = async (txt, msg) => { try { await navigator.clipboard.writeText(txt); toast(msg); } catch { prompt('Copie:', txt); } };
-    document.getElementById('copyCode').onclick = () => copy(PIX_CODE, 'Pix copia e cola copiado — obrigado! ❤');
-    document.getElementById('copyKey').onclick = () => copy(PIX_KEY, 'Chave Pix copiada — obrigado! ❤');
+    document.getElementById('copyCode').onclick = () => copy(PIX_CODE, SITE_MSG[SITE_LANG]?.code || 'Pix copia e cola copiado — obrigado! ❤');
+    document.getElementById('copyKey').onclick = () => copy(PIX_KEY, SITE_MSG[SITE_LANG]?.key || 'Chave Pix copiada — obrigado! ❤');
   </script>
 </body>
 </html>

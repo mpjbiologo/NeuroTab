@@ -1,7 +1,7 @@
 name: Release
 
 # Dispara quando você publica uma release no GitHub (Releases → Draft a new release → tag vX.Y.Z).
-# O .zip da extensão é gerado e anexado automaticamente à release.
+# Os pacotes (Edge/Chrome e Firefox) são gerados e anexados automaticamente à release.
 on:
   release:
     types: [published]
@@ -22,14 +22,15 @@ jobs:
           V=$(jq -r .version manifest.json)
           [ "v$V" = "${GITHUB_REF_NAME}" ] || { echo "manifest.json ($V) ≠ tag ($GITHUB_REF_NAME)"; exit 1; }
 
-      - name: Empacotar extensão
-        run: |
-          V=$(jq -r .version manifest.json)
-          mkdir -p dist
-          zip -r "dist/neurotab.zip" manifest.json src icons _locales LICENSE
-          cp dist/neurotab.zip "dist/neurotab-v$V.zip"
-          echo "ZIP=dist/neurotab.zip" >> $GITHUB_ENV
-          echo "ZIPV=dist/neurotab-v$V.zip" >> $GITHUB_ENV
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Empacotar extensão (Chromium e Firefox)
+        run: ./scripts/build.sh
+
+      - name: Validar pacote do Firefox
+        run: npx --yes web-ext@8 lint --source-dir build/firefox
 
       - uses: actions/upload-artifact@v4
         with:
@@ -41,6 +42,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name }}
-          files: |
-            ${{ env.ZIP }}
-            ${{ env.ZIPV }}
+          files: dist/*.zip

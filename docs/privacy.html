@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeuroTab — Política de privacidade / Privacy policy</title>
+<link rel="icon" href="icon.png">
+<style>
+  body { font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; max-width: 780px; margin: 0 auto; padding: 40px 22px 80px; color: #1d1d27; background: #fbfaff; }
+  h1 { font-size: 1.9rem; margin: 0 0 4px; } h2 { margin-top: 2.2em; font-size: 1.3rem; } h3 { margin-top: 1.6em; font-size: 1.05rem; }
+  .muted { color: #666; font-size: .92rem; }
+  nav a { margin-right: 14px; } a { color: #5b3fd6; }
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; margin: 10px 0; }
+  td, th { border: 1px solid #ddd; padding: 7px 9px; text-align: left; vertical-align: top; } th { background: #f0edff; }
+  section { border-top: 1px solid #e3e0f0; margin-top: 40px; padding-top: 10px; }
+</style>
+</head>
+<body>
+<p><a href="./">← NeuroTab</a></p>
+<h1>Política de privacidade</h1>
+<p class="muted">Última atualização: 5 de novembro de 2026 · versão 0.4</p>
+<nav><a href="#pt">Português</a><a href="#en">English</a><a href="#es">Español</a></nav>
+
+<section id="pt">
+<h2>Português</h2>
+<p><b>Resumo:</b> a NeuroTab não tem servidor, não tem conta, não usa análise de uso (analytics) e não vende nem compartilha dados. Tudo o que você cria (atalhos, notas, tarefas, fotos, configurações) fica guardado no seu navegador, no armazenamento local da extensão.</p>
+<h3>O que sai do seu computador, e só quando você usa o recurso</h3>
+<table>
+<tr><th>Recurso</th><th>Para onde vai</th><th>O que é enviado</th></tr>
+<tr><td>Clima e fusos</td><td>Open-Meteo (open-meteo.com)</td><td>Coordenadas das cidades que você escolheu; o nome digitado ao buscar uma cidade</td></tr>
+<tr><td>Cotações</td><td>AwesomeAPI, brapi.dev</td><td>Os códigos de moedas e ações escolhidos</td></tr>
+<tr><td>Trânsito</td><td>OpenStreetMap Nominatim; mapa incorporado do Waze</td><td>O endereço digitado ao buscar; coordenadas do local exibido no mapa</td></tr>
+<tr><td>Rotas</td><td>Google Maps ou Waze (em nova aba)</td><td>Origem e destino, só quando você clica na rota</td></tr>
+<tr><td>Slides de fotos</td><td>Bing, NASA (api.nasa.gov)</td><td>Nenhum dado pessoal; apenas a solicitação da lista de fotos. Suas fotos do PC ficam no navegador</td></tr>
+<tr><td>Notícias</td><td>Os feeds RSS que você adicionar</td><td>Apenas a solicitação do feed</td></tr>
+<tr><td>Inteligência artificial</td><td>O provedor que você configurar (Google Gemini, OpenAI, Anthropic, OpenRouter, Ollama local ou outro)</td><td>O texto da nota ou da pergunta e trechos das suas notas usados como contexto, com a sua chave de API. Sem chave configurada, nada é enviado</td></tr>
+<tr><td>Ditado e comandos de voz</td><td>O reconhecimento de voz do próprio navegador</td><td>O áudio é processado pelo navegador (no Chrome e no Edge, pode passar pelos servidores do fabricante)</td></tr>
+<tr><td>Aviso de atualização</td><td>GitHub (api.github.com)</td><td>Apenas a consulta da versão mais recente</td></tr>
+<tr><td>Ícones dos sites (só no Firefox)</td><td>DuckDuckGo (icons.duckduckgo.com)</td><td>O domínio dos seus atalhos, para mostrar o ícone</td></tr>
+</table>
+<p>Esses serviços têm políticas de privacidade próprias. A NeuroTab não envia identificadores, e-mail nem histórico de navegação a nenhum deles.</p>
+<h3>Permissões</h3>
+<p>Histórico de mais visitados, abas fechadas e acesso a outros sites são <b>opcionais</b>: o navegador pede sua autorização na primeira vez que você usa o recurso. As chaves de API ficam só no seu navegador e não entram no backup exportado.</p>
+<h3>Seus dados, seu controle</h3>
+<p>Você pode exportar tudo (Configurações → Backup), apagar notas e tarefas, esvaziar a lixeira ou remover a extensão, o que apaga os dados locais. O código é aberto: <a href="https://github.com/mpjbiologo/NeuroTab">github.com/mpjbiologo/NeuroTab</a>.</p>
+<h3>Contato</h3>
+<p>Dúvidas: abra uma issue em <a href="https://github.com/mpjbiologo/NeuroTab/issues">github.com/mpjbiologo/NeuroTab/issues</a>.</p>
+</section>
+
+<section id="en">
+<h2>English</h2>
+<p><b>Summary:</b> NeuroTab has no server, no account and no analytics, and it does not sell or share data. Everything you create (shortcuts, notes, tasks, photos, settings) is stored in your browser, in the extension's local storage.</p>
+<h3>What leaves your computer, and only when you use the feature</h3>
+<table>
+<tr><th>Feature</th><th>Where it goes</th><th>What is sent</th></tr>
+<tr><td>Weather and time zones</td><td>Open-Meteo</td><td>Coordinates of the cities you chose; the name you type when searching for a city</td></tr>
+<tr><td>Quotes</td><td>AwesomeAPI, brapi.dev</td><td>The currency and stock codes you chose</td></tr>
+<tr><td>Traffic</td><td>OpenStreetMap Nominatim; embedded Waze map</td><td>The address you type when searching; coordinates of the place shown on the map</td></tr>
+<tr><td>Routes</td><td>Google Maps or Waze (new tab)</td><td>Origin and destination, only when you click the route</td></tr>
+<tr><td>Photo slideshow</td><td>Bing, NASA</td><td>No personal data, only the request for the photo list. Photos from your computer stay in the browser</td></tr>
+<tr><td>News</td><td>The RSS feeds you add</td><td>Only the feed request</td></tr>
+<tr><td>Artificial intelligence</td><td>The provider you set up (Google Gemini, OpenAI, Anthropic, OpenRouter, local Ollama or other)</td><td>The text of the note or question and excerpts of your notes used as context, with your API key. With no key set, nothing is sent</td></tr>
+<tr><td>Dictation and voice commands</td><td>The browser's own speech recognition</td><td>Audio is processed by the browser (in Chrome and Edge it may go through the vendor's servers)</td></tr>
+<tr><td>Update notice</td><td>GitHub</td><td>Only the latest-version lookup</td></tr>
+<tr><td>Site icons (Firefox only)</td><td>DuckDuckGo</td><td>The domain of your shortcuts, to show the icon</td></tr>
+</table>
+<p>These services have their own privacy policies. NeuroTab sends no identifiers, e-mail or browsing history to any of them.</p>
+<h3>Permissions</h3>
+<p>Top sites, recently closed tabs and access to other sites are <b>optional</b>: the browser asks you the first time you use the feature. API keys stay in your browser and are left out of exported backups.</p>
+<h3>Your data, your control</h3>
+<p>You can export everything (Settings → Backup), delete notes and tasks, empty the trash or remove the extension, which deletes the local data. The code is open source: <a href="https://github.com/mpjbiologo/NeuroTab">github.com/mpjbiologo/NeuroTab</a>.</p>
+<h3>Contact</h3>
+<p>Questions: open an issue at <a href="https://github.com/mpjbiologo/NeuroTab/issues">github.com/mpjbiologo/NeuroTab/issues</a>.</p>
+</section>
+
+<section id="es">
+<h2>Español</h2>
+<p><b>Resumen:</b> NeuroTab no tiene servidor, cuenta ni analítica, y no vende ni comparte datos. Todo lo que creas (accesos directos, notas, tareas, fotos, configuración) se guarda en tu navegador, en el almacenamiento local de la extensión.</p>
+<h3>Qué sale de tu ordenador, y solo cuando usas la función</h3>
+<table>
+<tr><th>Función</th><th>Destino</th><th>Qué se envía</th></tr>
+<tr><td>Clima y husos horarios</td><td>Open-Meteo</td><td>Coordenadas de las ciudades elegidas; el nombre que escribes al buscar una ciudad</td></tr>
+<tr><td>Cotizaciones</td><td>AwesomeAPI, brapi.dev</td><td>Los códigos de monedas y acciones elegidos</td></tr>
+<tr><td>Tráfico</td><td>OpenStreetMap Nominatim; mapa de Waze incrustado</td><td>La dirección que escribes al buscar; coordenadas del lugar mostrado</td></tr>
+<tr><td>Rutas</td><td>Google Maps o Waze (pestaña nueva)</td><td>Origen y destino, solo cuando haces clic en la ruta</td></tr>
+<tr><td>Presentación de fotos</td><td>Bing, NASA</td><td>Ningún dato personal, solo la solicitud de la lista de fotos. Las fotos de tu ordenador se quedan en el navegador</td></tr>
+<tr><td>Noticias</td><td>Los feeds RSS que añadas</td><td>Solo la solicitud del feed</td></tr>
+<tr><td>Inteligencia artificial</td><td>El proveedor que configures (Google Gemini, OpenAI, Anthropic, OpenRouter, Ollama local u otro)</td><td>El texto de la nota o pregunta y fragmentos de tus notas como contexto, con tu clave de API. Sin clave, no se envía nada</td></tr>
+<tr><td>Dictado y comandos de voz</td><td>El reconocimiento de voz del propio navegador</td><td>El audio lo procesa el navegador (en Chrome y Edge puede pasar por los servidores del fabricante)</td></tr>
+<tr><td>Aviso de actualización</td><td>GitHub</td><td>Solo la consulta de la última versión</td></tr>
+<tr><td>Iconos de sitios (solo Firefox)</td><td>DuckDuckGo</td><td>El dominio de tus accesos directos, para mostrar el icono</td></tr>
+</table>
+<p>Estos servicios tienen sus propias políticas de privacidad. NeuroTab no les envía identificadores, correo ni historial de navegación.</p>
+<h3>Permisos</h3>
+<p>Los sitios más visitados, las pestañas cerradas y el acceso a otros sitios son <b>opcionales</b>: el navegador te pide permiso la primera vez que usas la función. Las claves de API se quedan en tu navegador y no se incluyen en las copias de seguridad exportadas.</p>
+<h3>Tus datos, tu control</h3>
+<p>Puedes exportar todo (Configuración → Copia de seguridad), borrar notas y tareas, vaciar la papelera o quitar la extensión, lo que borra los datos locales. El código es abierto: <a href="https://github.com/mpjbiologo/NeuroTab">github.com/mpjbiologo/NeuroTab</a>.</p>
+<h3>Contacto</h3>
+<p>Dudas: abre un issue en <a href="https://github.com/mpjbiologo/NeuroTab/issues">github.com/mpjbiologo/NeuroTab/issues</a>.</p>
+</section>
+</body>
+</html>
