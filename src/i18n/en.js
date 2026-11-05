@@ -260,6 +260,7 @@ export default {
     "Clique para voltar a ouvir": "Click to listen again",
     "Exemplos: \"anotar comprar café\" · \"me lembre amanhã às 9h de pagar a conta\" · \"timer de 10 minutos\" · \"abrir YouTube\" · \"como está o tempo\" · \"quanto é 15% de 200\"": "Examples: \"note buy coffee\" · \"remind me tomorrow at 9am to pay the bill\" · \"timer for 10 minutes\" · \"open YouTube\" · \"what's the weather\" · \"what is 15% of 200\"",
     "Qualquer outra pergunta vai para a IA (se configurada) com as suas notas": "Any other question goes to the AI (if set up) along with your notes; other phrases are interpreted by the AI",
+    "✓ Instalada pela loja: as atualizações chegam automaticamente.": "✓ Installed from the store: updates arrive automatically.",
   },
   html: {
     '<b>Abrir YouTube</b> (usa seus atalhos) · <b>Pesquisar …</b>': '<b>Abrir YouTube</b> (open a shortcut) · <b>Pesquisar …</b> (search)',

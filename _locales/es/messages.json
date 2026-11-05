@@ -1,0 +1,11 @@
+{
+  "extName": {
+    "message": "NeuroTab — nueva pestaña con segundo cerebro"
+  },
+  "extDescription": {
+    "message": "Nueva pestaña con accesos, notas, recordatorios, clima, voz e IA (Gemini, ChatGPT, Claude y más). Todo queda en tu navegador."
+  },
+  "actionTitle": {
+    "message": "NeuroTab: anotar o guardar esta página"
+  }
+}

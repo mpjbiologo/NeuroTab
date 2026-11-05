@@ -7,7 +7,7 @@ import { encryptJSON, decryptJSON } from './lib/crypto.js';
 import { loadItems, saveItems, fromKeepNote, toMarkdown, trashItems, purgeTrash, loadTrash } from './lib/brain.js';
 import { voicesFor, speak } from './lib/ui.js';
 import { SOUNDS } from './lib/sounds.js';
-import { UPDATE_KEY } from './lib/update.js';
+import { UPDATE_KEY, isStoreInstall } from './lib/update.js';
 import { SOURCES, addFiles, listLocal, clearLocal } from './lib/photos.js';
 import { initI18n, LOCALE, t } from './lib/i18n.js';
 import { PROVIDERS, aiConfig, requestPermission, listModels, complete } from './lib/ai.js';
@@ -539,6 +539,12 @@ function setupVoiceOptions() {
 // ---------- Atualizações ----------
 function setupUpdatesOptions() {
   $('#verNow').textContent = chrome.runtime.getManifest().version;
+  isStoreInstall().then((store) => {
+    if (!store) return;
+    $('#storeUpd').hidden = false;
+    $('#updRow').hidden = true;
+    $('#checkNow').hidden = true;
+  });
   const show = (u) => {
     if (!u) return;
     $('#updMsg').textContent = u.available

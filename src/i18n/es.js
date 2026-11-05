@@ -259,6 +259,7 @@ export default {
     "Clique para voltar a ouvir": "Haz clic para volver a escuchar",
     "Exemplos: \"anotar comprar café\" · \"me lembre amanhã às 9h de pagar a conta\" · \"timer de 10 minutos\" · \"abrir YouTube\" · \"como está o tempo\" · \"quanto é 15% de 200\"": "Ejemplos: \"anota comprar café\" · \"recuérdame mañana a las 9 pagar la cuenta\" · \"temporizador de 10 minutos\" · \"abrir YouTube\" · \"qué tiempo hace\" · \"cuánto es 15% de 200\"",
     "Qualquer outra pergunta vai para a IA (se configurada) com as suas notas": "Cualquier otra pregunta va a la IA (si está configurada) con tus notas; otras frases las interpreta la IA",
+    "✓ Instalada pela loja: as atualizações chegam automaticamente.": "✓ Instalada desde la tienda: las actualizaciones llegan solas.",
   },
   html: {
     '<b>Abrir YouTube</b> (usa seus atalhos) · <b>Pesquisar …</b>': '<b>Abrir YouTube</b> (abre un acceso) · <b>Pesquisar …</b> (buscar)',

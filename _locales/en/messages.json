@@ -1,9 +1,9 @@
 {
   "extName": {
-    "message": "NeuroTab — Speed Dial with a second brain"
+    "message": "NeuroTab — new tab with a second brain"
   },
   "extDescription": {
-    "message": "New tab with shortcuts, notes, reminders, weather, quotes and AI (Gemini, ChatGPT, Claude and more). Everything stays in your browser."
+    "message": "New tab with shortcuts, notes, reminders, weather, voice and AI (Gemini, ChatGPT, Claude and more). All stored in your browser."
   },
   "actionTitle": {
     "message": "NeuroTab: note or save this page"

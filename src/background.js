@@ -3,7 +3,7 @@ import { DATA_KEY, BRAIN_KEY, loadData, saveData, uid, hostOf, inspectFavicon } 
 import { loadItems, addItem, updateItem, displayTitle, purgeOldTrash } from './lib/brain.js';
 import { enrich, isConfigured } from './lib/ai.js';
 import { K as CK, loadAlarms, saveAlarms, nextOccurrence, getTimer, getPomo, nextPhase, phaseMinutes } from './lib/clock.js';
-import { checkForUpdate, UPDATE_KEY, WHATSNEW_KEY } from './lib/update.js';
+import { checkForUpdate, isStoreInstall, UPDATE_KEY, WHATSNEW_KEY } from './lib/update.js';
 import { setLang, t } from './lib/i18n.js';
 import { createPlayer } from './lib/sounds.js';
 
@@ -275,6 +275,7 @@ async function runUpdateCheck() {
   try {
     const { settings } = await loadData();
     if (settings.checkUpdates === false) return;
+    if (await isStoreInstall()) return; // a loja já atualiza a extensão sozinha
     const u = await checkForUpdate();
     if (u.available) {
       await chrome.action.setBadgeBackgroundColor({ color: '#7c5cff' });

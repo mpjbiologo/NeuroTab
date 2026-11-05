@@ -96,7 +96,7 @@ O Google só libera a API do Keep para contas empresariais (Workspace). Para con
 | **v0.4** ✅ | Relógio + clima com várias cidades e fusos, trânsito com locais e rotas, slides de fotos, hábitos, notícias RSS, foco do dia, tradução (pt/en/es), versão para Firefox, material para as lojas |
 | **v0.5** ✅ | Busca por significado, comandos de voz em inglês e espanhol, palavra de ativação (experimental), backup com chaves de API |
 | **Depois** | Agenda, sincronização entre computadores, Google Fotos e OneDrive nos slides, palavra de ativação offline |
-| — | Publicação nas lojas do Edge, Firefox, Opera e Chrome ([guia](docs/store/README.md)) |
+| — | Publicação nas lojas do Edge ([passo a passo](docs/store/EDGE.md)), Firefox, Opera e Chrome ([guia](docs/store/README.md)) |
 
 Ideias são bem-vindas nas [Issues](https://github.com/mpjbiologo/NeuroTab/issues).
 

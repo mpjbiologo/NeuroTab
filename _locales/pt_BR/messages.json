@@ -1,9 +1,9 @@
 {
   "extName": {
-    "message": "NeuroTab — Speed Dial com segundo cérebro"
+    "message": "NeuroTab — nova aba com segundo cérebro"
   },
   "extDescription": {
-    "message": "Nova aba com atalhos, notas, lembretes, clima, cotações e IA (Gemini, ChatGPT, Claude e outros). Tudo salvo no seu navegador."
+    "message": "Nova aba com atalhos, notas, lembretes, clima, voz e IA (Gemini, ChatGPT, Claude e outros). Tudo salvo no seu navegador."
   },
   "actionTitle": {
     "message": "NeuroTab: anotar ou salvar esta página"

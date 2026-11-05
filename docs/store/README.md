@@ -54,7 +54,7 @@ Pacotes (gerados por `./scripts/build.sh` ou baixados da release no GitHub):
 
 ### Português (Brasil)
 
-**Nome:** NeuroTab — Nova aba com segundo cérebro
+**Nome:** NeuroTab — nova aba com segundo cérebro
 
 **Resumo (até 132 caracteres):**
 Atalhos, notas, lembretes, IA, clima, trânsito e voz numa nova aba bonita e privada. Sucessora moderna do Speed Dial.
@@ -78,7 +78,7 @@ Privacidade: sem conta, sem servidor, sem analytics. Seus dados ficam no navegad
 
 ### English
 
-**Name:** NeuroTab — New tab with a second brain
+**Name:** NeuroTab — new tab with a second brain
 
 **Summary:**
 Shortcuts, notes, reminders, AI, weather, traffic and voice in a beautiful, private new tab. A modern Speed Dial successor.
@@ -102,7 +102,7 @@ Privacy: no account, no server, no analytics. Your data stays in your browser. O
 
 ### Español
 
-**Nombre:** NeuroTab — Nueva pestaña con segundo cerebro
+**Nombre:** NeuroTab — nueva pestaña con segundo cerebro
 
 **Resumen:**
 Accesos directos, notas, recordatorios, IA, clima, tráfico y voz en una nueva pestaña bonita y privada. Sucesora de Speed Dial.

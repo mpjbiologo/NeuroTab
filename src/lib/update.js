@@ -35,3 +35,13 @@ export async function checkForUpdate() {
   await chrome.storage.local.set({ [UPDATE_KEY]: info });
   return info;
 }
+
+/** Instalada pela loja (Edge Add-ons, Chrome Web Store, AMO)? Nesse caso a loja atualiza sozinha. */
+export async function isStoreInstall() {
+  try {
+    const self = await chrome.management.getSelf();
+    return self.installType === 'normal';
+  } catch {
+    return false;
+  }
+}
