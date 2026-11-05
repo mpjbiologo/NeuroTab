@@ -88,6 +88,26 @@
     .pixrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
     .pixkey { font-family: ui-monospace, monospace; font-size: 14px; color: #fff; }
 
+    .story { padding-top: 40px; }
+    .story-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 40px; align-items: start; margin-top: 30px; }
+    .story-text p { color: #cfcde0; font-size: 16.5px; margin: 0 0 16px; }
+    .story-text b { color: #fff; }
+    .story-text .sign { color: var(--muted); font-style: italic; margin-top: 22px; }
+    .pillars { display: grid; gap: 14px; }
+    .pillar { display: flex; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+    .pillar > span { font-size: 26px; }
+    .pillar b { font-size: 16px; }
+    .pillar p { margin: 4px 0 0; color: var(--muted); font-size: 14.5px; }
+    .game { display: flex; gap: 22px; align-items: center; margin-top: 20px; padding: 26px 30px; border-radius: 22px; border: 1px solid rgba(255,90,140,.35); background: linear-gradient(135deg, rgba(220,40,100,.18), rgba(124,92,255,.12)); }
+    .game-ic { font-size: 44px; }
+    .game-txt { flex: 1; }
+    .game h3 { margin: 0 0 6px; font-size: 22px; }
+    .game p { margin: 0 0 6px; color: var(--muted); }
+    .game .btn.primary { background: linear-gradient(135deg, #e0306f, #9b3cff); box-shadow: 0 10px 30px rgba(224,48,111,.35); white-space: nowrap; }
+    @media (max-width: 820px) {
+      .story-grid { grid-template-columns: 1fr; }
+      .game { flex-direction: column; text-align: center; }
+    }
     footer { border-top: 1px solid var(--line); padding: 30px 0 50px; color: var(--muted); font-size: 14px; }
     footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
     .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #23223a; border: 1px solid var(--line); padding: 10px 18px; border-radius: 10px; display: none; }
@@ -106,6 +126,7 @@
     <div class="wrap">
       <a class="brand" href="#"><img src="icon.png" alt="">NeuroTab</a>
       <div class="links">
+        <a href="#historia">A história</a>
         <a href="#recursos">Recursos</a>
         <a href="#instalar">Instalar</a>
         <a href="#privacidade">Privacidade</a>
@@ -128,6 +149,26 @@
       <div class="shot"><img src="shot-home.jpg" alt="Nova aba da NeuroTab com captura rápida, lembretes, notas e clima" width="1440" height="900"></div>
     </div>
   </header>
+
+  <section id="historia" class="story">
+    <div class="wrap">
+      <h2>Como surgiu a NeuroTab</h2>
+      <div class="story-grid">
+        <div class="story-text">
+          <p>Por anos, a primeira coisa que eu via ao abrir uma aba era o <a href="https://chromewebstore.google.com/detail/speed-dial/ejbjamhkdedinncaeiackcdehpccoejm" target="_blank" rel="noopener nofollow">Speed Dial</a>: meus sites favoritos organizados em blocos coloridos. Ele foi a inspiração direta deste projeto.</p>
+          <p>Só que o Speed Dial está <b>sem atualizações desde 2022</b>. Uma extensão que ocupa a página mais aberta do navegador e fica anos sem manutenção deixa uma lacuna de recursos e, principalmente, <b>de segurança</b>.</p>
+          <p>Ao mesmo tempo, duas ideias mudaram o jeito como eu penso a rotina no computador: o <b>segundo cérebro</b> (<i>second brain</i>), um lugar confiável para guardar tudo o que não cabe na cabeça, e os <b>assistentes no estilo JARVIS</b>, que entendem o que você diz e agem por você.</p>
+          <p>A NeuroTab nasceu do encontro dessas peças. A proposta é manter a simplicidade dos atalhos que eu já usava e somar o que faltava: notas, lembretes, voz e inteligência artificial, numa página moderna, segura e feita para a produtividade.</p>
+          <p class="sign">— Marcos de Paula Júnior, criador da NeuroTab</p>
+        </div>
+        <div class="pillars">
+          <div class="pillar"><span>🛡️</span><div><b>Moderna e segura</b><p>Construída no padrão atual de extensões (Manifest V3), com código aberto e atualizações frequentes.</p></div></div>
+          <div class="pillar"><span>🔗</span><div><b>Integrada</b><p>IA à sua escolha, comandos de voz, clima, cotações, Google Keep e muito mais, tudo num só lugar.</p></div></div>
+          <div class="pillar"><span>🚀</span><div><b>Produtiva</b><p>Capture ideias, lembretes e tarefas no momento em que surgem, e encontre tudo depois em segundos.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section id="recursos">
     <div class="wrap">
@@ -255,6 +296,15 @@
           <p class="small">Chave Pix: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior</p>
           <p class="small">Outras formas de ajudar: dê uma ⭐ no <a href="https://github.com/mpjbiologo/NeuroTab">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues">sugira ideias</a> e indique para os amigos.</p>
         </div>
+      </div>
+      <div class="game">
+        <div class="game-ic">🎲</div>
+        <div class="game-txt">
+          <h3>Apoie e ainda se divirta</h3>
+          <p>Conheça o <b>Clube da Sedução</b>, meu outro projeto: uma coleção de jogos para casais e grupos de amigos (Jogo da Sedução, Verdade ou Consequência e Eu Nunca), com modos do leve ao picante. O passe começa em <b>R$ 2,99</b> e não renova sozinho. Cada assinatura ajuda a manter a NeuroTab gratuita e em evolução.</p>
+          <p class="small">Conteúdo para maiores de 18 anos.</p>
+        </div>
+        <a class="btn primary" href="https://seduction.floot.app/" target="_blank" rel="noopener">Conhecer o Clube 🔥</a>
       </div>
     </div>
   </section>
