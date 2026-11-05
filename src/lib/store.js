@@ -81,7 +81,9 @@ export const DEFAULT_SETTINGS = {
   // Relógio
   timerSound: 'sino',
   // Layouts salvos
-  layouts: [], // [{ id, name, widgets }]
+  layoutMode: 'grid', // grid | free
+  freeFixed: {}, // posições do relógio e da busca no modo livre
+  layouts: [], // [{ id, name, widgets, mode, freeFixed }]
   activeLayout: '',
   // Atualizações
   checkUpdates: true,

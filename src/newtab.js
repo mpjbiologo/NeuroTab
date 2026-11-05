@@ -19,6 +19,9 @@ let data;
 let items = [];
 let activeId;
 let bgCache = null;
+// Relógio e busca: referências fixas (no modo livre eles mudam de lugar no DOM).
+const heroEl = document.getElementById('hero');
+const omniEl = document.getElementById('omniWrap');
 let drag = null; // { type: 'link' | 'group' | 'widget', id }
 let editing = false;
 const listeners = { brain: new Set(), data: new Set(), ask: new Set() };
@@ -73,7 +76,7 @@ async function init() {
       if (!data.groups.some((g) => g.id === activeId)) activeId = data.groups[0].id;
       applySettings();
       renderDock();
-      if (JSON.stringify(data.settings.widgets) !== widgetsSig) renderWidgets();
+      if (layoutSig() !== widgetsSig) renderWidgets();
       if (editing) renderLayoutPicker();
       listeners.data.forEach((fn) => fn(data));
     }
@@ -102,7 +105,10 @@ async function init() {
     rz = setTimeout(() => {
       const narrow = innerWidth < 700;
       if (narrow !== lastNarrow) { lastNarrow = narrow; applySettings(); renderDock(); }
-      if (layoutCols() !== gridCols) renderWidgets();
+      const freeNow = isFree();
+      if (freeNow !== document.body.classList.contains('free')) renderWidgets();
+      else if (freeNow) repositionFree();
+      else if (layoutCols() !== gridCols) renderWidgets();
     }, 150);
   });
   setupUpdates();
@@ -132,8 +138,8 @@ function applySettings() {
   const lateral = pos === 'left' || pos === 'right';
   b.toggle('pinned', lateral && s.dockPinned);
   $('#pinDock').classList.toggle('on', s.dockPinned);
-  $('#hero').hidden = !s.showClock;
-  $('#omniWrap').hidden = !s.showSearch;
+  heroEl.hidden = !s.showClock;
+  omniEl.hidden = !s.showSearch;
   $('#omni').placeholder = `Pesquisar atalhos, notas ou no ${(SEARCH_ENGINES[s.searchEngine] || SEARCH_ENGINES.google).name}…  (Ctrl+K)`;
   $('#addGroup').hidden = !s.showAddButtons;
   $('#panelAdd').hidden = !s.showAddButtons;
@@ -587,35 +593,70 @@ function spanFor(w) {
   return 1;
 }
 
+// ---------- Modo de layout ----------
+const isFree = () => data.settings.layoutMode === 'free' && innerWidth >= 700;
+const layoutSig = (s = data.settings) => JSON.stringify([s.widgets, s.freeFixed, s.layoutMode]);
+let zTop = 10;
+
+function buildCard(w, idx) {
+  const def = WIDGETS[w.id];
+  const actions = h('div', { class: 'wact' });
+  const body = h('div', { class: 'wbody' });
+  const grip = h('div', { class: 'grip', title: 'Arraste para redimensionar · duplo clique: altura automática' });
+  const header = h('header', {},
+    h('span', { class: 'wt' }, def.icon, ' ', def.title),
+    actions,
+    h('div', { class: 'wtools' },
+      h('button', { class: 'wgrid', title: 'Mais estreito', onclick: () => setWidget(idx, { w: Math.max(3, (w.w || 6) - 1) }) }, '−'),
+      h('span', { class: 'wsize wgrid' }, `${w.w}/12`),
+      h('button', { class: 'wgrid', title: 'Mais largo', onclick: () => setWidget(idx, { w: Math.min(12, (w.w || 6) + 1) }) }, '+'),
+      h('button', { title: 'Remover', onclick: () => removeWidget(idx) }, '✕'),
+    ),
+  );
+  const card = h('article', { class: 'widget', 'data-id': w.id, 'data-idx': idx }, header, body, grip);
+  return { def, card, header, body, grip, actions };
+}
+
+function mountCard({ def, body, actions }, w, idx) {
+  try {
+    const wctx = Object.assign(Object.create(ctx), { actions, saveWidget: (patch) => setWidget(idx, patch, true) });
+    Object.defineProperty(wctx, 'widget', { get: () => data.settings.widgets[idx] || w });
+    const inst = def.mount(body, wctx);
+    mounted.push({ id: w.id, destroy: inst?.destroy });
+  } catch (err) {
+    console.error(err);
+    body.append(h('p', { class: 'muted' }, 'Erro ao carregar este widget.'));
+  }
+}
+
 function renderWidgets() {
   mounted.forEach((m) => { try { m.destroy?.(); } catch {} });
   mounted = [];
+  $('#center').prepend(heroEl, omniEl); // tira de dentro dos quadros antes de redesenhar
+  widgetsSig = layoutSig();
+  const free = isFree();
+  document.body.classList.toggle('free', free);
+  if (editing) paintModeButtons();
+  if (free) renderFree();
+  else renderGrid();
+}
+
+// =====================================================================
+// GRADE
+// =====================================================================
+function renderGrid() {
+  const center = $('#center');
   const box = $('#widgets');
   box.replaceChildren();
+  box.style.height = '';
   gridCols = layoutCols();
   box.style.gridTemplateColumns = `repeat(${gridCols}, minmax(0, 1fr))`;
-  widgetsSig = JSON.stringify(data.settings.widgets);
   const list = data.settings.widgets;
   list.forEach((w, idx) => {
-    const def = WIDGETS[w.id];
-    if (!def) return;
-    const actions = h('div', { class: 'wact' });
-    const body = h('div', { class: 'wbody' });
-    const grip = h('div', { class: 'grip', title: 'Arraste para redimensionar · duplo clique: altura automática' });
-    const card = h('article', { class: 'widget', 'data-id': w.id, 'data-idx': idx, draggable: editing },
-      h('header', {},
-        h('span', { class: 'wt' }, def.icon, ' ', def.title),
-        actions,
-        h('div', { class: 'wtools' },
-          h('button', { title: 'Mais estreito', onclick: () => setWidget(idx, { w: Math.max(3, (w.w || 6) - 1) }) }, '−'),
-          h('span', { class: 'wsize' }, `${w.w}/12`),
-          h('button', { title: 'Mais largo', onclick: () => setWidget(idx, { w: Math.min(12, (w.w || 6) + 1) }) }, '+'),
-          h('button', { title: 'Remover', onclick: () => removeWidget(idx) }, '✕'),
-        ),
-      ),
-      body,
-      grip,
-    );
+    if (!WIDGETS[w.id]) return;
+    const parts = buildCard(w, idx);
+    const { card, grip } = parts;
+    card.draggable = editing;
     applyWidgetSize(card, w);
     setupResize(card, grip, idx);
     card.addEventListener('dragstart', (e) => { if (!editing || e.target !== card) return e.preventDefault(); drag = { type: 'widget', id: idx }; card.classList.add('dragging'); });
@@ -633,19 +674,266 @@ function renderWidgets() {
       renderWidgets();
     });
     box.append(card);
-    try {
-      const wctx = Object.assign(Object.create(ctx), { actions, saveWidget: (patch) => setWidget(idx, patch, true) });
-      Object.defineProperty(wctx, 'widget', { get: () => data.settings.widgets[idx] || w });
-      const inst = def.mount(body, wctx);
-      mounted.push({ id: w.id, destroy: inst?.destroy });
-    } catch (err) {
-      console.error(err);
-      body.append(h('p', { class: 'muted' }, 'Erro ao carregar este widget.'));
-    }
+    mountCard(parts, w, idx);
   });
   if (!list.length) {
     box.append(h('p', { class: 'muted', style: { gridColumn: '1 / -1', textAlign: 'center' } }, 'Nenhum widget. Clique em 🧩 na barra para adicionar.'));
   }
+}
+
+// =====================================================================
+// LIVRE — widgets em qualquer lugar da tela
+// =====================================================================
+const FIXED = {
+  _hero: { el: () => heroEl, label: '🕐 Relógio', def: { fx: 0.3, fy: 10, fw: 0.4 }, show: () => data.settings.showClock },
+  _search: { el: () => omniEl, label: '🔎 Busca', def: { fx: 0.22, fy: 170, fw: 0.56 }, show: () => data.settings.showSearch },
+};
+
+function renderFree() {
+  const box = $('#widgets');
+  box.replaceChildren();
+  box.style.gridTemplateColumns = '';
+  const W = box.clientWidth;
+  const s = data.settings;
+  s.freeFixed = s.freeFixed || {};
+
+  // Relógio e busca viram itens livres
+  for (const [key, f] of Object.entries(FIXED)) {
+    const el = f.el();
+    if (!f.show()) { $('#center').prepend(el); continue; }
+    const pos = { ...f.def, ...(s.freeFixed[key] || {}) };
+    const handle = h('div', { class: 'ff-handle', title: 'Arraste para mover' }, '⠿ ', f.label);
+    const grip = h('div', { class: 'grip' });
+    const frame = h('div', { class: 'free-item free-fixed', 'data-fixed': key }, handle, el, grip);
+    box.append(frame);
+    placeFrame(frame, pos, W, false);
+    attachFree(frame, {
+      handles: [handle],
+      grip,
+      fixedHeight: false,
+      minW: key === '_hero' ? 160 : 260,
+      save: async (p) => { data.settings.freeFixed = { ...(data.settings.freeFixed || {}), [key]: p }; await saveWidgets(); },
+    });
+  }
+
+  // Widgets
+  const list = s.widgets;
+  list.forEach((w, idx) => {
+    if (!WIDGETS[w.id]) return;
+    if (w.fx == null) Object.assign(w, autoPlace(w, W));
+    const parts = buildCard(w, idx);
+    const { card, header, grip } = parts;
+    card.classList.add('free-item');
+    box.append(card);
+    placeFrame(card, w, W, true);
+    zTop = Math.max(zTop, w.fz || 0);
+    grip.addEventListener('dblclick', async () => { card.style.height = 'auto'; const hpx = Math.min(900, card.offsetHeight); card.style.height = hpx + 'px'; await setWidget(idx, { fh: hpx }, true); fitCanvas(); });
+    attachFree(card, {
+      handles: [header],
+      grip,
+      fixedHeight: true,
+      minW: 200,
+      minH: 110,
+      save: (p) => setWidget(idx, p, true),
+    });
+    mountCard(parts, w, idx);
+  });
+  if (!list.length) box.append(h('p', { class: 'muted free-empty' }, 'Nenhum widget. Clique em 🧩 → ＋ Widget.'));
+  fitCanvas();
+}
+
+function placeFrame(frame, p, W, fixedHeight) {
+  frame.style.left = Math.round(p.fx * W) + 'px';
+  frame.style.top = Math.round(p.fy) + 'px';
+  frame.style.width = Math.round(Math.min(W, p.fw * W)) + 'px';
+  if (fixedHeight) frame.style.height = Math.round(p.fh || 320) + 'px';
+  if (p.fz) frame.style.zIndex = p.fz;
+}
+
+function repositionFree() {
+  const box = $('#widgets');
+  const W = box.clientWidth;
+  for (const frame of $$('.free-item', box)) {
+    if (frame.dataset.fixed) placeFrame(frame, { ...FIXED[frame.dataset.fixed].def, ...(data.settings.freeFixed?.[frame.dataset.fixed] || {}) }, W, false);
+    else {
+      const w = data.settings.widgets[+frame.dataset.idx];
+      if (w) placeFrame(frame, w, W, true);
+    }
+  }
+  fitCanvas();
+}
+
+function fitCanvas(extra = 0) {
+  const box = $('#widgets');
+  let bottom = 0;
+  for (const f of $$('.free-item', box)) bottom = Math.max(bottom, f.offsetTop + f.offsetHeight);
+  const min = innerHeight - (box.getBoundingClientRect().top + scrollY) - 10;
+  box.style.height = Math.max(min, bottom + 40, extra) + 'px';
+}
+
+/** Primeiro espaço livre (de cima para baixo, da esquerda para a direita). */
+function autoPlace(w, W) {
+  const fw = Math.min(1, (w.w || WIDGETS[w.id]?.defaultW || 6) / 12);
+  const fh = w.fh || 340;
+  const rects = $$('#widgets .free-item').map((f) => ({ l: f.offsetLeft, t: f.offsetTop, r: f.offsetLeft + f.offsetWidth, b: f.offsetTop + f.offsetHeight }));
+  const width = fw * W;
+  for (let y = 0; y < 6000; y += 20) {
+    for (let x = 0; x + width <= W + 1; x += Math.max(20, W / 48)) {
+      const r = { l: x, t: y, r: x + width, b: y + fh };
+      if (!rects.some((o) => r.l < o.r + 12 && r.r > o.l - 12 && r.t < o.b + 12 && r.b > o.t - 12)) return { fx: x / W, fy: y, fw, fh };
+    }
+  }
+  return { fx: 0, fy: 0, fw, fh };
+}
+
+let guides = [];
+function guide(dir, at) {
+  const g = h('div', { class: 'guide guide-' + dir });
+  if (dir === 'v') g.style.left = at + 'px'; else g.style.top = at + 'px';
+  $('#widgets').append(g);
+  guides.push(g);
+}
+function clearGuides() { guides.forEach((g) => g.remove()); guides = []; }
+
+function snapAxis(cands, targets, th = 8) {
+  let best = null;
+  for (const c of cands) for (const t of targets) {
+    const d = t - c;
+    if (Math.abs(d) <= th && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, at: t };
+  }
+  return best;
+}
+
+function attachFree(frame, { handles, grip, fixedHeight, minW = 200, minH = 110, save }) {
+  const box = $('#widgets');
+  const begin = (e, mode) => {
+    if (e.button !== 0) return;
+    if (mode === 'move' && e.target.closest('button, input, select, textarea, a, label, .wact, .wtools')) return;
+    if (mode === 'move' && frame.classList.contains('free-fixed') && !editing) return;
+    e.preventDefault();
+    const W = box.clientWidth;
+    const r = { x: frame.offsetLeft, y: frame.offsetTop, w: frame.offsetWidth, h: frame.offsetHeight };
+    const sx = e.clientX;
+    const sy = e.clientY;
+    frame.style.zIndex = ++zTop;
+    frame.classList.add(mode === 'move' ? 'moving' : 'resizing');
+    const others = $$('.free-item', box).filter((f) => f !== frame).map((f) => ({ l: f.offsetLeft, t: f.offsetTop, r: f.offsetLeft + f.offsetWidth, b: f.offsetTop + f.offsetHeight }));
+    const xs = [0, W, W / 2, ...others.flatMap((o) => [o.l, o.r, o.l - 16, o.r + 16])];
+    const ys = [0, ...others.flatMap((o) => [o.t, o.b, o.t - 16, o.b + 16])];
+    let cur = { ...r };
+    let moved = false;
+    const onMove = (ev) => {
+      const dx = ev.clientX - sx;
+      const dy = ev.clientY - sy;
+      if (!moved && Math.abs(dx) + Math.abs(dy) < 3) return;
+      moved = true;
+      const snap = !ev.altKey;
+      clearGuides();
+      if (mode === 'move') {
+        let x = r.x + dx;
+        let y = Math.max(0, r.y + dy);
+        if (snap) {
+          const a = snapAxis([x, x + r.w, x + r.w / 2], xs);
+          if (a) { x += a.d; guide('v', a.at); } else x = Math.round(x / 10) * 10;
+          const b = snapAxis([y, y + r.h], ys);
+          if (b) { y += b.d; guide('h', b.at); } else y = Math.round(y / 10) * 10;
+        }
+        cur.x = Math.max(0, Math.min(W - r.w, x));
+        cur.y = Math.max(0, y);
+      } else {
+        let w = r.w + dx;
+        let hh = r.h + dy;
+        if (snap) {
+          const a = snapAxis([r.x + w], xs);
+          if (a) { w += a.d; guide('v', a.at); } else w = Math.round(w / 10) * 10;
+          if (fixedHeight) {
+            const b = snapAxis([r.y + hh], ys);
+            if (b) { hh += b.d; guide('h', b.at); } else hh = Math.round(hh / 10) * 10;
+          }
+        }
+        cur.w = Math.max(minW, Math.min(W - r.x, w));
+        cur.h = Math.max(minH, hh);
+      }
+      frame.style.left = cur.x + 'px';
+      frame.style.top = cur.y + 'px';
+      frame.style.width = cur.w + 'px';
+      if (fixedHeight) frame.style.height = cur.h + 'px';
+      fitCanvas(cur.y + cur.h + 200);
+    };
+    const onUp = async () => {
+      window.removeEventListener('pointermove', onMove);
+      clearGuides();
+      frame.classList.remove('moving', 'resizing');
+      if (!moved) return;
+      const p = { fx: cur.x / W, fy: cur.y, fw: cur.w / W, fz: zTop };
+      if (fixedHeight) p.fh = cur.h;
+      await save(p);
+      fitCanvas();
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp, { once: true });
+  };
+  handles.forEach((hd) => hd.addEventListener('pointerdown', (e) => begin(e, 'move')));
+  grip?.addEventListener('pointerdown', (e) => { e.stopPropagation(); begin(e, 'resize'); });
+  frame.addEventListener('pointerdown', () => { if (+frame.style.zIndex < zTop) frame.style.zIndex = ++zTop; });
+}
+
+/** Converte a grade atual em posições livres, preservando o que se vê. */
+function captureGridPositions() {
+  const center = $('#center');
+  const cs = getComputedStyle(center);
+  const c = center.getBoundingClientRect();
+  const ox = c.left + parseFloat(cs.paddingLeft);
+  const oy = c.top + parseFloat(cs.paddingTop);
+  const W = center.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const s = data.settings;
+  s.freeFixed = s.freeFixed || {};
+  for (const [key, f] of Object.entries(FIXED)) {
+    const el = f.el();
+    if (el.hidden) continue;
+    const r = el.getBoundingClientRect();
+    const fw = key === '_hero' ? Math.min(0.4, 520 / W) : r.width / W;
+    const fx = key === '_hero' ? (1 - fw) / 2 : (r.left - ox) / W;
+    s.freeFixed[key] = { fx, fy: Math.max(0, r.top - oy), fw };
+  }
+  for (const card of $$('#widgets .widget')) {
+    const w = s.widgets[+card.dataset.idx];
+    if (!w) continue;
+    const r = card.getBoundingClientRect();
+    Object.assign(w, { fx: (r.left - ox) / W, fy: Math.max(0, r.top - oy), fw: r.width / W, fh: Math.round(r.height) });
+  }
+}
+
+async function setLayoutMode(mode) {
+  const s = data.settings;
+  if (mode === s.layoutMode) return;
+  if (mode === 'free') {
+    if (s.widgets.some((w) => w.fx == null) || !s.freeFixed?._hero) captureGridPositions();
+  }
+  s.layoutMode = mode;
+  await saveWidgets();
+  renderWidgets();
+  toast(mode === 'free' ? 'Modo livre: arraste pelo título para qualquer lugar ✨' : 'Modo grade');
+}
+
+async function rearrangeFree() {
+  if (!confirm('Reorganizar todos os widgets em grade (você pode mover de novo depois)?')) return;
+  const s = data.settings;
+  s.layoutMode = 'grid';
+  document.body.classList.remove('free');
+  renderGrid();
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  captureGridPositions();
+  s.layoutMode = 'free';
+  await saveWidgets();
+  renderWidgets();
+}
+
+function paintModeButtons() {
+  const free = data.settings.layoutMode === 'free';
+  $('#modeGrid').classList.toggle('sel', !free);
+  $('#modeFree').classList.toggle('sel', free);
+  $('#rearrange').hidden = !free;
 }
 
 function applyWidgetSize(card, w) {
@@ -690,7 +978,7 @@ function setupResize(card, grip, idx) {
 }
 
 async function saveWidgets() {
-  widgetsSig = JSON.stringify(data.settings.widgets);
+  widgetsSig = layoutSig();
   await saveData(data);
 }
 
@@ -701,7 +989,7 @@ async function setWidget(idx, patch, silent) {
   for (const k of Object.keys(patch)) if (patch[k] == null) delete w[k];
   await saveWidgets();
   if (!silent) renderWidgets();
-  else {
+  else if (!isFree()) {
     const card = $(`.widget[data-idx="${idx}"]`);
     if (card && ('w' in patch || 'hpx' in patch)) applyWidgetSize(card, w);
   }
@@ -718,8 +1006,8 @@ function setEditing(on) {
   document.body.classList.toggle('editing', on);
   $('#editBar').hidden = !on;
   $('#editLayout').classList.toggle('on', on);
-  $$('.widget').forEach((w) => { w.draggable = on; });
-  if (on) renderLayoutPicker();
+  $$('.widget:not(.free-item)').forEach((w) => { w.draggable = on; });
+  if (on) { renderLayoutPicker(); paintModeButtons(); }
 }
 
 // ---------- Layouts salvos ----------
@@ -737,9 +1025,13 @@ function setupLayouts() {
   $('#layoutSel').addEventListener('change', async (e) => {
     const s = data.settings;
     const cur = s.layouts.find((l) => l.id === s.activeLayout);
-    if (cur) cur.widgets = structuredClone(s.widgets); // guarda as mudanças do layout que estava aberto
+    if (cur) Object.assign(cur, { widgets: structuredClone(s.widgets), mode: s.layoutMode, freeFixed: structuredClone(s.freeFixed || {}) }); // guarda o layout que estava aberto
     const next = s.layouts.find((l) => l.id === e.target.value);
-    if (next) s.widgets = structuredClone(next.widgets);
+    if (next) {
+      s.widgets = structuredClone(next.widgets);
+      if (next.mode) s.layoutMode = next.mode;
+      if (next.freeFixed) s.freeFixed = structuredClone(next.freeFixed);
+    }
     s.activeLayout = next ? next.id : '';
     await saveWidgets();
     renderWidgets();
@@ -751,13 +1043,17 @@ function setupLayouts() {
     const name = prompt('Nome do layout (ex.: Trabalho, Casa, Estudos):', s.layouts.find((l) => l.id === s.activeLayout)?.name || '');
     if (!name?.trim()) return;
     let l = s.layouts.find((x) => x.name.toLowerCase() === name.trim().toLowerCase());
-    if (l) l.widgets = structuredClone(s.widgets);
-    else { l = { id: uid(), name: name.trim(), widgets: structuredClone(s.widgets) }; s.layouts.push(l); }
+    const snap = { widgets: structuredClone(s.widgets), mode: s.layoutMode, freeFixed: structuredClone(s.freeFixed || {}) };
+    if (l) Object.assign(l, snap);
+    else { l = { id: uid(), name: name.trim(), ...snap }; s.layouts.push(l); }
     s.activeLayout = l.id;
     await saveWidgets();
     renderLayoutPicker();
     toast(`Layout "${l.name}" salvo`);
   });
+  $('#modeGrid').addEventListener('click', () => setLayoutMode('grid'));
+  $('#modeFree').addEventListener('click', () => setLayoutMode('free'));
+  $('#rearrange').addEventListener('click', rearrangeFree);
   $('#layoutDel').addEventListener('click', async () => {
     const s = data.settings;
     const l = s.layouts.find((x) => x.id === s.activeLayout);
@@ -777,11 +1073,13 @@ function openWidgetPicker() {
     type: 'button',
     disabled: used.has(def.id) && !def.multiple,
     onclick: async () => {
-      data.settings.widgets.push({ id: def.id, w: def.defaultW || 6 });
+      const nw = { id: def.id, w: def.defaultW || 6 };
+      if (isFree()) Object.assign(nw, autoPlace(nw, $('#widgets').clientWidth), { fz: ++zTop });
+      data.settings.widgets.push(nw);
       await saveWidgets();
       renderWidgets();
       dlg.close();
-      $('.widget:last-of-type')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      $(`.widget[data-idx="${data.settings.widgets.length - 1}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     },
   }, h('span', { class: 'wi' }, def.icon), h('span', {}, h('b', {}, def.title), h('small', {}, used.has(def.id) ? 'Já está na tela' : def.description)))));
   dlg.showModal();

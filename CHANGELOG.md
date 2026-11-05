@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.1 — 2026-11-05
+- **Modo livre**: widgets podem ser colocados em qualquer lugar da tela (arraste pelo título), com sobreposição e camadas
+- Encaixe magnético nas bordas de outros widgets e no centro da tela, com guias visuais (Alt desliga o encaixe)
+- Relógio e busca também podem ser movidos e redimensionados no modo 🧩
+- Ao ativar o modo livre, a posição atual da grade é preservada; "🧲 Reorganizar" refaz a grade
+- Layouts salvos guardam o modo e as posições
+- Em janelas estreitas (< 700 px) volta automaticamente à grade
+
 ## v0.3.0 — 2026-11-05
 **Organização e voz.**
 

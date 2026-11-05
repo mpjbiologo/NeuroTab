@@ -46,7 +46,12 @@
     <div id="updateBar" class="update-bar" hidden></div>
 
     <div id="editBar" class="edit-bar" hidden>
-      <span>🧩 <b>Organizando</b> — arraste para reordenar, puxe o canto ↘ para redimensionar.</span>
+      <span>🧩 <b>Organizando</b></span>
+      <span class="seg" role="group" aria-label="Modo">
+        <button id="modeGrid" class="btn" title="Widgets em colunas, organizados automaticamente">▦ Grade</button>
+        <button id="modeFree" class="btn" title="Coloque os widgets em qualquer lugar da tela">✥ Livre</button>
+      </span>
+      <button id="rearrange" class="btn" title="Reorganizar tudo em grade" hidden>🧲 Reorganizar</button>
       <span class="grow"></span>
       <select id="layoutSel" class="layout-sel" title="Layouts salvos"></select>
       <button id="layoutSave" class="btn" title="Salvar estes widgets como um layout">💾 Salvar layout</button>

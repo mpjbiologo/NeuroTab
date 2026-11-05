@@ -427,3 +427,44 @@ body.dock-right .voice-fab { right: calc(var(--rail) + 22px); }
 .reply { margin-top: 8px; font-size: 15px; color: #cfe0ff; }
 .reply:empty { display: none; }
 .voice-hint { width: min(720px, 92vw); margin: 12px 0 0; color: rgba(255,255,255,.7); font-size: 12.5px; text-align: center; }
+
+/* ================= MODO LIVRE ================= */
+body.free .widgets { display: block; position: relative; width: 100%; margin: 0; min-height: 60vh; }
+body.free #center { padding-top: 14px; }
+body.free.dock-top #center { padding-top: 66px; }
+.free-item { position: absolute; max-height: none; }
+.free-item.widget { display: flex; flex-direction: column; }
+.free-item.widget .wbody { flex: 1; }
+body.free .widget > header { cursor: grab; user-select: none; touch-action: none; }
+body.free .widget.moving > header { cursor: grabbing; }
+.free-item.moving, .free-item.resizing { box-shadow: 0 24px 60px rgba(0,0,0,.55); outline: 2px solid var(--accent); outline-offset: 2px; transition: none; }
+.free-item.moving { opacity: .92; }
+body.free .wgrid { display: none !important; }
+body.free.editing .widget { outline: 2px dashed rgba(106,168,255,.55); cursor: default; }
+body.free.editing .widget .wbody { pointer-events: auto; opacity: 1; }
+.free-fixed { min-height: 40px; }
+.free-fixed .hero { padding: 0; container-type: inline-size; }
+.free-fixed .clock { font-size: clamp(36px, 24cqw, 160px); }
+.free-fixed .omni-wrap { width: 100%; margin: 0; }
+.free-fixed .grip { opacity: 0; }
+.ff-handle {
+  display: none; position: absolute; top: 4px; left: 4px; z-index: 3; height: 24px; padding: 0 10px; border-radius: 8px;
+  background: rgba(106,168,255,.85); color: #001; font-size: 12px; font-weight: 600; line-height: 24px; cursor: grab; user-select: none; touch-action: none; white-space: nowrap;
+}
+body.editing .ff-handle { display: block; }
+body.editing .free-fixed { outline: 2px dashed rgba(106,168,255,.55); outline-offset: 4px; border-radius: 10px; }
+body.editing .free-fixed .grip { opacity: 1; }
+.free-fixed.moving .ff-handle { cursor: grabbing; }
+.guide { position: absolute; z-index: 9999; pointer-events: none; background: #ff4fd8; }
+.guide-v { top: 0; bottom: 0; width: 1px; }
+.guide-h { left: 0; right: 0; height: 1px; }
+.free-empty { position: absolute; top: 320px; left: 0; right: 0; text-align: center; }
+body.free .edit-bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 60; width: min(1100px, 94vw); margin: 0; backdrop-filter: blur(16px); background: rgba(30,40,70,.85); box-shadow: 0 16px 40px rgba(0,0,0,.5); }
+body.free .update-bar { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 60; width: min(900px, 94vw); margin: 0; backdrop-filter: blur(16px); }
+body.free.dock-top .update-bar { top: 64px; }
+.seg { display: inline-flex; }
+.seg .btn { border-radius: 0; }
+.seg .btn:first-child { border-radius: 9px 0 0 9px; }
+.seg .btn:last-child { border-radius: 0 9px 9px 0; margin-left: -1px; }
+.seg .btn.sel { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.free-fixed:focus-within { z-index: 9000 !important; }

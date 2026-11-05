@@ -1,5 +1,14 @@
 // Novidades exibidas uma vez após atualizar a extensão.
 export const WHATS_NEW = {
+  '0.3.1': {
+    title: 'NeuroTab 0.3.1 — widgets em qualquer lugar',
+    items: [
+      ['✥', 'Modo livre', 'Clique em 🧩 → "Livre" e arraste os widgets pelo título para qualquer ponto da tela. Eles podem até se sobrepor.'],
+      ['🧲', 'Encaixe magnético', 'Ao mover ou redimensionar, os widgets se alinham às bordas dos outros (linhas rosa). Segure Alt para mover sem encaixe.'],
+      ['🕐', 'Relógio e busca também se movem', 'No modo 🧩, use as etiquetas "⠿ Relógio" e "⠿ Busca" para reposicioná-los ou mudar o tamanho.'],
+      ['💾', 'Layouts guardam as posições', 'Salve arranjos diferentes (Trabalho, Casa) e troque com um clique. "🧲 Reorganizar" volta tudo para a grade.'],
+    ],
+  },
   '0.3.0': {
     title: 'NeuroTab 0.3 — organização e voz',
     items: [
