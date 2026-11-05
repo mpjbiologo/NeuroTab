@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.5.0 — 2026-11-05
+**Mais inteligente e fala sua língua.**
+
+**Busca por significado**
+- Notas viram vetores (embeddings) gerados pelo seu provedor de IA: Gemini (`gemini-embedding-001`), OpenAI e OpenRouter (`text-embedding-3-small`), Ollama (`nomic-embed-text`) ou outro compatível
+- Busca híbrida (palavras + significado) no widget Meu cérebro e no Ctrl+K; resultados achados pelo sentido ganham ✨
+- "Pergunte ao cérebro" escolhe as notas de contexto pelo significado; com Anthropic (sem embeddings), a própria IA escolhe as notas
+- Índice no IndexedDB, atualizado sozinho ao abrir uma nova aba; botões "Indexar minhas notas" e "Refazer índice"
+- Desligada por padrão (Configurações → IA e voz)
+
+**Voz**
+- Comandos de voz em **inglês e espanhol**, além do português, com respostas faladas no mesmo idioma
+- Lembretes e durações entendem datas e números nos três idiomas ("tomorrow at 9am", "mañana a las 9", "ten minutes")
+- Conversões aceitam nomes de unidades em inglês e espanhol ("10 km to miles")
+- Plano B com IA: frases fora do padrão são interpretadas pela IA e executadas
+- **Palavra de ativação** (experimental, desligada por padrão): "NeuroTab, …" sem apertar nada; escuta só com a nova aba visível e em foco, desliga sozinha após 5–60 min sem uso, indicador na tela para pausar
+
+**Backup**
+- Opção "Incluir chaves de API da IA", com aviso
+- Senha opcional: as chaves são criptografadas (AES-256-GCM, PBKDF2) dentro do arquivo; sem a senha, o resto do backup é restaurado sem as chaves
+
 ## v0.4.0 — 2026-11-05
 **O mundo na sua nova aba.**
 

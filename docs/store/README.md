@@ -66,7 +66,8 @@ A NeuroTab troca a nova aba do navegador por um painel pessoal: seus atalhos num
 • Notas, ideias e tarefas com busca, tags e lixeira de 30 dias; importação do Google Keep e exportação em Markdown
 • Lembretes com linguagem natural ("amanhã às 9h") e notificações
 • IA opcional (Gemini, OpenAI, Claude, OpenRouter ou Ollama local): organiza notas e responde perguntas sobre elas
-• Comandos de voz e leitura em voz alta
+• Comandos de voz em português, inglês e espanhol, palavra de ativação opcional e leitura em voz alta
+• Busca por significado: encontra notas pelo sentido, não só pelas palavras
 • Relógio e clima juntos, com outras cidades e fusos horários
 • Trânsito com seus locais e rotas favoritas (Waze e Google Maps)
 • Widgets: cotações, despertador, timer, pomodoro, calculadora, hábitos, notícias RSS, foco do dia, slides de fotos
@@ -89,7 +90,8 @@ NeuroTab replaces your browser's new tab with a personal dashboard: shortcuts in
 • Notes, ideas and tasks with search, tags and a 30-day trash; Google Keep import and Markdown export
 • Reminders with notifications
 • Optional AI (Gemini, OpenAI, Claude, OpenRouter or local Ollama): organizes notes and answers questions about them
-• Voice commands (Portuguese for now) and read-aloud
+• Voice commands in English, Portuguese and Spanish, an optional wake word, and read-aloud
+• Search by meaning: find notes by what they mean, not just the words
 • Clock and weather together, with other cities and time zones
 • Traffic with your favorite places and routes (Waze and Google Maps)
 • Widgets: quotes, alarm, timer, pomodoro, calculator, habits, RSS news, daily focus, photo slideshow
@@ -112,7 +114,8 @@ NeuroTab cambia la nueva pestaña del navegador por un panel personal: tus acces
 • Notas, ideas y tareas con búsqueda, etiquetas y papelera de 30 días; importación de Google Keep y exportación en Markdown
 • Recordatorios y notificaciones
 • IA opcional (Gemini, OpenAI, Claude, OpenRouter u Ollama local): organiza notas y responde preguntas sobre ellas
-• Comandos de voz (por ahora en portugués) y lectura en voz alta
+• Comandos de voz en español, portugués e inglés, palabra de activación opcional y lectura en voz alta
+• Búsqueda por significado: encuentra notas por su sentido, no solo por las palabras
 • Reloj y clima juntos, con otras ciudades y husos horarios
 • Tráfico con tus lugares y rutas favoritas (Waze y Google Maps)
 • Widgets: cotizaciones, alarma, temporizador, pomodoro, calculadora, hábitos, noticias RSS, foco del día, presentación de fotos

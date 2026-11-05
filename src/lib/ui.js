@@ -126,7 +126,12 @@ export function startDictation({ lang, onText, onEnd, onError }) {
     };
     onError?.(map[ev.error] || 'Erro no reconhecimento de voz: ' + ev.error);
   };
-  rec.onend = () => onEnd?.(finalText.trim());
+  rec.onend = () => {
+    window.dispatchEvent(new CustomEvent('nt-dictation', { detail: 'end' }));
+    onEnd?.(finalText.trim());
+  };
+  // Avisa a palavra de ativação para liberar o microfone enquanto este ditado roda.
+  window.dispatchEvent(new CustomEvent('nt-dictation', { detail: 'start' }));
   rec.start();
   return { stop: () => rec.stop() };
 }

@@ -1,15 +1,17 @@
 // NeuroTab — página de configurações.
 import {
   DATA_KEY, SEARCH_ENGINES, DEFAULT_SETTINGS, mergeSettings,
-  loadData, saveData, loadBg, saveBg, parseBackup, toBackup, uid,
+  loadData, saveData, loadBg, saveBg, parseBackup, toBackup, collectSecrets, applySecrets, uid,
 } from './lib/store.js';
+import { encryptJSON, decryptJSON } from './lib/crypto.js';
 import { loadItems, saveItems, fromKeepNote, toMarkdown, trashItems, purgeTrash, loadTrash } from './lib/brain.js';
 import { voicesFor, speak } from './lib/ui.js';
 import { SOUNDS } from './lib/sounds.js';
 import { UPDATE_KEY } from './lib/update.js';
 import { SOURCES, addFiles, listLocal, clearLocal } from './lib/photos.js';
-import { initI18n, LOCALE } from './lib/i18n.js';
+import { initI18n, LOCALE, t } from './lib/i18n.js';
 import { PROVIDERS, aiConfig, requestPermission, listModels, complete } from './lib/ai.js';
+import { embedConfig, indexItems, indexStatus, clearIndex, EMBED_DEFAULTS } from './lib/semantic.js';
 import { pixPayload, qrSvg } from './lib/pix.js';
 import { PROJECT, DONATION } from './config.js';
 
@@ -69,6 +71,7 @@ function fillSettings() {
     else el.value = v == null ? '' : String(v);
   }
   $('#autoEnrich').checked = !!data.settings.ai.autoEnrich;
+  $('#semantic').checked = !!data.settings.ai.semantic;
 }
 
 function bindSettings() {
@@ -204,6 +207,7 @@ function setupAi() {
       const t0 = performance.now();
       const out = await complete(s, { messages: [{ role: 'user', content: 'Responda apenas: OK' }], maxTokens: 50 });
       msg(`✓ Funcionando (${cfg.model}, ${Math.round(performance.now() - t0)} ms): "${out.trim().slice(0, 40)}"`, 'ok');
+      document.querySelector('#semantic').dispatchEvent(new Event('repaint'));
     } catch (e) {
       msg('✕ ' + e.message, 'err');
     }
@@ -212,6 +216,90 @@ function setupAi() {
   $('#autoEnrich').addEventListener('change', async (e) => {
     data.settings.ai.autoEnrich = e.target.checked;
     await saveData(data);
+    toast('Salvo ✓');
+  });
+
+  // ---------- Busca por significado ----------
+  const semMsg = (txt, cls = '') => { const m = $('#semMsg'); m.className = 'msg ' + cls; m.textContent = t(txt); };
+  const paintSem = async () => {
+    const on = !!data.settings.ai.semantic;
+    $('#semBox').hidden = !on;
+    if (!on) return;
+    const c = embedConfig(data.settings);
+    const id = c.id;
+    $('#embedRow').hidden = EMBED_DEFAULTS[id] === null;
+    $('#embedModel').placeholder = EMBED_DEFAULTS[id] || 'ex.: nomic-embed-text';
+    $('#embedModel').value = (data.settings.ai.embedModels || {})[id] || '';
+    $('#semIndex').hidden = $('#semClear').hidden = !c.supported;
+    if (EMBED_DEFAULTS[id] === null) {
+      $('#semInfo').textContent = `${c.p.name} não oferece embeddings. A busca no "Pergunte ao cérebro" usa a própria IA para escolher as notas relevantes (sem índice).`;
+      return;
+    }
+    if (!c.supported) {
+      $('#semInfo').textContent = 'Configure e salve o provedor de IA acima (e informe o modelo de embeddings, se for "Outro compatível").';
+      return;
+    }
+    const st = await indexStatus(data.settings, await loadItems());
+    $('#semInfo').textContent = `Modelo: ${c.embedModel} · ${st.done} de ${st.total} notas indexadas. Notas novas são indexadas sozinhas quando você abre uma nova aba.`;
+  };
+  $('#semantic').addEventListener('change', async (e) => {
+    if (e.target.checked) {
+      const c = embedConfig(data.settings);
+      if (!(await requestPermission(c).catch(() => false)) && c.base) { e.target.checked = false; return toast('Permissão negada pelo navegador.'); }
+    }
+    data.settings.ai.semantic = e.target.checked;
+    await saveData(data);
+    await paintSem();
+    if (e.target.checked && embedConfig(data.settings).supported) $('#semIndex').click();
+  });
+  $('#embedModel').addEventListener('change', async (e) => {
+    data.settings.ai.embedModels = { ...(data.settings.ai.embedModels || {}), [embedConfig(data.settings).id]: e.target.value.trim() };
+    await saveData(data);
+    await paintSem();
+  });
+  $('#semIndex').onclick = async () => {
+    const prog = $('#semProg');
+    prog.hidden = false;
+    semMsg('Indexando…');
+    try {
+      const r = await indexItems(data.settings, await loadItems(), (done, total) => { prog.value = total ? done / total : 1; semMsg(`Indexando… ${done}/${total}`); });
+      if (r?.busy) semMsg('Outra aba já está indexando. Aguarde um pouco.', '');
+      else semMsg(`✓ ${r.done} notas indexadas.`, 'ok');
+    } catch (err) {
+      semMsg('✕ ' + err.message, 'err');
+    }
+    prog.hidden = true;
+    paintSem();
+  };
+  $('#semClear').onclick = async () => {
+    await clearIndex();
+    await paintSem();
+    $('#semIndex').click();
+  };
+  paintSem();
+  $('#semantic').addEventListener('repaint', paintSem);
+
+  // ---------- Palavra de ativação ----------
+  const hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  $('#wakeRow').hidden = !hasSR;
+  $('#wakeNo').hidden = hasSR;
+  const paintWake = () => { $('#wakeWord').checked = !!data.settings.wakeWord; $('#wakeBox').hidden = !data.settings.wakeWord; };
+  paintWake();
+  $('#wakeWord').addEventListener('change', async (e) => {
+    if (e.target.checked) {
+      const ok = confirm('Ligar a palavra de ativação?\n\nEnquanto a nova aba estiver aberta e em foco, o navegador vai ouvir continuamente. No Edge e no Chrome, o áudio é enviado ao serviço de reconhecimento da Microsoft ou do Google.\n\nVocê pode pausar a qualquer momento pelo indicador no canto da tela.');
+      if (!ok) { e.target.checked = false; return; }
+      try {
+        const st = await navigator.mediaDevices.getUserMedia({ audio: true });
+        st.getTracks().forEach((tr) => tr.stop());
+      } catch {
+        e.target.checked = false;
+        return toast('O navegador bloqueou o microfone. Libere no ícone da barra de endereço.');
+      }
+    }
+    data.settings.wakeWord = e.target.checked;
+    await saveData(data);
+    paintWake();
     toast('Salvo ✓');
   });
 
@@ -286,6 +374,7 @@ function setupBackup() {
       const mode = document.querySelector('input[name=mode]:checked').value;
       const current = await loadBg();
       const secrets = { ai: data.settings.ai, brapiToken: data.settings.brapiToken };
+      const imported = await readSecrets(parsed.secrets);
       if (mode === 'replace') {
         if (!confirm(`Substituir tudo por ${parsed.data.groups.length} grupos e ${parsed.data.links.length} atalhos${parsed.brain.length ? ` e ${parsed.brain.length} notas` : ''}?`)) { msg.textContent = ''; return; }
         data = parsed.data;
@@ -307,6 +396,7 @@ function setupBackup() {
           await saveItems([...items, ...parsed.brain.filter((i) => !ids.has(i.id))].sort((a, b) => b.createdAt - a.createdAt));
         }
       }
+      const nKeys = imported ? applySecrets(data.settings, imported, mode === 'replace') : 0;
       await saveData(data);
       if (parsed.background && (mode === 'replace' || !current)) {
         msg.textContent = 'Otimizando plano de fundo…';
@@ -316,6 +406,8 @@ function setupBackup() {
       fillSettings();
       msg.className = 'msg ok';
       msg.textContent = `✓ Importado: ${parsed.data.groups.length} grupos, ${parsed.data.links.length} atalhos${parsed.brain.length ? `, ${parsed.brain.length} notas` : ''}.`;
+      if (nKeys) msg.textContent += ' ' + t('🔑 Chaves de API restauradas.');
+      else if (parsed.secrets && !imported) msg.textContent += ' ' + t('Chaves de API não restauradas.');
       showStats();
     } catch (err) {
       console.error(err);
@@ -323,10 +415,55 @@ function setupBackup() {
       msg.textContent = '✕ ' + (err.message || 'Não foi possível importar.');
     }
   });
+  const incl = $('#inclKeys');
+  incl.addEventListener('change', () => { $('#keysBox').hidden = !incl.checked; });
   $('#exportBtn').addEventListener('click', async () => {
-    const blob = new Blob([JSON.stringify(toBackup(data, await loadBg(), await loadItems()))], { type: 'application/json' });
-    download(blob, `neurotab-backup-${today()}.json`);
+    let secrets = null;
+    if (incl.checked) {
+      const s = collectSecrets(data.settings);
+      if (!Object.keys(s.aiKeys).length && !s.brapiToken) {
+        alert('Não há chaves de API salvas para incluir.');
+      } else {
+        const p1 = $('#bkPwd').value;
+        const p2 = $('#bkPwd2').value;
+        if (p1 !== p2) { alert('As senhas não conferem.'); return; }
+        if (p1) {
+          if (p1.length < 6) { alert('Use uma senha com pelo menos 6 caracteres.'); return; }
+          secrets = { protected: true, ...(await encryptJSON(s, p1)) };
+        } else {
+          if (!confirm('As chaves vão ficar legíveis no arquivo, sem senha. Quem tiver o arquivo poderá usá-las. Continuar?')) return;
+          secrets = { protected: false, value: s };
+        }
+      }
+    }
+    const blob = new Blob([JSON.stringify(toBackup(data, await loadBg(), await loadItems(), secrets))], { type: 'application/json' });
+    download(blob, `neurotab-backup-${today()}${secrets ? '-com-chaves' : ''}.json`);
+    $('#bkPwd').value = $('#bkPwd2').value = '';
   });
+}
+
+// Lê os segredos do backup: pede a senha quando estão criptografados. Retorna null se pulados.
+async function readSecrets(box) {
+  if (!box) return null;
+  if (!box.protected) return box.value || null;
+  const dlg = $('#pwdDlg');
+  const input = $('#pwdIn');
+  const err = $('#pwdErr');
+  err.textContent = '';
+  input.value = '';
+  input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); dlg.close('ok'); } };
+  for (;;) {
+    dlg.showModal();
+    input.focus();
+    const choice = await new Promise((res) => dlg.addEventListener('close', () => res(dlg.returnValue), { once: true }));
+    if (choice !== 'ok') return null;
+    try {
+      return await decryptJSON(box, input.value);
+    } catch (e) {
+      err.textContent = t(e.message);
+      input.value = '';
+    }
+  }
 }
 
 async function showStats() {

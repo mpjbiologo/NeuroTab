@@ -40,15 +40,17 @@ A NeuroTab começou como substituta da extensão **Speed Dial**, que parou de se
 | 🔎 **Ctrl+K** | Uma busca só para atalhos, notas, web e perguntas à IA. **Shift+Enter** salva o texto como nota |
 | ⏱ **Relógio** | Despertador com dias da semana e soneca, timer, pomodoro e cronômetro, com som e notificação |
 | 🧮 **Calculadora** | Contas, porcentagem ("200 + 10%"), conversões (moedas, medidas, temperatura, datas) e calculadoras de saúde opcionais |
-| 🎙 **Comandos de voz** | **Alt+Shift+V** em qualquer aba: "anotar…", "me lembre amanhã às 9h…", "timer de 10 minutos", "abrir YouTube", "como está o tempo" |
+| 🎙 **Comandos de voz** | **Alt+Shift+V** em qualquer aba: "anotar…", "me lembre amanhã às 9h…", "timer de 10 minutos", "abrir YouTube", "como está o tempo". Em português, inglês e espanhol; frases fora do padrão são interpretadas pela IA |
+| 👂 **Palavra de ativação** *(experimental)* | Diga **"NeuroTab, …"** sem apertar nada. Desligada por padrão; só escuta com a nova aba aberta e em foco e desliga sozinha após um tempo sem uso |
+| ✨ **Busca por significado** | "Aquela nota sobre sono" encontra "dormi mal". Usa embeddings do seu provedor de IA e melhora as respostas do "Pergunte ao cérebro" |
 | 🌤 **Relógio e clima juntos** | O tempo fica ao lado da saudação, com previsão de 5 dias. Adicione outras cidades para ver a hora e o clima de cada fuso |
 | 🗺 **Trânsito** | Mapa do Waze, seus locais favoritos (casa, trabalho…) e rotas salvas que abrem no Google Maps ou no Waze |
 | 🖼 **Slides de fotos** | Fundo com fotos do seu PC, a foto do dia do Bing ou da NASA |
 | ✅ **Hábitos, notícias e foco** | Hábitos com sequência de dias, feeds RSS e a tarefa principal do dia |
-| 🌐 **Idiomas** | Português, inglês e espanhol, conforme o idioma do navegador (dá para trocar nas configurações). Os comandos de voz ainda são só em português |
+| 🌐 **Idiomas** | Português, inglês e espanhol, conforme o idioma do navegador (dá para trocar nas configurações), incluindo os comandos de voz |
 | 🗑 **Lixeira e limpeza** | Seleção múltipla, limpar concluídas, lixeira de 30 dias |
 | 📈🕘 **Mais widgets** | Clima, cotações, mais visitados e abas fechadas, atalhos em blocos. Arraste o canto ↘ para redimensionar e salve layouts com o 🧩. No **modo livre**, os widgets ficam em qualquer lugar da tela |
-| 🔁 **Importar e exportar** | Importa o Speed Dial (`.spd`) e o Google Keep (via Takeout). Exporta as notas em Markdown e faz backup completo em `.json` |
+| 🔁 **Importar e exportar** | Importa o Speed Dial (`.spd`) e o Google Keep (via Takeout). Exporta as notas em Markdown e faz backup completo em `.json`, com a opção de incluir as chaves de API protegidas por senha |
 
 <p align="center"><img src="docs/shot-panel.jpg" width="49%" alt="Painel de atalhos"> <img src="docs/shot-voice.jpg" width="49%" alt="Comando de voz"></p>
 
@@ -92,14 +94,15 @@ O Google só libera a API do Keep para contas empresariais (Workspace). Para con
 | **v0.2** ✅ | Segundo cérebro: widgets, captura, lembretes, IA multi-provedor, voz, Keep, anotar páginas |
 | **v0.3** ✅ | Widgets redimensionáveis e responsivos, relógio/despertador, calculadora, navegação, lixeira, comandos de voz, aviso de atualização |
 | **v0.4** ✅ | Relógio + clima com várias cidades e fusos, trânsito com locais e rotas, slides de fotos, hábitos, notícias RSS, foco do dia, tradução (pt/en/es), versão para Firefox, material para as lojas |
-| **v0.5** | Agenda, Google Fotos e OneDrive, comandos de voz em outros idiomas, palavra de ativação, sincronização, busca por significado |
+| **v0.5** ✅ | Busca por significado, comandos de voz em inglês e espanhol, palavra de ativação (experimental), backup com chaves de API |
+| **Depois** | Agenda, sincronização entre computadores, Google Fotos e OneDrive nos slides, palavra de ativação offline |
 | — | Publicação nas lojas do Edge, Firefox, Opera e Chrome ([guia](docs/store/README.md)) |
 
 Ideias são bem-vindas nas [Issues](https://github.com/mpjbiologo/NeuroTab/issues).
 
 ## 🔒 Privacidade
 
-Tudo fica **no seu navegador**. A NeuroTab não tem servidor, não pede conta e não coleta dados. A chave da IA fica só no navegador e **não entra no backup**. Detalhes na [política de privacidade](https://mpjbiologo.github.io/NeuroTab/privacy.html).
+Tudo fica **no seu navegador**. A NeuroTab não tem servidor, não pede conta e não coleta dados. A chave da IA fica só no navegador e **só entra no backup se você pedir** (com senha opcional). Detalhes na [política de privacidade](https://mpjbiologo.github.io/NeuroTab/privacy.html).
 
 | Permissão | Para quê |
 |---|---|

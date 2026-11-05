@@ -1,15 +1,8 @@
 // NeuroTab — fotos para slides: do computador (IndexedDB) e galerias online (Bing, NASA).
-const DB = 'neurotab';
-const STORE = 'photos';
+import { openDB } from './idb.js';
 
-function db() {
-  return new Promise((res, rej) => {
-    const r = indexedDB.open(DB, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore(STORE, { keyPath: 'id' });
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
-  });
-}
+const STORE = 'photos';
+const db = openDB;
 
 async function tx(mode, fn) {
   const d = await db();

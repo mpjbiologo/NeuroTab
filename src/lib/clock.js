@@ -167,12 +167,15 @@ export function parseDuration(text) {
   if ((m = t.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/))) return m[3] ? (+m[1] * 3600 + +m[2] * 60 + +m[3]) * 1000 : (+m[1] * 60 + +m[2]) * 1000;
   let ms = 0;
   let any = false;
-  for (const [, n, u] of t.matchAll(/(\d+(?:\.\d+)?)\s*(h|hora|horas|m|min|minuto|minutos|s|seg|segundo|segundos)?/g)) {
+  // Unidades em português, inglês e espanhol: h/hora/hour/hr · m/min/minuto/minute · s/seg/segundo/sec/second
+  for (const [, n, u] of t.matchAll(/(\d+(?:\.\d+)?)\s*([a-z]+)?/g)) {
     if (!n) continue;
+    const unit = u || '';
+    if (unit && !/^(h|hr|hrs|horas?|hours?|m|mins?|minutos?|minutes?|s|secs?|seg|segs|segundos?|seconds?)$/.test(unit)) continue;
     any = true;
     const v = parseFloat(n);
-    if (!u || u.startsWith('m')) ms += v * 60e3;
-    else if (u.startsWith('h')) ms += v * 3600e3;
+    if (!unit || unit.startsWith('m')) ms += v * 60e3;
+    else if (unit.startsWith('h')) ms += v * 3600e3;
     else ms += v * 1000;
   }
   return any ? Math.round(ms) : null;

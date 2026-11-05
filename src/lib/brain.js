@@ -1,5 +1,6 @@
 // NeuroTab — "segundo cérebro": notas, trechos, páginas, tarefas e lembretes.
 import { BRAIN_KEY, TRASH_KEY, uid, hostOf } from './store.js';
+import { LANG } from './i18n.js';
 
 export const TYPES = {
   note: { label: 'Nota', icon: '📝' },
@@ -153,32 +154,51 @@ export function searchItems(items, query, limit = 20) {
 }
 
 // ---------- Lembretes em linguagem natural (sem IA) ----------
-// Entende: "amanhã às 9h", "hoje 14:30", "depois de amanhã 8h", "em 20 minutos", "em 2 horas", "dia 15 às 10h", "15/11 9h".
-export function parseReminder(text, now = new Date()) {
+// Português: "amanhã às 9h", "hoje 14:30", "depois de amanhã 8h", "em 20 minutos", "dia 15 às 10h", "15/11 9h".
+// English: "tomorrow at 9am", "today 2:30 pm", "in 20 minutes", "on the 15th at 10", "11/15 9am".
+// Español: "mañana a las 9", "hoy 14:30", "pasado mañana", "en 20 minutos", "dentro de 2 horas", "el día 15".
+const REL_RE = /\b(?:em|in|en|dentro de) (\d{1,3}) ?(min|mins|minutos?|minutes?|h|hrs?|horas?|hours?)\b/;
+const MORNING_RE = /\b(?:por|de|en|pela|da) (?:la )?manana\b/;
+
+export function parseReminder(text, now = new Date(), dateOrder = LANG === 'en' ? 'mdy' : 'dmy') {
   const t = fold(text);
-  let m = t.match(/\bem (\d{1,3}) ?(min|minutos?|h|horas?)\b/);
+  let m = t.match(REL_RE);
   if (m) {
     const n = +m[1];
     return now.getTime() + n * (m[2].startsWith('h') ? 3600e3 : 60e3);
   }
-  const time = t.match(/\b(?:as |a |às )?(\d{1,2})(?:h|:)(\d{2})?\b/);
+  // Hora: 9h, 9h30, 9:30, 9am, 9:30 pm, "às 9", "at 9", "a las 9"
+  let h = null;
+  let min = 0;
+  if ((m = t.match(/\b(\d{1,2})(?:h|:)(\d{2})?\s*(am|pm|a\.m\.?|p\.m\.?)?(?![\w/])/)) || (m = t.match(/\b(\d{1,2})\s*(am|pm|a\.m\.?|p\.m\.?)(?!\w)/))) {
+    h = +m[1];
+    const ampm = m.length > 3 ? m[3] : m[2];
+    if (m.length > 3 && m[2]) min = +m[2];
+    if (ampm && !/^\d/.test(ampm)) {
+      if (/^p/.test(ampm) && h < 12) h += 12;
+      if (/^a/.test(ampm) && h === 12) h = 0;
+    }
+  } else if ((m = t.match(/\b(?:as|a|at|a las|a la) (\d{1,2})\b(?!\s*(?:min|hora|hour|dia|day|\/))/))) {
+    h = +m[1];
+  }
+  if (h != null && /\b(?:da noite|de la noche|at night|tonight|da tarde|de la tarde|in the evening|in the afternoon|pm)\b/.test(t) && h < 12) h += 12;
   let day = null;
-  if (/\bdepois de amanha\b/.test(t)) day = addDays(now, 2);
-  else if (/\bamanha\b/.test(t)) day = addDays(now, 1);
-  else if (/\bhoje\b/.test(t)) day = new Date(now);
+  if (/\b(depois de amanha|day after tomorrow|pasado manana)\b/.test(t)) day = addDays(now, 2);
+  else if (/\b(amanha|tomorrow)\b/.test(t) || (/\bmanana\b/.test(t) && !MORNING_RE.test(t))) day = addDays(now, 1);
+  else if (/\b(hoje|today|tonight|hoy|esta noche)\b/.test(t)) day = new Date(now);
   else if ((m = t.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/))) {
     const y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : now.getFullYear();
-    day = new Date(y, +m[2] - 1, +m[1]);
-  } else if ((m = t.match(/\bdia (\d{1,2})\b/))) {
+    const [d, mo] = dateOrder === 'mdy' ? [+m[2], +m[1]] : [+m[1], +m[2]];
+    day = new Date(y, mo - 1, d);
+  } else if ((m = t.match(/\b(?:dia|el dia|el|on the|the) (\d{1,2})(st|nd|rd|th)?\b/)) && (m[2] || !/^(?:el|the)/.test(m[0]))) {
     day = new Date(now.getFullYear(), now.getMonth(), +m[1]);
     if (day < startOfDay(now)) day.setMonth(day.getMonth() + 1);
   }
-  if (!day && !time) return null;
-  if (!/\b(lembr|avis|alarm|despert|me chama|notific)/.test(t) && !day) return null;
+  if (!day && h == null) return null;
+  if (!/\b(lembr|avis|alarm|despert|me chama|notific|remind|alert|wake|recuerd|record)/.test(t) && !day) return null;
   const explicitDay = !!day;
   day = day || new Date(now);
-  const h = time ? +time[1] : 9;
-  const min = time && time[2] ? +time[2] : 0;
+  if (h == null) h = 9;
   if (h > 23 || min > 59) return null;
   day.setHours(h, min, 0, 0);
   if (day.getTime() <= now.getTime() && !explicitDay) day = addDays(day, 1);

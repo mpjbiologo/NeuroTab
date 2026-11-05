@@ -10,9 +10,10 @@ const FILTERS = [
   ['all', 'Tudo'], ['note', '📝 Notas'], ['task', '☑️ Tarefas'], ['clip', '✂️ Trechos'], ['page', '🔖 Páginas'], ['idea', '💡 Ideias'], ['pinned', '📌'], ['trash', '🗑'],
 ];
 
-export function itemRow(it, ctx, { checkbox = false, select = null } = {}) {
+export function itemRow(it, ctx, { checkbox = false, select = null, semantic = false } = {}) {
   const tags = (it.tags || []).slice(0, 4).map((t) => h('span', { class: 'tag' }, '#' + t));
   const meta = [h('span', {}, it.deletedAt ? `apagado ${relTime(it.deletedAt)}` : relTime(it.createdAt))];
+  if (semantic) meta.unshift(h('span', { class: 'sem-hit', title: 'Encontrado pelo significado' }, '✨'));
   if (it.url) meta.push(h('span', {}, '· ' + hostOf(it.url)));
   if (it.remindAt && !it.done && !it.deletedAt) {
     const late = it.remindAt < Date.now();
@@ -50,6 +51,8 @@ export default {
     let limit = 25;
     let selecting = false;
     let trash = [];
+    let sem = null; // { key, list, semIds } — resultado da busca por significado
+    let semTimer;
     const picked = new Set();
     const select = {
       has: (id) => picked.has(id),
@@ -62,7 +65,24 @@ export default {
     const list = h('div', { class: 'items' });
     const selBtn = h('button', { title: 'Selecionar vários', onclick: () => { selecting = !selecting; picked.clear(); render(); } }, '☑');
     ctx.actions.append(selBtn, h('button', { title: 'Nova nota', onclick: () => ctx.newItem({}) }, '＋'));
-    search.addEventListener('input', () => { q = search.value; limit = 25; render(); });
+    search.addEventListener('input', () => { q = search.value; limit = 25; render(); askSemantic(); });
+
+    // Busca por significado: roda depois de uma pausa na digitação e reordena a lista.
+    function askSemantic() {
+      clearTimeout(semTimer);
+      const query = q.trim();
+      if (!ctx.semanticOn() || filter === 'trash' || query.length < 3) return;
+      const key = filter + '|' + query;
+      if (sem?.key === key) return;
+      semTimer = setTimeout(async () => {
+        try {
+          const res = await ctx.smartSearch(query, 200, base());
+          if (q.trim() !== query) return;
+          sem = { key, list: res.map((x) => x.it), semIds: new Set(res.filter((x) => x.sem && !x.kw).map((x) => x.it.id)) };
+          render();
+        } catch (e) { console.warn(e); }
+      }, 450);
+    }
 
     function setFilter(k) {
       if ((k === 'trash') !== (filter === 'trash')) selecting = false;
@@ -71,13 +91,22 @@ export default {
       picked.clear();
       chips.forEach((c, i) => c.classList.toggle('sel', FILTERS[i][0] === k));
       if (k === 'trash') loadTrash().then((t) => { trash = t; render(); });
-      else render();
+      else { render(); askSemantic(); }
     }
 
-    function visible() {
+    function base() {
       let arr = filter === 'trash' ? trash : ctx.items;
       if (filter === 'pinned') arr = arr.filter((i) => i.pinned);
       else if (filter !== 'all' && filter !== 'trash') arr = arr.filter((i) => i.type === filter);
+      return arr;
+    }
+
+    function visible() {
+      const arr = base();
+      if (q.trim() && sem?.key === filter + '|' + q.trim()) {
+        const live = new Map(arr.map((i) => [i.id, i]));
+        return sem.list.map((i) => live.get(i.id)).filter(Boolean);
+      }
       return q.trim() ? searchItems(arr, q, 500) : [...arr].sort((a, b) => filter === 'trash' ? b.deletedAt - a.deletedAt : (b.pinned - a.pinned) || (b.createdAt - a.createdAt));
     }
 
@@ -140,7 +169,7 @@ export default {
           : 'Seu cérebro está vazio. Use a Captura rápida, o botão direito em qualquer página (NeuroTab → Salvar trecho) ou o ícone da extensão.'));
         return;
       }
-      arr.slice(0, limit).forEach((it) => list.append(itemRow(it, ctx, { select: selecting || filter === 'trash' ? select : null })));
+      arr.slice(0, limit).forEach((it) => list.append(itemRow(it, ctx, { select: selecting || filter === 'trash' ? select : null, semantic: !!sem?.semIds.has(it.id) && sem.key === filter + '|' + q.trim() })));
       if (arr.length > limit) list.append(h('button', { class: 'btn more', onclick: () => { limit += 50; render(); } }, `Ver mais (${arr.length - limit})`));
     }
 
@@ -149,7 +178,9 @@ export default {
     const off = ctx.on('brain', async () => {
       if (filter === 'trash') trash = await loadTrash();
       for (const id of [...picked]) if (!(filter === 'trash' ? trash : ctx.items).some((i) => i.id === id)) picked.delete(id);
+      sem = null;
       render();
+      askSemantic();
     });
     return { destroy: off };
   },

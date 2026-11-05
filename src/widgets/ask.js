@@ -2,6 +2,7 @@
 import { h, micButton, miniMarkdown, speak } from '../lib/ui.js';
 import { ask, aiConfig } from '../lib/ai.js';
 import { displayTitle, searchItems } from '../lib/brain.js';
+import { t } from '../lib/i18n.js';
 
 export default {
   id: 'ask',
@@ -25,10 +26,10 @@ export default {
     function intro() {
       if (!ctx.aiReady()) {
         chat.append(h('div', { class: 'msg bot' },
-          h('p', {}, 'Para conversar com as suas notas, conecte uma IA. O Gemini tem camada gratuita.'),
-          h('p', {}, h('button', { class: 'btn primary', onclick: () => ctx.openSettings('#ia') }, 'Configurar IA'))));
+          h('p', {}, t('Para conversar com as suas notas, conecte uma IA. O Gemini tem camada gratuita.')),
+          h('p', {}, h('button', { class: 'btn primary', onclick: () => ctx.openSettings('#ia') }, t('Configurar IA')))));
       } else {
-        chat.append(h('div', { class: 'msg bot' }, h('p', {}, `Pergunte qualquer coisa sobre o que você salvou. Usando ${aiConfig(ctx.settings).p.name}.`)));
+        chat.append(h('div', { class: 'msg bot' }, h('p', {}, t(`Pergunte qualquer coisa sobre o que você salvou. Usando ${aiConfig(ctx.settings).p.name}.`))));
       }
     }
 
@@ -46,12 +47,12 @@ export default {
       if (!ctx.aiReady()) {
         const found = searchItems(ctx.items, q, 5);
         chat.append(h('div', { class: 'msg bot' },
-          h('p', {}, found.length ? 'Sem IA configurada — encontrei estes itens:' : 'Sem IA configurada e nada encontrado nas notas.'),
+          h('p', {}, t(found.length ? 'Sem IA configurada — encontrei estes itens:' : 'Sem IA configurada e nada encontrado nas notas.')),
           ...found.map((it) => h('p', {}, h('a', { href: '#', onclick: (e) => { e.preventDefault(); ctx.openItem(it); } }, displayTitle(it))))));
         chat.scrollTop = chat.scrollHeight;
         return;
       }
-      const wait = h('div', { class: 'msg bot typing' }, 'Pensando');
+      const wait = h('div', { class: 'msg bot typing' }, t('Pensando'));
       chat.append(wait);
       chat.scrollTop = chat.scrollHeight;
       try {
@@ -67,7 +68,7 @@ export default {
         wait.replaceWith(msg);
         if (ctx.settings.speakAnswers || byVoice) speak(answer, ctx.settings);
       } catch (e) {
-        wait.replaceWith(h('div', { class: 'msg bot err' }, e.message));
+        wait.replaceWith(h('div', { class: 'msg bot err' }, t(e.message)));
       }
       chat.scrollTop = chat.scrollHeight;
     }

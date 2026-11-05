@@ -41,6 +41,8 @@ export const DEFAULT_AI = {
   models: {},
   baseUrls: {},
   autoEnrich: true,
+  semantic: false, // busca por significado (embeddings)
+  embedModels: {}, // modelo de embeddings por provedor (vazio = padrão)
 };
 
 export const DEFAULT_SETTINGS = {
@@ -82,6 +84,9 @@ export const DEFAULT_SETTINGS = {
   // IA e voz
   ai: DEFAULT_AI,
   voiceLang: '', // vazio = idioma da interface
+  wakeWord: false, // palavra de ativação (experimental)
+  wakePhrase: 'NeuroTab',
+  wakeMinutes: 10, // desliga sozinha após X min sem ser chamada
   speakAnswers: false,
   ttsVoice: '',
   ttsRate: 1,
@@ -106,7 +111,7 @@ export function mergeSettings(s = {}) {
     ...s,
     widgets: normalizeWidgets(s.widgets),
     layouts: Array.isArray(s.layouts) ? s.layouts.map((l) => ({ ...l, widgets: normalizeWidgets(l.widgets) })) : [],
-    ai: { ...DEFAULT_AI, ...(s.ai || {}), keys: { ...(s.ai?.keys || {}) }, models: { ...(s.ai?.models || {}) }, baseUrls: { ...(s.ai?.baseUrls || {}) } },
+    ai: { ...DEFAULT_AI, ...(s.ai || {}), keys: { ...(s.ai?.keys || {}) }, models: { ...(s.ai?.models || {}) }, embedModels: { ...(s.ai?.embedModels || {}) }, baseUrls: { ...(s.ai?.baseUrls || {}) } },
   };
 }
 
@@ -305,17 +310,39 @@ export function fromSpeedDialBackup(spd) {
   };
 }
 
-// Formato próprio de backup. Chaves de API e tokens NÃO são exportados.
-export function toBackup(data, background, brain) {
+// Formato próprio de backup. Por padrão, chaves de API e tokens NÃO são exportados.
+// `secrets` (opcional) já vem pronto: { protected: true, ...caixa criptografada } ou { protected: false, value }.
+export function toBackup(data, background, brain, secrets = null) {
   const clean = structuredClone(data);
   clean.settings.ai = { ...clean.settings.ai, keys: {} };
   clean.settings.brapiToken = '';
-  return { format: 'neurotab', version: SCHEMA_VERSION, exportedAt: new Date().toISOString(), data: clean, background, brain: brain || [] };
+  const out = { format: 'neurotab', version: SCHEMA_VERSION, exportedAt: new Date().toISOString(), data: clean, background, brain: brain || [] };
+  if (secrets) out.secrets = secrets;
+  return out;
+}
+
+/** Segredos que podem ir no backup (chaves de IA e token da brapi). */
+export function collectSecrets(settings) {
+  const keys = Object.fromEntries(Object.entries(settings.ai?.keys || {}).filter(([, v]) => v));
+  return { aiKeys: keys, brapiToken: settings.brapiToken || '' };
+}
+
+/** Aplica segredos importados. overwrite=false só preenche o que estiver vazio. */
+export function applySecrets(settings, secrets, overwrite = true) {
+  if (!secrets) return 0;
+  settings.ai = settings.ai || {};
+  settings.ai.keys = settings.ai.keys || {};
+  let n = 0;
+  for (const [k, v] of Object.entries(secrets.aiKeys || {})) {
+    if (v && (overwrite || !settings.ai.keys[k])) { settings.ai.keys[k] = v; n++; }
+  }
+  if (secrets.brapiToken && (overwrite || !settings.brapiToken)) { settings.brapiToken = secrets.brapiToken; n++; }
+  return n;
 }
 
 export function parseBackup(json) {
   if (json && json.format === 'neurotab') {
-    return { data: normalize(json.data), background: json.background || null, brain: Array.isArray(json.brain) ? json.brain : [] };
+    return { data: normalize(json.data), background: json.background || null, brain: Array.isArray(json.brain) ? json.brain : [], secrets: json.secrets && typeof json.secrets === 'object' ? json.secrets : null };
   }
   if (json && Array.isArray(json.categories) && Array.isArray(json.links)) return fromSpeedDialBackup(json);
   throw new Error('Arquivo não reconhecido. Use um backup da NeuroTab (.json) ou do Speed Dial (.spd).');

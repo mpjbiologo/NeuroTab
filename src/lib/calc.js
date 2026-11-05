@@ -137,6 +137,20 @@ const UNITS = {
   // energia (kcal)
   kcal: ['energy', 1], cal: ['energy', 0.001], kj: ['energy', 1 / 4.184],
 };
+// Nomes em inglês e espanhol para as mesmas unidades.
+const ALIASES = {
+  mile: 'mi', miles: 'mi', milla: 'mi', millas: 'mi', foot: 'ft', feet: 'ft', pie: 'ft', pies: 'ft', inch: 'in', inches: 'in', pulgada: 'in', pulgadas: 'in', yard: 'yd', yards: 'yd', yarda: 'yd', yardas: 'yd',
+  meter: 'm', meters: 'm', metre: 'm', metres: 'm', metro: 'm', metros: 'm', kilometer: 'km', kilometers: 'km', kilometre: 'km', kilometres: 'km', kilometro: 'km', kilometros: 'km', quilometro: 'km', quilometros: 'km',
+  centimeter: 'cm', centimeters: 'cm', centimetro: 'cm', centimetros: 'cm',
+  gram: 'g', grams: 'g', gramo: 'g', gramos: 'g', grama: 'g', gramas: 'g', kilo: 'kg', kilos: 'kg', kilogram: 'kg', kilograms: 'kg', kilogramo: 'kg', kilogramos: 'kg', quilo: 'kg', quilos: 'kg',
+  pound: 'lb', pounds: 'lb', lbs: 'lb', ounce: 'oz', ounces: 'oz', onza: 'oz', onzas: 'oz',
+  liter: 'l', liters: 'l', litre: 'l', litres: 'l', gallon: 'gal', gallons: 'gal', galon: 'gal', galones: 'gal', cup: 'xicara', cups: 'xicara', taza: 'xicara', tazas: 'xicara',
+  second: 's', seconds: 's', segundo: 's', segundos: 's', minute: 'min', minutes: 'min', minuto: 'min', minutos: 'min', hour: 'h', hours: 'h',
+  day: 'dia', days: 'dia', week: 'semana', weeks: 'semana', year: 'ano', years: 'ano',
+  dollar: 'usd', dollars: 'usd', reales: 'brl', yen: 'jpy',
+};
+const unitKey = (u) => ALIASES[u] || u;
+
 const TEMP = { c: 'c', '°c': 'c', celsius: 'c', f: 'f', '°f': 'f', fahrenheit: 'f', k: 'k', kelvin: 'k' };
 const CUR = { usd: 'USD', dolar: 'USD', dolares: 'USD', '$': 'USD', us$: 'USD', eur: 'EUR', euro: 'EUR', euros: 'EUR', '€': 'EUR', brl: 'BRL', real: 'BRL', reais: 'BRL', 'r$': 'BRL', gbp: 'GBP', libra_est: 'GBP', btc: 'BTC', bitcoin: 'BTC', eth: 'ETH', ars: 'ARS', peso: 'ARS', jpy: 'JPY', iene: 'JPY', cad: 'CAD', cny: 'CNY', yuan: 'CNY' };
 
@@ -160,11 +174,11 @@ export async function defaultRateFetcher(code) {
 
 /** "10 km em milhas", "100 usd em brl", "37 c em f" → { text, value } ou null */
 export async function convert(q, fetcher = defaultRateFetcher) {
-  const m = fold(q).match(/^(-?[\d.,]+)\s*([a-z°$€²³/\-]+(?:\s[a-z]+)?)\s+(?:em|para|pra|to|in|->|=)\s+([a-z°$€²³/\-]+)$/);
+  const m = fold(q).match(/^(-?[\d.,]+)\s*([a-z°$€²³/\-]+(?:\s[a-z]+)?)\s+(?:em|para|pra|to|in|en|a|->|=)\s+([a-z°$€²³/\-]+)$/);
   if (!m) return null;
   const v = parseNum(m[1]);
-  let a = m[2].replace(/\s+/g, '-');
-  let b = m[3];
+  let a = unitKey(m[2].replace(/\s+/g, '-'));
+  let b = unitKey(m[3]);
   if (a === 'colher-de' || a === 'colheres') a = 'colher';
   if (TEMP[a] && TEMP[b]) {
     const r = fromC(toC(v, TEMP[a]), TEMP[b]);

@@ -217,16 +217,36 @@
         <div><b>Organizar automaticamente com IA</b><small>Ao salvar algo, a IA cria título, tags, resumo e detecta lembretes.</small></div>
         <label class="sw"><input type="checkbox" id="autoEnrich"><span></span></label>
       </div>
-      <p class="hint">🔒 A chave fica guardada só neste navegador e não entra no arquivo de backup.</p>
+      <div class="opt">
+        <div><b>Busca por significado</b><small>Encontra notas pelo sentido, não só pelas palavras ("aquela nota sobre sono" acha "dormi mal"). Também melhora as respostas do "Pergunte ao cérebro". O texto das notas é enviado ao provedor para gerar o índice.</small></div>
+        <label class="sw"><input type="checkbox" id="semantic"><span></span></label>
+      </div>
+      <div class="sem-box" id="semBox" hidden>
+        <p class="hint" id="semInfo"></p>
+        <div class="opt" id="embedRow">
+          <div><b>Modelo de embeddings</b><small>Deixe em branco para usar o padrão do provedor.</small></div>
+          <input type="text" id="embedModel" class="txt">
+        </div>
+        <div class="foot">
+          <button class="btn" id="semIndex">Indexar minhas notas</button>
+          <button class="btn" id="semClear" title="Apaga o índice; ele é refeito na próxima indexação">Refazer índice</button>
+          <span id="semMsg" class="msg"></span>
+        </div>
+        <progress id="semProg" max="1" value="0" hidden></progress>
+      </div>
+      <p class="hint">🔒 A chave fica guardada só neste navegador. Ela só vai para o backup se você marcar "Incluir chaves de API" na aba Backup.</p>
       <hr>
       <h2>Voz</h2>
       <div class="opt">
         <div><b>Idioma do ditado e da leitura</b></div>
         <select data-k="voiceLang">
+          <option value="">Automático (idioma da interface)</option>
           <option value="pt-BR">Português (Brasil)</option>
           <option value="pt-PT">Português (Portugal)</option>
           <option value="en-US">English (US)</option>
-          <option value="es-ES">Español</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="es-ES">Español (España)</option>
+          <option value="es-MX">Español (México)</option>
         </select>
       </div>
       <div class="opt">
@@ -245,6 +265,27 @@
         <div><b>Ler as respostas da IA em voz alta</b></div>
         <label class="sw"><input type="checkbox" data-k="speakAnswers"><span></span></label>
       </div>
+      <div class="opt" id="wakeRow">
+        <div><b>Palavra de ativação <span class="beta">experimental</span></b><small>Diga "NeuroTab, timer de 5 minutos" sem apertar nada. Só escuta com a nova aba aberta e em foco, e desliga sozinha depois de um tempo sem uso.</small></div>
+        <label class="sw"><input type="checkbox" id="wakeWord"><span></span></label>
+      </div>
+      <div class="sem-box" id="wakeBox" hidden>
+        <p class="hint">⚠️ No Edge e no Chrome, o reconhecimento de voz envia o áudio para os servidores da Microsoft ou do Google. Com a palavra de ativação ligada, isso acontece o tempo todo enquanto a nova aba estiver aberta e em foco. Um indicador vermelho no canto da tela mostra quando está ouvindo; clique nele para pausar.</p>
+        <div class="opt">
+          <div><b>Palavra</b><small>Use algo curto e incomum.</small></div>
+          <input type="text" class="txt" data-k="wakePhrase" placeholder="NeuroTab">
+        </div>
+        <div class="opt">
+          <div><b>Desligar sozinha após</b></div>
+          <select data-k="wakeMinutes" data-num>
+            <option value="5">5 minutos sem uso</option>
+            <option value="10">10 minutos sem uso</option>
+            <option value="30">30 minutos sem uso</option>
+            <option value="60">1 hora sem uso</option>
+          </select>
+        </div>
+      </div>
+      <p class="hint" id="wakeNo" hidden>A palavra de ativação precisa do reconhecimento de voz do navegador, que o Firefox não oferece.</p>
       <div class="opt">
         <div><b>Atalho para comandos de voz</b><small>Padrão: <b>Alt+Shift+V</b> em qualquer aba (abre a NeuroTab ouvindo) e <b>Alt+M</b> na nova aba.</small></div>
         <button class="btn" id="shortcutsBtn">Mudar atalhos</button>
@@ -318,10 +359,32 @@
       <p id="importMsg" class="msg"></p>
       <hr>
       <h2>Exportar</h2>
-      <p>Salva atalhos, grupos, notas, configurações e plano de fundo em um arquivo <code>.json</code>. Chaves de API não são incluídas.</p>
+      <p>Salva atalhos, grupos, notas, configurações e plano de fundo em um arquivo <code>.json</code>.</p>
+      <label class="inline"><input type="checkbox" id="inclKeys"> Incluir chaves de API da IA</label>
+      <div id="keysBox" class="keys-box" hidden>
+        <p class="warn">⚠️ Quem tiver este arquivo poderá usar suas chaves e gerar cobranças na sua conta do provedor de IA. Guarde-o em lugar seguro e não compartilhe.</p>
+        <p class="hint">Recomendado: defina uma senha. As chaves ficam criptografadas (AES-256) dentro do arquivo e só são restauradas com a senha. O resto do backup continua sem senha.</p>
+        <div class="row">
+          <input type="password" id="bkPwd" placeholder="Senha (opcional)" autocomplete="new-password">
+          <input type="password" id="bkPwd2" placeholder="Repita a senha" autocomplete="new-password">
+        </div>
+      </div>
       <button class="btn" id="exportBtn">Baixar backup</button>
       <p id="stats" class="hint"></p>
     </section>
+
+    <dialog id="pwdDlg" class="pwd-dlg">
+      <form method="dialog">
+        <h3>🔒 Chaves de API protegidas</h3>
+        <p>Este backup tem chaves de API criptografadas. Digite a senha para restaurá-las, ou pule para importar o resto sem as chaves.</p>
+        <input type="password" id="pwdIn" placeholder="Senha" autocomplete="current-password">
+        <p id="pwdErr" class="msg err"></p>
+        <div class="row end">
+          <button class="btn" value="skip">Pular chaves</button>
+          <button class="btn primary" value="ok" id="pwdOk">Restaurar</button>
+        </div>
+      </form>
+    </dialog>
 
     <!-- APOIE -->
     <section id="tab-apoie" class="card" hidden>

@@ -18,7 +18,7 @@
 <body>
 <p><a href="./">← NeuroTab</a></p>
 <h1>Política de privacidade</h1>
-<p class="muted">Última atualização: 5 de novembro de 2026 · versão 0.4</p>
+<p class="muted">Última atualização: 5 de novembro de 2026 · versão 0.5</p>
 <nav><a href="#pt">Português</a><a href="#en">English</a><a href="#es">Español</a></nav>
 
 <section id="pt">
@@ -34,13 +34,15 @@
 <tr><td>Slides de fotos</td><td>Bing, NASA (api.nasa.gov)</td><td>Nenhum dado pessoal; apenas a solicitação da lista de fotos. Suas fotos do PC ficam no navegador</td></tr>
 <tr><td>Notícias</td><td>Os feeds RSS que você adicionar</td><td>Apenas a solicitação do feed</td></tr>
 <tr><td>Inteligência artificial</td><td>O provedor que você configurar (Google Gemini, OpenAI, Anthropic, OpenRouter, Ollama local ou outro)</td><td>O texto da nota ou da pergunta e trechos das suas notas usados como contexto, com a sua chave de API. Sem chave configurada, nada é enviado</td></tr>
+<tr><td>Busca por significado (opcional)</td><td>O mesmo provedor de IA configurado</td><td>O texto das notas, para gerar o índice. O índice fica no navegador</td></tr>
 <tr><td>Ditado e comandos de voz</td><td>O reconhecimento de voz do próprio navegador</td><td>O áudio é processado pelo navegador (no Chrome e no Edge, pode passar pelos servidores do fabricante)</td></tr>
+<tr><td>Palavra de ativação (opcional, desligada por padrão)</td><td>O reconhecimento de voz do navegador</td><td>Áudio contínuo enquanto a nova aba estiver aberta e em foco, até desligar sozinha por falta de uso</td></tr>
 <tr><td>Aviso de atualização</td><td>GitHub (api.github.com)</td><td>Apenas a consulta da versão mais recente</td></tr>
 <tr><td>Ícones dos sites (só no Firefox)</td><td>DuckDuckGo (icons.duckduckgo.com)</td><td>O domínio dos seus atalhos, para mostrar o ícone</td></tr>
 </table>
 <p>Esses serviços têm políticas de privacidade próprias. A NeuroTab não envia identificadores, e-mail nem histórico de navegação a nenhum deles.</p>
 <h3>Permissões</h3>
-<p>Histórico de mais visitados, abas fechadas e acesso a outros sites são <b>opcionais</b>: o navegador pede sua autorização na primeira vez que você usa o recurso. As chaves de API ficam só no seu navegador e não entram no backup exportado.</p>
+<p>Histórico de mais visitados, abas fechadas e acesso a outros sites são <b>opcionais</b>: o navegador pede sua autorização na primeira vez que você usa o recurso. As chaves de API ficam só no seu navegador e só entram no backup exportado se você marcar essa opção (com senha opcional para criptografá-las).</p>
 <h3>Seus dados, seu controle</h3>
 <p>Você pode exportar tudo (Configurações → Backup), apagar notas e tarefas, esvaziar a lixeira ou remover a extensão, o que apaga os dados locais. O código é aberto: <a href="https://github.com/mpjbiologo/NeuroTab">github.com/mpjbiologo/NeuroTab</a>.</p>
 <h3>Contato</h3>
@@ -60,13 +62,15 @@
 <tr><td>Photo slideshow</td><td>Bing, NASA</td><td>No personal data, only the request for the photo list. Photos from your computer stay in the browser</td></tr>
 <tr><td>News</td><td>The RSS feeds you add</td><td>Only the feed request</td></tr>
 <tr><td>Artificial intelligence</td><td>The provider you set up (Google Gemini, OpenAI, Anthropic, OpenRouter, local Ollama or other)</td><td>The text of the note or question and excerpts of your notes used as context, with your API key. With no key set, nothing is sent</td></tr>
+<tr><td>Search by meaning (optional)</td><td>The same AI provider you set up</td><td>Note text, to build the index. The index stays in the browser</td></tr>
 <tr><td>Dictation and voice commands</td><td>The browser's own speech recognition</td><td>Audio is processed by the browser (in Chrome and Edge it may go through the vendor's servers)</td></tr>
+<tr><td>Wake word (optional, off by default)</td><td>The browser's speech recognition</td><td>Continuous audio while the new tab is open and focused, until it turns itself off for lack of use</td></tr>
 <tr><td>Update notice</td><td>GitHub</td><td>Only the latest-version lookup</td></tr>
 <tr><td>Site icons (Firefox only)</td><td>DuckDuckGo</td><td>The domain of your shortcuts, to show the icon</td></tr>
 </table>
 <p>These services have their own privacy policies. NeuroTab sends no identifiers, e-mail or browsing history to any of them.</p>
 <h3>Permissions</h3>
-<p>Top sites, recently closed tabs and access to other sites are <b>optional</b>: the browser asks you the first time you use the feature. API keys stay in your browser and are left out of exported backups.</p>
+<p>Top sites, recently closed tabs and access to other sites are <b>optional</b>: the browser asks you the first time you use the feature. API keys stay in your browser and only go into an exported backup if you tick that option (with an optional password to encrypt them).</p>
 <h3>Your data, your control</h3>
 <p>You can export everything (Settings → Backup), delete notes and tasks, empty the trash or remove the extension, which deletes the local data. The code is open source: <a href="https://github.com/mpjbiologo/NeuroTab">github.com/mpjbiologo/NeuroTab</a>.</p>
 <h3>Contact</h3>
@@ -86,13 +90,15 @@
 <tr><td>Presentación de fotos</td><td>Bing, NASA</td><td>Ningún dato personal, solo la solicitud de la lista de fotos. Las fotos de tu ordenador se quedan en el navegador</td></tr>
 <tr><td>Noticias</td><td>Los feeds RSS que añadas</td><td>Solo la solicitud del feed</td></tr>
 <tr><td>Inteligencia artificial</td><td>El proveedor que configures (Google Gemini, OpenAI, Anthropic, OpenRouter, Ollama local u otro)</td><td>El texto de la nota o pregunta y fragmentos de tus notas como contexto, con tu clave de API. Sin clave, no se envía nada</td></tr>
+<tr><td>Búsqueda por significado (opcional)</td><td>El mismo proveedor de IA configurado</td><td>El texto de las notas, para crear el índice. El índice queda en el navegador</td></tr>
 <tr><td>Dictado y comandos de voz</td><td>El reconocimiento de voz del propio navegador</td><td>El audio lo procesa el navegador (en Chrome y Edge puede pasar por los servidores del fabricante)</td></tr>
+<tr><td>Palabra de activación (opcional, apagada por defecto)</td><td>El reconocimiento de voz del navegador</td><td>Audio continuo mientras la nueva pestaña esté abierta y en foco, hasta que se apague sola por falta de uso</td></tr>
 <tr><td>Aviso de actualización</td><td>GitHub</td><td>Solo la consulta de la última versión</td></tr>
 <tr><td>Iconos de sitios (solo Firefox)</td><td>DuckDuckGo</td><td>El dominio de tus accesos directos, para mostrar el icono</td></tr>
 </table>
 <p>Estos servicios tienen sus propias políticas de privacidad. NeuroTab no les envía identificadores, correo ni historial de navegación.</p>
 <h3>Permisos</h3>
-<p>Los sitios más visitados, las pestañas cerradas y el acceso a otros sitios son <b>opcionales</b>: el navegador te pide permiso la primera vez que usas la función. Las claves de API se quedan en tu navegador y no se incluyen en las copias de seguridad exportadas.</p>
+<p>Los sitios más visitados, las pestañas cerradas y el acceso a otros sitios son <b>opcionales</b>: el navegador te pide permiso la primera vez que usas la función. Las claves de API se quedan en tu navegador y solo se incluyen en la copia exportada si marcas esa opción (con contraseña opcional para cifrarlas).</p>
 <h3>Tus datos, tu control</h3>
 <p>Puedes exportar todo (Configuración → Copia de seguridad), borrar notas y tareas, vaciar la papelera o quitar la extensión, lo que borra los datos locales. El código es abierto: <a href="https://github.com/mpjbiologo/NeuroTab">github.com/mpjbiologo/NeuroTab</a>.</p>
 <h3>Contacto</h3>

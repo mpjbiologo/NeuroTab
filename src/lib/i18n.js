@@ -19,49 +19,66 @@ export function resolveLang(pref) {
 
 const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-export function setLang(pref) {
-  LANG = resolveLang(pref);
-  const nav = globalThis.navigator?.language || '';
-  LOCALE = LANG === 'pt-BR' ? 'pt-BR' : nav.toLowerCase().startsWith(LANG) ? nav : LANG === 'en' ? 'en-US' : 'es-ES';
-  D = DICTS[LANG] || null;
-  PATS = D
-    ? D.patterns.map(([src, dst]) => {
+function buildPats(dict) {
+  return dict
+    ? dict.patterns.map(([src, dst]) => {
       const order = [];
       const re = new RegExp('^' + src.split(/\{(\d)\}/).map((p, i) => (i % 2 ? (order.push(+p), '([\\s\\S]+?)') : escRe(p))).join('') + '$');
       return { re, order, dst, len: src.length };
     }).sort((a, b) => b.len - a.len) // padrões mais específicos primeiro
     : [];
+}
+
+export function setLang(pref) {
+  LANG = resolveLang(pref);
+  const nav = globalThis.navigator?.language || '';
+  LOCALE = LANG === 'pt-BR' ? 'pt-BR' : nav.toLowerCase().startsWith(LANG) ? nav : LANG === 'en' ? 'en-US' : 'es-ES';
+  D = DICTS[LANG] || null;
+  PATS = buildPats(D);
   patchLocale();
   return LANG;
 }
 
-function matchPattern(s) {
-  for (const p of PATS) {
+function matchPattern(s, dict = D, pats = PATS) {
+  for (const p of pats) {
     const m = s.match(p.re);
     if (!m) continue;
     const vals = {};
     p.order.forEach((n, i) => { vals[n] = m[i + 1]; });
     return p.dst.replace(/\{(\d)\}/g, (_, n) => {
       const v = vals[n] ?? '';
-      return D.exact[v.trim()] ?? v;
+      return dict.exact[v.trim()] ?? v;
     });
   }
   return null;
 }
 
-/** Traduz um texto (mantém espaços nas pontas). Sem dicionário, devolve o original. */
-export function t(s) {
-  if (!D || typeof s !== 'string' || !s.trim()) return s;
+function translate(s, dict, pats) {
+  if (!dict || typeof s !== 'string' || !s.trim()) return s;
   const m = s.match(/^(\s*)([\s\S]*?)(\s*)$/);
   const core = m[2];
-  let out = D.exact[core];
-  if (out == null) out = matchPattern(core);
+  let out = dict.exact[core];
+  if (out == null) out = matchPattern(core, dict, pats);
   if (out == null && core.includes(' · ')) {
     const parts = core.split(' · ');
-    const tr = parts.map((p) => D.exact[p] ?? matchPattern(p) ?? p);
+    const tr = parts.map((p) => dict.exact[p] ?? matchPattern(p, dict, pats) ?? p);
     if (tr.some((x, i) => x !== parts[i])) out = tr.join(' · ');
   }
   return out == null ? s : m[1] + out + m[3];
+}
+
+/** Traduz um texto para o idioma da interface (mantém espaços nas pontas). Sem dicionário, devolve o original. */
+export function t(s) {
+  return translate(s, D, PATS);
+}
+
+const patsCache = {};
+/** Traduz para um idioma específico ('pt' | 'en' | 'es'), independente da interface. */
+export function tIn(lang, s) {
+  const key = lang === 'pt' || lang === 'pt-BR' ? null : lang.slice(0, 2);
+  if (!key || !DICTS[key]) return s;
+  patsCache[key] = patsCache[key] || buildPats(DICTS[key]);
+  return translate(s, DICTS[key], patsCache[key]);
 }
 
 export const isTranslated = () => !!D;

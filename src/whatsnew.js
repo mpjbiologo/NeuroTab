@@ -1,5 +1,34 @@
 // Novidades exibidas uma vez após atualizar a extensão.
 export const WHATS_NEW = {
+  '0.5.0': {
+    pt: {
+      title: 'NeuroTab 0.5 — mais inteligente e fala sua língua',
+      items: [
+        ['✨', 'Busca por significado', 'Ative em Configurações → IA e voz. "Aquela nota sobre sono" encontra "dormi mal". As respostas do "Pergunte ao cérebro" também ficam melhores.'],
+        ['🗣', 'Comandos de voz em inglês e espanhol', 'Os comandos seguem o idioma da interface ou o que você escolher. Frases fora do padrão são interpretadas pela IA.'],
+        ['👂', 'Palavra de ativação (experimental)', 'Diga "NeuroTab, timer de 5 minutos" sem apertar nada. Vem desligada; ative em IA e voz.'],
+        ['🔑', 'Backup com chaves de API', 'Opcional, com aviso e senha para criptografar as chaves dentro do arquivo.'],
+      ],
+    },
+    en: {
+      title: 'NeuroTab 0.5 — smarter, and speaks your language',
+      items: [
+        ['✨', 'Search by meaning', 'Turn it on in Settings → AI & voice. "That note about sleep" finds "slept badly". "Ask your brain" answers get better too.'],
+        ['🗣', 'Voice commands in English and Spanish', 'Commands follow the interface language or the one you choose. Unusual phrases are interpreted by the AI.'],
+        ['👂', 'Wake word (experimental)', 'Say "NeuroTab, timer for 5 minutes" without pressing anything. Off by default; turn it on in AI & voice.'],
+        ['🔑', 'Backup with API keys', 'Optional, with a warning and a password to encrypt the keys inside the file.'],
+      ],
+    },
+    es: {
+      title: 'NeuroTab 0.5 — más inteligente y habla tu idioma',
+      items: [
+        ['✨', 'Búsqueda por significado', 'Actívala en Configuración → IA y voz. "Esa nota sobre el sueño" encuentra "dormí mal". Las respuestas de "Pregunta a tu cerebro" también mejoran.'],
+        ['🗣', 'Comandos de voz en inglés y español', 'Los comandos siguen el idioma de la interfaz o el que elijas. Las frases fuera de lo común las interpreta la IA.'],
+        ['👂', 'Palabra de activación (experimental)', 'Di "NeuroTab, temporizador de 5 minutos" sin pulsar nada. Viene apagada; actívala en IA y voz.'],
+        ['🔑', 'Copia de seguridad con claves de API', 'Opcional, con aviso y contraseña para cifrar las claves dentro del archivo.'],
+      ],
+    },
+  },
   '0.4.0': {
     pt: {
       title: 'NeuroTab 0.4 — o mundo na sua nova aba',

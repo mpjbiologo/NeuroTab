@@ -6,13 +6,14 @@ import {
 import * as Brain from './lib/brain.js';
 import { isConfigured, enrich } from './lib/ai.js';
 import { $, $$, h, toast, showCtx, micButton, toLocalInput, fromLocalInput, startDictation, hasDictation, speak } from './lib/ui.js';
-import { runCommand, tasksSummary } from './lib/assistant.js';
-import { ask as aiAsk } from './lib/ai.js';
+import { runCommand, tasksSummary, commandLang } from './lib/assistant.js';
+import { ask as aiAsk, interpretCommand } from './lib/ai.js';
+import { semanticOn, indexItems, hybridSearch, embedConfig } from './lib/semantic.js';
 import { looksLikeMath, smartCalc } from './lib/calc.js';
 import { UPDATE_KEY, WHATSNEW_KEY, cmpVersion } from './lib/update.js';
 import { WHATS_NEW } from './whatsnew.js';
 import { photoList, photoUrl, preload } from './lib/photos.js';
-import { initI18n, t, LANG } from './lib/i18n.js';
+import { initI18n, t, tIn, LANG, LOCALE } from './lib/i18n.js';
 import { getWeather, searchCities, wxIcon, wxDesc, timeIn, tzOffsetLabel, dayIn, renderForecast } from './lib/weather.js';
 import { WIDGETS } from './widgets/index.js';
 
@@ -53,12 +54,24 @@ const ctx = {
     return it;
   },
   aiReady: () => isConfigured(data.settings),
+  semanticOn: () => semanticOn(data.settings) && embedConfig(data.settings).supported,
+  smartSearch: (q, limit = 20, list = items) => hybridSearch(data.settings, list, q, limit),
   openLinkDialog: (link, preset) => editLink(link, preset),
   faviconFor: (l) => l.favicon || faviconUrl(l.url),
   openSettings: (hash = '') => { location.href = 'options.html' + hash; },
 };
 
 init();
+
+// Busca por significado: indexa notas novas/alteradas em segundo plano.
+let indexTimer;
+function scheduleIndex(delay = 6000) {
+  clearTimeout(indexTimer);
+  if (!semanticOn(data.settings) || !embedConfig(data.settings).supported) return;
+  indexTimer = setTimeout(() => {
+    indexItems(data.settings, items).catch((e) => console.warn('NeuroTab: indexação por significado falhou', e.message));
+  }, delay);
+}
 
 async function init() {
   data = await loadData();
@@ -72,6 +85,7 @@ async function init() {
   renderWidgets();
   setupOmni();
   setupClock();
+  scheduleIndex(3000);
 
   chrome.storage.onChanged.addListener(async (changes, area) => {
     if (area !== 'local') return;
@@ -85,10 +99,13 @@ async function init() {
       if (layoutSig() !== widgetsSig) renderWidgets();
       if (editing) renderLayoutPicker();
       listeners.data.forEach((fn) => fn(data));
+      scheduleIndex();
+      updateWake(true);
     }
     if (changes[BRAIN_KEY]) {
       items = changes[BRAIN_KEY].newValue || [];
       listeners.brain.forEach((fn) => fn(items));
+      scheduleIndex();
     }
     if (changes[BG_KEY]) { bgCache = changes[BG_KEY].newValue || null; applyBackground(); }
   });
@@ -119,6 +136,7 @@ async function init() {
   });
   setupUpdates();
   setupVoice();
+  setupWake();
   setupExternalDrop();
 
   const m = location.hash.match(/item=([\w]+)/);
@@ -714,7 +732,7 @@ function setupOmni() {
     if (!q) { box.hidden = true; return; }
     const fq = Brain.fold(q);
     const links = data.links.filter((l) => Brain.fold(l.title + ' ' + l.url).includes(fq)).slice(0, 6);
-    const notes = Brain.searchItems(items, q, 5);
+    const notes = omniSem?.q === q ? omniSem.list : Brain.searchItems(items, q, 5);
     const eng = SEARCH_ENGINES[data.settings.searchEngine] || SEARCH_ENGINES.google;
     results = [];
     const sections = [];
@@ -756,7 +774,22 @@ function setupOmni() {
   };
   const highlight = () => $$('.omni-item', box).forEach((el, i) => el.classList.toggle('sel', i === sel));
 
-  input.addEventListener('input', render);
+  let omniSem = null;
+  let omniTimer;
+  const askSemantic = () => {
+    clearTimeout(omniTimer);
+    const q = input.value.trim();
+    if (q.length < 3 || !ctx.semanticOn() || omniSem?.q === q) return;
+    omniTimer = setTimeout(async () => {
+      try {
+        const res = await ctx.smartSearch(q, 5);
+        if (input.value.trim() !== q) return;
+        omniSem = { q, list: res.map((x) => x.it) };
+        if (!box.hidden) render();
+      } catch (e) { console.warn(e); }
+    }, 450);
+  };
+  input.addEventListener('input', () => { render(); askSemantic(); });
   input.addEventListener('focus', render);
   input.addEventListener('blur', () => setTimeout(() => { box.hidden = true; }, 120));
   input.addEventListener('keydown', async (e) => {
@@ -1409,6 +1442,7 @@ function voiceApi() {
     capture: (p) => ctx.capture(p),
     aiReady: () => isConfigured(data.settings),
     ask: (q) => aiAsk(data.settings, items, q, []),
+    interpret: (text) => interpretCommand(data.settings, text),
     open: (url) => { location.href = url; },
     searchUrl: (q) => eng.url + encodeURIComponent(q),
     findLink: (name) => {
@@ -1435,7 +1469,7 @@ function voiceApi() {
       const c = (await chrome.storage.local.get('nt_cache_quotes')).nt_cache_quotes;
       if (!c?.rows?.length) return 'Adicione o widget de cotações para eu saber os valores.';
       let rows = c.rows.filter((r) => !r.err);
-      const want = /dolar/.test(t) ? 'USD' : /euro/.test(t) ? 'EUR' : /bitcoin/.test(t) ? 'BTC' : null;
+      const want = /dolar|dollar/.test(t) ? 'USD' : /euro/.test(t) ? 'EUR' : /bitcoin/.test(t) ? 'BTC' : null;
       if (want) rows = rows.filter((r) => r.name === want);
       if (!rows.length) return 'Não tenho essa cotação no widget.';
       return rows.slice(0, 4).map((r) => `${r.sub || r.name}: ${Number(r.price).toLocaleString('pt-BR', { style: 'currency', currency: r.cur || 'BRL' })}, ${r.pct >= 0 ? 'alta' : 'queda'} de ${Math.abs(r.pct || 0).toFixed(1).replace('.', ',')}%`).join('. ') + '.';
@@ -1464,17 +1498,17 @@ function startVoice() {
   const reply = $('#voiceReply');
   ov.hidden = false;
   ov.classList.add('listening');
-  heard.textContent = 'Pode falar…';
+  heard.textContent = t('Pode falar…');
   heard.classList.add('interim');
   reply.textContent = '';
   speechSynthesis?.cancel();
   let finalText = '';
   let silence;
   voiceSession = startDictation({
-    lang: data.settings.voiceLang,
+    lang: voiceCode(),
     onText: (fin, interim) => {
       finalText = fin;
-      heard.textContent = (fin + ' ' + interim).trim() || 'Pode falar…';
+      heard.textContent = (fin + ' ' + interim).trim() || t('Pode falar…');
       heard.classList.toggle('interim', !fin);
       clearTimeout(silence);
       silence = setTimeout(() => voiceSession?.stop(), 1600); // termina após pausa
@@ -1484,23 +1518,182 @@ function startVoice() {
       voiceSession = null;
       ov.classList.remove('listening');
       const said = (fin || finalText).trim();
-      if (!said) { heard.textContent = 'Não ouvi nada. Toque em 🎙 para tentar de novo.'; setTimeout(() => { if (!voiceSession) ov.hidden = true; }, 2500); return; }
-      heard.textContent = `“${said}”`;
-      heard.classList.remove('interim');
-      reply.textContent = 'Processando…';
-      try {
-        const r = await runCommand(said, voiceApi());
-        reply.textContent = r.reply;
-        await speak(r.reply, data.settings);
-        setTimeout(() => { if (!voiceSession) ov.hidden = true; }, r.long ? 6000 : 1800);
-      } catch (e) {
-        reply.textContent = e.message;
-        setTimeout(() => { if (!voiceSession) ov.hidden = true; }, 4000);
-      }
+      if (!said) { heard.textContent = t('Não ouvi nada. Toque em 🎙 para tentar de novo.'); setTimeout(() => { if (!voiceSession) ov.hidden = true; }, 2500); return; }
+      await processVoice(said);
     },
-    onError: (msg) => { reply.textContent = msg; },
+    onError: (msg) => { reply.textContent = t(msg); },
   });
   if (!voiceSession) { ov.hidden = true; toast('Reconhecimento de voz indisponível neste navegador.'); }
+}
+
+// =====================================================================
+// PALAVRA DE ATIVAÇÃO (experimental)
+// Escuta contínua só com a nova aba visível e em foco; desliga sozinha após X minutos sem uso.
+// No Edge/Chrome o áudio passa pelo serviço de reconhecimento do navegador (Microsoft/Google).
+// =====================================================================
+const wake = { rec: null, until: 0, paused: false, external: false, busy: false, blocked: false, backoff: 0, retry: null, lang: '' };
+
+const WAKE_VARIANTS = ['neurotab', 'neurotabe', 'neurotabi', 'neurotap', 'neurotabs', 'neuraltab', 'neurotav', 'newrotab', 'neurotabby', 'neurotape'];
+function wakeVariants() {
+  const p = Brain.fold(data.settings.wakePhrase || 'NeuroTab').replace(/[^a-z0-9]/g, '');
+  return p === 'neurotab' ? WAKE_VARIANTS : [p];
+}
+
+/** Procura a palavra de ativação; devolve o que vem depois dela ('' se nada) ou null se não achou. */
+function afterWake(text) {
+  const words = text.trim().split(/\s+/);
+  const variants = wakeVariants();
+  for (let i = 0; i < words.length; i++) {
+    for (let n = 1; n <= 3 && i + n <= words.length; n++) {
+      const j = Brain.fold(words.slice(i, i + n).join('')).replace(/[^a-z0-9]/g, '');
+      if (variants.includes(j)) return words.slice(i + n).join(' ').replace(/^[\s,.:;!]+/, '').trim();
+    }
+  }
+  return null;
+}
+
+const wakeMs = () => Math.max(1, +data.settings.wakeMinutes || 10) * 60e3;
+const wakeEnabled = () => !!data.settings.wakeWord && hasDictation();
+function wakeShouldListen() {
+  return wakeEnabled() && !wake.paused && !wake.blocked && !wake.external && !wake.busy && !voiceSession
+    && document.visibilityState === 'visible' && document.hasFocus() && Date.now() < wake.until;
+}
+
+function paintWake() {
+  const pill = $('#wakePill');
+  if (!pill) return;
+  pill.hidden = !wakeEnabled();
+  if (pill.hidden) return;
+  const phrase = data.settings.wakePhrase || 'NeuroTab';
+  pill.classList.toggle('on', !!wake.rec);
+  pill.classList.toggle('blocked', wake.blocked);
+  pill.textContent = wake.blocked ? t('Permitir microfone')
+    : wake.rec ? `${t('Ouvindo')} “${phrase}”`
+      : t('Palavra de ativação pausada');
+  pill.title = wake.rec ? t('Clique para pausar a escuta') : t('Clique para voltar a ouvir');
+}
+
+function startWake() {
+  if (wake.rec || !wakeShouldListen()) { paintWake(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const rec = new SR();
+  rec.lang = wake.lang = voiceCode();
+  rec.continuous = true;
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+  rec.onresult = (ev) => {
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      if (!ev.results[i].isFinal) continue;
+      const rest = afterWake(ev.results[i][0].transcript);
+      if (rest == null) continue;
+      wake.until = Date.now() + wakeMs();
+      wake.busy = true;
+      stopWake();
+      wake.busy = false;
+      if (rest.length >= 2) processVoice(rest);
+      else startVoice();
+      return;
+    }
+  };
+  rec.onerror = (ev) => {
+    if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') wake.blocked = true;
+    else if (ev.error === 'network') wake.backoff = Math.min((wake.backoff || 5000) * 2, 60000);
+  };
+  rec.onend = () => {
+    if (wake.rec === rec) wake.rec = null;
+    paintWake();
+    clearTimeout(wake.retry);
+    if (wakeShouldListen()) wake.retry = setTimeout(startWake, wake.backoff || 300); // o navegador encerra a escuta de tempos em tempos
+  };
+  rec.onstart = () => { wake.backoff = 0; };
+  try {
+    rec.start();
+    wake.rec = rec;
+  } catch (e) {
+    console.warn('NeuroTab: palavra de ativação', e);
+  }
+  paintWake();
+}
+
+function stopWake() {
+  clearTimeout(wake.retry);
+  const r = wake.rec;
+  wake.rec = null;
+  if (r) { r.onend = null; try { r.abort(); } catch { /* já parado */ } }
+  paintWake();
+}
+
+/** Liga/desliga conforme o estado da aba e das configurações. renew=true reinicia o prazo. */
+function updateWake(renew = false) {
+  if (!wakeEnabled()) { stopWake(); return; }
+  if (renew && !wake.paused) wake.until = Date.now() + wakeMs();
+  if (wake.rec && wake.lang !== voiceCode()) stopWake(); // idioma mudou
+  if (wakeShouldListen()) startWake(); else if (wake.rec && !(Date.now() < wake.until && document.visibilityState === 'visible')) stopWake();
+  else paintWake();
+}
+
+function setupWake() {
+  wake.until = Date.now() + wakeMs();
+  $('#wakePill').addEventListener('click', async () => {
+    if (wake.blocked) {
+      try {
+        const st = await navigator.mediaDevices.getUserMedia({ audio: true });
+        st.getTracks().forEach((tr) => tr.stop());
+        wake.blocked = false;
+      } catch {
+        toast('O navegador bloqueou o microfone. Libere no ícone da barra de endereço.');
+        return;
+      }
+    } else if (wake.rec) {
+      wake.paused = true;
+      stopWake();
+      return;
+    }
+    wake.paused = false;
+    updateWake(true);
+  });
+  document.addEventListener('visibilitychange', () => (document.visibilityState === 'visible' ? updateWake(true) : stopWake()));
+  window.addEventListener('focus', () => updateWake(true));
+  window.addEventListener('blur', () => stopWake());
+  window.addEventListener('nt-dictation', (e) => {
+    wake.external = e.detail === 'start';
+    if (wake.external) stopWake();
+    else setTimeout(() => updateWake(), 600);
+  });
+  setInterval(() => { if (wake.rec && Date.now() >= wake.until) stopWake(); }, 15000);
+  updateWake(true);
+}
+
+/** Idioma dos comandos de voz: o escolhido em "IA e voz" ou o da interface. */
+const voiceCode = () => data.settings.voiceLang || LOCALE;
+
+/** Mostra a frase ouvida, executa o comando e fala a resposta. */
+async function processVoice(said) {
+  wake.busy = true; // a escuta contínua não deve ouvir a própria resposta falada
+  stopWake();
+  try { await runVoice(said); } finally { wake.busy = false; setTimeout(() => updateWake(), 400); }
+}
+
+async function runVoice(said) {
+  const ov = $('#voice');
+  const heard = $('#voiceHeard');
+  const reply = $('#voiceReply');
+  ov.hidden = false;
+  heard.textContent = `“${said}”`;
+  heard.classList.remove('interim');
+  reply.textContent = t('Processando…');
+  try {
+    const lang = commandLang(voiceCode());
+    const r = await runCommand(said, voiceApi(), lang);
+    // A resposta sai no idioma em que a pessoa falou (respostas longas da IA já vêm no idioma da interface).
+    const text = r.long ? r.reply : tIn(lang, r.reply);
+    reply.textContent = text;
+    await speak(text, { ...data.settings, voiceLang: r.long ? data.settings.voiceLang : voiceCode() });
+    setTimeout(() => { if (!voiceSession) ov.hidden = true; }, r.long ? 6000 : 1800);
+  } catch (e) {
+    reply.textContent = t(e.message);
+    setTimeout(() => { if (!voiceSession) ov.hidden = true; }, 4000);
+  }
 }
 
 function stopVoice(close) {
