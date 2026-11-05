@@ -83,6 +83,22 @@
         <div><b>Cantos arredondados dos blocos</b></div>
         <input type="range" min="0" max="20" data-k="tileRadius" data-num>
       </div>
+      <hr>
+      <h2>Relógio</h2>
+      <div class="opt">
+        <div><b>Som do timer</b><small>Os despertadores têm som próprio, escolhido em cada um.</small></div>
+        <div class="keybox"><select data-k="timerSound" id="timerSound"></select><button class="btn" id="testTimerSound" title="Ouvir">🔊</button></div>
+      </div>
+      <hr>
+      <h2>Atualizações</h2>
+      <div class="opt">
+        <div><b>Avisar quando houver versão nova</b><small>Consulta o GitHub duas vezes por dia. Nenhum dado seu é enviado.</small></div>
+        <label class="sw"><input type="checkbox" data-k="checkUpdates"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Versão instalada: <span id="verNow"></span></b><small id="updMsg"></small></div>
+        <button class="btn" id="checkNow">Verificar agora</button>
+      </div>
       <div class="foot">
         <button class="btn" id="reset">Restaurar padrões</button>
         <span class="hint">As alterações são salvas automaticamente.</span>
@@ -161,9 +177,37 @@
         </select>
       </div>
       <div class="opt">
+        <div><b>Voz de leitura</b><small>As vozes "Natural/Online" do Edge são as mais realistas.</small></div>
+        <div class="keybox"><select id="ttsVoice" class="wide-sel"></select><button class="btn" id="testVoice">▶ Testar</button></div>
+      </div>
+      <div class="opt">
+        <div><b>Velocidade da fala</b></div>
+        <input type="range" min="0.6" max="1.8" step="0.1" data-k="ttsRate" data-num>
+      </div>
+      <div class="opt">
+        <div><b>Tom da voz</b></div>
+        <input type="range" min="0.6" max="1.6" step="0.1" data-k="ttsPitch" data-num>
+      </div>
+      <div class="opt">
         <div><b>Ler as respostas da IA em voz alta</b></div>
         <label class="sw"><input type="checkbox" data-k="speakAnswers"><span></span></label>
       </div>
+      <div class="opt">
+        <div><b>Atalho para comandos de voz</b><small>Padrão: <b>Alt+Shift+V</b> em qualquer aba (abre a NeuroTab ouvindo) e <b>Alt+M</b> na nova aba.</small></div>
+        <button class="btn" id="shortcutsBtn">Mudar atalhos</button>
+      </div>
+      <details class="cmds">
+        <summary><b>Comandos que a NeuroTab entende</b></summary>
+        <ul>
+          <li><b>Anotar …</b> / <b>Ideia …</b> — salva uma nota</li>
+          <li><b>Me lembre amanhã às 9h de …</b> / <b>Tarefa …</b></li>
+          <li><b>Timer de 10 minutos</b> · <b>Iniciar pomodoro</b> · <b>Despertador às 6h30 dias úteis</b> · <b>Parar som</b></li>
+          <li><b>Abrir YouTube</b> (usa seus atalhos) · <b>Pesquisar …</b></li>
+          <li><b>Que horas são</b> · <b>Como está o tempo</b> · <b>Dólar hoje</b> · <b>Minhas tarefas de hoje</b></li>
+          <li><b>Quanto é 15% de 200</b> · <b>Converter 10 km em milhas</b></li>
+          <li>Qualquer outra pergunta vai para a IA (se configurada) com as suas notas</li>
+        </ul>
+      </details>
       <div class="opt">
         <div><b>Permissão do microfone</b><small>Se o 🎤 não funcionar na nova aba, libere aqui uma vez.</small></div>
         <button class="btn" id="micPerm">Liberar microfone</button>
@@ -189,6 +233,15 @@
       <p>Um arquivo Markdown com todas as notas — abre no Obsidian, Notion, Logseq, Google Docs ou qualquer editor.</p>
       <button class="btn" id="exportMd">Baixar notas (.md)</button>
       <p id="brainStats" class="hint"></p>
+      <hr>
+      <h2>Limpeza</h2>
+      <p>Itens excluídos ficam <b>30 dias na lixeira</b> (filtro 🗑 no widget "Meu cérebro") e depois são apagados de vez.</p>
+      <div class="row">
+        <button class="btn" id="cleanDone">🧹 Mover tarefas concluídas para a lixeira</button>
+        <button class="btn" id="emptyTrash">Esvaziar lixeira</button>
+        <button class="btn danger-btn" id="wipeAll">⚠ Apagar todas as notas…</button>
+      </div>
+      <p id="cleanMsg" class="msg"></p>
       <hr>
       <h2>Próximas integrações</h2>
       <ul class="soon">

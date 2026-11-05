@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.3.0 — 2026-11-05
+**Organização e voz.**
+
+**Layout**
+- Widgets **redimensionáveis**: puxe o canto ↘ (largura em colunas, altura livre; duplo clique volta à altura automática)
+- **Responsivo**: 12, 6 ou 1 coluna conforme a largura; em janelas estreitas a barra de atalhos vai para o rodapé
+- **Layouts salvos** (ex.: Trabalho, Casa) no modo 🧩
+
+**Novos widgets**
+- ⏱ **Relógio**: despertador (dias da semana, soneca, 5 sons), timer, pomodoro e cronômetro — com notificação e som
+- 🧮 **Calculadora**: porcentagem ("200 + 10%", "15% de 200"), conversões de moedas, medidas, temperatura e datas; histórico; calculadoras de saúde opcionais (IMC, TMB/GET, água)
+- 🕘 **Navegação**: sites mais visitados e abas fechadas recentemente (permissão pedida só ao usar)
+
+**Notas e tarefas**
+- **Lixeira de 30 dias** (filtro 🗑): restaurar, apagar de vez, esvaziar
+- **Seleção múltipla**: concluir, adicionar tag, exportar .md ou excluir vários de uma vez
+- 🧹 **Limpar concluídas** no widget de lembretes; limpeza geral nas configurações
+
+**Voz**
+- **Comandos de voz** com **Alt+Shift+V** em qualquer aba (ou Alt+M / botão 🎙 na nova aba): anotar, lembretes, timer, pomodoro, despertador, abrir atalhos, pesquisar, horas, clima, cotações, tarefas do dia, contas — e perguntas à IA
+- **Escolha da voz** de leitura, velocidade e tom
+
+**Outros**
+- 🔔 **Aviso de atualização** (consulta o GitHub) e janela de **novidades** após atualizar
+- Busca Ctrl+K calcula na hora ("2^10 + 5", "100 usd em brl")
+
 ## v0.2.0 — 2026-11-04
 O centro da nova aba virou um **segundo cérebro**.
 

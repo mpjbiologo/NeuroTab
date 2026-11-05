@@ -129,16 +129,33 @@ export function startDictation({ lang = 'pt-BR', onText, onEnd, onError }) {
   return { stop: () => rec.stop() };
 }
 
-export function speak(text, lang = 'pt-BR') {
-  if (!('speechSynthesis' in window)) return;
+export function voicesFor(lang = 'pt-BR') {
+  if (!('speechSynthesis' in window)) return [];
+  const pre = lang.slice(0, 2);
+  return speechSynthesis.getVoices().filter((v) => v.lang.replace('_', '-').toLowerCase().startsWith(pre));
+}
+
+/** opts: string (idioma) ou settings ({ voiceLang, ttsVoice, ttsRate, ttsPitch }). Retorna Promise ao terminar. */
+export function speak(text, opts = 'pt-BR') {
+  if (!('speechSynthesis' in window)) return Promise.resolve();
+  const o = typeof opts === 'string' ? { voiceLang: opts } : opts || {};
+  const lang = o.voiceLang || 'pt-BR';
   speechSynthesis.cancel();
-  const clean = text.replace(/\[\d+\]/g, '').replace(/[*#`_>]/g, '').slice(0, 1200);
+  const clean = String(text).replace(/\[\d+\]/g, '').replace(/[*#`_>]/g, '').replace(/https?:\/\/\S+/g, '').slice(0, 1500);
   const u = new SpeechSynthesisUtterance(clean);
   u.lang = lang;
-  const voice = speechSynthesis.getVoices().find((v) => v.lang.replace('_', '-').startsWith(lang.slice(0, 2)) && /natural|online|google/i.test(v.name))
-    || speechSynthesis.getVoices().find((v) => v.lang.replace('_', '-').startsWith(lang.slice(0, 2)));
-  if (voice) u.voice = voice;
-  speechSynthesis.speak(u);
+  u.rate = o.ttsRate || 1;
+  u.pitch = o.ttsPitch || 1;
+  const all = speechSynthesis.getVoices();
+  const voice = (o.ttsVoice && all.find((v) => v.voiceURI === o.ttsVoice))
+    || voicesFor(lang).find((v) => /natural|online|neural/i.test(v.name))
+    || voicesFor(lang)[0];
+  if (voice) { u.voice = voice; u.lang = voice.lang; }
+  return new Promise((res) => {
+    u.onend = res;
+    u.onerror = res;
+    speechSynthesis.speak(u);
+  });
 }
 
 // Botão de microfone ligado a um campo de texto.

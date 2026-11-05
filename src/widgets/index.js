@@ -6,5 +6,8 @@ import reminders from './reminders.js';
 import weather from './weather.js';
 import quotes from './quotes.js';
 import shortcuts from './shortcuts.js';
+import clock from './clock.js';
+import calc from './calc.js';
+import browsing from './browsing.js';
 
-export const WIDGETS = Object.fromEntries([capture, reminders, brain, ask, weather, quotes, shortcuts].map((w) => [w.id, w]));
+export const WIDGETS = Object.fromEntries([capture, reminders, brain, ask, weather, quotes, clock, calc, browsing, shortcuts].map((w) => [w.id, w]));

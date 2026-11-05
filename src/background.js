@@ -1,7 +1,9 @@
 // NeuroTab — service worker: menus do botão direito, lembretes e notificações.
 import { DATA_KEY, BRAIN_KEY, loadData, saveData, uid, hostOf, inspectFavicon } from './lib/store.js';
-import { loadItems, addItem, updateItem, displayTitle } from './lib/brain.js';
+import { loadItems, addItem, updateItem, displayTitle, purgeOldTrash } from './lib/brain.js';
 import { enrich, isConfigured } from './lib/ai.js';
+import { K as CK, loadAlarms, saveAlarms, nextOccurrence, getTimer, getPomo, nextPhase, phaseMinutes } from './lib/clock.js';
+import { checkForUpdate, UPDATE_KEY, WHATSNEW_KEY } from './lib/update.js';
 
 const NEWTAB = chrome.runtime.getURL('src/newtab.html');
 
@@ -94,6 +96,11 @@ async function syncAlarms() {
 }
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name.startsWith('clock-')) return fireClockAlarm(alarm.name.slice(6));
+  if (alarm.name === 'timer') return fireTimer();
+  if (alarm.name === 'pomo') return firePomo();
+  if (alarm.name === 'update-check') return runUpdateCheck();
+  if (alarm.name === 'daily') return purgeOldTrash();
   if (!alarm.name.startsWith('rem-')) return;
   const id = alarm.name.slice(4);
   const it = (await loadItems()).find((x) => x.id === id);
@@ -113,6 +120,32 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 chrome.notifications.onButtonClicked.addListener(async (nid, btn) => {
+  if (nid.startsWith('clock-')) {
+    await stopSound();
+    if (btn === 1) {
+      const id = nid.slice(6);
+      const a = await loadAlarms();
+      const al = a.find((x) => x.id === id);
+      if (al) { al.snoozeUntil = Date.now() + 10 * 60e3; al.enabled = true; await saveAlarms(a); }
+    }
+    chrome.notifications.clear(nid);
+    return;
+  }
+  if (nid === 'timer' || nid === 'pomo') {
+    await stopSound();
+    if (nid === 'timer' && btn === 0) {
+      const t = await getTimer();
+      await chrome.storage.local.set({ [CK.timer]: { ...t, endAt: Date.now() + (t.duration || 60e3), pausedLeft: null } });
+    }
+    chrome.notifications.clear(nid);
+    return;
+  }
+  if (nid === 'update') {
+    const u = (await chrome.storage.local.get(UPDATE_KEY))[UPDATE_KEY];
+    if (u) chrome.tabs.create({ url: btn === 0 ? u.zip : u.url });
+    chrome.notifications.clear(nid);
+    return;
+  }
   if (!nid.startsWith('rem-')) return;
   const id = nid.slice(4);
   if (btn === 0) await updateItem(id, { done: true });
@@ -120,14 +153,166 @@ chrome.notifications.onButtonClicked.addListener(async (nid, btn) => {
   chrome.notifications.clear(nid);
 });
 
+chrome.notifications.onClosed.addListener((nid) => {
+  if (nid.startsWith('clock-') || nid === 'timer') stopSound();
+});
+
 chrome.notifications.onClicked.addListener(async (nid) => {
   chrome.notifications.clear(nid);
+  if (nid.startsWith('clock-') || nid === 'timer' || nid === 'pomo') { stopSound(); return; }
   await chrome.tabs.create({ url: NEWTAB + (nid.startsWith('rem-') ? '#item=' + nid.slice(4) : '') });
 });
 
+// ---------- Som (documento offscreen) ----------
+async function ensureOffscreen() {
+  const has = chrome.offscreen.hasDocument
+    ? await chrome.offscreen.hasDocument()
+    : (await chrome.runtime.getContexts({ contextTypes: ['OFFSCREEN_DOCUMENT'] })).length > 0;
+  if (has) return;
+  try {
+    await chrome.offscreen.createDocument({ url: 'src/offscreen.html', reasons: ['AUDIO_PLAYBACK'], justification: 'Tocar o som de despertadores e timers da NeuroTab' });
+  } catch (e) {
+    if (!String(e).includes('single offscreen')) console.warn(e);
+  }
+}
+
+async function playSound(kind, opts) {
+  await ensureOffscreen();
+  await chrome.runtime.sendMessage({ target: 'offscreen', type: 'play', kind, opts }).catch(() => {});
+  await chrome.storage.local.set({ [CK.sound]: { playing: !!opts?.loop, kind, at: Date.now() } });
+}
+
+async function stopSound() {
+  await chrome.runtime.sendMessage({ target: 'offscreen', type: 'stop' }).catch(() => {});
+  await chrome.storage.local.set({ [CK.sound]: { playing: false } });
+}
+
+// ---------- Despertadores, timer e pomodoro ----------
+async function syncClock() {
+  const existing = await chrome.alarms.getAll();
+  const want = new Map();
+  for (const al of await loadAlarms()) {
+    if (!al.enabled) continue;
+    const when = al.snoozeUntil && al.snoozeUntil > Date.now() ? al.snoozeUntil : nextOccurrence(al);
+    if (when) want.set('clock-' + al.id, when);
+  }
+  const t = await getTimer();
+  if (t.endAt) want.set('timer', Math.max(t.endAt, Date.now() + 500));
+  const p = await getPomo();
+  if (p.running && p.endAt) want.set('pomo', Math.max(p.endAt, Date.now() + 500));
+  for (const a of existing) {
+    if (!(a.name.startsWith('clock-') || a.name === 'timer' || a.name === 'pomo')) continue;
+    if (!want.has(a.name) || Math.abs(a.scheduledTime - want.get(a.name)) > 1500) await chrome.alarms.clear(a.name);
+    else want.delete(a.name);
+  }
+  for (const [name, when] of want) chrome.alarms.create(name, { when });
+}
+
+async function fireClockAlarm(id) {
+  const a = await loadAlarms();
+  const al = a.find((x) => x.id === id);
+  if (!al || !al.enabled) return;
+  al.snoozeUntil = null;
+  if (!al.days?.length) al.enabled = false;
+  await saveAlarms(a);
+  chrome.notifications.create('clock-' + id, {
+    type: 'basic',
+    iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+    title: '⏰ ' + (al.label || 'Despertador'),
+    message: `São ${al.time}.`,
+    buttons: [{ title: '⏹ Parar' }, { title: '😴 Soneca 10 min' }],
+    requireInteraction: true,
+    priority: 2,
+  });
+  playSound(al.sound, { loop: true, maxSec: 180, crescendo: true });
+}
+
+async function fireTimer() {
+  const t = await getTimer();
+  if (!t.endAt) return;
+  await chrome.storage.local.set({ [CK.timer]: { ...t, endAt: null, pausedLeft: null, finishedAt: Date.now() } });
+  chrome.notifications.create('timer', {
+    type: 'basic',
+    iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+    title: '⏱ ' + (t.label || 'Timer concluído'),
+    message: 'O tempo acabou.',
+    buttons: [{ title: '🔁 Repetir' }, { title: '⏹ Parar' }],
+    requireInteraction: true,
+    priority: 2,
+  });
+  const { settings } = await loadData();
+  playSound(settings.timerSound || 'sino', { loop: true, maxSec: 60 });
+}
+
+async function firePomo() {
+  const p = await getPomo();
+  if (!p.running) return;
+  const n = { ...p, ...nextPhase(p) };
+  n.endAt = Date.now() + phaseMinutes(n) * 60e3;
+  await chrome.storage.local.set({ [CK.pomo]: n });
+  const msg = n.phase === 'focus'
+    ? { t: `🍅 Foco ${n.cycle}`, m: `Pausa terminou. Hora de focar por ${n.focusMin} min.` }
+    : { t: n.phase === 'long' ? '🌿 Pausa longa' : '☕ Pausa', m: `Bom trabalho! Descanse ${phaseMinutes(n)} min.` };
+  chrome.notifications.create('pomo', { type: 'basic', iconUrl: chrome.runtime.getURL('icons/icon128.png'), title: msg.t, message: msg.m, priority: 1 });
+  playSound(n.phase === 'focus' ? 'digital' : 'suave', { loop: false });
+}
+
+// ---------- Atualizações ----------
+async function runUpdateCheck() {
+  try {
+    const { settings } = await loadData();
+    if (settings.checkUpdates === false) return;
+    const u = await checkForUpdate();
+    if (u.available) {
+      await chrome.action.setBadgeBackgroundColor({ color: '#7c5cff' });
+      await chrome.action.setBadgeText({ text: 'NEW' });
+      if (u.notifiedVersion !== u.latest) {
+        chrome.notifications.create('update', {
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+          title: `NeuroTab ${u.latest} disponível`,
+          message: 'Uma nova versão foi lançada. Veja as novidades e baixe.',
+          buttons: [{ title: '⬇ Baixar' }, { title: '📄 Ver novidades' }],
+        });
+        await chrome.storage.local.set({ [UPDATE_KEY]: { ...u, notifiedVersion: u.latest } });
+      }
+    } else {
+      await chrome.action.setBadgeText({ text: '' });
+    }
+  } catch (e) {
+    console.warn('NeuroTab: verificação de atualização falhou', e);
+  }
+}
+
 // ---------- Eventos ----------
-chrome.runtime.onInstalled.addListener(() => { rebuildMenus(); syncAlarms(); });
-chrome.runtime.onStartup.addListener(() => { rebuildMenus(); syncAlarms(); });
+function setupPeriodic() {
+  chrome.alarms.create('update-check', { delayInMinutes: 1, periodInMinutes: 12 * 60 });
+  chrome.alarms.create('daily', { delayInMinutes: 2, periodInMinutes: 24 * 60 });
+}
+
+chrome.runtime.onInstalled.addListener(async (details) => {
+  rebuildMenus();
+  syncAlarms();
+  syncClock();
+  setupPeriodic();
+  if (details.reason === 'update') {
+    await chrome.storage.local.set({ [WHATSNEW_KEY]: chrome.runtime.getManifest().version });
+    await chrome.action.setBadgeText({ text: '' });
+  }
+});
+chrome.runtime.onStartup.addListener(() => { rebuildMenus(); syncAlarms(); syncClock(); setupPeriodic(); });
+
+// Comando de teclado global: abrir a NeuroTab ouvindo um comando de voz.
+chrome.commands.onCommand.addListener(async (cmd) => {
+  if (cmd !== 'voice-command') return;
+  const url = chrome.runtime.getURL('src/newtab.html');
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.url?.startsWith(url) || tab?.url === 'chrome://newtab/' || tab?.url === 'edge://newtab/') {
+    chrome.runtime.sendMessage({ type: 'startVoice' }).catch(() => {});
+  } else {
+    chrome.tabs.create({ url: url + '#voice' });
+  }
+});
 
 let menuTimer;
 let alarmTimer;
@@ -141,10 +326,20 @@ chrome.storage.onChanged.addListener((changes, area) => {
     clearTimeout(alarmTimer);
     alarmTimer = setTimeout(syncAlarms, 300);
   }
+  if (changes[CK.alarms] || changes[CK.timer] || changes[CK.pomo]) syncClock();
 });
 
 // Mensagens da página/popup (ex.: organizar com IA em segundo plano).
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
+  if (msg?.target === 'offscreen') return false;
+  if (msg?.type === 'stopSound') { stopSound().then(() => reply({ ok: true })); return true; }
+  if (msg?.type === 'previewSound') { playSound(msg.kind, { loop: false }).then(() => reply({ ok: true })); return true; }
+  if (msg?.type === 'checkUpdate') {
+    checkForUpdate()
+      .then(async () => { await runUpdateCheck(); reply({ ok: true, u: (await chrome.storage.local.get(UPDATE_KEY))[UPDATE_KEY] }); })
+      .catch((e) => reply({ ok: false, error: e.message }));
+    return true;
+  }
   if (msg?.type === 'enrich' && msg.id) {
     (async () => {
       try {

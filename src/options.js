@@ -3,7 +3,10 @@ import {
   DATA_KEY, SEARCH_ENGINES, DEFAULT_SETTINGS, mergeSettings,
   loadData, saveData, loadBg, saveBg, parseBackup, toBackup, uid,
 } from './lib/store.js';
-import { loadItems, saveItems, fromKeepNote, toMarkdown } from './lib/brain.js';
+import { loadItems, saveItems, fromKeepNote, toMarkdown, trashItems, purgeTrash, loadTrash } from './lib/brain.js';
+import { voicesFor, speak } from './lib/ui.js';
+import { SOUNDS } from './lib/sounds.js';
+import { UPDATE_KEY } from './lib/update.js';
 import { PROVIDERS, aiConfig, requestPermission, listModels, complete } from './lib/ai.js';
 import { pixPayload, qrSvg } from './lib/pix.js';
 import { PROJECT, DONATION } from './config.js';
@@ -18,6 +21,7 @@ async function init() {
   $('#ver').textContent = 'v' + chrome.runtime.getManifest().version;
   for (const [k, e] of Object.entries(SEARCH_ENGINES)) $('#engines').add(new Option(e.name, k));
   for (let n = 2; n <= 12; n++) $('#cols').add(new Option(String(n), String(n)));
+  for (const [k, v] of Object.entries(SOUNDS)) $('#timerSound').add(new Option(v, k));
 
   data = await loadData();
   fillSettings();
@@ -28,6 +32,9 @@ async function init() {
   setupNotes();
   setupBackup();
   setupDonation();
+  setupVoiceOptions();
+  setupUpdatesOptions();
+  setupCleanup();
 
   chrome.storage.onChanged.addListener(async (c, area) => {
     if (area === 'local' && c[DATA_KEY]) { data = await loadData(); fillSettings(); showStats(); }
@@ -365,4 +372,69 @@ function toast(msg) {
   t.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+}
+
+// ---------- Voz ----------
+function setupVoiceOptions() {
+  const sel = $('#ttsVoice');
+  const fill = () => {
+    const lang = data.settings.voiceLang || 'pt-BR';
+    const list = voicesFor(lang).sort((a, b) => (/natural|online|neural/i.test(b.name) - /natural|online|neural/i.test(a.name)) || a.name.localeCompare(b.name));
+    sel.replaceChildren(new Option('Automática (melhor disponível)', ''), ...list.map((v) => new Option(`${v.name}${v.localService ? '' : ' ☁'}`, v.voiceURI)));
+    sel.value = list.some((v) => v.voiceURI === data.settings.ttsVoice) ? data.settings.ttsVoice : '';
+  };
+  fill();
+  speechSynthesis.addEventListener?.('voiceschanged', fill);
+  $('[data-k="voiceLang"]').addEventListener('change', () => setTimeout(fill, 100));
+  sel.addEventListener('change', async () => { data.settings.ttsVoice = sel.value; await saveData(data); toast('Voz salva ✓'); });
+  $('#testVoice').onclick = () => speak('Olá! Eu sou a NeuroTab. Posso anotar ideias, criar lembretes e responder perguntas sobre as suas notas.', data.settings);
+  $('#shortcutsBtn').onclick = () => chrome.tabs.create({ url: navigator.userAgent.includes('Edg/') ? 'edge://extensions/shortcuts' : 'chrome://extensions/shortcuts' });
+  $('#testTimerSound').onclick = () => chrome.runtime.sendMessage({ type: 'previewSound', kind: $('#timerSound').value });
+}
+
+// ---------- Atualizações ----------
+function setupUpdatesOptions() {
+  $('#verNow').textContent = chrome.runtime.getManifest().version;
+  const show = (u) => {
+    if (!u) return;
+    $('#updMsg').textContent = u.available
+      ? `🎉 Versão ${u.latest} disponível — veja o aviso na nova aba.`
+      : `✓ Você está na versão mais recente (verificado ${new Date(u.checkedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}).`;
+  };
+  chrome.storage.local.get(UPDATE_KEY).then((r) => show(r[UPDATE_KEY]));
+  $('#checkNow').onclick = async () => {
+    $('#updMsg').textContent = 'Verificando…';
+    const r = await chrome.runtime.sendMessage({ type: 'checkUpdate' });
+    if (r?.ok) show(r.u);
+    else $('#updMsg').textContent = '✕ Não foi possível verificar: ' + (r?.error || 'sem resposta');
+  };
+}
+
+// ---------- Limpeza ----------
+function setupCleanup() {
+  const msg = (t, cls = 'ok') => { const m = $('#cleanMsg'); m.className = 'msg ' + cls; m.textContent = t; };
+  $('#cleanDone').onclick = async () => {
+    const done = (await loadItems()).filter((i) => i.done);
+    if (!done.length) return msg('Nenhuma tarefa concluída.', '');
+    await trashItems(done.map((i) => i.id));
+    msg(`✓ ${done.length} tarefa(s) concluída(s) movida(s) para a lixeira.`);
+    showBrainStats();
+  };
+  $('#emptyTrash').onclick = async () => {
+    const n = (await loadTrash()).length;
+    if (!n) return msg('A lixeira já está vazia.', '');
+    if (!confirm(`Apagar definitivamente ${n} item(ns) da lixeira?`)) return;
+    await purgeTrash();
+    msg(`✓ Lixeira esvaziada (${n} itens).`);
+  };
+  $('#wipeAll').onclick = async () => {
+    const items = await loadItems();
+    if (!items.length) return msg('Não há notas para apagar.', '');
+    const typed = prompt(`Isto move TODAS as ${items.length} notas, tarefas e lembretes para a lixeira (recuperáveis por 30 dias).\nAntes, um backup será baixado.\n\nDigite APAGAR para confirmar:`);
+    if (typed?.trim().toUpperCase() !== 'APAGAR') return;
+    download(new Blob([toMarkdown(items)], { type: 'text/markdown' }), `neurotab-antes-de-apagar-${today()}.md`);
+    await trashItems(items.map((i) => i.id));
+    msg(`✓ ${items.length} itens movidos para a lixeira. Um backup em Markdown foi baixado.`);
+    showBrainStats();
+  };
 }

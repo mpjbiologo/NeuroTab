@@ -16,7 +16,7 @@ export default {
   title: 'Clima',
   icon: '🌤️',
   description: 'Tempo agora e nos próximos dias para a sua cidade.',
-  defaultSize: 's',
+  defaultW: 4,
   mount(el, ctx) {
     const body = h('div');
     ctx.actions.append(h('button', { title: 'Trocar cidade', onclick: () => askCity() }, '📍'));

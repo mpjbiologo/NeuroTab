@@ -1,5 +1,5 @@
 // NeuroTab — "segundo cérebro": notas, trechos, páginas, tarefas e lembretes.
-import { BRAIN_KEY, uid, hostOf } from './store.js';
+import { BRAIN_KEY, TRASH_KEY, uid, hostOf } from './store.js';
 
 export const TYPES = {
   note: { label: 'Nota', icon: '📝' },
@@ -58,19 +58,55 @@ export async function updateItem(id, patch) {
   return it;
 }
 
-export async function deleteItem(id) {
-  const items = await loadItems();
-  const idx = items.findIndex((x) => x.id === id);
-  if (idx < 0) return null;
-  const [removed] = items.splice(idx, 1);
-  await saveItems(items);
-  return { removed, idx };
+// ---------- Lixeira (30 dias) ----------
+export const TRASH_DAYS = 30;
+
+export async function loadTrash() {
+  const r = await chrome.storage.local.get(TRASH_KEY);
+  return Array.isArray(r[TRASH_KEY]) ? r[TRASH_KEY] : [];
 }
 
-export async function restoreItem(item, idx) {
+/** Move itens para a lixeira. Retorna os itens movidos. */
+export async function trashItems(ids) {
+  const set = new Set(ids);
   const items = await loadItems();
-  items.splice(Math.min(idx, items.length), 0, item);
-  await saveItems(items);
+  const moved = items.filter((i) => set.has(i.id)).map((i) => ({ ...i, deletedAt: Date.now() }));
+  if (!moved.length) return [];
+  const trash = await loadTrash();
+  await chrome.storage.local.set({ [BRAIN_KEY]: items.filter((i) => !set.has(i.id)), [TRASH_KEY]: [...moved, ...trash] });
+  return moved;
+}
+
+export async function restoreFromTrash(ids) {
+  const set = new Set(ids);
+  const trash = await loadTrash();
+  const back = trash.filter((i) => set.has(i.id)).map(({ deletedAt, ...i }) => i);
+  const items = [...back, ...(await loadItems())].sort((a, b) => b.createdAt - a.createdAt);
+  await chrome.storage.local.set({ [BRAIN_KEY]: items, [TRASH_KEY]: trash.filter((i) => !set.has(i.id)) });
+  return back.length;
+}
+
+export async function purgeTrash(ids) {
+  if (!ids) { await chrome.storage.local.set({ [TRASH_KEY]: [] }); return; }
+  const set = new Set(ids);
+  await chrome.storage.local.set({ [TRASH_KEY]: (await loadTrash()).filter((i) => !set.has(i.id)) });
+}
+
+export async function purgeOldTrash(days = TRASH_DAYS) {
+  const trash = await loadTrash();
+  const keep = trash.filter((i) => Date.now() - (i.deletedAt || 0) < days * 864e5);
+  if (keep.length !== trash.length) await chrome.storage.local.set({ [TRASH_KEY]: keep });
+  return trash.length - keep.length;
+}
+
+// Compatibilidade: excluir = mandar para a lixeira.
+export async function deleteItem(id) {
+  const [removed] = await trashItems([id]);
+  return removed ? { removed, idx: 0 } : null;
+}
+
+export async function restoreItem(item) {
+  await restoreFromTrash([item.id]);
 }
 
 export function displayTitle(it) {

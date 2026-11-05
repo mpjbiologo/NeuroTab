@@ -5,7 +5,12 @@ import {
 } from './lib/store.js';
 import * as Brain from './lib/brain.js';
 import { isConfigured, enrich } from './lib/ai.js';
-import { $, $$, h, toast, showCtx, micButton, toLocalInput, fromLocalInput } from './lib/ui.js';
+import { $, $$, h, toast, showCtx, micButton, toLocalInput, fromLocalInput, startDictation, hasDictation, speak } from './lib/ui.js';
+import { runCommand, tasksSummary } from './lib/assistant.js';
+import { ask as aiAsk } from './lib/ai.js';
+import { looksLikeMath, smartCalc } from './lib/calc.js';
+import { UPDATE_KEY, WHATSNEW_KEY, cmpVersion } from './lib/update.js';
+import { WHATS_NEW } from './whatsnew.js';
 import { WIDGETS } from './widgets/index.js';
 
 const EMOJIS = ['🏠','⭐','📁','🚀','🎓','💲','💼','🤖','🎮','📚','🍺','🥗','🎬','🎵','🛒','💻','🔗','🧪','🧬','📰','✈️','⚙️','❤️','📷'];
@@ -42,7 +47,7 @@ const ctx = {
     return it;
   },
   aiReady: () => isConfigured(data.settings),
-  openLinkDialog: (link) => editLink(link),
+  openLinkDialog: (link, preset) => editLink(link, preset),
   faviconFor: (l) => l.favicon || faviconUrl(l.url),
   openSettings: (hash = '') => { location.href = 'options.html' + hash; },
 };
@@ -64,12 +69,12 @@ async function init() {
   chrome.storage.onChanged.addListener(async (changes, area) => {
     if (area !== 'local') return;
     if (changes[DATA_KEY]) {
-      const prevWidgets = JSON.stringify(data.settings.widgets);
       data = await loadData();
       if (!data.groups.some((g) => g.id === activeId)) activeId = data.groups[0].id;
       applySettings();
       renderDock();
-      if (JSON.stringify(data.settings.widgets) !== prevWidgets) renderWidgets();
+      if (JSON.stringify(data.settings.widgets) !== widgetsSig) renderWidgets();
+      if (editing) renderLayoutPicker();
       listeners.data.forEach((fn) => fn(data));
     }
     if (changes[BRAIN_KEY]) {
@@ -88,7 +93,20 @@ async function init() {
   $('#editLayout').addEventListener('click', () => setEditing(!editing));
   $('#doneEdit').addEventListener('click', () => setEditing(false));
   $('#addWidget').addEventListener('click', openWidgetPicker);
+  setupLayouts();
   setupPanelBehaviour();
+  let rz;
+  let lastNarrow = innerWidth < 700;
+  window.addEventListener('resize', () => {
+    clearTimeout(rz);
+    rz = setTimeout(() => {
+      const narrow = innerWidth < 700;
+      if (narrow !== lastNarrow) { lastNarrow = narrow; applySettings(); renderDock(); }
+      if (layoutCols() !== gridCols) renderWidgets();
+    }, 150);
+  });
+  setupUpdates();
+  setupVoice();
   setupExternalDrop();
 
   const m = location.hash.match(/item=([\w]+)/);
@@ -108,8 +126,10 @@ function applySettings() {
   root.setProperty('--dim', s.bgDim);
   root.setProperty('--bg-color', s.bgColor);
   const b = document.body.classList;
-  ['left', 'right', 'top', 'bottom'].forEach((p) => b.toggle('dock-' + p, s.dockPosition === p));
-  const lateral = s.dockPosition === 'left' || s.dockPosition === 'right';
+  const pos = dockPos();
+  ['left', 'right', 'top', 'bottom'].forEach((p) => b.toggle('dock-' + p, pos === p));
+  b.toggle('narrow', innerWidth < 700);
+  const lateral = pos === 'left' || pos === 'right';
   b.toggle('pinned', lateral && s.dockPinned);
   $('#pinDock').classList.toggle('on', s.dockPinned);
   $('#hero').hidden = !s.showClock;
@@ -152,7 +172,7 @@ let openTimer;
 function renderDock() {
   const box = $('#railGroups');
   box.replaceChildren();
-  const horizontal = ['top', 'bottom'].includes(data.settings.dockPosition);
+  const horizontal = ['top', 'bottom'].includes(dockPos());
   for (const g of data.groups) {
     const n = data.links.filter((l) => l.groupId === g.id).length;
     const b = h('button', { class: 'rail-btn' + (g.id === panelGroup ? ' active' : ''), title: `${g.name} (${n})`, draggable: true },
@@ -212,7 +232,9 @@ function renderDock() {
   if (panelGroup) renderPanel();
 }
 
-const isPinned = () => data.settings.dockPinned && ['left', 'right'].includes(data.settings.dockPosition);
+// Em janelas estreitas a barra vai para o rodapé.
+const dockPos = () => (innerWidth < 700 ? 'bottom' : data.settings.dockPosition);
+const isPinned = () => data.settings.dockPinned && ['left', 'right'].includes(dockPos());
 
 function openPanel(groupId, quiet) {
   clearTimeout(closeTimer);
@@ -485,6 +507,16 @@ function setupOmni() {
     if (links.length) sections.push(['Atalhos', links.map((l) => ({ icon: h('img', { src: ctx.faviconFor(l), alt: '' }), label: l.title, sub: hostOf(l.url), action: () => { location.href = l.url; } }))]);
     if (notes.length) sections.push(['Cérebro', notes.map((it) => ({ icon: Brain.TYPES[it.type]?.icon, label: Brain.displayTitle(it), sub: Brain.relTime(it.createdAt), action: () => openItemDialog(it) }))]);
     const acts = [];
+    if (looksLikeMath(q) || /^-?[\d.,]+\s*\S+(\s\S+)?\s+(em|para)\s+\S+$/i.test(q) || /^dias?\s(ate|até|desde)\s/i.test(q)) {
+      const calcItem = { icon: '🧮', label: `${q} = …`, sub: 'Enter copia', action: async () => { if (calcItem.value != null) { await navigator.clipboard.writeText(String(calcItem.value)); toast('Resultado copiado'); } } };
+      acts.push(calcItem);
+      smartCalc(q).then((r) => {
+        calcItem.value = Number.isFinite(r.value) ? String(r.value).replace('.', ',') : r.text;
+        calcItem.label = r.text.includes('=') || /faltam|dias/i.test(r.text) ? r.text : `${q} = ${r.text}`;
+        const el = box.querySelector(`[data-i="${results.indexOf(calcItem)}"] span:nth-child(2)`);
+        if (el && input.value.trim() === q) el.textContent = calcItem.label;
+      }).catch(() => { calcItem.label = `${q} = ?`; });
+    }
     if (/^(https?:\/\/|www\.)|^[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(q) && !/\s/.test(q)) acts.push({ icon: '↗', label: `Abrir ${q}`, action: () => { location.href = normalizeUrl(q); } });
     acts.push({ icon: '🔎', label: `Pesquisar "${q}" no ${eng.name}`, action: () => { location.href = eng.url + encodeURIComponent(q); } });
     acts.push({ icon: '🤖', label: `Perguntar ao cérebro: "${q}"`, action: () => askBrain(q) });
@@ -503,8 +535,8 @@ function setupOmni() {
       }
     }
     // Sem atalhos/notas, a ação padrão é pesquisar na web.
-    sel = links.length || notes.length ? 0 : results.findIndex((r) => r.icon === '🔎' || r.icon === '↗');
-    if (results[0]?.icon === '↗') sel = results.findIndex((r) => r.icon === '↗');
+    sel = links.length || notes.length ? 0 : results.findIndex((r) => ['🧮', '↗', '🔎'].includes(r.icon));
+    if (results.some((r) => r.icon === '🧮') && !links.length) sel = results.findIndex((r) => r.icon === '🧮');
     highlight();
     box.hidden = false;
   };
@@ -539,31 +571,54 @@ function askBrain(q) {
 }
 
 // =====================================================================
-// WIDGETS
+// WIDGETS (redimensionáveis, responsivos, layouts salvos)
 // =====================================================================
+let widgetsSig = '';
+let gridCols = 12;
+
+function layoutCols() {
+  const w = $('#widgets').clientWidth || innerWidth;
+  return w >= 1000 ? 12 : w >= 620 ? 6 : 1;
+}
+
+function spanFor(w) {
+  if (gridCols === 12) return w;
+  if (gridCols === 6) return w >= 7 ? 6 : 3;
+  return 1;
+}
+
 function renderWidgets() {
   mounted.forEach((m) => { try { m.destroy?.(); } catch {} });
   mounted = [];
   const box = $('#widgets');
   box.replaceChildren();
-  const list = data.settings.widgets.filter((w) => WIDGETS[w.id]);
+  gridCols = layoutCols();
+  box.style.gridTemplateColumns = `repeat(${gridCols}, minmax(0, 1fr))`;
+  widgetsSig = JSON.stringify(data.settings.widgets);
+  const list = data.settings.widgets;
   list.forEach((w, idx) => {
     const def = WIDGETS[w.id];
+    if (!def) return;
     const actions = h('div', { class: 'wact' });
     const body = h('div', { class: 'wbody' });
-    const sizeBtn = (s, label) => h('button', { class: w.size === s ? 'sel' : '', title: { s: 'Pequeno', m: 'Médio', l: 'Largo' }[s], onclick: () => setWidget(idx, { size: s }) }, label);
-    const card = h('article', { class: `widget size-${w.size || def.defaultSize || 'm'}`, 'data-id': w.id, draggable: editing },
+    const grip = h('div', { class: 'grip', title: 'Arraste para redimensionar · duplo clique: altura automática' });
+    const card = h('article', { class: 'widget', 'data-id': w.id, 'data-idx': idx, draggable: editing },
       h('header', {},
         h('span', { class: 'wt' }, def.icon, ' ', def.title),
         actions,
         h('div', { class: 'wtools' },
-          sizeBtn('s', 'P'), sizeBtn('m', 'M'), sizeBtn('l', 'G'),
+          h('button', { title: 'Mais estreito', onclick: () => setWidget(idx, { w: Math.max(3, (w.w || 6) - 1) }) }, '−'),
+          h('span', { class: 'wsize' }, `${w.w}/12`),
+          h('button', { title: 'Mais largo', onclick: () => setWidget(idx, { w: Math.min(12, (w.w || 6) + 1) }) }, '+'),
           h('button', { title: 'Remover', onclick: () => removeWidget(idx) }, '✕'),
         ),
       ),
       body,
+      grip,
     );
-    card.addEventListener('dragstart', (e) => { if (!editing) return e.preventDefault(); drag = { type: 'widget', id: idx }; card.classList.add('dragging'); });
+    applyWidgetSize(card, w);
+    setupResize(card, grip, idx);
+    card.addEventListener('dragstart', (e) => { if (!editing || e.target !== card) return e.preventDefault(); drag = { type: 'widget', id: idx }; card.classList.add('dragging'); });
     card.addEventListener('dragend', () => { drag = null; card.classList.remove('dragging'); clearDropMarks(); });
     card.addEventListener('dragover', (e) => { if (drag?.type === 'widget' && drag.id !== idx) { e.preventDefault(); card.classList.add('drop-target'); } });
     card.addEventListener('dragleave', () => card.classList.remove('drop-target'));
@@ -574,12 +629,13 @@ function renderWidgets() {
       const [moved] = arr.splice(drag.id, 1);
       arr.splice(idx, 0, moved);
       drag = null;
-      await saveData(data);
+      await saveWidgets();
       renderWidgets();
     });
     box.append(card);
     try {
-      const wctx = Object.assign(Object.create(ctx), { actions, widget: w, saveWidget: (patch) => setWidget(idx, patch, true) });
+      const wctx = Object.assign(Object.create(ctx), { actions, saveWidget: (patch) => setWidget(idx, patch, true) });
+      Object.defineProperty(wctx, 'widget', { get: () => data.settings.widgets[idx] || w });
       const inst = def.mount(body, wctx);
       mounted.push({ id: w.id, destroy: inst?.destroy });
     } catch (err) {
@@ -588,19 +644,72 @@ function renderWidgets() {
     }
   });
   if (!list.length) {
-    box.append(h('p', { class: 'muted', style: { gridColumn: 'span 12', textAlign: 'center' } }, 'Nenhum widget. Clique em 🧩 na barra para adicionar.'));
+    box.append(h('p', { class: 'muted', style: { gridColumn: '1 / -1', textAlign: 'center' } }, 'Nenhum widget. Clique em 🧩 na barra para adicionar.'));
   }
 }
 
-async function setWidget(idx, patch, silent) {
-  Object.assign(data.settings.widgets[idx], patch);
+function applyWidgetSize(card, w) {
+  card.style.gridColumn = `span ${spanFor(w.w || 6)}`;
+  if (w.hpx && gridCols > 1) { card.style.height = w.hpx + 'px'; card.style.maxHeight = 'none'; card.classList.add('fixed-h'); }
+  else { card.style.height = ''; card.style.maxHeight = ''; card.classList.remove('fixed-h'); }
+  const ws = card.querySelector('.wsize');
+  if (ws) ws.textContent = `${w.w}/12`;
+}
+
+function setupResize(card, grip, idx) {
+  grip.addEventListener('dblclick', () => setWidget(idx, { hpx: null }));
+  grip.addEventListener('pointerdown', (e) => {
+    if (gridCols === 1) return;
+    e.preventDefault();
+    grip.setPointerCapture(e.pointerId);
+    const box = $('#widgets');
+    const gap = parseFloat(getComputedStyle(box).columnGap) || 16;
+    const colW = (box.clientWidth - gap * (gridCols - 1)) / gridCols;
+    const r0 = card.getBoundingClientRect();
+    const start = { x: e.clientX, y: e.clientY, w: r0.width, h: r0.height };
+    const w = { ...data.settings.widgets[idx] };
+    card.classList.add('resizing');
+    const move = (ev) => {
+      const width = start.w + (ev.clientX - start.x);
+      let span = Math.round((width + gap) / (colW + gap));
+      span = Math.max(gridCols === 12 ? 3 : 3, Math.min(gridCols, span));
+      w.w = gridCols === 12 ? span : span >= 6 ? 12 : 6;
+      w.hpx = Math.max(140, Math.min(1200, Math.round((start.h + (ev.clientY - start.y)) / 10) * 10));
+      applyWidgetSize(card, w);
+    };
+    const up = async () => {
+      grip.removeEventListener('pointermove', move);
+      card.classList.remove('resizing');
+      if (Math.abs(w.hpx - start.h) < 12) w.hpx = data.settings.widgets[idx].hpx || null;
+      await setWidget(idx, { w: w.w, hpx: w.hpx }, true);
+    };
+    grip.addEventListener('pointermove', move);
+    grip.addEventListener('pointerup', up, { once: true });
+    grip.addEventListener('pointercancel', up, { once: true });
+  });
+}
+
+async function saveWidgets() {
+  widgetsSig = JSON.stringify(data.settings.widgets);
   await saveData(data);
+}
+
+async function setWidget(idx, patch, silent) {
+  const w = data.settings.widgets[idx];
+  if (!w) return;
+  Object.assign(w, patch);
+  for (const k of Object.keys(patch)) if (patch[k] == null) delete w[k];
+  await saveWidgets();
   if (!silent) renderWidgets();
+  else {
+    const card = $(`.widget[data-idx="${idx}"]`);
+    if (card && ('w' in patch || 'hpx' in patch)) applyWidgetSize(card, w);
+  }
 }
 
 async function removeWidget(idx) {
   data.settings.widgets.splice(idx, 1);
-  await saveData(data);
+  await saveWidgets();
   renderWidgets();
 }
 
@@ -610,6 +719,54 @@ function setEditing(on) {
   $('#editBar').hidden = !on;
   $('#editLayout').classList.toggle('on', on);
   $$('.widget').forEach((w) => { w.draggable = on; });
+  if (on) renderLayoutPicker();
+}
+
+// ---------- Layouts salvos ----------
+function renderLayoutPicker() {
+  const s = data.settings;
+  const sel = $('#layoutSel');
+  const opts = [new Option('— Layout atual —', '')];
+  for (const l of s.layouts) opts.push(new Option(l.name, l.id));
+  sel.replaceChildren(...opts);
+  sel.value = s.layouts.some((l) => l.id === s.activeLayout) ? s.activeLayout : '';
+  $('#layoutDel').hidden = !sel.value;
+}
+
+function setupLayouts() {
+  $('#layoutSel').addEventListener('change', async (e) => {
+    const s = data.settings;
+    const cur = s.layouts.find((l) => l.id === s.activeLayout);
+    if (cur) cur.widgets = structuredClone(s.widgets); // guarda as mudanças do layout que estava aberto
+    const next = s.layouts.find((l) => l.id === e.target.value);
+    if (next) s.widgets = structuredClone(next.widgets);
+    s.activeLayout = next ? next.id : '';
+    await saveWidgets();
+    renderWidgets();
+    renderLayoutPicker();
+    if (next) toast(`Layout "${next.name}"`);
+  });
+  $('#layoutSave').addEventListener('click', async () => {
+    const s = data.settings;
+    const name = prompt('Nome do layout (ex.: Trabalho, Casa, Estudos):', s.layouts.find((l) => l.id === s.activeLayout)?.name || '');
+    if (!name?.trim()) return;
+    let l = s.layouts.find((x) => x.name.toLowerCase() === name.trim().toLowerCase());
+    if (l) l.widgets = structuredClone(s.widgets);
+    else { l = { id: uid(), name: name.trim(), widgets: structuredClone(s.widgets) }; s.layouts.push(l); }
+    s.activeLayout = l.id;
+    await saveWidgets();
+    renderLayoutPicker();
+    toast(`Layout "${l.name}" salvo`);
+  });
+  $('#layoutDel').addEventListener('click', async () => {
+    const s = data.settings;
+    const l = s.layouts.find((x) => x.id === s.activeLayout);
+    if (!l || !confirm(`Excluir o layout "${l.name}"? Os widgets na tela continuam.`)) return;
+    s.layouts = s.layouts.filter((x) => x !== l);
+    s.activeLayout = '';
+    await saveWidgets();
+    renderLayoutPicker();
+  });
 }
 
 function openWidgetPicker() {
@@ -620,10 +777,11 @@ function openWidgetPicker() {
     type: 'button',
     disabled: used.has(def.id) && !def.multiple,
     onclick: async () => {
-      data.settings.widgets.push({ id: def.id, size: def.defaultSize || 'm' });
-      await saveData(data);
+      data.settings.widgets.push({ id: def.id, w: def.defaultW || 6 });
+      await saveWidgets();
       renderWidgets();
       dlg.close();
+      $('.widget:last-of-type')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     },
   }, h('span', { class: 'wi' }, def.icon), h('span', {}, h('b', {}, def.title), h('small', {}, used.has(def.id) ? 'Já está na tela' : def.description)))));
   dlg.showModal();
@@ -684,7 +842,7 @@ function openItemDialog(item, preset = {}) {
   $('#itemDelete').onclick = async () => {
     dlg.close('cancel');
     const r = await Brain.deleteItem(it.id);
-    if (r) toast('Item excluído', 'Desfazer', () => Brain.restoreItem(r.removed, r.idx));
+    if (r) toast('Movido para a lixeira', 'Desfazer', () => Brain.restoreItem(r.removed));
   };
   dlg.onclose = async () => {
     if (dlg.returnValue !== 'ok') return;
@@ -696,4 +854,143 @@ function openItemDialog(item, preset = {}) {
   dlg.returnValue = '';
   dlg.showModal();
   (item ? f.text : f.text).focus();
+}
+
+// =====================================================================
+// ATUALIZAÇÕES E NOVIDADES
+// =====================================================================
+async function setupUpdates() {
+  const paint = async () => {
+    const u = (await chrome.storage.local.get(UPDATE_KEY))[UPDATE_KEY];
+    const bar = $('#updateBar');
+    const cur = chrome.runtime.getManifest().version;
+    if (!u || !u.latest || cmpVersion(u.latest, cur) <= 0 || u.dismissed === u.latest || data.settings.checkUpdates === false) { bar.hidden = true; return; }
+    bar.replaceChildren(
+      h('span', {}, '🎉'),
+      h('b', {}, `NeuroTab ${u.latest} disponível`),
+      h('span', { class: 'muted' }, `(você usa a ${cur})`),
+      h('span', { class: 'grow' }),
+      h('a', { class: 'btn', href: u.url, target: '_blank' }, '📄 Novidades'),
+      h('a', { class: 'btn primary', href: u.zip, target: '_blank' }, '⬇ Baixar'),
+      h('button', { class: 'btn', title: 'Como atualizar', onclick: () => alert('Como atualizar:\n\n1. Baixe e descompacte o neurotab.zip.\n2. Substitua os arquivos na pasta onde a NeuroTab está instalada.\n3. Abra edge://extensions e clique em ↻ (Recarregar) na NeuroTab.\n\nSeus atalhos, notas e configurações são mantidos.') }, '❓'),
+      h('button', { class: 'btn', title: 'Dispensar', onclick: async () => { await chrome.storage.local.set({ [UPDATE_KEY]: { ...u, dismissed: u.latest } }); bar.hidden = true; } }, '✕'),
+    );
+    bar.hidden = false;
+  };
+  paint();
+  chrome.storage.onChanged.addListener((c, area) => { if (area === 'local' && c[UPDATE_KEY]) paint(); });
+
+  // Novidades após atualizar
+  const v = (await chrome.storage.local.get(WHATSNEW_KEY))[WHATSNEW_KEY];
+  const news = v && WHATS_NEW[v];
+  if (news) {
+    $('#newsTitle').textContent = news.title;
+    $('#newsList').replaceChildren(...news.items.map(([i, t, d]) => h('div', {}, h('span', { class: 'ni' }, i), h('div', {}, h('b', {}, t), h('span', {}, d)))));
+    $('#newsDlg').showModal();
+    await chrome.storage.local.remove(WHATSNEW_KEY);
+  }
+}
+
+// =====================================================================
+// ASSISTENTE DE VOZ
+// =====================================================================
+let voiceSession = null;
+
+function voiceApi() {
+  const eng = SEARCH_ENGINES[data.settings.searchEngine] || SEARCH_ENGINES.google;
+  return {
+    capture: (p) => ctx.capture(p),
+    aiReady: () => isConfigured(data.settings),
+    ask: (q) => aiAsk(data.settings, items, q, []),
+    open: (url) => { location.href = url; },
+    searchUrl: (q) => eng.url + encodeURIComponent(q),
+    findLink: (name) => {
+      const f = Brain.fold(name).replace(/\s+/g, '');
+      return data.links.find((l) => Brain.fold(l.title).replace(/\s+/g, '') === f)
+        || data.links.find((l) => Brain.fold(l.title).replace(/\s+/g, '').includes(f))
+        || data.links.find((l) => Brain.fold(hostOf(l.url)).includes(f));
+    },
+    tasksText: () => tasksSummary(items),
+    weatherText: async () => {
+      const c = (await chrome.storage.local.get('nt_cache_weather')).nt_cache_weather;
+      const w = data.settings.weather;
+      if (!c?.d || !w) return 'Adicione o widget de clima e escolha sua cidade primeiro.';
+      const d = c.d;
+      return `Em ${w.name}, agora faz ${Math.round(d.current.temperature_2m)} graus, sensação de ${Math.round(d.current.apparent_temperature)}. Hoje: máxima de ${Math.round(d.daily.temperature_2m_max[0])} e mínima de ${Math.round(d.daily.temperature_2m_min[0])}, com ${d.daily.precipitation_probability_max[0] ?? 0}% de chance de chuva.`;
+    },
+    quotesText: async (t) => {
+      const c = (await chrome.storage.local.get('nt_cache_quotes')).nt_cache_quotes;
+      if (!c?.rows?.length) return 'Adicione o widget de cotações para eu saber os valores.';
+      let rows = c.rows.filter((r) => !r.err);
+      const want = /dolar/.test(t) ? 'USD' : /euro/.test(t) ? 'EUR' : /bitcoin/.test(t) ? 'BTC' : null;
+      if (want) rows = rows.filter((r) => r.name === want);
+      if (!rows.length) return 'Não tenho essa cotação no widget.';
+      return rows.slice(0, 4).map((r) => `${r.sub || r.name}: ${Number(r.price).toLocaleString('pt-BR', { style: 'currency', currency: r.cur || 'BRL' })}, ${r.pct >= 0 ? 'alta' : 'queda'} de ${Math.abs(r.pct || 0).toFixed(1).replace('.', ',')}%`).join('. ') + '.';
+    },
+  };
+}
+
+function setupVoice() {
+  const fab = $('#voiceFab');
+  fab.hidden = !hasDictation();
+  fab.addEventListener('click', () => startVoice());
+  $('#voiceClose').addEventListener('click', () => stopVoice(true));
+  $('#voice').addEventListener('click', (e) => { if (e.target.id === 'voice') stopVoice(true); });
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 'm') { e.preventDefault(); voiceSession ? stopVoice() : startVoice(); }
+    if (e.key === 'Escape' && !$('#voice').hidden) stopVoice(true);
+  });
+  chrome.runtime.onMessage.addListener((msg) => { if (msg?.type === 'startVoice' && document.visibilityState === 'visible') startVoice(); });
+  if (location.hash === '#voice') { history.replaceState(null, '', location.pathname); setTimeout(startVoice, 300); }
+}
+
+function startVoice() {
+  if (voiceSession) return;
+  const ov = $('#voice');
+  const heard = $('#voiceHeard');
+  const reply = $('#voiceReply');
+  ov.hidden = false;
+  ov.classList.add('listening');
+  heard.textContent = 'Pode falar…';
+  heard.classList.add('interim');
+  reply.textContent = '';
+  speechSynthesis?.cancel();
+  let finalText = '';
+  let silence;
+  voiceSession = startDictation({
+    lang: data.settings.voiceLang,
+    onText: (fin, interim) => {
+      finalText = fin;
+      heard.textContent = (fin + ' ' + interim).trim() || 'Pode falar…';
+      heard.classList.toggle('interim', !fin);
+      clearTimeout(silence);
+      silence = setTimeout(() => voiceSession?.stop(), 1600); // termina após pausa
+    },
+    onEnd: async (fin) => {
+      clearTimeout(silence);
+      voiceSession = null;
+      ov.classList.remove('listening');
+      const said = (fin || finalText).trim();
+      if (!said) { heard.textContent = 'Não ouvi nada. Toque em 🎙 para tentar de novo.'; setTimeout(() => { if (!voiceSession) ov.hidden = true; }, 2500); return; }
+      heard.textContent = `“${said}”`;
+      heard.classList.remove('interim');
+      reply.textContent = 'Processando…';
+      try {
+        const r = await runCommand(said, voiceApi());
+        reply.textContent = r.reply;
+        await speak(r.reply, data.settings);
+        setTimeout(() => { if (!voiceSession) ov.hidden = true; }, r.long ? 6000 : 1800);
+      } catch (e) {
+        reply.textContent = e.message;
+        setTimeout(() => { if (!voiceSession) ov.hidden = true; }, 4000);
+      }
+    },
+    onError: (msg) => { reply.textContent = msg; },
+  });
+  if (!voiceSession) { ov.hidden = true; toast('Reconhecimento de voz indisponível neste navegador.'); }
+}
+
+function stopVoice(close) {
+  if (voiceSession) voiceSession.stop();
+  if (close) { voiceSession = null; $('#voice').hidden = true; speechSynthesis?.cancel(); }
 }

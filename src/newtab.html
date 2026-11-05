@@ -43,10 +43,15 @@
       <div id="omniResults" class="omni-results" hidden></div>
     </div>
 
+    <div id="updateBar" class="update-bar" hidden></div>
+
     <div id="editBar" class="edit-bar" hidden>
-      <span>🧩 <b>Organizando widgets</b> — mude tamanho, ordem ou remova.</span>
+      <span>🧩 <b>Organizando</b> — arraste para reordenar, puxe o canto ↘ para redimensionar.</span>
       <span class="grow"></span>
-      <button id="addWidget" class="btn">＋ Adicionar widget</button>
+      <select id="layoutSel" class="layout-sel" title="Layouts salvos"></select>
+      <button id="layoutSave" class="btn" title="Salvar estes widgets como um layout">💾 Salvar layout</button>
+      <button id="layoutDel" class="btn danger" title="Excluir layout" hidden>🗑</button>
+      <button id="addWidget" class="btn">＋ Widget</button>
       <button id="doneEdit" class="btn primary">Concluir</button>
     </div>
 
@@ -121,6 +126,29 @@
       <div class="actions"><button value="cancel" class="btn">Fechar</button></div>
     </form>
   </dialog>
+
+  <!-- Novidades -->
+  <dialog id="newsDlg" class="dlg dlg-wide">
+    <form method="dialog">
+      <h2 id="newsTitle">Novidades</h2>
+      <div id="newsList" class="news-list"></div>
+      <div class="actions"><button value="ok" class="btn primary">Entendi</button></div>
+    </form>
+  </dialog>
+
+  <!-- Assistente de voz -->
+  <div id="voice" class="voice" hidden>
+    <div class="voice-card">
+      <div class="voice-orb"><span>🎙</span></div>
+      <div class="voice-text">
+        <div id="voiceHeard" class="heard">Pode falar…</div>
+        <div id="voiceReply" class="reply"></div>
+      </div>
+      <button id="voiceClose" class="icon-btn" title="Fechar (Esc)">✕</button>
+    </div>
+    <p class="voice-hint">Exemplos: "anotar comprar café" · "me lembre amanhã às 9h de pagar a conta" · "timer de 10 minutos" · "abrir YouTube" · "como está o tempo" · "quanto é 15% de 200"</p>
+  </div>
+  <button id="voiceFab" class="voice-fab" title="Comando de voz (Alt+Shift+V em qualquer aba, ou Alt+M aqui)">🎙</button>
 
   <div id="toast" class="toast" hidden></div>
   <script type="module" src="newtab.js"></script>

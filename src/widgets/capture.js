@@ -7,7 +7,7 @@ export default {
   title: 'Captura rápida',
   icon: '⚡',
   description: 'Anote uma ideia, tarefa ou lembrete em segundos — digitando ou falando.',
-  defaultSize: 'm',
+  defaultW: 6,
   mount(el, ctx) {
     let type = 'note';
     let usedVoice = false;

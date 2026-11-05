@@ -3,7 +3,7 @@
   "name": "__MSG_extName__",
   "short_name": "NeuroTab",
   "description": "__MSG_extDescription__",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "default_locale": "pt_BR",
   "homepage_url": "https://github.com/mpjbiologo/NeuroTab",
   "icons": {
@@ -36,13 +36,15 @@
     "scripting",
     "favicon",
     "alarms",
-    "notifications"
+    "notifications",
+    "offscreen"
   ],
   "host_permissions": [
     "https://api.open-meteo.com/*",
     "https://geocoding-api.open-meteo.com/*",
     "https://economia.awesomeapi.com.br/*",
-    "https://brapi.dev/*"
+    "https://brapi.dev/*",
+    "https://api.github.com/*"
   ],
   "optional_host_permissions": [
     "https://generativelanguage.googleapis.com/*",
@@ -59,6 +61,17 @@
         "default": "Alt+Shift+N"
       },
       "description": "Anotar ou salvar a página atual"
+    },
+    "voice-command": {
+      "suggested_key": {
+        "default": "Alt+Shift+V"
+      },
+      "description": "Falar um comando de voz na NeuroTab"
     }
-  }
+  },
+  "optional_permissions": [
+    "topSites",
+    "sessions",
+    "tabs"
+  ]
 }

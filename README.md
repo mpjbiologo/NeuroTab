@@ -38,10 +38,14 @@ A NeuroTab começou como substituta da extensão **Speed Dial**, que parou de se
 | 🤖 **Pergunte ao seu cérebro** | Chat com a IA sobre o que você salvou, com citações das fontes. Também funciona por voz |
 | ✂️ **Anotar páginas** | O ícone da extensão (ou **Alt+Shift+N**) abre um painel para anotar a página. O botão direito salva trechos, páginas e links |
 | 🔎 **Ctrl+K** | Uma busca só para atalhos, notas, web e perguntas à IA. **Shift+Enter** salva o texto como nota |
-| 🌤️📈 **Widgets** | Clima, cotações (moedas, cripto e ações da B3) e atalhos em blocos coloridos. Você escolhe a ordem e o tamanho com o 🧩 |
+| ⏱ **Relógio** | Despertador com dias da semana e soneca, timer, pomodoro e cronômetro, com som e notificação |
+| 🧮 **Calculadora** | Contas, porcentagem ("200 + 10%"), conversões (moedas, medidas, temperatura, datas) e calculadoras de saúde opcionais |
+| 🎙 **Comandos de voz** | **Alt+Shift+V** em qualquer aba: "anotar…", "me lembre amanhã às 9h…", "timer de 10 minutos", "abrir YouTube", "como está o tempo" |
+| 🗑 **Lixeira e limpeza** | Seleção múltipla, limpar concluídas, lixeira de 30 dias |
+| 🌤️📈🕘 **Mais widgets** | Clima, cotações, mais visitados e abas fechadas, atalhos em blocos. Arraste o canto ↘ para redimensionar e salve layouts com o 🧩 |
 | 🔁 **Importar e exportar** | Importa o Speed Dial (`.spd`) e o Google Keep (via Takeout). Exporta as notas em Markdown e faz backup completo em `.json` |
 
-<p align="center"><img src="docs/shot-panel.jpg" width="49%" alt="Painel de atalhos"> <img src="docs/shot-search.jpg" width="49%" alt="Busca universal"></p>
+<p align="center"><img src="docs/shot-panel.jpg" width="49%" alt="Painel de atalhos"> <img src="docs/shot-voice.jpg" width="49%" alt="Comando de voz"></p>
 
 ### 🤖 IA: use a que preferir
 A IA é **opcional**. Ela organiza as notas (título, resumo, tags e lembrete) e responde perguntas sobre elas. Você usa a **sua chave**, e as chamadas vão direto do seu navegador para o provedor escolhido:
@@ -60,7 +64,9 @@ Para configurar, abra **⚙ Configurações → IA e voz**, escolha o provedor, 
 3. Ative o **Modo de desenvolvedor** e clique em **Carregar sem pacote**. Escolha a pasta.
 4. Abra uma nova aba. O Edge pergunta se você quer manter a alteração: clique em **Manter alterações**.
 
-Para **atualizar**: baixe o zip novo, substitua os arquivos na mesma pasta e clique em ↻ na página de extensões. Seus dados são mantidos.
+Para **atualizar**: a NeuroTab avisa quando sai versão nova. Baixe o zip, substitua os arquivos na mesma pasta e clique em ↻ na página de extensões. Seus dados são mantidos.
+
+> **Despertador e timer** tocam com o navegador aberto e o computador ligado — a extensão não consegue acordar o PC.
 
 ### Vindo do Speed Dial?
 No Speed Dial antigo, vá em **Settings → Import/Export** e exporte o `.spd`. Na NeuroTab, vá em **Configurações → Backup** e escolha esse arquivo.
@@ -76,8 +82,9 @@ O Google só libera a API do Keep para contas empresariais (Workspace). Para con
 |---|---|
 | **v0.1** ✅ | Speed Dial completo e importação do `.spd` |
 | **v0.2** ✅ | Segundo cérebro: widgets, captura, lembretes, IA multi-provedor, voz, Keep, anotar páginas |
-| **v0.3** | Busca por significado (embeddings), resumo do dia, "revisitar hoje", mapa de conexões entre notas |
-| **v0.4** | Google Tarefas e Agenda, Notion, Obsidian, sincronização opcional, temas, interface em inglês |
+| **v0.3** ✅ | Widgets redimensionáveis e responsivos, relógio/despertador, calculadora, navegação, lixeira, comandos de voz, aviso de atualização |
+| **v0.4** | Slide de fotos (PC e galerias), mapa de trânsito (Waze), agenda, hábitos, RSS, foco do dia, versão para Firefox, lojas |
+| **v0.5** | Google Fotos e OneDrive, palavra de ativação por voz, sincronização, busca por significado |
 | — | Publicação na loja de complementos do Edge e na Chrome Web Store |
 
 Ideias são bem-vindas nas [Issues](https://github.com/mpjbiologo/NeuroTab/issues).
@@ -91,7 +98,10 @@ Tudo fica **no seu navegador**. A NeuroTab não tem servidor, não pede conta e 
 | `storage`, `unlimitedStorage` | Guardar atalhos, notas e fundo |
 | `contextMenus` | Mostrar o menu "NeuroTab" no botão direito |
 | `activeTab`, `scripting` | Ler o título e o texto selecionado da página quando **você** clica no ícone |
-| `alarms`, `notifications` | Disparar os lembretes |
+| `alarms`, `notifications` | Disparar lembretes, despertadores e timers |
+| `offscreen` | Tocar o som do despertador e do timer |
+| `topSites`, `sessions`, `tabs` *(opcionais)* | Widget Navegação — pedidas só se você usar o widget |
+| GitHub API | Verificar se há versão nova |
 | `favicon` | Mostrar os ícones dos sites |
 | Open-Meteo, AwesomeAPI, brapi.dev | Buscar clima e cotações |
 | Provedor de IA *(opcional)* | Pedida só quando você configura a IA |

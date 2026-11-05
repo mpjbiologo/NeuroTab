@@ -1,18 +1,25 @@
 // Widget: lembretes e tarefas.
 import { h } from '../lib/ui.js';
 import { itemRow } from './brain.js';
+import { trashItems, restoreFromTrash } from '../lib/brain.js';
 
 export default {
   id: 'reminders',
   title: 'Lembretes e tarefas',
   icon: '⏰',
   description: 'O que está atrasado, para hoje e para os próximos dias.',
-  defaultSize: 'm',
+  defaultW: 6,
   mount(el, ctx) {
     let showDone = false;
     const list = h('div', { class: 'items' });
     const toggle = h('button', { title: 'Mostrar concluídas', onclick: () => { showDone = !showDone; toggle.textContent = showDone ? '🙈' : '✓'; render(); } }, '✓');
-    ctx.actions.append(toggle, h('button', { title: 'Nova tarefa', onclick: () => ctx.newItem({ type: 'task' }) }, '＋'));
+    const clean = h('button', { title: 'Limpar concluídas (vão para a lixeira)', onclick: async () => {
+      const done = ctx.items.filter((i) => (i.type === 'task' || i.remindAt) && i.done);
+      if (!done.length) return ctx.toast('Nenhuma tarefa concluída para limpar');
+      const moved = await trashItems(done.map((i) => i.id));
+      ctx.toast(`${moved.length} concluída(s) na lixeira`, 'Desfazer', () => restoreFromTrash(moved.map((m) => m.id)));
+    } }, '🧹');
+    ctx.actions.append(clean, toggle, h('button', { title: 'Nova tarefa', onclick: () => ctx.newItem({ type: 'task' }) }, '＋'));
 
     function render() {
       const now = Date.now();

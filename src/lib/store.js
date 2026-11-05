@@ -5,6 +5,7 @@ export const DATA_KEY = 'nt_data';
 export const BG_KEY = 'nt_bg';
 export const ACTIVE_KEY = 'nt_active_group';
 export const BRAIN_KEY = 'nt_brain';
+export const TRASH_KEY = 'nt_trash';
 export const SCHEMA_VERSION = 1;
 
 export const SEARCH_ENGINES = {
@@ -17,14 +18,23 @@ export const SEARCH_ENGINES = {
 };
 
 export const DEFAULT_WIDGETS = [
-  { id: 'capture', size: 'm' },
-  { id: 'reminders', size: 'm' },
-  { id: 'brain', size: 'm' },
-  { id: 'ask', size: 'm' },
-  { id: 'weather', size: 's' },
-  { id: 'quotes', size: 's' },
-  { id: 'shortcuts', size: 's' },
+  { id: 'capture', w: 6 },
+  { id: 'reminders', w: 6 },
+  { id: 'brain', w: 6 },
+  { id: 'ask', w: 6 },
+  { id: 'weather', w: 4 },
+  { id: 'clock', w: 4 },
+  { id: 'quotes', w: 4 },
 ];
+
+const SIZE_TO_W = { s: 4, m: 6, l: 12 };
+export function normalizeWidgets(list) {
+  return (Array.isArray(list) ? list : DEFAULT_WIDGETS).map((w) => {
+    const out = { ...w, w: Math.max(3, Math.min(12, w.w || SIZE_TO_W[w.size] || 6)) };
+    delete out.size;
+    return out;
+  });
+}
 
 export const DEFAULT_AI = {
   provider: 'gemini', // gemini | openai | anthropic | openrouter | ollama | custom
@@ -65,13 +75,24 @@ export const DEFAULT_SETTINGS = {
   ai: DEFAULT_AI,
   voiceLang: 'pt-BR',
   speakAnswers: false,
+  ttsVoice: '',
+  ttsRate: 1,
+  ttsPitch: 1,
+  // Relógio
+  timerSound: 'sino',
+  // Layouts salvos
+  layouts: [], // [{ id, name, widgets }]
+  activeLayout: '',
+  // Atualizações
+  checkUpdates: true,
 };
 
 export function mergeSettings(s = {}) {
   return {
     ...DEFAULT_SETTINGS,
     ...s,
-    widgets: Array.isArray(s.widgets) ? s.widgets : DEFAULT_WIDGETS.map((w) => ({ ...w })),
+    widgets: normalizeWidgets(s.widgets),
+    layouts: Array.isArray(s.layouts) ? s.layouts.map((l) => ({ ...l, widgets: normalizeWidgets(l.widgets) })) : [],
     ai: { ...DEFAULT_AI, ...(s.ai || {}), keys: { ...(s.ai?.keys || {}) }, models: { ...(s.ai?.models || {}) }, baseUrls: { ...(s.ai?.baseUrls || {}) } },
   };
 }

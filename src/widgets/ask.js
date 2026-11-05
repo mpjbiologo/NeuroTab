@@ -8,7 +8,7 @@ export default {
   title: 'Pergunte ao seu cérebro',
   icon: '🤖',
   description: 'Converse com a IA sobre as suas notas. Também funciona por voz.',
-  defaultSize: 'm',
+  defaultW: 6,
   mount(el, ctx) {
     const history = [];
     const chat = h('div', { class: 'chat' });
@@ -65,7 +65,7 @@ export default {
         const bar = sourcesBar(sources, answer);
         if (bar) msg.append(bar);
         wait.replaceWith(msg);
-        if (ctx.settings.speakAnswers || byVoice) speak(answer, ctx.settings.voiceLang);
+        if (ctx.settings.speakAnswers || byVoice) speak(answer, ctx.settings);
       } catch (e) {
         wait.replaceWith(h('div', { class: 'msg bot err' }, e.message));
       }

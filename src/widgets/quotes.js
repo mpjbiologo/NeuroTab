@@ -9,7 +9,7 @@ export default {
   title: 'Cotações',
   icon: '📈',
   description: 'Dólar, euro, bitcoin e ações da B3.',
-  defaultSize: 's',
+  defaultW: 4,
   mount(el, ctx) {
     const body = h('div');
     const stamp = h('p', { class: 'muted', style: { margin: '8px 0 0', fontSize: '11.5px' } });
