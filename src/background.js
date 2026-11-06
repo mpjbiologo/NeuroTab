@@ -66,12 +66,16 @@ async function captureImage(info, tab) {
   }
   const response = await fetch(sourceUrl, { credentials: 'omit', redirect: 'follow', referrerPolicy: 'no-referrer' });
   if (!response.ok) throw new Error('Não foi possível baixar a imagem (' + response.status + ').');
+  const declaredSize = Number(response.headers.get('content-length') || 0);
+  if (declaredSize > 12 * 1024 * 1024) throw new Error('Imagem maior que 12 MB. Escolha uma versão menor.');
   const blob = await response.blob();
   const type = (blob.type || response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
   if (!type.startsWith('image/')) throw new Error('O endereço não retornou um arquivo de imagem.');
   if (blob.size > 12 * 1024 * 1024) throw new Error('Imagem maior que 12 MB. Escolha uma versão menor.');
   if (!blob.size) throw new Error('A imagem está vazia.');
   const db = await (await import('./lib/idb.js')).openDB();
+  let fileName = parsed.pathname.split('/').pop() || 'imagem';
+  try { fileName = decodeURIComponent(fileName); } catch { /* mantém o nome codificado */ }
   const record = {
     id: uid(),
     blob: blob.type === type ? blob : blob.slice(0, blob.size, type),
@@ -80,7 +84,7 @@ async function captureImage(info, tab) {
     url: sourceUrl,
     pageUrl,
     pageTitle: (tab?.title || '').slice(0, 300),
-    fileName: decodeURIComponent(parsed.pathname.split('/').pop() || 'imagem').slice(0, 160),
+    fileName: fileName.slice(0, 160),
     capturedAt: Date.now(),
   };
   await new Promise((resolve, reject) => {
