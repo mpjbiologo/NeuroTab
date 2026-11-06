@@ -6,6 +6,7 @@ import { K as CK, loadAlarms, saveAlarms, nextOccurrence, getTimer, getPomo, nex
 import { checkForUpdate, isStoreInstall, UPDATE_KEY, WHATSNEW_KEY } from './lib/update.js';
 import { setLang, t } from './lib/i18n.js';
 import { createPlayer } from './lib/sounds.js';
+import { openDB } from './lib/idb.js';
 
 const NEWTAB = chrome.runtime.getURL('src/newtab.html');
 loadData().then((d) => setLang(d.settings.lang)).catch(() => {});
@@ -73,7 +74,7 @@ async function captureImage(info, tab) {
   if (!type.startsWith('image/')) throw new Error('O endereço não retornou um arquivo de imagem.');
   if (blob.size > 12 * 1024 * 1024) throw new Error('Imagem maior que 12 MB. Escolha uma versão menor.');
   if (!blob.size) throw new Error('A imagem está vazia.');
-  const db = await (await import('./lib/idb.js')).openDB();
+  const db = await openDB();
   let fileName = parsed.pathname.split('/').pop() || 'imagem';
   try { fileName = decodeURIComponent(fileName); } catch { /* mantém o nome codificado */ }
   const record = {
