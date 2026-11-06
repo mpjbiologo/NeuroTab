@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.2 — 2026-11-06
+**Correção da captura de imagens.**
+
+- Corrigida a solicitação de permissão do domínio: agora ocorre diretamente no clique do menu de contexto, preservando o gesto do usuário exigido pelo Manifest V3.
+- A captura agora mostra um indicador de sucesso ou falha no ícone da extensão; ao passar o mouse, o título informa o resultado.
+- Mantidas as imagens e os dados existentes na biblioteca.
+
+# Changelog
+
 ## v0.5.1 — 2026-11-06
 **Biblioteca visual e captura de imagens.**
 
