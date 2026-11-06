@@ -1,6 +1,6 @@
 // NeuroTab — banco IndexedDB compartilhado: fotos dos slides e vetores da busca por significado.
 const DB = 'neurotab';
-const VERSION = 2;
+const VERSION = 3;
 let pending = null;
 
 export function openDB() {
@@ -11,6 +11,7 @@ export function openDB() {
       const d = r.result;
       if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos', { keyPath: 'id' });
       if (!d.objectStoreNames.contains('vectors')) d.createObjectStore('vectors', { keyPath: 'id' });
+      if (!d.objectStoreNames.contains('captures')) d.createObjectStore('captures', { keyPath: 'id' });
     };
     r.onsuccess = () => {
       const d = r.result;
