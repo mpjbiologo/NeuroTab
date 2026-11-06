@@ -89,12 +89,18 @@ async function captureImage(info, tab) {
     capturedAt: Date.now(),
   };
   await new Promise((resolve, reject) => {
+    if (!db.objectStoreNames.contains('captures')) {
+      reject(new Error('Biblioteca de imagens indisponível. Recarregue a extensão para atualizar o banco local.'));
+      return;
+    }
     const tx = db.transaction('captures', 'readwrite');
     tx.objectStore('captures').add(record);
     tx.oncomplete = resolve;
     tx.onerror = () => reject(tx.error);
     tx.onabort = () => reject(tx.error || new Error('Falha ao salvar a imagem.'));
   });
+  // Atualiza a biblioteca que já estiver aberta em outra aba/janela.
+  chrome.runtime.sendMessage({ type: 'imageCaptured', id: record.id }).catch(() => {});
   return record;
 }
 
