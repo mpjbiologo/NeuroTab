@@ -11,8 +11,9 @@ import calc from './calc.js';
 import browsing from './browsing.js';
 import traffic from './traffic.js';
 import photos from './photos.js';
+import imageLibrary from './image-library.js';
 import habits from './habits.js';
 import news from './news.js';
 import focus from './focus.js';
 
-export const WIDGETS = Object.fromEntries([capture, focus, reminders, brain, ask, weather, quotes, clock, calc, browsing, traffic, photos, habits, news, shortcuts].map((w) => [w.id, w]));
+export const WIDGETS = Object.fromEntries([capture, focus, reminders, brain, ask, weather, quotes, clock, calc, browsing, traffic, photos, imageLibrary, habits, news, shortcuts].map((w) => [w.id, w]));
