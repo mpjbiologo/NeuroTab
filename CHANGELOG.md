@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.5.1 — 2026-11-06
+**Biblioteca visual e captura de imagens.**
+
+- Novo comando no menu de contexto: salvar imagens diretamente na biblioteca da NeuroTab.
+- Nova área/widget **Biblioteca de imagens**, com pré-visualização, data, tamanho e origem.
+- Imagens armazenadas localmente no IndexedDB do navegador.
+- Permissão de acesso ao domínio da imagem solicitada sob demanda (HTTP/HTTPS).
+- Validação do conteúdo e limite de 12 MB por imagem.
+- Exclusão de imagens salvas e liberação dos recursos temporários de visualização.
+- Banco IndexedDB atualizado para a versão 3, preservando os dados existentes.
+
+**Teste:** esta versão é destinada à avaliação funcional da captura e da biblioteca visual. Ainda é necessário validar o comportamento em Chrome, Edge e Firefox.
+
+# Changelog
+
 ## v0.5.0 — 2026-11-05
 **Mais inteligente e fala sua língua.**
 
