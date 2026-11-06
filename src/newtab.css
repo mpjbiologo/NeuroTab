@@ -560,3 +560,14 @@ body.free.dock-top .update-bar { top: 64px; }
 @keyframes wakeDot { 0%,100% { box-shadow: 0 0 0 0 rgba(255,77,109,.55); } 50% { box-shadow: 0 0 0 6px rgba(255,77,109,0); } }
 body.dock-bottom .wake-pill, body.narrow .wake-pill { bottom: 84px; }
 body.dock-right .wake-pill { right: calc(var(--rail) + 84px); }
+
+
+/* Biblioteca local de imagens capturadas */
+.nt-image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; }
+.nt-image-card { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: rgba(0,0,0,.12); }
+.nt-image-preview { display: grid; place-items: center; height: 125px; background: rgba(0,0,0,.2); }
+.nt-image-preview img { max-width: 100%; max-height: 125px; object-fit: contain; }
+.nt-image-meta { display: grid; gap: 3px; padding: 8px 9px 4px; min-width: 0; }
+.nt-image-meta b, .nt-image-meta a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.nt-image-meta small { color: var(--muted); font-size: 11px; }
+.nt-image-card > button { margin: 4px 8px 8px; }
