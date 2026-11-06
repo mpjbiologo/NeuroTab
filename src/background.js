@@ -107,7 +107,7 @@ async function flashBadge(tabId, ok, detail = '') {
   if (!tabId) return;
   await chrome.action.setBadgeBackgroundColor({ color: ok ? '#2e9d4f' : '#c62828', tabId });
   await chrome.action.setBadgeText({ text: ok ? '✓' : '!', tabId });
-  await chrome.action.setTitle({ title: ok ? 'NeuroTab: imagem salva na biblioteca' : `NeuroTab: ${detail || 'falha ao salvar imagem'}`, tabId });
+  await chrome.action.setTitle({ title: ok ? 'NeuroTab: ação concluída' : `NeuroTab: ${detail || 'falha ao salvar imagem'}`, tabId });
   setTimeout(() => {
     chrome.action.setBadgeText({ text: '', tabId });
     chrome.action.setTitle({ title: 'NeuroTab', tabId });
