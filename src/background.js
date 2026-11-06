@@ -60,11 +60,10 @@ async function captureImage(info, tab) {
   if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Formato de imagem não suportado.');
   const origin = parsed.origin;
   const permission = { origins: [origin + '/*'] };
-  const alreadyAllowed = await chrome.permissions.contains(permission);
-  if (!alreadyAllowed) {
-    const granted = await chrome.permissions.request(permission);
-    if (!granted) throw new Error('Permissão para acessar a imagem não concedida.');
-  }
+  // IMPORTANTE: request() precisa ser chamado imediatamente no gesto do menu.
+  // Não inserir nenhum await antes desta chamada, ou o navegador perde a ativação do usuário.
+  const granted = await chrome.permissions.request(permission);
+  if (!granted) throw new Error('Permissão para acessar a imagem não concedida. Tente novamente e autorize o domínio solicitado.');
   const response = await fetch(sourceUrl, { credentials: 'omit', redirect: 'follow', referrerPolicy: 'no-referrer' });
   if (!response.ok) throw new Error('Não foi possível baixar a imagem (' + response.status + ').');
   const declaredSize = Number(response.headers.get('content-length') || 0);
@@ -104,16 +103,21 @@ async function captureImage(info, tab) {
   return record;
 }
 
-async function flashBadge(tabId, ok) {
+async function flashBadge(tabId, ok, detail = '') {
   if (!tabId) return;
   await chrome.action.setBadgeBackgroundColor({ color: ok ? '#2e9d4f' : '#c62828', tabId });
   await chrome.action.setBadgeText({ text: ok ? '✓' : '!', tabId });
-  setTimeout(() => chrome.action.setBadgeText({ text: '', tabId }), 2000);
+  await chrome.action.setTitle({ title: ok ? 'NeuroTab: imagem salva na biblioteca' : `NeuroTab: ${detail || 'falha ao salvar imagem'}`, tabId });
+  setTimeout(() => {
+    chrome.action.setBadgeText({ text: '', tabId });
+    chrome.action.setTitle({ title: 'NeuroTab', tabId });
+  }, 6000);
 }
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   const id = String(info.menuItemId);
   let ok = true;
+  let failure = '';
   try {
     if (id.startsWith('nt-g-')) {
       const isLink = !!info.linkUrl;
@@ -132,10 +136,11 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       await captureImage(info, tab);
     }
   } catch (e) {
-    console.error(e);
+    console.error('NeuroTab: falha na captura', e);
     ok = false;
+    failure = e?.message || String(e);
   }
-  flashBadge(tab?.id, ok);
+  flashBadge(tab?.id, ok, failure);
 });
 
 // ---------- Lembretes ----------
