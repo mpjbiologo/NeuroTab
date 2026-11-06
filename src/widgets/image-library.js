@@ -10,10 +10,11 @@ export default {
   defaultW: 6,
   mount(el) {
     const list = h('div', { class: 'nt-image-grid' });
-    const status = h('p', { class: 'muted' }, 'Carregando imagens…');
+    const status = h('p', { class: 'muted', role: 'status' }, 'Carregando imagens…');
+    const refresh = h('button', { class: 'chip', type: 'button' }, '↻ Atualizar');
     let urls = [];
     let destroyed = false;
-    el.append(status, list);
+    el.append(h('div', { class: 'nt-image-toolbar' }, status, refresh), list);
 
     async function load() {
       urls.forEach((url) => URL.revokeObjectURL(url));
@@ -21,6 +22,7 @@ export default {
       list.replaceChildren();
       try {
         const db = await openDB();
+        if (!db.objectStoreNames.contains('captures')) throw new Error('Armazenamento ausente. Recarregue a extensão em chrome://extensions ou edge://extensions.');
         const records = await new Promise((resolve, reject) => {
           const tx = db.transaction('captures', 'readonly');
           const req = tx.objectStore('captures').getAll();
@@ -63,13 +65,18 @@ export default {
             remove));
         }
       } catch (error) {
-        status.textContent = 'Não foi possível abrir a biblioteca: ' + error.message;
+        status.textContent = 'Erro ao carregar a biblioteca: ' + error.message;
       }
     }
+    const onMessage = (message) => { if (message?.type === 'imageCaptured') load(); };
+    chrome.runtime.onMessage.addListener(onMessage);
+    refresh.addEventListener('click', load);
     load();
     return {
       destroy() {
         destroyed = true;
+        chrome.runtime.onMessage.removeListener(onMessage);
+        refresh.removeEventListener('click', load);
         urls.forEach((url) => URL.revokeObjectURL(url));
         urls = [];
       }
