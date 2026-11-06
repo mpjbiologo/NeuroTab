@@ -21,6 +21,7 @@ async function rebuildMenus() {
   chrome.contextMenus.create({ id: 'nt-clip', parentId: 'nt-root', title: t('✂️ Salvar trecho no cérebro'), contexts: ['selection'] });
   chrome.contextMenus.create({ id: 'nt-page', parentId: 'nt-root', title: t('🔖 Salvar página no cérebro (ler depois)'), contexts: ['page'] });
   chrome.contextMenus.create({ id: 'nt-link', parentId: 'nt-root', title: t('🔗 Salvar link no cérebro'), contexts: ['link'] });
+  chrome.contextMenus.create({ id: 'nt-image', parentId: 'nt-root', title: t('🖼️ Salvar imagem na biblioteca'), contexts: ['image'] });
   chrome.contextMenus.create({ id: 'nt-add', parentId: 'nt-root', title: t('➕ Adicionar aos atalhos'), contexts: ['page', 'link'] });
   for (const g of data.groups) {
     chrome.contextMenus.create({ id: 'nt-g-' + g.id, parentId: 'nt-add', title: `${g.icon} ${g.name}`, contexts: ['page', 'link'] });
@@ -50,6 +51,48 @@ async function captureAndEnrich(p) {
   return item;
 }
 
+
+async function captureImage(info, tab) {
+  const sourceUrl = info.srcUrl || '';
+  const pageUrl = info.pageUrl || tab?.url || '';
+  const parsed = new URL(sourceUrl);
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Formato de imagem não suportado.');
+  const origin = parsed.origin;
+  const permission = { origins: [origin + '/*'] };
+  const alreadyAllowed = await chrome.permissions.contains(permission);
+  if (!alreadyAllowed) {
+    const granted = await chrome.permissions.request(permission);
+    if (!granted) throw new Error('Permissão para acessar a imagem não concedida.');
+  }
+  const response = await fetch(sourceUrl, { credentials: 'omit', redirect: 'follow', referrerPolicy: 'no-referrer' });
+  if (!response.ok) throw new Error('Não foi possível baixar a imagem (' + response.status + ').');
+  const blob = await response.blob();
+  const type = (blob.type || response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+  if (!type.startsWith('image/')) throw new Error('O endereço não retornou um arquivo de imagem.');
+  if (blob.size > 12 * 1024 * 1024) throw new Error('Imagem maior que 12 MB. Escolha uma versão menor.');
+  if (!blob.size) throw new Error('A imagem está vazia.');
+  const db = await (await import('./lib/idb.js')).openDB();
+  const record = {
+    id: uid(),
+    blob: blob.type === type ? blob : blob.slice(0, blob.size, type),
+    type,
+    size: blob.size,
+    url: sourceUrl,
+    pageUrl,
+    pageTitle: (tab?.title || '').slice(0, 300),
+    fileName: decodeURIComponent(parsed.pathname.split('/').pop() || 'imagem').slice(0, 160),
+    capturedAt: Date.now(),
+  };
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction('captures', 'readwrite');
+    tx.objectStore('captures').add(record);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error('Falha ao salvar a imagem.'));
+  });
+  return record;
+}
+
 async function flashBadge(tabId, ok) {
   if (!tabId) return;
   await chrome.action.setBadgeBackgroundColor({ color: ok ? '#2e9d4f' : '#c62828', tabId });
@@ -74,6 +117,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       await captureAndEnrich({ type: 'page', title: tab?.title, url: info.pageUrl, pageTitle: tab?.title, source: 'context' });
     } else if (id === 'nt-link') {
       await captureAndEnrich({ type: 'page', title: info.selectionText || '', url: info.linkUrl, source: 'context' });
+    } else if (id === 'nt-image') {
+      await captureImage(info, tab);
     }
   } catch (e) {
     console.error(e);
