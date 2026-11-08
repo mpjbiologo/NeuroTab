@@ -1049,7 +1049,7 @@ function snapAxis(cands, targets, th = 8) {
 
 /** Evita que janelas do layout livre terminem sobrepostas após mover/redimensionar. */
 function freeItemRects(box, except) {
-  return $('.free-item', box).filter((item) => item !== except).map((item) => ({
+  return Array.from(box.querySelectorAll('.free-item')).filter((item) => item !== except).map((item) => ({
     l: item.offsetLeft, t: item.offsetTop,
     r: item.offsetLeft + item.offsetWidth, b: item.offsetTop + item.offsetHeight,
   }));
