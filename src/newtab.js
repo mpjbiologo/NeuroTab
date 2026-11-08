@@ -1047,6 +1047,57 @@ function snapAxis(cands, targets, th = 8) {
   return best;
 }
 
+/** Evita que janelas do layout livre terminem sobrepostas após mover/redimensionar. */
+function freeItemRects(box, except) {
+  return $('.free-item', box).filter((item) => item !== except).map((item) => ({
+    l: item.offsetLeft, t: item.offsetTop,
+    r: item.offsetLeft + item.offsetWidth, b: item.offsetTop + item.offsetHeight,
+  }));
+}
+
+function overlapsFreeItem(rect, obstacles, gap = 12) {
+  return obstacles.some((o) =>
+    rect.l < o.r + gap && rect.r > o.l - gap
+    && rect.t < o.b + gap && rect.b > o.t - gap
+  );
+}
+
+/** Procura a posição livre mais próxima, priorizando deslocamentos pequenos. */
+function nearestFreePosition(box, frame, desired, obstacles) {
+  const W = box.clientWidth;
+  const width = Math.min(W, desired.w);
+  const height = desired.h;
+  const xs = new Set([0, Math.max(0, W - width), Math.max(0, Math.min(W - width, desired.x))]);
+  const ys = new Set([0, Math.max(0, desired.y)]);
+  for (const o of obstacles) {
+    xs.add(Math.max(0, Math.min(W - width, o.l - width - 12)));
+    xs.add(Math.max(0, Math.min(W - width, o.r + 12)));
+    ys.add(Math.max(0, o.t - height - 12));
+    ys.add(Math.max(0, o.b + 12));
+  }
+  let candidates = [];
+  for (const x of xs) for (const y of ys) candidates.push({ x, y });
+  candidates.sort((a, b) =>
+    Math.abs(a.x - desired.x) + Math.abs(a.y - desired.y) * 1.15
+    - (Math.abs(b.x - desired.x) + Math.abs(b.y - desired.y) * 1.15)
+  );
+  const valid = (p) => !overlapsFreeItem(
+    { l: p.x, t: p.y, r: p.x + width, b: p.y + height }, obstacles
+  );
+  let found = candidates.find(valid);
+  if (found) return { ...found, w: width, h: height };
+
+  // Fallback em grade: útil quando as posições existentes ocupam quase toda a largura.
+  const bottom = Math.max(desired.y + 1600, ...obstacles.map((o) => o.b + height + 32));
+  for (let y = 0; y <= bottom; y += 24) {
+    for (let x = 0; x + width <= W + 1; x += 24) {
+      const p = { x, y };
+      if (valid(p)) return { ...p, w: width, h: height };
+    }
+  }
+  return null;
+}
+
 function attachFree(frame, { handles, grip, fixedHeight, minW = 200, minH = 110, save }) {
   const box = $('#widgets');
   const begin = (e, mode) => {
@@ -1108,6 +1159,30 @@ function attachFree(frame, { handles, grip, fixedHeight, minW = 200, minH = 110,
       clearGuides();
       frame.classList.remove('moving', 'resizing');
       if (!moved) return;
+
+      const obstacles = freeItemRects(box, frame);
+      const proposed = { l: cur.x, t: cur.y, r: cur.x + cur.w, b: cur.y + cur.h };
+      if (mode === 'move' && overlapsFreeItem(proposed, obstacles)) {
+        const free = nearestFreePosition(box, frame, cur, obstacles);
+        if (free) {
+          cur.x = free.x;
+          cur.y = free.y;
+          frame.style.left = cur.x + 'px';
+          frame.style.top = cur.y + 'px';
+        } else {
+          cur = { ...r };
+          frame.style.left = r.x + 'px';
+          frame.style.top = r.y + 'px';
+          toast('Não há espaço livre para posicionar este widget.');
+        }
+      } else if (mode === 'resize' && overlapsFreeItem(proposed, obstacles)) {
+        cur.w = r.w;
+        cur.h = r.h;
+        frame.style.width = r.w + 'px';
+        if (fixedHeight) frame.style.height = r.h + 'px';
+        toast('Redimensionamento limitado para evitar sobreposição. Mova o widget ou tente outro tamanho.');
+      }
+
       const p = { fx: cur.x / W, fy: cur.y, fw: cur.w / W, fz: zTop };
       if (fixedHeight) p.fh = cur.h;
       await save(p);
