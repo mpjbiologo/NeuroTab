@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.6 — 2026-11-08
+**Correção da hierarquia visual.**
+
+- Isolado o contexto de empilhamento do conteúdo principal para impedir que widgets em modo livre ultrapassem overlays e painéis globais.
+- Mantida a prioridade visual do assistente de voz, dock e notificações sobre os widgets.
+
 ## v0.5.2 — 2026-11-06
 **Correção da captura de imagens.**
 
