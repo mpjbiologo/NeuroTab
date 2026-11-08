@@ -16,6 +16,7 @@ import { photoList, photoUrl, preload } from './lib/photos.js';
 import { initI18n, t, tIn, LANG, LOCALE } from './lib/i18n.js';
 import { getWeather, searchCities, wxIcon, wxDesc, timeIn, tzOffsetLabel, dayIn, renderForecast } from './lib/weather.js';
 import { WIDGETS } from './widgets/index.js';
+import { initWindowManager, bringToFront } from './lib/window-manager.js';
 
 const EMOJIS = ['🏠','⭐','📁','🚀','🎓','💲','💼','🤖','🎮','📚','🍺','🥗','🎬','🎵','🛒','💻','🔗','🧪','🧬','📰','✈️','⚙️','❤️','📷'];
 
@@ -74,6 +75,7 @@ function scheduleIndex(delay = 6000) {
 }
 
 async function init() {
+  initWindowManager();
   data = await loadData();
   initI18n(data.settings.lang);
   items = await Brain.loadItems();
@@ -1056,7 +1058,7 @@ function attachFree(frame, { handles, grip, fixedHeight, minW = 200, minH = 110,
     const r = { x: frame.offsetLeft, y: frame.offsetTop, w: frame.offsetWidth, h: frame.offsetHeight };
     const sx = e.clientX;
     const sy = e.clientY;
-    frame.style.zIndex = ++zTop;
+    zTop = bringToFront(frame);
     frame.classList.add(mode === 'move' ? 'moving' : 'resizing');
     const others = $$('.free-item', box).filter((f) => f !== frame).map((f) => ({ l: f.offsetLeft, t: f.offsetTop, r: f.offsetLeft + f.offsetWidth, b: f.offsetTop + f.offsetHeight }));
     const xs = [0, W, W / 2, ...others.flatMap((o) => [o.l, o.r, o.l - 16, o.r + 16])];
@@ -1116,7 +1118,7 @@ function attachFree(frame, { handles, grip, fixedHeight, minW = 200, minH = 110,
   };
   handles.forEach((hd) => hd.addEventListener('pointerdown', (e) => begin(e, 'move')));
   grip?.addEventListener('pointerdown', (e) => { e.stopPropagation(); begin(e, 'resize'); });
-  frame.addEventListener('pointerdown', () => { if (+frame.style.zIndex < zTop) frame.style.zIndex = ++zTop; });
+  frame.addEventListener('pointerdown', () => { zTop = bringToFront(frame); });
 }
 
 /** Converte a grade atual em posições livres, preservando o que se vê. */
