@@ -942,7 +942,7 @@ function repairLoadedFreeLayout() {
   let changed = false;
   let unresolved = false;
 
-  for (const frame of $('.free-item', box)) {
+  for (const frame of $$('.free-item', box)) {
     const width = Math.min(W, frame.offsetWidth);
     const height = frame.offsetHeight;
     const original = {
