@@ -36,6 +36,10 @@ a { color: var(--accent); }
 #bg { position: fixed; inset: 0; z-index: -1; background-color: var(--bg-color); background-size: cover; background-position: center; }
 #bg::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0, calc(var(--dim) / 100)); }
 
+/* O conteúdo principal é um contexto isolado: z-index de widgets livres
+   não pode escapar e ficar acima do dock, overlays ou modais globais. */
+#center { position: relative; z-index: var(--z-content); isolation: isolate; }
+
 /* ================= DOCK ================= */
 .dock { position: fixed; z-index: var(--z-dock); display: flex; }
 .rail {
