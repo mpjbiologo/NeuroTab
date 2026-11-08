@@ -932,6 +932,76 @@ const FIXED = {
   _search: { el: () => omniEl, label: '🔎 Busca', def: { fx: 0.22, fy: 170, fw: 0.56 }, show: () => data.settings.showSearch },
 };
 
+/** Corrige conflitos herdados no layout salvo, sem reorganizar widgets que já estão livres. */
+function repairLoadedFreeLayout() {
+  const box = $('#widgets');
+  const W = box.clientWidth;
+  if (!W) return false;
+
+  const placed = [];
+  let changed = false;
+  let unresolved = false;
+
+  for (const frame of $('.free-item', box)) {
+    const width = Math.min(W, frame.offsetWidth);
+    const height = frame.offsetHeight;
+    const original = {
+      x: frame.offsetLeft,
+      y: Math.max(0, frame.offsetTop),
+      w: width,
+      h: height,
+    };
+    const desired = {
+      x: Math.max(0, Math.min(W - width, original.x)),
+      y: original.y,
+      w: width,
+      h: height,
+    };
+    const rect = (p) => ({ l: p.x, t: p.y, r: p.x + p.w, b: p.y + p.h });
+
+    let next = desired;
+    if (overlapsFreeItem(rect(next), placed)) {
+      next = nearestFreePosition(box, frame, desired, placed);
+    }
+
+    if (!next) {
+      unresolved = true;
+      placed.push(rect(original));
+      continue;
+    }
+
+    const moved = Math.abs(next.x - frame.offsetLeft) > 1
+      || Math.abs(next.y - frame.offsetTop) > 1
+      || Math.abs(next.w - frame.offsetWidth) > 1;
+    if (moved) {
+      frame.style.left = next.x + 'px';
+      frame.style.top = next.y + 'px';
+      frame.style.width = next.w + 'px';
+      changed = true;
+
+      const fixedKey = frame.dataset.fixed;
+      if (fixedKey) {
+        data.settings.freeFixed = data.settings.freeFixed || {};
+        data.settings.freeFixed[fixedKey] = {
+          ...(data.settings.freeFixed[fixedKey] || FIXED[fixedKey].def),
+          fx: next.x / W,
+          fy: next.y,
+          fw: next.w / W,
+        };
+      } else {
+        const idx = Number(frame.dataset.idx);
+        const widget = data.settings.widgets[idx];
+        if (widget) Object.assign(widget, { fx: next.x / W, fy: next.y, fw: next.w / W });
+      }
+    }
+    placed.push(rect(next));
+  }
+
+  if (changed) saveWidgets().catch((err) => console.error('Falha ao salvar layout recuperado:', err));
+  if (unresolved) toast('Alguns widgets continuam sobrepostos: não foi encontrado espaço livre suficiente.');
+  return changed;
+}
+
 function renderFree() {
   const box = $('#widgets');
   box.replaceChildren();
@@ -982,6 +1052,7 @@ function renderFree() {
     mountCard(parts, w, idx);
   });
   if (!list.length) box.append(h('p', { class: 'muted free-empty' }, 'Nenhum widget. Clique em 🧩 → ＋ Widget.'));
+  repairLoadedFreeLayout();
   fitCanvas();
 }
 
