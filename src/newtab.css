@@ -14,6 +14,15 @@
   --ok: #4cc38a;
   --warn: #f2b14c;
   --bad: #ff7a70;
+  /* Camadas globais da interface — valores gerenciados pelo Window Manager. */
+  --z-content: 1;
+  --z-dock: 30;
+  --z-floating: 40;
+  --z-popover: 50;
+  --z-toolbar: 60;
+  --z-overlay: 70;
+  --z-modal: 80;
+  --z-notification: 90;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: dark;
 }
@@ -467,7 +476,9 @@ body.free.dock-top .update-bar { top: 64px; }
 .seg .btn:first-child { border-radius: 9px 0 0 9px; }
 .seg .btn:last-child { border-radius: 0 9px 9px 0; margin-left: -1px; }
 .seg .btn.sel { background: #3b82f6; border-color: #3b82f6; color: #fff; }
-.free-fixed:focus-within { z-index: 9000 !important; }
+/* A prioridade de superfícies livres é controlada pelo Window Manager. */
+.free-item { isolation: isolate; }
+.free-item:focus-within { outline-color: var(--accent); }
 
 /* ================= v0.4: relógio + clima ================= */
 .hero { position: relative; }
