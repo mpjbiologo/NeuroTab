@@ -18,8 +18,15 @@ let driver;
 const storage = (key) => driver.executeAsyncScript((k, done) => { browser.storage.local.get(k).then((r) => done(r[k] ?? null)); }, key);
 // Erros de JavaScript da página (coletados por um ouvinte instalado logo após abrir).
 const errors = () => driver.executeScript('return window.__ffErrors || []');
+// O Firefox não deixa o WebDriver navegar direto para moz-extension://. Abrimos a aba pela interface
+// do próprio Firefox (contexto privilegiado), como se a pessoa tivesse aberto, e então controlamos a página.
 async function open(path) {
-  await driver.get(BASE + path);
+  await driver.setContext(firefox.Context.CHROME);
+  await driver.executeScript('gBrowser.selectedTab = gBrowser.addTrustedTab(arguments[0]);', BASE + path);
+  await driver.setContext(firefox.Context.CONTENT);
+  const handles = await driver.getAllWindowHandles();
+  await driver.switchTo().window(handles[handles.length - 1]);
+  await driver.wait(async () => (await driver.getCurrentUrl()).startsWith(BASE), 10000);
   await driver.executeScript("window.__ffErrors = []; addEventListener('error', (e) => __ffErrors.push(e.message)); addEventListener('unhandledrejection', (e) => __ffErrors.push(String(e.reason?.message || e.reason)));");
   await driver.sleep(1500);
 }
@@ -27,7 +34,7 @@ async function open(path) {
 before(async () => {
   assert.ok(existsSync(XPI), 'gere o pacote antes: ./scripts/build.sh');
   const opts = new firefox.Options()
-    .addArguments('-headless')
+    .addArguments('-headless', '-remote-allow-system-access')
     .setPreference('extensions.webextensions.uuids', JSON.stringify({ [ID]: UUID }))
     .setPreference('intl.locale.requested', 'pt-BR')
     .setPreference('intl.accept_languages', 'pt-BR');
