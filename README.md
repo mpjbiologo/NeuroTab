@@ -114,7 +114,9 @@ A NeuroTab é feita nas horas vagas e vai continuar gratuita. Se ela é útil pa
 
 <img src="docs/pix.svg" width="160" align="right" alt="QR Code Pix">
 
-- **Pix:** `prof.marcosbiologo@hotmail.com`. O QR Code ao lado também funciona, assim como a aba **❤ Apoie** nas configurações
+- **Pix:** `prof.marcosbiologo@gmail.com`. O QR Code ao lado também funciona, assim como a aba **❤ Apoie** nas configurações
+- **Ko-fi:** [ko-fi.com/marcosdepaulajunior](https://ko-fi.com/marcosdepaulajunior) (cartão ou PayPal, de qualquer país)
+- **PayPal:** [doar pelo PayPal](https://www.paypal.com/donate/?hosted_button_id=ZJ2SZQ4L5ZND4)
 - ⭐ Dê uma estrela no repositório
 - 🐛 [Sugira ideias ou relate problemas](https://github.com/mpjbiologo/NeuroTab/issues)
 

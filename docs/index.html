@@ -332,7 +332,7 @@
             <button class="btn primary" id="copyCode" data-i="t98">Copiar Pix copia e cola</button>
             <button class="btn" id="copyKey" data-i="t99">Copiar chave</button>
           </div>
-          <p class="small" data-i="t65">Chave Pix: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior</p>
+          <p class="small" data-i="t65">Chave Pix: <span class="pixkey">prof.marcosbiologo@gmail.com</span> · Marcos de Paula Júnior</p>
           <div class="givers" id="givers" hidden>
             <p class="givers-title" data-i="t151">Prefere outra forma? Também dá para apoiar por:</p>
             <div class="giver-list" id="giverList"></div>
@@ -391,7 +391,7 @@
         t60: 'Edge asks whether to keep the new page: click <b>Keep changes</b>. Done!', t61: 'Coming from Speed Dial? Settings → Backup → choose the <code>.spd</code> file.',
         t62: 'NeuroTab has no server, no account and collects nothing. Everything stays in your browser.',
         t63: 'NeuroTab is made in my spare time and will remain free and ad-free. If it is useful to you, any amount helps keep development going and bring new features — via Pix or the options below.', t151: 'Prefer another way? You can also support through:',
-        t64: 'Open your banking app and point the camera at the QR code, or copy:', t65: 'Pix key: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior',
+        t64: 'Open your banking app and point the camera at the QR code, or copy:', t65: 'Pix key: <span class="pixkey">prof.marcosbiologo@gmail.com</span> · Marcos de Paula Júnior',
         t66: 'Other ways to help: give it a ⭐ on <a href="https://github.com/mpjbiologo/NeuroTab">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues">suggest ideas</a> and tell your friends.',
         t67: 'Meet <b>Clube da Sedução</b>, my other project: a collection of games for couples and groups of friends (Seduction Game, Truth or Dare, Never Have I Ever and more games and modes on the way), from mild to spicy. Passes start at <b>R$ 2.99</b> and don\'t auto-renew. Every subscription helps keep NeuroTab free and evolving. (Portuguese only.)',
         t68: 'Adults only (18+).',
@@ -432,7 +432,7 @@
         t60: 'Edge pregunta si quieres mantener la nueva página: haz clic en <b>Conservar cambios</b>. ¡Listo!', t61: '¿Vienes de Speed Dial? Configuración → Copia de seguridad → elige el archivo <code>.spd</code>.',
         t62: 'NeuroTab no tiene servidor, no pide cuenta y no recopila nada. Todo queda en tu navegador.',
         t63: 'NeuroTab se hace en mis ratos libres y seguirá siendo gratuita y sin anuncios. Si te resulta útil, cualquier monto ayuda a mantener el desarrollo y a traer novedades, por Pix o con las opciones de abajo.', t151: '¿Prefieres otra forma? También puedes apoyar por:',
-        t64: 'Abre la app de tu banco y apunta la cámara al código QR, o copia:', t65: 'Clave Pix: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior',
+        t64: 'Abre la app de tu banco y apunta la cámara al código QR, o copia:', t65: 'Clave Pix: <span class="pixkey">prof.marcosbiologo@gmail.com</span> · Marcos de Paula Júnior',
         t66: 'Otras formas de ayudar: dale una ⭐ en <a href="https://github.com/mpjbiologo/NeuroTab">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues">sugiere ideas</a> y recomiéndala a tus amigos.',
         t67: 'Conoce el <b>Clube da Sedução</b>, mi otro proyecto: una colección de juegos para parejas y grupos de amigos (Juego de la Seducción, Verdad o Reto, Yo Nunca y más juegos y modos en camino), de lo suave a lo picante. El pase empieza en <b>R$ 2,99</b> y no se renueva solo. Cada suscripción ayuda a mantener NeuroTab gratuita y en evolución. (Solo en portugués.)',
         t68: 'Contenido para mayores de 18 años.',
@@ -483,8 +483,8 @@
     // Preencha o link de cada conta. Botões com link vazio não aparecem no site.
     const DONATE = {
       github: '',  // ex.: 'https://github.com/sponsors/mpjbiologo'
-      kofi: '',    // ex.: 'https://ko-fi.com/seu_usuario'
-      paypal: '',  // ex.: 'https://www.paypal.com/donate/?hosted_button_id=XXXX' ou 'https://paypal.me/seu_usuario'
+      kofi: 'https://ko-fi.com/marcosdepaulajunior',
+      paypal: 'https://www.paypal.com/donate/?hosted_button_id=ZJ2SZQ4L5ZND4',
       apoiase: '', // ex.: 'https://apoia.se/neurotab'
       catarse: '', // ex.: 'https://www.catarse.me/neurotab'
     };
@@ -517,8 +517,8 @@
     };
     window.renderGivers();
 
-    const PIX_CODE = '00020126700014br.gov.bcb.pix0130prof.marcosbiologo@hotmail.com0214Apoio NeuroTab5204000053039865802BR5922MARCOS DE PAULA JUNIOR6006ITAUNA62070503***6304E215';
-    const PIX_KEY = 'prof.marcosbiologo@hotmail.com';
+    const PIX_CODE = '00020126680014br.gov.bcb.pix0128prof.marcosbiologo@gmail.com0214Apoio NeuroTab5204000053039865802BR5922MARCOS DE PAULA JUNIOR6006ITAUNA62070503***63042A7D';
+    const PIX_KEY = 'prof.marcosbiologo@gmail.com';
     const toast = (m) => { const t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => { t.style.display = 'none'; }, 2400); };
     const copy = async (txt, msg) => { try { await navigator.clipboard.writeText(txt); toast(msg); } catch { prompt('Copie:', txt); } };
     document.getElementById('copyCode').onclick = () => copy(PIX_CODE, SITE_MSG[SITE_LANG]?.code || 'Pix copia e cola copiado — obrigado! ❤');

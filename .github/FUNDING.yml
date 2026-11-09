@@ -1,3 +1,6 @@
 # Botão "Sponsor" do GitHub.
-# ko_fi: seu_usuario        # quando criar a conta no Ko-fi
-custom: ["https://mpjbiologo.github.io/NeuroTab/#apoie"]
+# github: [mpjbiologo]   # quando o GitHub Sponsors for aprovado
+ko_fi: marcosdepaulajunior
+custom:
+  - "https://www.paypal.com/donate/?hosted_button_id=ZJ2SZQ4L5ZND4"
+  - "https://mpjbiologo.github.io/NeuroTab/#apoie"

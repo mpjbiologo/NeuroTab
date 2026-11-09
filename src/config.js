@@ -11,14 +11,15 @@ export const PROJECT = {
 export const DONATION = {
   // Pix: o QR Code e o "copia e cola" são gerados automaticamente.
   pix: {
-    key: 'prof.marcosbiologo@hotmail.com',
+    key: 'prof.marcosbiologo@gmail.com',
     name: 'Marcos de Paula Junior', // nome do recebedor (até 25 letras, sem acento)
     city: 'Itauna',
     message: 'Apoio NeuroTab',
   },
   // Outros links. Ex.: { label: 'Ko-fi', url: 'https://ko-fi.com/seuusuario', icon: '☕' }
   links: [
-    // { label: 'Ko-fi', url: '', icon: '☕' },
-    // { label: 'GitHub Sponsors', url: 'https://github.com/sponsors/mpjbiologo', icon: '💜' },
+    { label: 'Ko-fi', url: 'https://ko-fi.com/marcosdepaulajunior', icon: '☕' },
+    { label: 'PayPal', url: 'https://www.paypal.com/donate/?hosted_button_id=ZJ2SZQ4L5ZND4', icon: '🅿️' },
+    // { label: 'GitHub Sponsors', url: 'https://github.com/sponsors/mpjbiologo', icon: '💜' }, // depois da aprovação
   ],
 };
