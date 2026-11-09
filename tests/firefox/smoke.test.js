@@ -34,11 +34,13 @@ async function open(path) {
 before(async () => {
   assert.ok(existsSync(XPI), 'gere o pacote antes: ./scripts/build.sh');
   const opts = new firefox.Options()
-    .addArguments('-headless', '-remote-allow-system-access')
+    .addArguments('-headless')
     .setPreference('extensions.webextensions.uuids', JSON.stringify({ [ID]: UUID }))
     .setPreference('intl.locale.requested', 'pt-BR')
     .setPreference('intl.accept_languages', 'pt-BR');
-  driver = await new Builder().forBrowser('firefox').setFirefoxOptions(opts).build();
+  // --allow-system-access: permite usar o contexto privilegiado para abrir as páginas da extensão.
+  const service = new firefox.ServiceBuilder().addArguments('--allow-system-access');
+  driver = await new Builder().forBrowser('firefox').setFirefoxOptions(opts).setFirefoxService(service).build();
   await driver.installAddon(XPI, true);
   await driver.sleep(1500);
 });
