@@ -24,7 +24,7 @@ Tempo estimado: 30–40 minutos para preencher. A revisão da Microsoft costuma 
 ## 2. Criar a extensão e enviar o pacote
 
 1. No painel do Edge: **Create new extension**.
-2. Arraste o **`neurotab.zip`** em *Packages*. O painel lê a versão (0.5.0) e as permissões.
+2. Arraste o **`neurotab.zip`** em *Packages*. O painel lê a versão e as permissões.
 3. Clique em **Continue**.
 
 ## 3. Availability (disponibilidade)
@@ -85,7 +85,8 @@ How to test:
 
 AI features are optional and use the user's own API key (Settings > AI & voice). Without a key everything else works.
 Optional permissions (topSites, sessions, tabs) are requested only when the user adds the "Browsing" widget.
-Optional host permissions are requested only when the user sets up an AI provider or adds an RSS feed.
+Optional host permissions are requested only when the user uses the related feature: quotes widget, traffic address search,
+Bing/NASA background photos, an AI provider, an RSS feed or saving an image. They are listed (with Allow/Remove) in Settings > General > Permissions.
 Voice features use the browser's Web Speech API; the continuous "wake word" is off by default and shows a privacy warning before it can be enabled.
 No remote code is loaded; the code is not minified. Source: https://github.com/mpjbiologo/NeuroTab
 ```
