@@ -84,12 +84,13 @@ test('Firefox: configurações abrem todas as abas; permissões e migração', a
   await open('src/options.html');
   const tabs = await driver.findElements(By.css('[data-tab]'));
   for (const tab of tabs) await tab.click();
-  const perm = await driver.findElement(By.id('permList')).getText();
+  // a lista fica na aba Geral, escondida depois de clicar nas outras: lê o texto direto
+  const perm = await driver.executeScript("return document.querySelector('#permList').textContent");
   assert.match(perm, /Cotações/);
   const meta = await storage('nt_meta');
   assert.ok(meta?.schema >= 2, 'esquema de dados registrado');
   // a palavra de ativação some no Firefox (sem reconhecimento de voz)
-  assert.equal(await driver.findElement(By.id('wakeRow')).isDisplayed(), false);
+  assert.equal(await driver.executeScript("return document.querySelector('#wakeRow').hidden"), true);
   assert.deepEqual(await errors(), []);
 });
 
