@@ -84,6 +84,14 @@
     .qr { background: #fff; padding: 12px; border-radius: 16px; line-height: 0; }
     .qr img { width: 220px; height: 220px; }
     .donate h2 { text-align: left; }
+    .givers { margin: 18px 0 6px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .givers-title { margin: 0 0 10px; font-weight: 600; color: var(--text, #fff) !important; }
+    .giver-list { display: flex; flex-wrap: wrap; gap: 10px; }
+    .giver { display: inline-flex; align-items: center; gap: 9px; padding: 9px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: inherit; text-decoration: none; transition: transform .15s, border-color .15s, background .15s; }
+    .giver:hover { transform: translateY(-2px); border-color: var(--brand, #7c5cff); background: rgba(124,92,255,.12); }
+    .giver .gi { font-size: 20px; line-height: 1; }
+    .giver b { display: block; font-size: 14px; }
+    .giver small { display: block; font-size: 12px; color: var(--muted); }
     .donate p { color: var(--muted); }
     .pixrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
     .pixkey { font-family: ui-monospace, monospace; font-size: 14px; color: #fff; }
@@ -120,6 +128,7 @@
       .split, .donate { grid-template-columns: 1fr; }
       .donate { text-align: center; justify-items: center; }
       .donate h2 { text-align: center; }
+      .giver-list { justify-content: center; }
       .pixrow { justify-content: center; }
     }
   </style>
@@ -317,13 +326,17 @@
         <div class="qr"><img src="pix.svg" alt="QR Code Pix para apoiar a NeuroTab"></div>
         <div>
           <h2 data-i="t7">❤ Apoie o projeto</h2>
-          <p data-i="t63">A NeuroTab é feita nas horas vagas e vai continuar gratuita e sem anúncios. Se ela é útil para você, um Pix de qualquer valor ajuda a manter o desenvolvimento — e a trazer a IA, as integrações e a publicação nas lojas.</p>
+          <p data-i="t63">A NeuroTab é feita nas horas vagas e vai continuar gratuita e sem anúncios. Se ela é útil para você, qualquer valor ajuda a manter o desenvolvimento e a trazer novidades — por Pix ou pelas opções abaixo.</p>
           <p data-i="t64">Abra o app do seu banco e aponte a câmera para o QR Code, ou copie:</p>
           <div class="pixrow">
             <button class="btn primary" id="copyCode" data-i="t98">Copiar Pix copia e cola</button>
             <button class="btn" id="copyKey" data-i="t99">Copiar chave</button>
           </div>
           <p class="small" data-i="t65">Chave Pix: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior</p>
+          <div class="givers" id="givers" hidden>
+            <p class="givers-title" data-i="t151">Prefere outra forma? Também dá para apoiar por:</p>
+            <div class="giver-list" id="giverList"></div>
+          </div>
           <p class="small" data-i="t66">Outras formas de ajudar: dê uma ⭐ no <a href="https://github.com/mpjbiologo/NeuroTab" data-i="t110">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues" data-i="t111">sugira ideias</a> e indique para os amigos.</p>
         </div>
       </div>
@@ -377,7 +390,7 @@
         t58: 'Type <code>edge://extensions</code> (or <code>chrome://extensions</code>) in the address bar.', t59: 'Turn on <b>Developer mode</b>, then click <b>Load unpacked</b> and choose the folder.',
         t60: 'Edge asks whether to keep the new page: click <b>Keep changes</b>. Done!', t61: 'Coming from Speed Dial? Settings → Backup → choose the <code>.spd</code> file.',
         t62: 'NeuroTab has no server, no account and collects nothing. Everything stays in your browser.',
-        t63: 'NeuroTab is made in my spare time and will remain free and ad-free. If it is useful to you, a Pix of any amount helps keep development going — and bring the AI, integrations and store releases.',
+        t63: 'NeuroTab is made in my spare time and will remain free and ad-free. If it is useful to you, any amount helps keep development going and bring new features — via Pix or the options below.', t151: 'Prefer another way? You can also support through:',
         t64: 'Open your banking app and point the camera at the QR code, or copy:', t65: 'Pix key: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior',
         t66: 'Other ways to help: give it a ⭐ on <a href="https://github.com/mpjbiologo/NeuroTab">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues">suggest ideas</a> and tell your friends.',
         t67: 'Meet <b>Clube da Sedução</b>, my other project: a collection of games for couples and groups of friends (Seduction Game, Truth or Dare, Never Have I Ever and more games and modes on the way), from mild to spicy. Passes start at <b>R$ 2.99</b> and don\'t auto-renew. Every subscription helps keep NeuroTab free and evolving. (Portuguese only.)',
@@ -418,7 +431,7 @@
         t58: 'Escribe <code>edge://extensions</code> (o <code>chrome://extensions</code>) en la barra de direcciones.', t59: 'Activa el <b>Modo de desarrollador</b>, luego haz clic en <b>Cargar descomprimida</b> y elige la carpeta.',
         t60: 'Edge pregunta si quieres mantener la nueva página: haz clic en <b>Conservar cambios</b>. ¡Listo!', t61: '¿Vienes de Speed Dial? Configuración → Copia de seguridad → elige el archivo <code>.spd</code>.',
         t62: 'NeuroTab no tiene servidor, no pide cuenta y no recopila nada. Todo queda en tu navegador.',
-        t63: 'NeuroTab se hace en mis ratos libres y seguirá siendo gratuita y sin anuncios. Si te resulta útil, un Pix de cualquier monto ayuda a mantener el desarrollo y a traer la IA, las integraciones y la publicación en las tiendas.',
+        t63: 'NeuroTab se hace en mis ratos libres y seguirá siendo gratuita y sin anuncios. Si te resulta útil, cualquier monto ayuda a mantener el desarrollo y a traer novedades, por Pix o con las opciones de abajo.', t151: '¿Prefieres otra forma? También puedes apoyar por:',
         t64: 'Abre la app de tu banco y apunta la cámara al código QR, o copia:', t65: 'Clave Pix: <span class="pixkey">prof.marcosbiologo@hotmail.com</span> · Marcos de Paula Júnior',
         t66: 'Otras formas de ayudar: dale una ⭐ en <a href="https://github.com/mpjbiologo/NeuroTab">GitHub</a>, <a href="https://github.com/mpjbiologo/NeuroTab/issues">sugiere ideas</a> y recomiéndala a tus amigos.',
         t67: 'Conoce el <b>Clube da Sedução</b>, mi otro proyecto: una colección de juegos para parejas y grupos de amigos (Juego de la Seducción, Verdad o Reto, Yo Nunca y más juegos y modos en camino), de lo suave a lo picante. El pase empieza en <b>R$ 2,99</b> y no se renueva solo. Cada suscripción ayuda a mantener NeuroTab gratuita y en evolución. (Solo en portugués.)',
@@ -457,6 +470,7 @@
         el.innerHTML = lang === 'pt-BR' ? ORIGINAL[k] : (dict[k] ?? ORIGINAL[k]);
       });
       document.querySelectorAll('.lang-switch button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang));
+      window.renderGivers?.();
     }
     document.querySelectorAll('.lang-switch button').forEach((b) => b.addEventListener('click', () => {
       try { localStorage.setItem('neurotab-lang', b.dataset.lang); } catch {}
@@ -465,6 +479,44 @@
     applyLang(detectLang());
   </script>
   <script>
+    // ---------- Outras formas de doação ----------
+    // Preencha o link de cada conta. Botões com link vazio não aparecem no site.
+    const DONATE = {
+      github: '',  // ex.: 'https://github.com/sponsors/mpjbiologo'
+      kofi: '',    // ex.: 'https://ko-fi.com/seu_usuario'
+      paypal: '',  // ex.: 'https://www.paypal.com/donate/?hosted_button_id=XXXX' ou 'https://paypal.me/seu_usuario'
+      apoiase: '', // ex.: 'https://apoia.se/neurotab'
+      catarse: '', // ex.: 'https://www.catarse.me/neurotab'
+    };
+    const GIVERS = {
+      github: { icon: '💖', name: 'GitHub Sponsors', note: { 'pt-BR': 'Mensal ou única', en: 'Monthly or one-time', es: 'Mensual o única' } },
+      kofi: { icon: '☕', name: 'Ko-fi', note: { 'pt-BR': 'Cartão ou PayPal, de qualquer país', en: 'Card or PayPal, from any country', es: 'Tarjeta o PayPal, desde cualquier país' } },
+      paypal: { icon: '🅿️', name: 'PayPal', note: { 'pt-BR': 'Doação única', en: 'One-time donation', es: 'Donación única' } },
+      apoiase: { icon: '🤝', name: 'Apoia.se', note: { 'pt-BR': 'Apoio mensal (Pix, boleto, cartão)', en: 'Monthly support (Brazil)', es: 'Apoyo mensual (Brasil)' } },
+      catarse: { icon: '🌱', name: 'Catarse', note: { 'pt-BR': 'Apoio mensal (Pix, boleto, cartão)', en: 'Monthly support (Brazil)', es: 'Apoyo mensual (Brasil)' } },
+    };
+    window.renderGivers = () => {
+      const list = document.getElementById('giverList');
+      const items = Object.entries(DONATE).filter(([, url]) => /^https:\/\//.test(url));
+      document.getElementById('givers').hidden = !items.length;
+      list.replaceChildren(...items.map(([id, url]) => {
+        const g = GIVERS[id];
+        const a = document.createElement('a');
+        a.className = 'giver';
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        const ic = document.createElement('span'); ic.className = 'gi'; ic.textContent = g.icon;
+        const txt = document.createElement('span');
+        const b = document.createElement('b'); b.textContent = g.name;
+        const sm = document.createElement('small'); sm.textContent = g.note[SITE_LANG] || g.note['pt-BR'];
+        txt.append(b, sm);
+        a.append(ic, txt);
+        return a;
+      }));
+    };
+    window.renderGivers();
+
     const PIX_CODE = '00020126700014br.gov.bcb.pix0130prof.marcosbiologo@hotmail.com0214Apoio NeuroTab5204000053039865802BR5922MARCOS DE PAULA JUNIOR6006ITAUNA62070503***6304E215';
     const PIX_KEY = 'prof.marcosbiologo@hotmail.com';
     const toast = (m) => { const t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => { t.style.display = 'none'; }, 2400); };
