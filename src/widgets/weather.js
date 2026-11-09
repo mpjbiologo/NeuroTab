@@ -1,5 +1,6 @@
 // Widget: clima detalhado da cidade principal (a mesma do relógio).
 import { h } from '../lib/ui.js';
+import { requestFeature } from '../lib/permissions.js';
 import { getWeather, renderForecast, searchCities } from '../lib/weather.js';
 import { uid } from '../lib/store.js';
 
@@ -19,7 +20,10 @@ export default {
       const list = h('div', { class: 'items' });
       const go = async () => {
         const q = input.value.trim();
+    // Firefox: pede o consentimento de localização aqui, no clique (no Chrome/Edge não aparece nada).
+    const allowed = q ? await requestFeature('weather') : false;
         if (!q) return;
+    if (!allowed) { list.replaceChildren(h('p', { class: 'muted' }, 'Sem permissão para enviar a localização ao serviço de clima.')); return; }
         list.replaceChildren(h('p', { class: 'muted' }, 'Buscando…'));
         try {
           const res = await searchCities(q);

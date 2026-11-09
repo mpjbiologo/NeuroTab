@@ -4,7 +4,7 @@ name: Testes
 # Se algum teste falhar, a release não é empacotada.
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
   workflow_call:
   workflow_dispatch:
@@ -45,3 +45,27 @@ jobs:
 
       - name: Testes de ponta a ponta (extensão carregada no Chromium)
         run: npm run test:e2e
+
+  # Firefox de verdade (o runner do GitHub já tem Firefox e geckodriver).
+  firefox:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Empacotar
+        run: ./scripts/build.sh
+
+      - name: Versão do Firefox
+        run: firefox --version && (geckodriver --version | head -1 || true)
+
+      - name: Testes no Firefox (extensão temporária)
+        run: npm run test:firefox

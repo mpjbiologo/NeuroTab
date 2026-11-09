@@ -7,6 +7,7 @@ export const FEATURES = {
     label: 'Clima e fusos horários',
     why: 'Busca a previsão do tempo e as cidades que você adiciona (Open-Meteo). Envia só as coordenadas das cidades escolhidas.',
     origins: ['https://api.open-meteo.com/*', 'https://geocoding-api.open-meteo.com/*'],
+    data: ['locationInfo'], // Firefox: consentimento de dados (coordenadas das cidades)
     required: true,
   },
   updates: {
@@ -24,6 +25,7 @@ export const FEATURES = {
     label: 'Endereços do widget Trânsito',
     why: 'Procura o endereço dos seus locais favoritos (OpenStreetMap Nominatim).',
     origins: ['https://nominatim.openstreetmap.org/*'],
+    data: ['locationInfo'],
   },
   slides: {
     label: 'Fotos do dia nos slides',
@@ -34,6 +36,7 @@ export const FEATURES = {
     label: 'Provedores de IA',
     why: 'Envia suas perguntas e o texto das notas usadas como contexto ao provedor que você configurar, com a sua chave.',
     origins: ['https://generativelanguage.googleapis.com/*', 'https://api.openai.com/*', 'https://api.anthropic.com/*', 'https://openrouter.ai/*'],
+    data: ['websiteContent'],
     managed: true, // pedido na tela de IA, por provedor
   },
   local: {
@@ -53,6 +56,31 @@ export const FEATURES = {
 
 const api = () => globalThis.chrome?.permissions;
 
+// ---------- Consentimento de dados do Firefox (data_collection_permissions) ----------
+// O Firefox pergunta à pessoa antes de a extensão enviar dados pessoais a serviços externos.
+// Os tipos usados aqui estão em "optional" no manifest do Firefox (scripts/firefox-manifest.mjs).
+// Nos navegadores Chromium não existe esse consentimento: as funções abaixo devolvem true.
+export const DATA_TYPES = ['locationInfo', 'websiteContent'];
+export function usesDataConsent() {
+  return typeof globalThis.browser !== 'undefined' && typeof globalThis.browser?.runtime?.getBrowserInfo === 'function';
+}
+
+export async function hasData(type) {
+  if (!usesDataConsent()) return true;
+  try {
+    return await globalThis.browser.permissions.contains({ data_collection: [type] });
+  } catch {
+    return true; // Firefox sem suporte ao consentimento (anterior ao 140)
+  }
+}
+
+/** Pede origens e/ou consentimento de dados num único pedido. Chamar direto no clique, sem await antes. */
+export function requestAccess({ origins = [], data = [] } = {}) {
+  const req = { origins };
+  if (usesDataConsent() && data.length) req.data_collection = data;
+  return api().request(req).catch(() => false);
+}
+
 /** Recursos cujo acesso pode ser ligado/desligado pela pessoa. */
 export const TOGGLEABLE = Object.entries(FEATURES).filter(([, f]) => !f.required && !f.managed).map(([id]) => id);
 
@@ -60,21 +88,19 @@ export async function hasFeature(id) {
   const f = FEATURES[id];
   if (!f) return false;
   try {
-    return await api().contains({ origins: f.origins });
+    if (!(await api().contains({ origins: f.origins }))) return false;
+    for (const d of f.data || []) if (!(await hasData(d))) return false;
+    return true;
   } catch {
     return false;
   }
 }
 
-/** Pede o acesso do recurso. Precisa ser chamado direto num clique (gesto do usuário). */
+/** Pede o acesso do recurso (sites e, no Firefox, consentimento de dados). Chamar direto num clique. */
 export async function requestFeature(id) {
   const f = FEATURES[id];
   if (!f) return false;
-  try {
-    return await api().request({ origins: f.origins });
-  } catch {
-    return false;
-  }
+  return requestAccess({ origins: f.origins, data: f.data || [] });
 }
 
 export async function revokeFeature(id) {

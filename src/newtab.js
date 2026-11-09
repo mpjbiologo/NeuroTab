@@ -14,6 +14,7 @@ import { UPDATE_KEY, WHATSNEW_KEY, cmpVersion } from './lib/update.js';
 import { WHATS_NEW } from './whatsnew.js';
 import { photoList, photoUrl, preload } from './lib/photos.js';
 import { initI18n, t, tIn, LANG, LOCALE } from './lib/i18n.js';
+import { requestFeature } from './lib/permissions.js';
 import { getWeather, searchCities, wxIcon, wxDesc, timeIn, tzOffsetLabel, dayIn, renderForecast } from './lib/weather.js';
 import { WIDGETS } from './widgets/index.js';
 import { initWindowManager, bringToFront } from './lib/window-manager.js';
@@ -363,7 +364,10 @@ function openPlacePicker(anchor, asMain, replaceId) {
   const list = h('div', { class: 'items' });
   const go = async () => {
     const q = input.value.trim();
+    // Firefox: pede o consentimento de localização aqui, no clique (no Chrome/Edge não aparece nada).
+    const allowed = q ? await requestFeature('weather') : false;
     if (!q) return;
+    if (!allowed) { list.replaceChildren(h('p', { class: 'muted' }, 'Sem permissão para enviar a localização ao serviço de clima.')); return; }
     list.replaceChildren(h('p', { class: 'muted' }, 'Buscando…'));
     try {
       const res = await searchCities(q);

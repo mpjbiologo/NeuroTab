@@ -1,5 +1,6 @@
 // NeuroTab — clima (Open-Meteo, gratuito e sem chave) e cidades/fusos.
 import { h } from './ui.js';
+import { hasData } from './permissions.js';
 
 export const WMO = {
   0: ['☀️', 'Céu limpo'], 1: ['🌤️', 'Poucas nuvens'], 2: ['⛅', 'Parcialmente nublado'], 3: ['☁️', 'Nublado'],
@@ -23,6 +24,7 @@ const TTL = 30 * 60e3;
 
 export async function getWeather(place, { force = false } = {}) {
   if (!place) return null;
+  if (!(await hasData('locationInfo'))) return null; // Firefox: sem consentimento, não envia coordenadas
   const key = CACHE_PREFIX + `${(+place.lat).toFixed(2)},${(+place.lon).toFixed(2)}`;
   const cached = (await chrome.storage.local.get(key))[key];
   if (!force && cached && Date.now() - cached.at < TTL) return cached.d;
@@ -38,6 +40,7 @@ export async function getWeather(place, { force = false } = {}) {
 }
 
 export async function searchCities(q, lang = 'pt') {
+  if (!(await hasData('locationInfo'))) throw new Error('Para buscar cidades, autorize o envio de localização.');
   const r = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=6&language=${lang}&name=${encodeURIComponent(q)}`)).json();
   return (r.results || []).map((c) => ({
     id: `${c.id || c.latitude + ',' + c.longitude}`,

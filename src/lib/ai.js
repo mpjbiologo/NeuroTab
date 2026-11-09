@@ -5,6 +5,7 @@ import { hostOf } from './store.js';
 import { aiLanguageName } from './i18n.js';
 import { contextItems } from './semantic.js';
 import { redact, secretsFromHeaders } from './secrets.js';
+import { requestAccess, hasData } from './permissions.js';
 
 export const PROVIDERS = {
   gemini: {
@@ -77,12 +78,18 @@ export function originsFor(cfg) {
   }
 }
 
-// Precisa ser chamado a partir de um clique (gesto do usuário).
-export async function requestPermission(cfg) {
+// Precisa ser chamado a partir de um clique (gesto do usuário), SEM await antes:
+// o Firefox só mostra o pedido se ele acontecer direto no clique. Se já houver permissão, não aparece nada.
+// No Firefox, pede junto o consentimento para enviar conteúdo das notas ao provedor.
+export function requestPermission(cfg) {
   const origins = originsFor(cfg);
-  if (!origins.length) throw new Error('URL do provedor inválida.');
-  if (await chrome.permissions.contains({ origins })) return true;
-  return chrome.permissions.request({ origins });
+  if (!origins.length) return Promise.reject(new Error('URL do provedor inválida.'));
+  return requestAccess({ origins, data: ['websiteContent'] });
+}
+
+// No Firefox, sem o consentimento de dados nada é enviado ao provedor.
+async function ensureDataConsent() {
+  if (!(await hasData('websiteContent'))) throw new Error('No Firefox, autorize o envio de conteúdo à IA: Configurações → IA e voz → Salvar.');
 }
 
 async function http(url, opts) {
@@ -110,6 +117,7 @@ async function http(url, opts) {
  * Retorna o texto da resposta.
  */
 export async function complete(settings, { system = '', messages, json = false, maxTokens = 1200 }) {
+  await ensureDataConsent();
   const c = aiConfig(settings);
   if (!isConfigured(settings)) throw new Error('Configure a IA em Configurações → IA.');
 

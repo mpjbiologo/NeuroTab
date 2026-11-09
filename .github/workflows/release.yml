@@ -31,6 +31,10 @@ jobs:
   build:
     needs: testes
     runs-on: ubuntu-24.04
+    env:
+      # Credenciais da loja do Firefox (AMO). Sem elas, o envio é pulado.
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
     steps:
       - uses: actions/checkout@v5
 
@@ -52,3 +56,16 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: dist/*.zip
+
+      # 4) Envia a versão para a loja do Firefox. A Mozilla revisa e, aprovada, todo mundo atualiza sozinho.
+      #    Só funciona depois da primeira publicação manual (docs/store/FIREFOX.md).
+      - name: Enviar para a loja do Firefox (AMO)
+        if: github.event_name == 'release' && env.AMO_JWT_ISSUER != ''
+        run: >
+          npx --yes web-ext@8 sign
+          --channel listed
+          --source-dir build/firefox
+          --api-key "$AMO_JWT_ISSUER"
+          --api-secret "$AMO_JWT_SECRET"
+          --approval-timeout 0
+          --timeout 900000

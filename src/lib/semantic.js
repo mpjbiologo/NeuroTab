@@ -5,6 +5,7 @@ import { openDB } from './idb.js';
 import { aiConfig, isConfigured, complete, parseJson } from './ai.js';
 import { displayTitle, searchItems } from './brain.js';
 import { redact, secretsFromHeaders } from './secrets.js';
+import { hasData } from './permissions.js';
 
 const STORE = 'vectors';
 const DIM = 768;
@@ -52,6 +53,7 @@ async function post(url, headers, body) {
 
 /** Gera vetores (normalizados) para uma lista de textos. kind: 'doc' | 'query'. */
 export async function embed(settings, texts, kind = 'doc') {
+  if (!(await hasData('websiteContent'))) throw new Error('No Firefox, autorize o envio de conteúdo à IA: Configurações → IA e voz → Salvar.');
   const c = embedConfig(settings);
   if (!c.supported) throw new Error('O provedor escolhido não oferece embeddings.');
   let vecs;

@@ -17,8 +17,12 @@ m.host_permissions = [...new Set([...(m.host_permissions || []), 'https://icons.
 m.browser_specific_settings = {
   gecko: {
     id: 'neurotab@mpjbiologo.github.io',
-    strict_min_version: '128.0',
-    data_collection_permissions: { required: ['none'] },
+    // 140+: versão a partir da qual o Firefox mostra e controla o consentimento de dados.
+    strict_min_version: '140.0',
+    // Nada é exigido na instalação. Opcionais, pedidos na hora de usar (src/lib/permissions.js):
+    //   locationInfo   → coordenadas das cidades (clima) e endereços (Trânsito)
+    //   websiteContent → texto das notas, trechos e páginas enviados ao provedor de IA que a pessoa configurar
+    data_collection_permissions: { required: ['none'], optional: ['locationInfo', 'websiteContent'] },
   },
 };
 

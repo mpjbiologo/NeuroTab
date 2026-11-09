@@ -53,6 +53,7 @@ export function fakeVector(text) {
  */
 async function mockNetwork(ctx, { ai } = {}) {
   const calls = { embed: 0, ai: [] };
+  await ctx.route('https://geocoding-api.open-meteo.com/**', (r) => r.fulfill({ json: { results: [{ id: 2267057, name: 'Lisboa', admin1: 'Lisboa', country_code: 'PT', country: 'Portugal', latitude: 38.72, longitude: -9.13, timezone: 'Europe/Lisbon' }] }, headers: CORS }));
   await ctx.route('https://api.open-meteo.com/**', (r) => r.fulfill({ json: weather(+new URL(r.request().url()).searchParams.get('latitude')), headers: CORS }));
   await ctx.route('https://generativelanguage.googleapis.com/**', (r) => {
     const url = r.request().url();

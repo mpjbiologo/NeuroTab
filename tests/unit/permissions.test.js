@@ -5,7 +5,7 @@ import { readFileSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { FEATURES } from '../../src/lib/permissions.js';
+import { FEATURES, DATA_TYPES } from '../../src/lib/permissions.js';
 
 const root = new URL('../../', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('manifest.json', root), 'utf8'));
@@ -47,4 +47,10 @@ test('manifest do Firefox é gerado corretamente', () => {
   assert.ok(!ff.permissions.includes('offscreen') && !ff.permissions.includes('favicon'));
   assert.equal(ff.browser_specific_settings.gecko.id, 'neurotab@mpjbiologo.github.io');
   assert.ok(ff.host_permissions.includes('https://icons.duckduckgo.com/*'));
+  assert.equal(ff.browser_specific_settings.gecko.strict_min_version, '140.0');
+  const dc = ff.browser_specific_settings.gecko.data_collection_permissions;
+  assert.deepEqual(dc.required, ['none']);
+  assert.deepEqual([...dc.optional].sort(), [...DATA_TYPES].sort());
+  // todo tipo de dado usado por um recurso está declarado
+  for (const f of Object.values(FEATURES)) for (const d of f.data || []) assert.ok(dc.optional.includes(d), d);
 });

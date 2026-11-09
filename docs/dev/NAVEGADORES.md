@@ -1,14 +1,16 @@
 # Matriz de navegadores
 
-Versões mínimas: **Chrome/Edge 116+** (Manifest V3 com service worker, `offscreen`, `navigator.locks`) e **Firefox 128+** (`strict_min_version` no pacote do Firefox).
+Versões mínimas: **Chrome/Edge 116+** (Manifest V3 com service worker, `offscreen`, `navigator.locks`) e **Firefox 140+** (`strict_min_version` no pacote do Firefox; é a versão que controla o consentimento de dados).
 
-Legenda: ✅ automatizado no CI · 🖐 testar à mão antes de publicar · ➖ não se aplica / limitação conhecida
+Legenda: ✅ automatizado no CI (Chromium com Playwright; Firefox com Selenium, em `tests/firefox`) · 🖐 testar à mão antes de publicar · ➖ não se aplica / limitação conhecida
 
 | Recurso | Chromium (CI) | Edge | Chrome | Firefox | Observações |
 |---|---|---|---|---|---|
-| Instalar e abrir nova aba, configurações e popup | ✅ | 🖐 | 🖐 | 🖐 | Firefox: `about:debugging` → Carregar extensão temporária |
+| Instalar e abrir nova aba, configurações e popup | ✅ | 🖐 | 🖐 | ✅ | Firefox: `about:debugging` → Carregar extensão temporária |
 | Interface em pt/en/es | ✅ | 🖐 | 🖐 | 🖐 | |
 | Atalhos, grupos, busca (Ctrl+K), calculadora | ✅ | 🖐 | 🖐 | 🖐 | |
+| Captura rápida com lembrete (alarme criado) | ✅ | 🖐 | 🖐 | ✅ | |
+| Consentimento de dados (localização, conteúdo para IA) | ➖ | ➖ | ➖ | 🖐 | Só no Firefox: pedido ao adicionar cidade, buscar endereço ou salvar a IA |
 | Widgets, modo livre, camadas | ✅ | 🖐 | 🖐 | 🖐 | |
 | Backup e restauração (com e sem chaves) | ✅ | 🖐 | 🖐 | 🖐 | |
 | Migração de dados antigos e IndexedDB | ✅ | 🖐 | 🖐 | 🖐 | |

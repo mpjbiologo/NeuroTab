@@ -28,11 +28,7 @@ Pacotes (gerados por `./scripts/build.sh` ou baixados da release no GitHub):
 
 ## 2. Firefox Add-ons (AMO, gratuito)
 
-1. Acesse https://addons.mozilla.org/developers/ e entre com uma conta Firefox.
-2. **Submit a New Add-on** → *On this site* → envie `neurotab-firefox.zip`.
-3. A AMO pede o **código-fonte** quando há código minificado. A NeuroTab não é minificada, então responda "No". Se pedirem mesmo assim, envie o zip do repositório.
-4. Preencha nome, resumo e descrição (abaixo), categoria *Tabs* ou *Productivity*, licença MIT e a URL de privacidade.
-5. A versão automática sai em minutos; a revisão humana pode levar alguns dias.
+Passo a passo completo, com atualizações automáticas pelo GitHub: **[FIREFOX.md](FIREFOX.md)**.
 
 ## 3. Opera Add-ons (gratuito)
 

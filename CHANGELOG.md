@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.1 — 2026-11-09
+**Pronta para a loja do Firefox.**
+
+- Firefox: declaração de dados exigida pela Mozilla desde 03/11/2026: nada é obrigatório; localização (clima e Trânsito) e envio de conteúdo à IA são opcionais e pedidos na hora de usar. Sem consentimento, nada é enviado
+- Firefox: corrigido o pedido de permissão da IA, que não aparecia (o Firefox exige o pedido direto no clique)
+- Firefox: versão mínima passa a ser a 140
+- CI: testes num **Firefox de verdade** (Selenium) a cada push, além do Chromium
+- Release: envio automático para a loja do Firefox quando as credenciais `AMO_JWT_ISSUER`/`AMO_JWT_SECRET` estiverem configuradas
+- Guia de publicação: `docs/store/FIREFOX.md`
+
 ## v0.6.0 — 2026-11-09
 **Fundação: testes automáticos, migrações de dados, permissões sob demanda e chaves mais protegidas.**
 
