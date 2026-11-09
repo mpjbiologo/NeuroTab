@@ -35,12 +35,9 @@ Passo a passo completo, com atualizações automáticas pelo GitHub: **[FIREFOX.
 1. https://addons.opera.com/developer/ → *Upload new extension* → envie `neurotab.zip`.
 2. Mesmos textos e capturas. A revisão é manual e pode demorar algumas semanas.
 
-## 4. Chrome Web Store (opcional, taxa única de US$ 5)
+## 4. Chrome Web Store (taxa única de US$ 5)
 
-1. https://chrome.google.com/webstore/devconsole → pague a taxa de registro.
-2. **New item** → envie `neurotab.zip`.
-3. Aba **Privacy**: preencha as justificativas de permissão (abaixo), marque que **não** coleta dados de usuário e informe a URL da política.
-4. **Store listing**: textos, capturas, bloco 440×280 e banner 1400×560.
+Passo a passo completo, com os textos para colar, em [`CHROME.md`](CHROME.md). Atenção: na aba **Privacy**, marque **Location** e **Website content** em *Data usage*, porque o Chrome conta como coleta qualquer dado enviado a serviços externos, mesmo os escolhidos pelo usuário.
 
 > Depois de publicada, a loja atualiza a extensão sozinha. O aviso de atualização via GitHub continua útil para quem instalou pelo zip.
 
