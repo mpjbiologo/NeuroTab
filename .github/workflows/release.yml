@@ -12,19 +12,19 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Conferir versão do manifest
         if: github.event_name == 'release'
         run: |
           V=$(jq -r .version manifest.json)
-          [ "v$V" = "${GITHUB_REF_NAME}" ] || { echo "manifest.json ($V) ≠ tag ($GITHUB_REF_NAME)"; exit 1; }
+          [ "v$V" = "${GITHUB_REF_NAME}" ] || { echo "::error::A tag $GITHUB_REF_NAME aponta para um commit com manifest.json na versão $V. Apague a tag e a release e crie de novo a partir do commit mais recente da main."; exit 1; }
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Empacotar extensão (Chromium e Firefox)
         run: ./scripts/build.sh
