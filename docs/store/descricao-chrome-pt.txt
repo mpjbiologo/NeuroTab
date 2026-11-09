@@ -1,0 +1,175 @@
+A NeuroTab transforma a nova aba do Chrome num painel pessoal: seus sites favoritos sempre à mão numa barra lateral e, no centro, um "segundo cérebro" com as notas, tarefas, lembretes e informações que importam no seu dia. Sem conta, sem servidor e sem anúncios. Tudo fica guardado no seu navegador.
+
+Ela nasceu para quem sente falta de um bom Speed Dial, mas quer mais: um lugar para anotar ideias no segundo em que elas aparecem, lembrar compromissos sem abrir outro app e, se quiser, conversar com uma inteligência artificial sobre tudo o que você já salvou.
+
+
+━━━━━━━━━━━━━━━━━━━━
+🗂️ ATALHOS DO SEU JEITO
+━━━━━━━━━━━━━━━━━━━━
+
+• Grupos de atalhos com emoji, numa barra que pode ficar à esquerda, à direita, no topo ou no rodapé da tela
+• Os atalhos abrem num painel ao passar o mouse; dá para fixar o painel aberto
+• Arraste e solte para reorganizar; as cores e os ícones dos sites são automáticos
+• Widget de atalhos em blocos, para quem prefere o estilo clássico de discagem rápida
+• Vindo do Speed Dial? Importe o seu backup (.spd) e seus grupos aparecem na hora
+
+
+━━━━━━━━━━━━━━━━━━━━
+🧠 SEU SEGUNDO CÉREBRO
+━━━━━━━━━━━━━━━━━━━━
+
+• Captura rápida: digite ou fale e pronto, a ideia está salva
+• Notas, trechos, páginas, links, tarefas e ideias num só lugar
+• Busca, filtros, tags e itens fixados no topo
+• Seleção múltipla, limpar concluídas e lixeira de 30 dias (nada some por engano)
+• Importe suas notas do Google Keep (via Google Takeout)
+• Exporte tudo em Markdown, para usar no Obsidian, Notion ou onde preferir
+
+
+━━━━━━━━━━━━━━━━━━━━
+✂️ SALVE QUALQUER PÁGINA
+━━━━━━━━━━━━━━━━━━━━
+
+• Clique no ícone da NeuroTab (ou use Alt+Shift+N) em qualquer site para anotar sobre a página
+• Botão direito do mouse → NeuroTab para salvar o trecho selecionado, um link ou a página inteira (para ler depois)
+• Guarde imagens dos sites numa biblioteca própria, também pelo botão direito
+• Adicione a página atual a um grupo de atalhos sem sair dela
+• Tudo vai direto para o seu cérebro, com título e endereço da origem
+
+
+━━━━━━━━━━━━━━━━━━━━
+⏰ LEMBRETES EM LINGUAGEM NATURAL
+━━━━━━━━━━━━━━━━━━━━
+
+• Escreva como você fala: "me lembre amanhã às 9h de ligar para o banco"
+• A NeuroTab entende a data e a hora e cria o lembrete sozinha
+• Notificações do sistema com os botões Concluir e Adiar 10 min
+
+
+━━━━━━━━━━━━━━━━━━━━
+🔎 UMA BUSCA PARA TUDO (Ctrl+K)
+━━━━━━━━━━━━━━━━━━━━
+
+• Procure atalhos, notas, a web e faça perguntas à IA na mesma caixa
+• Shift+Enter salva o que você digitou como nota
+• Busca por significado (opcional): "aquela nota sobre sono" encontra "dormi mal ontem", mesmo sem nenhuma palavra em comum
+
+
+━━━━━━━━━━━━━━━━━━━━
+🤖 INTELIGÊNCIA ARTIFICIAL OPCIONAL, COM A SUA CHAVE
+━━━━━━━━━━━━━━━━━━━━
+
+A IA é totalmente opcional: sem ela, todo o resto funciona. Se você ativar, ela:
+
+• Organiza suas notas automaticamente: título, resumo, tags e até o lembrete
+• Responde perguntas sobre o que você salvou ("o que eu anotei sobre a reunião de segunda?"), citando as notas de onde tirou a resposta
+• Entende comandos de voz fora do padrão
+
+Você escolhe o provedor e usa a sua própria chave. As chamadas vão direto do seu navegador para o provedor, sem passar por nenhum servidor nosso:
+
+• Google Gemini (tem camada gratuita)
+• OpenAI (ChatGPT)
+• Anthropic (Claude)
+• OpenRouter (centenas de modelos)
+• Ollama, que roda no seu computador, offline e sem chave
+• Qualquer API compatível com OpenAI (LM Studio, Groq, Mistral, DeepSeek e outras)
+
+
+━━━━━━━━━━━━━━━━━━━━
+🎙 COMANDOS DE VOZ EM 3 IDIOMAS
+━━━━━━━━━━━━━━━━━━━━
+
+• Aperte Alt+Shift+V em qualquer aba e fale
+• "Anotar comprar café", "me lembre amanhã às 9h de pagar a conta", "timer de 10 minutos", "abrir YouTube", "como está o tempo", "quais são minhas tarefas"
+• Funciona em português, inglês e espanhol
+• Leitura em voz alta das respostas
+• Palavra de ativação (experimental): diga "NeuroTab, …" sem apertar nada. Vem desligada, só escuta com a nova aba aberta e em foco, mostra um aviso de privacidade antes de ligar e desliga sozinha depois de um tempo sem uso
+
+
+━━━━━━━━━━━━━━━━━━━━
+🌤 RELÓGIO, CLIMA E FUSOS HORÁRIOS
+━━━━━━━━━━━━━━━━━━━━
+
+• Saudação com relógio e o tempo agora, lado a lado
+• Previsão para os próximos 5 dias
+• Adicione outras cidades para ver a hora e o clima de cada fuso horário
+• Dados meteorológicos abertos do Open-Meteo, sem cadastro
+
+
+━━━━━━━━━━━━━━━━━━━━
+🗺 TRÂNSITO E ROTAS
+━━━━━━━━━━━━━━━━━━━━
+
+• Mapa de trânsito do Waze na própria nova aba
+• Seus locais favoritos (casa, trabalho, academia…) salvos
+• Rotas favoritas que abrem no Google Maps ou no Waze com um clique
+
+
+━━━━━━━━━━━━━━━━━━━━
+🧩 WIDGETS PARA MONTAR O SEU PAINEL
+━━━━━━━━━━━━━━━━━━━━
+
+• Despertador com dias da semana e soneca, timer, pomodoro e cronômetro, com som e notificação
+• Calculadora inteligente: contas, porcentagem ("200 + 10%") e conversões de moedas, medidas, temperatura e datas
+• Cotações de moedas e ações
+• Hábitos com contagem de dias seguidos
+• Notícias dos feeds RSS que você escolher
+• Foco do dia: a tarefa mais importante sempre à vista
+• Mais visitados e abas fechadas recentemente
+• Slides de fundo com fotos do seu computador, a foto do dia do Bing ou a imagem astronômica do dia da NASA
+
+Redimensione cada widget arrastando o canto, organize em grade ou ative o modo livre e posicione tudo onde quiser na tela. Salve layouts diferentes e troque quando quiser.
+
+
+━━━━━━━━━━━━━━━━━━━━
+🔒 PRIVACIDADE DE VERDADE
+━━━━━━━━━━━━━━━━━━━━
+
+• Sem conta, sem login e sem servidor: seus atalhos, notas, tarefas, fotos e configurações ficam no armazenamento local do navegador
+• Sem analytics, sem rastreamento e sem anúncios
+• Nada é vendido nem compartilhado
+• Dados só saem do computador quando você usa um recurso que precisa deles (por exemplo, a cidade do clima vai para o Open-Meteo, e o texto de uma pergunta vai para o provedor de IA que você configurou)
+• Permissões extras (cotações, trânsito, fotos do dia, mais visitados, acesso a outros sites) são pedidas só na primeira vez que você usa o recurso, e podem ser revistas e removidas em Configurações → Permissões
+• Suas chaves de API ficam só no seu navegador
+• Código aberto: qualquer pessoa pode conferir o que a extensão faz
+
+
+━━━━━━━━━━━━━━━━━━━━
+💾 BACKUP E PORTABILIDADE
+━━━━━━━━━━━━━━━━━━━━
+
+• Backup completo em um arquivo .json, para guardar ou levar para outro computador
+• Opção de incluir as chaves de API no backup, protegidas com senha e criptografia (AES-GCM)
+• Importação do Speed Dial (.spd) e do Google Keep
+• Exportação das notas em Markdown
+
+
+━━━━━━━━━━━━━━━━━━━━
+🌐 IDIOMAS
+━━━━━━━━━━━━━━━━━━━━
+
+Português, inglês e espanhol, de acordo com o idioma do navegador (dá para trocar nas configurações), incluindo os comandos de voz.
+
+
+━━━━━━━━━━━━━━━━━━━━
+🚀 COMO COMEÇAR
+━━━━━━━━━━━━━━━━━━━━
+
+1. Instale a extensão e abra uma nova aba
+2. Adicione seus primeiros atalhos ou importe o backup do Speed Dial em Configurações → Backup
+3. Escreva algo na captura rápida, por exemplo "me lembre sexta às 18h de regar as plantas"
+4. Clique no ícone de quebra-cabeça (canto inferior esquerdo) para adicionar widgets
+5. Opcional: em Configurações → IA e voz, escolha um provedor, cole sua chave e clique em Salvar e testar
+
+Observação: despertador, timer e lembretes tocam com o navegador aberto e o computador ligado; a extensão não consegue ligar o computador.
+
+
+━━━━━━━━━━━━━━━━━━━━
+❤ PROJETO INDEPENDENTE E GRATUITO
+━━━━━━━━━━━━━━━━━━━━
+
+A NeuroTab é gratuita, de código aberto e feita por um desenvolvedor independente no Brasil. Se ela facilitar o seu dia, você pode apoiar pela aba Apoie nas configurações, deixar uma avaliação aqui na loja ou sugerir ideias.
+
+Ideias, dúvidas e problemas: https://github.com/mpjbiologo/NeuroTab/issues
+Site: https://mpjbiologo.github.io/NeuroTab/
+Política de privacidade: https://mpjbiologo.github.io/NeuroTab/privacy.html
