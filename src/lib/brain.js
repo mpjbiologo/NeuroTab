@@ -1,5 +1,6 @@
 // NeuroTab — "segundo cérebro": notas, trechos, páginas, tarefas e lembretes.
 import { BRAIN_KEY, TRASH_KEY, uid, hostOf } from './store.js';
+import { migrateIfNeeded } from './migrations.js';
 import { LANG } from './i18n.js';
 
 export const TYPES = {
@@ -11,6 +12,7 @@ export const TYPES = {
 };
 
 export async function loadItems() {
+  await migrateIfNeeded();
   const r = await chrome.storage.local.get(BRAIN_KEY);
   return Array.isArray(r[BRAIN_KEY]) ? r[BRAIN_KEY] : [];
 }

@@ -1,0 +1,47 @@
+name: Testes
+
+# Roda em todo push na main, em pull requests e antes de cada release (chamado pelo release.yml).
+# Se algum teste falhar, a release não é empacotada.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testes-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Testes de unidade
+        run: npm run test:unit
+
+      - name: Empacotar (Chromium e Firefox)
+        run: ./scripts/build.sh
+
+      - name: Validar pacote do Firefox
+        run: npx --yes web-ext@8 lint --source-dir build/firefox
+
+      - name: Instalar o Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Testes de ponta a ponta (extensão carregada no Chromium)
+        run: npm run test:e2e

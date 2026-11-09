@@ -1,5 +1,6 @@
 // NeuroTab — camada de dados compartilhada (nova aba, configurações e service worker).
 // Tudo fica em chrome.storage.local (permissão unlimitedStorage).
+import { migrateIfNeeded, normalizeItems, CURRENT_SCHEMA } from './migrations.js';
 
 export const DATA_KEY = 'nt_data';
 export const BG_KEY = 'nt_bg';
@@ -163,6 +164,7 @@ export function normalize(d) {
 }
 
 export async function loadData() {
+  await migrateIfNeeded();
   const r = await chrome.storage.local.get(DATA_KEY);
   const data = normalize(r[DATA_KEY]);
   if (!r[DATA_KEY]) await saveData(data);
@@ -316,7 +318,7 @@ export function toBackup(data, background, brain, secrets = null) {
   const clean = structuredClone(data);
   clean.settings.ai = { ...clean.settings.ai, keys: {} };
   clean.settings.brapiToken = '';
-  const out = { format: 'neurotab', version: SCHEMA_VERSION, exportedAt: new Date().toISOString(), data: clean, background, brain: brain || [] };
+  const out = { format: 'neurotab', version: SCHEMA_VERSION, schema: CURRENT_SCHEMA, exportedAt: new Date().toISOString(), data: clean, background, brain: brain || [] };
   if (secrets) out.secrets = secrets;
   return out;
 }
@@ -342,7 +344,8 @@ export function applySecrets(settings, secrets, overwrite = true) {
 
 export function parseBackup(json) {
   if (json && json.format === 'neurotab') {
-    return { data: normalize(json.data), background: json.background || null, brain: Array.isArray(json.brain) ? json.brain : [], secrets: json.secrets && typeof json.secrets === 'object' ? json.secrets : null };
+    if (Number(json.schema) > CURRENT_SCHEMA) throw new Error('Este backup foi criado por uma versão mais nova da NeuroTab. Atualize a extensão antes de importar.');
+    return { data: normalize(json.data), background: json.background || null, brain: normalizeItems(json.brain), secrets: json.secrets && typeof json.secrets === 'object' ? json.secrets : null };
   }
   if (json && Array.isArray(json.categories) && Array.isArray(json.links)) return fromSpeedDialBackup(json);
   throw new Error('Arquivo não reconhecido. Use um backup da NeuroTab (.json) ou do Speed Dial (.spd).');

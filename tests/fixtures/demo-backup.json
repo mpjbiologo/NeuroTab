@@ -1,0 +1,320 @@
+{
+ "format": "neurotab",
+ "version": 1,
+ "data": {
+  "groups": [
+   {
+    "id": "g1",
+    "name": "Principal",
+    "icon": "🏠"
+   },
+   {
+    "id": "g2",
+    "name": "Estudos",
+    "icon": "🎓"
+   },
+   {
+    "id": "g3",
+    "name": "Trabalho",
+    "icon": "💼"
+   },
+   {
+    "id": "g4",
+    "name": "Lazer",
+    "icon": "🎮"
+   },
+   {
+    "id": "g5",
+    "name": "IA",
+    "icon": "🤖"
+   },
+   {
+    "id": "g6",
+    "name": "Finanças",
+    "icon": "💲"
+   }
+  ],
+  "links": [
+   {
+    "id": "d0",
+    "groupId": "g1",
+    "title": "WhatsApp Web",
+    "url": "https://web.whatsapp.com/",
+    "color": "rgb(72, 206, 112)",
+    "favicon": ""
+   },
+   {
+    "id": "d1",
+    "groupId": "g1",
+    "title": "Gmail",
+    "url": "https://mail.google.com/mail/u/0/?tab=wm",
+    "color": "rgb(229, 228, 226)",
+    "favicon": ""
+   },
+   {
+    "id": "d2",
+    "groupId": "g1",
+    "title": "Google",
+    "url": "https://google.com",
+    "color": "rgb(174, 157, 116)",
+    "favicon": ""
+   },
+   {
+    "id": "d3",
+    "groupId": "g1",
+    "title": "Google Drive",
+    "url": "https://drive.google.com/drive/u/0/my-drive",
+    "color": "rgb(62, 151, 162)",
+    "favicon": ""
+   },
+   {
+    "id": "d4",
+    "groupId": "g1",
+    "title": "YouTube",
+    "url": "http://youtube.com",
+    "color": "#f44336",
+    "favicon": ""
+   },
+   {
+    "id": "d5",
+    "groupId": "g1",
+    "title": "Spotify",
+    "url": "https://open.spotify.com/browse/featured?_ga=2.89289691.1175247733.1528762082-2004507032.1528762082",
+    "color": "rgb(29, 24, 24)",
+    "favicon": ""
+   },
+   {
+    "id": "d6",
+    "groupId": "g1",
+    "title": "Google Tradutor",
+    "url": "https://translate.google.com/",
+    "color": "rgb(87, 144, 241)",
+    "favicon": ""
+   },
+   {
+    "id": "d7",
+    "groupId": "g1",
+    "title": "Instagram",
+    "url": "https://www.instagram.com/",
+    "color": "rgb(224, 158, 184)",
+    "favicon": ""
+   },
+   {
+    "id": "d8",
+    "groupId": "g1",
+    "title": "Netflix",
+    "url": "https://netflix.com/browse",
+    "color": "rgb(185, 8, 18)",
+    "favicon": ""
+   },
+   {
+    "id": "d9",
+    "groupId": "g1",
+    "title": "Telegram",
+    "url": "https://web.telegram.org/",
+    "color": "rgb(47,167,226)",
+    "favicon": ""
+   },
+   {
+    "id": "d10",
+    "groupId": "g1",
+    "title": "Google Agenda",
+    "url": "https://calendar.google.com/calendar/r",
+    "color": "rgb(229, 228, 226)",
+    "favicon": ""
+   },
+   {
+    "id": "d11",
+    "groupId": "g1",
+    "title": "Kindle",
+    "url": "https://ler.amazon.com.br/",
+    "color": "rgb(65,63,61)",
+    "favicon": ""
+   },
+   {
+    "id": "d12",
+    "groupId": "g1",
+    "title": "Prime Video",
+    "url": "https://www.primevideo.com/storefront/home/ref=atv_nb_sf_hm",
+    "color": "rgb(128,172,80)",
+    "favicon": ""
+   },
+   {
+    "id": "d13",
+    "groupId": "g1",
+    "title": "SciELO",
+    "url": "http://www.scielo.org/php/index.php",
+    "color": "rgb(15, 53, 118)",
+    "favicon": ""
+   },
+   {
+    "id": "d14",
+    "groupId": "g1",
+    "title": "Outlook",
+    "url": "https://outlook.live.com",
+    "color": "rgb(44, 135, 208)",
+    "favicon": ""
+   },
+   {
+    "id": "d15",
+    "groupId": "g1",
+    "title": "Max",
+    "url": "https://play.max.com/",
+    "color": "rgb(154,116,239)",
+    "favicon": ""
+   },
+   {
+    "id": "d16",
+    "groupId": "g1",
+    "title": "MEGA",
+    "url": "https://mega.nz/fm/dashboard",
+    "color": "rgb(237,22,29)",
+    "favicon": ""
+   },
+   {
+    "id": "d17",
+    "groupId": "g1",
+    "title": "Google Fotos",
+    "url": "https://photos.google.com/",
+    "color": "#377a3f",
+    "favicon": ""
+   }
+  ],
+  "settings": {
+   "showSearch": true,
+   "bgColor": "#17151f",
+   "userName": "Ana",
+   "weather": {
+    "name": "Belo Horizonte",
+    "lat": -19.92,
+    "lon": -43.94
+   }
+  }
+ },
+ "background": null,
+ "brain": [
+  {
+   "id": "n1",
+   "type": "clip",
+   "title": "Sono e produtividade",
+   "text": "“Dormir menos de 6 horas reduz a atenção sustentada de forma semelhante à privação total.”",
+   "url": "https://www.scielo.br/",
+   "pageTitle": "",
+   "tags": [
+    "saúde",
+    "sono"
+   ],
+   "summary": "Pouco sono afeta a atenção tanto quanto ficar sem dormir.",
+   "pinned": false,
+   "done": false,
+   "remindAt": null,
+   "notifiedAt": null,
+   "source": "manual",
+   "createdAt": 1793825405940.0,
+   "updatedAt": 1793829005940,
+   "enriched": true
+  },
+  {
+   "id": "n2",
+   "type": "idea",
+   "title": "App de receitas saudáveis",
+   "text": "Gerar receitas a partir do que tenho na geladeira, com IA.",
+   "url": "",
+   "pageTitle": "",
+   "tags": [
+    "ideias",
+    "apps"
+   ],
+   "summary": "",
+   "pinned": true,
+   "done": false,
+   "remindAt": null,
+   "notifiedAt": null,
+   "source": "manual",
+   "createdAt": 1793821805940.0,
+   "updatedAt": 1793829005940,
+   "enriched": true
+  },
+  {
+   "id": "n3",
+   "type": "task",
+   "title": "Pagar boleto da internet",
+   "text": "",
+   "url": "",
+   "pageTitle": "",
+   "tags": [
+    "contas"
+   ],
+   "summary": "",
+   "pinned": false,
+   "done": false,
+   "remindAt": 1793839805940.0,
+   "notifiedAt": null,
+   "source": "manual",
+   "createdAt": 1793818205940.0,
+   "updatedAt": 1793829005940,
+   "enriched": true
+  },
+  {
+   "id": "n4",
+   "type": "task",
+   "title": "Reunião com a equipe",
+   "text": "",
+   "url": "",
+   "pageTitle": "",
+   "tags": [
+    "trabalho"
+   ],
+   "summary": "",
+   "pinned": false,
+   "done": false,
+   "remindAt": 1793901005940.0,
+   "notifiedAt": null,
+   "source": "manual",
+   "createdAt": 1793814605940.0,
+   "updatedAt": 1793829005940,
+   "enriched": true
+  },
+  {
+   "id": "n5",
+   "type": "page",
+   "title": "Guia de Python para iniciantes",
+   "text": "",
+   "url": "https://docs.python.org/pt-br/3/tutorial/",
+   "pageTitle": "",
+   "tags": [
+    "estudos",
+    "python"
+   ],
+   "summary": "",
+   "pinned": false,
+   "done": false,
+   "remindAt": null,
+   "notifiedAt": null,
+   "source": "manual",
+   "createdAt": 1793721005940.0,
+   "updatedAt": 1793829005940,
+   "enriched": true
+  },
+  {
+   "id": "n6",
+   "type": "note",
+   "title": "Livros para ler",
+   "text": "Hábitos Atômicos; Rápido e Devagar; O Gene Egoísta",
+   "url": "",
+   "pageTitle": "",
+   "tags": [
+    "leitura"
+   ],
+   "summary": "",
+   "pinned": false,
+   "done": false,
+   "remindAt": null,
+   "notifiedAt": null,
+   "source": "manual",
+   "createdAt": 1793807405940.0,
+   "updatedAt": 1793829005940,
+   "enriched": true
+  }
+ ]
+}

@@ -167,7 +167,12 @@ async function rateToBRL(code, fetcher) {
 }
 
 export async function defaultRateFetcher(code) {
-  const res = await fetch(`https://economia.awesomeapi.com.br/json/last/${code}-BRL`);
+  let res;
+  try {
+    res = await fetch(`https://economia.awesomeapi.com.br/json/last/${code}-BRL`);
+  } catch {
+    throw new Error('Para converter moedas, permita "Cotações" em Configurações → Geral → Permissões.');
+  }
   const j = await res.json();
   return +j[code + 'BRL']?.bid || null;
 }

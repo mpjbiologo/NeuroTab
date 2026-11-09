@@ -4,6 +4,7 @@ import { displayTitle, searchItems, TYPES } from './brain.js';
 import { hostOf } from './store.js';
 import { aiLanguageName } from './i18n.js';
 import { contextItems } from './semantic.js';
+import { redact, secretsFromHeaders } from './secrets.js';
 
 export const PROVIDERS = {
   gemini: {
@@ -95,7 +96,8 @@ async function http(url, opts) {
   let json;
   try { json = JSON.parse(txt); } catch { json = null; }
   if (!res.ok) {
-    const msg = json?.error?.message || json?.message || txt.slice(0, 200);
+    // Nunca mostrar a chave: alguns provedores repetem parte dela na mensagem de erro.
+    const msg = redact(json?.error?.message || json?.message || txt.slice(0, 200), secretsFromHeaders(opts?.headers));
     if (res.status === 401 || res.status === 403) throw new Error('Chave de API recusada: ' + msg);
     if (res.status === 429) throw new Error('Limite de uso atingido no provedor. Tente de novo em instantes. (' + msg + ')');
     throw new Error(`Erro ${res.status}: ${msg}`);

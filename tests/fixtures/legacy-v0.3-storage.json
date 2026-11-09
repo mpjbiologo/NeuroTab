@@ -1,0 +1,89 @@
+{
+ "nt_data": {
+  "version": 1,
+  "groups": [
+   {
+    "id": "g1",
+    "name": "Principal",
+    "icon": "🏠"
+   }
+  ],
+  "links": [
+   {
+    "id": "l1",
+    "groupId": "g1",
+    "title": "Exemplo",
+    "url": "https://example.com/",
+    "color": "#123456",
+    "favicon": ""
+   }
+  ],
+  "settings": {
+   "dockPosition": "left",
+   "widgets": [
+    {
+     "id": "capture",
+     "size": "m"
+    },
+    {
+     "id": "weather",
+     "size": "s"
+    },
+    {
+     "id": "brain",
+     "size": "l"
+    }
+   ],
+   "weather": {
+    "name": "Belo Horizonte",
+    "region": "MG",
+    "lat": -19.92,
+    "lon": -43.94
+   }
+  }
+ },
+ "nt_brain": [
+  {
+   "id": "a",
+   "type": "note",
+   "text": "Comprar café",
+   "createdAt": 1690000000000
+  },
+  {
+   "id": "b",
+   "type": "task",
+   "text": "Ligar para o banco",
+   "tags": [
+    "banco"
+   ],
+   "remindAt": 1690100000000,
+   "createdAt": 1690000001000
+  },
+  {
+   "id": "c",
+   "text": "Item sem tipo nem tags"
+  },
+  null,
+  {
+   "id": "d",
+   "type": "page",
+   "title": "Artigo",
+   "url": "https://example.com/artigo",
+   "createdAt": 1690000002000
+  },
+  {
+   "id": "e",
+   "type": "idea",
+   "text": "",
+   "title": ""
+  }
+ ],
+ "nt_trash": [
+  {
+   "id": "t1",
+   "type": "note",
+   "text": "Apagada",
+   "deletedAt": 1690000003000
+  }
+ ]
+}

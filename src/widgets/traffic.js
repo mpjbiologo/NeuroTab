@@ -1,4 +1,5 @@
 // Widget: trânsito — mapa ao vivo do Waze, locais e rotas favoritas.
+import { requestFeature } from '../lib/permissions.js';
 import { h, showCtx } from '../lib/ui.js';
 import { uid } from '../lib/store.js';
 
@@ -16,6 +17,8 @@ export function gmapsRoute(from, to, mode = 'driving') {
 export const wazeTo = (to) => `https://waze.com/ul?ll=${to.lat},${to.lon}&navigate=yes`;
 
 async function searchAddress(q) {
+  // Pedido direto no clique de "Buscar" (se já houver acesso, não aparece nada).
+  if (!(await requestFeature('traffic'))) throw new Error('Para buscar endereços, permita o acesso ao OpenStreetMap.');
   const u = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=0&accept-language=pt-BR&q=${encodeURIComponent(q)}`;
   const r = await (await fetch(u, { headers: { Accept: 'application/json' } })).json();
   return r.map((x) => ({ address: x.display_name, lat: +x.lat, lon: +x.lon }));
@@ -102,8 +105,8 @@ export default {
             render();
           } }, h('span', { class: 'ic' }, '📍'), h('div', { class: 'body' }, h('div', { class: 'tt' }, r.address.split(',').slice(0, 2).join(',')), h('div', { class: 'tx' }, r.address)))));
           if (!res.length) results.replaceChildren(h('p', { class: 'muted' }, 'Endereço não encontrado. Tente incluir a cidade.'));
-        } catch {
-          results.replaceChildren(h('p', { class: 'muted' }, 'Sem conexão com o serviço de endereços.'));
+        } catch (e) {
+          results.replaceChildren(h('p', { class: 'muted' }, /permita/.test(e?.message) ? e.message : 'Sem conexão com o serviço de endereços.'));
         }
       };
       q.addEventListener('keydown', (e) => e.key === 'Enter' && find());

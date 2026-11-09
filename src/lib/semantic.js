@@ -4,6 +4,7 @@
 import { openDB } from './idb.js';
 import { aiConfig, isConfigured, complete, parseJson } from './ai.js';
 import { displayTitle, searchItems } from './brain.js';
+import { redact, secretsFromHeaders } from './secrets.js';
 
 const STORE = 'vectors';
 const DIM = 768;
@@ -41,7 +42,7 @@ async function post(url, headers, body) {
   let json = null;
   try { json = JSON.parse(txt); } catch { /* texto puro */ }
   if (!res.ok) {
-    const msg = json?.error?.message || json?.message || txt.slice(0, 200);
+    const msg = redact(json?.error?.message || json?.message || txt.slice(0, 200), secretsFromHeaders(headers));
     const err = new Error(res.status === 429 ? 'Limite de uso atingido no provedor. Tente de novo em instantes.' : `Erro ${res.status}: ${msg}`);
     err.status = res.status;
     throw err;

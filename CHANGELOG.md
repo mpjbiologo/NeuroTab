@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.6.0 — 2026-11-09
+**Fundação: testes automáticos, migrações de dados, permissões sob demanda e chaves mais protegidas.**
+
+**Testes e CI** (#1, #16)
+- 37 testes de unidade (`node:test`) e 18 de ponta a ponta (Playwright, com a extensão carregada num Chromium de verdade), sem depender de internet
+- Cobrem backup e restauração, migrações, criptografia, datas e comandos de voz nos três idiomas, busca por significado, palavra de ativação, biblioteca de imagens, modo livre, camadas e permissões
+- Workflow "Testes" roda a cada push e pull request; a release só é empacotada se todos passarem
+- Documentação em `docs/dev/` (testes, armazenamento, segurança, permissões e matriz de navegadores)
+
+**Migrações de dados** (#2)
+- Versão do esquema em `nt_meta`; migrações sequenciais, idempotentes, gravadas de uma vez e com cópia de segurança do estado anterior
+- Primeira migração: notas e tarefas antigas ganham os campos obrigatórios (tags, tipo, datas) — corrige travamentos com dados de versões antigas; clima e widgets da v0.3 convertidos
+- Backups de versão mais nova são recusados com mensagem clara; os antigos são normalizados ao importar
+
+**Permissões** (#3)
+- Cotações, endereços do Trânsito e fotos do Bing/NASA deixam de ser pedidos na instalação: o acesso é pedido só quando você usa o recurso
+- Novo painel **Configurações → Geral → Permissões**: o que cada acesso faz, com botões Permitir/Remover, e a lista de sites liberados individualmente
+- Teste automático garante que o manifest e o mapa de permissões batem
+
+**Chaves de API** (#4)
+- Mensagens de erro dos provedores nunca mostram a chave (nem trechos dela)
+- Botão 🗑 para apagar a chave salva de um provedor
+- Documento `docs/dev/SEGURANCA.md` com o caminho da chave e os limites de proteção
+
 ## v0.5.7 — 2026-11-09
 **Voz mais útil, colar imagens e permissões mais enxutas.**
 

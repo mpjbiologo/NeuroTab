@@ -94,7 +94,9 @@ O Google só libera a API do Keep para contas empresariais (Workspace). Para con
 | **v0.2** ✅ | Segundo cérebro: widgets, captura, lembretes, IA multi-provedor, voz, Keep, anotar páginas |
 | **v0.3** ✅ | Widgets redimensionáveis e responsivos, relógio/despertador, calculadora, navegação, lixeira, comandos de voz, aviso de atualização |
 | **v0.4** ✅ | Relógio + clima com várias cidades e fusos, trânsito com locais e rotas, slides de fotos, hábitos, notícias RSS, foco do dia, tradução (pt/en/es), versão para Firefox, material para as lojas |
-| **v0.5** ✅ | Busca por significado, comandos de voz em inglês e espanhol, palavra de ativação (experimental), backup com chaves de API |
+| **v0.5** ✅ | Busca por significado, comandos de voz em inglês e espanhol, palavra de ativação (experimental), backup com chaves de API, biblioteca de imagens |
+| **v0.6** ✅ | Fundação: testes automáticos e CI, migrações de dados, permissões sob demanda, chaves de API mais protegidas |
+| **v0.7** | Maximizar/minimizar widgets, nome do assistente, agenda, imagens no cérebro |
 | **Depois** | Agenda, sincronização entre computadores, Google Fotos e OneDrive nos slides, palavra de ativação offline |
 | — | Publicação nas lojas do Edge ([passo a passo](docs/store/EDGE.md)), Firefox, Opera e Chrome ([guia](docs/store/README.md)) |
 
@@ -104,22 +106,7 @@ Ideias são bem-vindas nas [Issues](https://github.com/mpjbiologo/NeuroTab/issue
 
 Tudo fica **no seu navegador**. A NeuroTab não tem servidor, não pede conta e não coleta dados. A chave da IA fica só no navegador e **só entra no backup se você pedir** (com senha opcional). Detalhes na [política de privacidade](https://mpjbiologo.github.io/NeuroTab/privacy.html).
 
-| Permissão | Para quê |
-|---|---|
-| `storage`, `unlimitedStorage` | Guardar atalhos, notas e fundo |
-| `contextMenus` | Mostrar o menu "NeuroTab" no botão direito |
-| `activeTab`, `scripting` | Ler o título e o texto selecionado da página quando **você** clica no ícone |
-| `alarms`, `notifications` | Disparar lembretes, despertadores e timers |
-| `offscreen` | Tocar o som do despertador e do timer |
-| `topSites`, `sessions`, `tabs` *(opcionais)* | Widget Navegação — pedidas só se você usar o widget |
-| GitHub API | Verificar se há versão nova |
-| `favicon` | Mostrar os ícones dos sites |
-| Open-Meteo, AwesomeAPI, brapi.dev | Buscar clima, cidades e cotações |
-| OpenStreetMap Nominatim | Buscar endereços dos locais do widget Trânsito |
-| Bing, NASA | Fotos do dia nos slides de fundo |
-| Feeds RSS *(opcionais)* | Pedida para cada site de notícias que você adicionar |
-| DuckDuckGo *(só no Firefox)* | Ícones dos sites, já que o Firefox não tem a API de favicons |
-| Provedor de IA *(opcional)* | Pedida só quando você configura a IA |
+A NeuroTab pede o mínimo na instalação (armazenamento, menus, lembretes e clima). Cotações, endereços do Trânsito, fotos do Bing/NASA, provedores de IA, feeds e imagens de sites são **pedidos só quando você usa o recurso**, e podem ser removidos em **Configurações → Geral → Permissões**. A lista completa, com o motivo de cada uma, está em [docs/dev/PERMISSOES.md](docs/dev/PERMISSOES.md). Sobre as chaves de API, veja [docs/dev/SEGURANCA.md](docs/dev/SEGURANCA.md).
 
 ## ❤ Apoie o projeto
 
@@ -135,7 +122,14 @@ A NeuroTab é feita nas horas vagas e vai continuar gratuita. Se ela é útil pa
 
 ## 🛠 Desenvolvimento
 
-O projeto não tem etapa de build: é HTML, CSS e JavaScript puros (módulos ES).
+O projeto não tem etapa de build: é HTML, CSS e JavaScript puros (módulos ES). O Node.js só é usado para os testes e o empacotamento.
+
+```bash
+npm ci && npx playwright install chromium
+npm test        # testes de unidade + ponta a ponta (a extensão roda num Chromium de verdade)
+```
+
+Os mesmos testes rodam no GitHub a cada push e **antes de cada release** — se algo quebrar, a release não sai. Detalhes em [docs/dev/TESTES.md](docs/dev/TESTES.md); armazenamento e migrações em [docs/dev/ARMAZENAMENTO.md](docs/dev/ARMAZENAMENTO.md); navegadores suportados em [docs/dev/NAVEGADORES.md](docs/dev/NAVEGADORES.md).
 
 ```
 manifest.json            Manifest V3
@@ -144,21 +138,26 @@ src/widgets/             Um arquivo por widget, registrados em index.js
 src/popup.*              Painel do ícone (anotar página)
 src/options.*            Configurações
 src/background.js        Menus, lembretes (alarms) e notificações
-src/lib/store.js         Atalhos, configurações, importação do .spd
+src/lib/store.js         Atalhos, configurações, backup, importação do .spd
+src/lib/migrations.js    Versões do esquema de dados e migrações
+src/lib/permissions.js   Cada acesso a site e o recurso que o usa
+src/lib/captures.js      Biblioteca de imagens (IndexedDB)
 src/lib/brain.js         Notas, busca, lembretes em PT-BR, Keep, Markdown
 src/lib/ai.js            Provedores de IA (Gemini, OpenAI, Anthropic, OpenRouter, Ollama…)
 src/lib/pix.js           Pix copia e cola + QR Code
 src/config.js            Links do projeto e dados do Pix
-docs/                    Site do projeto (GitHub Pages)
+tests/                   Testes (unidade, ponta a ponta e dados de exemplo)
+docs/                    Site do projeto (GitHub Pages) e documentação (docs/dev)
 ```
 
 **Para criar um widget:** copie um arquivo de `src/widgets/`, exporte `{ id, title, icon, description, mount(el, ctx) }` e registre-o em `src/widgets/index.js`.
 
 **Para lançar uma versão:**
-1. Atualize `version` no `manifest.json` e o `CHANGELOG.md`.
-2. No GitHub, abra **Releases → Draft a new release**, crie a tag `vX.Y.Z` e publique.
+1. Atualize `version` no `manifest.json` e o `CHANGELOG.md`, faça o commit e o push.
+2. Espere o "Testes" ficar verde na aba Actions.
+3. No GitHub, abra **Releases → Draft a new release**, crie a tag `vX.Y.Z` a partir da `main` e publique.
 
-O Actions anexa o `neurotab.zip` à release automaticamente.
+O Actions confere a versão, roda os testes de novo e anexa o `neurotab.zip` e o `neurotab-firefox.zip` à release.
 
 ## 📄 Licença
 

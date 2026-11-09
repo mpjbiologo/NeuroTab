@@ -5,9 +5,10 @@ import {
 } from './lib/store.js';
 import { encryptJSON, decryptJSON } from './lib/crypto.js';
 import { loadItems, saveItems, fromKeepNote, toMarkdown, trashItems, purgeTrash, loadTrash } from './lib/brain.js';
-import { voicesFor, speak } from './lib/ui.js';
+import { voicesFor, speak, h } from './lib/ui.js';
 import { SOUNDS } from './lib/sounds.js';
 import { UPDATE_KEY, isStoreInstall } from './lib/update.js';
+import { FEATURES, hasFeature, requestFeature, revokeFeature, grantedSites, revokeSite } from './lib/permissions.js';
 import { SOURCES, addFiles, listLocal, clearLocal } from './lib/photos.js';
 import { initI18n, LOCALE, t } from './lib/i18n.js';
 import { PROVIDERS, aiConfig, requestPermission, listModels, complete } from './lib/ai.js';
@@ -27,6 +28,12 @@ async function init() {
   for (let n = 2; n <= 12; n++) $('#cols').add(new Option(String(n), String(n)));
   for (const [k, v] of Object.entries(SOUNDS)) $('#timerSound').add(new Option(v, k));
   for (const [k, v] of Object.entries(SOURCES)) $('#slideSource').add(new Option(v, k));
+  // Bing/NASA precisam do acesso "Fotos do dia": pedido na hora da escolha.
+  $('#slideSource').addEventListener('change', async (e) => {
+    if (e.target.value === 'local' || (await requestFeature('slides'))) return;
+    e.target.value = 'local';
+    e.target.dispatchEvent(new Event('change'));
+  });
 
   data = await loadData();
   initI18n(data.settings.lang);
@@ -170,6 +177,15 @@ function setupAi() {
   paint();
   sel.addEventListener('change', paint);
   $('#showKey').onclick = () => { const k = $('#apiKey'); k.type = k.type === 'password' ? 'text' : 'password'; };
+  $('#removeKey').onclick = async () => {
+    const id = sel.value;
+    if (!data.settings.ai.keys[id] && !$('#apiKey').value) return msg('Não há chave salva para este provedor.');
+    if (!confirm(`Apagar a chave de ${PROVIDERS[id].name} deste navegador?`)) return;
+    delete data.settings.ai.keys[id];
+    await saveData(data);
+    $('#apiKey').value = '';
+    msg('🗑 Chave apagada.', 'ok');
+  };
 
   const staged = () => {
     const s = structuredClone(data.settings);
@@ -180,7 +196,7 @@ function setupAi() {
     if (PROVIDERS[id].editableBase) s.ai.baseUrls[id] = $('#baseUrl').value.trim();
     return s;
   };
-  const msg = (t, cls = '') => { const m = $('#aiMsg'); m.className = 'msg ' + cls; m.textContent = t; };
+  const msg = (txt, cls = '') => { const m = $('#aiMsg'); m.className = 'msg ' + cls; m.textContent = t(txt); };
 
   $('#loadModels').onclick = async () => {
     const s = staged();
@@ -537,7 +553,35 @@ function setupVoiceOptions() {
 }
 
 // ---------- Atualizações ----------
+// ---------- Permissões ----------
+async function renderPermissions() {
+  const box = $('#permList');
+  if (!box) return;
+  const rows = [];
+  for (const [id, f] of Object.entries(FEATURES)) {
+    if (f.perSite) continue;
+    const on = await hasFeature(id);
+    let control;
+    if (f.required) control = h('span', { class: 'perm-state on' }, 'Sempre ativo');
+    else if (f.managed) control = h('span', { class: 'perm-state ' + (on ? 'on' : 'off') }, on ? 'Permitido' : 'Pedido ao configurar');
+    else {
+      control = h('div', { class: 'keybox' },
+        h('span', { class: 'perm-state ' + (on ? 'on' : 'off') }, on ? 'Permitido' : 'Não permitido'),
+        h('button', { class: 'btn', onclick: async () => { if (on) await revokeFeature(id); else await requestFeature(id); renderPermissions(); } }, on ? 'Remover' : 'Permitir'));
+    }
+    rows.push(h('div', { class: 'opt' }, h('div', {}, h('b', {}, f.label), h('small', {}, f.why)), control));
+  }
+  box.replaceChildren(...rows);
+  const sites = await grantedSites();
+  $('#permSites').replaceChildren(
+    h('p', { class: 'hint' }, sites.length ? 'Sites liberados individualmente (feeds, imagens, IA com endereço próprio). Clique para remover:' : 'Nenhum site liberado individualmente.'),
+    ...sites.map((o) => h('button', { class: 'chip', title: 'Remover acesso', onclick: async () => { await revokeSite(o); renderPermissions(); } }, o.replace(/\/\*$/, '') + ' ✕')));
+}
+
 function setupUpdatesOptions() {
+  renderPermissions();
+  chrome.permissions.onAdded?.addListener(renderPermissions);
+  chrome.permissions.onRemoved?.addListener(renderPermissions);
   $('#verNow').textContent = chrome.runtime.getManifest().version;
   isStoreInstall().then((store) => {
     if (!store) return;
@@ -562,7 +606,7 @@ function setupUpdatesOptions() {
 
 // ---------- Limpeza ----------
 function setupCleanup() {
-  const msg = (t, cls = 'ok') => { const m = $('#cleanMsg'); m.className = 'msg ' + cls; m.textContent = t; };
+  const msg = (txt, cls = 'ok') => { const m = $('#cleanMsg'); m.className = 'msg ' + cls; m.textContent = t(txt); };
   $('#cleanDone').onclick = async () => {
     const done = (await loadItems()).filter((i) => i.done);
     if (!done.length) return msg('Nenhuma tarefa concluída.', '');

@@ -1,5 +1,6 @@
 // Widget: cotações — moedas/cripto (AwesomeAPI) e ações da B3 (brapi.dev).
 import { h } from '../lib/ui.js';
+import { hasFeature, requestFeature, FEATURES } from '../lib/permissions.js';
 
 const CACHE = 'nt_cache_quotes';
 const fmt = (v, cur = 'BRL') => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: cur, maximumFractionDigits: v > 1000 ? 0 : 2 });
@@ -59,6 +60,14 @@ export default {
     }
 
     async function load(force) {
+      // O acesso aos sites de cotação é pedido só quando a pessoa usa o widget.
+      if (!(await hasFeature('quotes'))) {
+        body.replaceChildren(
+          h('p', { class: 'muted' }, FEATURES.quotes.why),
+          h('button', { class: 'btn primary', type: 'button', onclick: async () => { if (await requestFeature('quotes')) load(true); } }, 'Permitir acesso às cotações'));
+        stamp.textContent = '';
+        return;
+      }
       const key = ctx.settings.quoteCurrencies + '|' + ctx.settings.quoteStocks + '|' + !!ctx.settings.brapiToken;
       let c = (await chrome.storage.local.get(CACHE))[CACHE];
       if (force || !c || c.key !== key || Date.now() - c.at > 10 * 60e3) {

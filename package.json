@@ -1,0 +1,22 @@
+{
+  "name": "neurotab",
+  "version": "0.6.0",
+  "private": true,
+  "description": "Nova aba com segundo cérebro — testes e ferramentas de desenvolvimento",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test --import ./tests/unit/setup.js \"tests/unit/**/*.test.js\"",
+    "test:e2e": "node --test --test-concurrency=1 --test-timeout=180000 \"tests/e2e/**/*.test.js\"",
+    "build": "./scripts/build.sh",
+    "lint:firefox": "npx --yes web-ext@8 lint --source-dir build/firefox",
+    "check": "npm run test:unit && npm run build && npm run lint:firefox && npm run test:e2e"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

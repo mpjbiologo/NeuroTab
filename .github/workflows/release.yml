@@ -1,7 +1,7 @@
 name: Release
 
 # Dispara quando você publica uma release no GitHub (Releases → Draft a new release → tag vX.Y.Z).
-# Os pacotes (Edge/Chrome e Firefox) são gerados e anexados automaticamente à release.
+# Ordem: confere a versão → roda todos os testes → só então empacota e anexa os zips à release.
 on:
   release:
     types: [published]
@@ -11,16 +11,28 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  # 1) A tag precisa bater com a versão do manifest (falha rápido, antes dos testes).
+  versao:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-
       - name: Conferir versão do manifest
         if: github.event_name == 'release'
         run: |
           V=$(jq -r .version manifest.json)
           [ "v$V" = "${GITHUB_REF_NAME}" ] || { echo "::error::A tag $GITHUB_REF_NAME aponta para um commit com manifest.json na versão $V. Apague a tag e a release e crie de novo a partir do commit mais recente da main."; exit 1; }
+
+  # 2) Os mesmos testes que rodam a cada push (unidade, empacotamento, Firefox e ponta a ponta).
+  testes:
+    needs: versao
+    uses: ./.github/workflows/ci.yml
+
+  # 3) Só empacota e publica se os testes passarem.
+  build:
+    needs: testes
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
         with:
@@ -28,9 +40,6 @@ jobs:
 
       - name: Empacotar extensão (Chromium e Firefox)
         run: ./scripts/build.sh
-
-      - name: Validar pacote do Firefox
-        run: npx --yes web-ext@8 lint --source-dir build/firefox
 
       - uses: actions/upload-artifact@v4
         with:

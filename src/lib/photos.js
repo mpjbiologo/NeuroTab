@@ -1,5 +1,6 @@
 // NeuroTab — fotos para slides: do computador (IndexedDB) e galerias online (Bing, NASA).
 import { openDB } from './idb.js';
+import { hasFeature } from './permissions.js';
 
 const STORE = 'photos';
 const db = openDB;
@@ -79,7 +80,8 @@ async function cached(key, ttl, fn) {
   }
 }
 
-export function bingPhotos() {
+export async function bingPhotos() {
+  if (!(await hasFeature('slides'))) return [];
   return cached('bing', 6 * 3600e3, async () => {
     const r = await (await fetch('https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=pt-BR')).json();
     return (r.images || []).map((i) => ({
@@ -91,7 +93,8 @@ export function bingPhotos() {
   });
 }
 
-export function nasaPhotos() {
+export async function nasaPhotos() {
+  if (!(await hasFeature('slides'))) return [];
   return cached('nasa', 12 * 3600e3, async () => {
     const r = await (await fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&count=12&thumbs=true')).json();
     return (Array.isArray(r) ? r : [])

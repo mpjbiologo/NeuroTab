@@ -141,9 +141,9 @@ Privacidad: sin cuenta, sin servidor, sin analítica. Tus datos se quedan en el 
 | offscreen | Plays the alarm/timer sound from the background. |
 | topSites, sessions, tabs (optional) | "Browsing" widget: most-visited sites and recently closed tabs. Requested only when the user enables the widget. |
 | Host: open-meteo.com | Weather and city search. |
-| Host: awesomeapi.com.br, brapi.dev | Currency and stock quotes widget. |
-| Host: nominatim.openstreetmap.org | Address search for saved places in the traffic widget. |
-| Host: bing.com, api.nasa.gov | Photo-of-the-day background slideshow. |
+| Optional host: awesomeapi.com.br, brapi.dev | Currency and stock quotes widget. Requested when the user enables the widget. |
+| Optional host: nominatim.openstreetmap.org | Address search for saved places in the traffic widget. Requested on first search. |
+| Optional host: bing.com, api.nasa.gov | Photo-of-the-day background slideshow. Requested when the user picks that source. |
 | Host: api.github.com | Checks GitHub for new releases. |
 | Optional hosts (AI providers, https://*/*) | Requested only when the user configures an AI provider or adds an RSS feed. |
 

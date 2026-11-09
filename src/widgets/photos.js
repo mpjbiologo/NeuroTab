@@ -1,5 +1,6 @@
 // Widget: slide de fotos (do computador ou galerias online).
 import { h } from '../lib/ui.js';
+import { requestFeature } from '../lib/permissions.js';
 import { photoList, photoUrl, preload, addFiles, SOURCES } from '../lib/photos.js';
 
 export default {
@@ -15,7 +16,11 @@ export default {
     let timer;
     const src = h('select', { style: { width: 'auto', height: '26px', padding: '0 6px', fontSize: '12px' } }, ...Object.entries(SOURCES).map(([k, v]) => new Option(v, k)));
     src.value = ctx.widget.source || 'local';
-    src.onchange = async () => { await ctx.saveWidget({ source: src.value }); load(); };
+    src.onchange = async () => {
+      if (src.value !== 'local' && !(await requestFeature('slides'))) src.value = 'local';
+      await ctx.saveWidget({ source: src.value });
+      load();
+    };
     const file = h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true });
     const addBtn = h('button', { title: 'Adicionar fotos do computador', onclick: () => file.click() }, '＋');
     ctx.actions.append(src, addBtn);

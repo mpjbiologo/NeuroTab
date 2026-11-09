@@ -3,7 +3,7 @@
   "name": "__MSG_extName__",
   "short_name": "NeuroTab",
   "description": "__MSG_extDescription__",
-  "version": "0.5.7",
+  "version": "0.6.0",
   "default_locale": "pt_BR",
   "homepage_url": "https://github.com/mpjbiologo/NeuroTab",
   "icons": {
@@ -42,14 +42,14 @@
   "host_permissions": [
     "https://api.open-meteo.com/*",
     "https://geocoding-api.open-meteo.com/*",
-    "https://economia.awesomeapi.com.br/*",
-    "https://brapi.dev/*",
-    "https://api.github.com/*",
-    "https://nominatim.openstreetmap.org/*",
-    "https://www.bing.com/*",
-    "https://api.nasa.gov/*"
+    "https://api.github.com/*"
   ],
   "optional_host_permissions": [
+    "https://economia.awesomeapi.com.br/*",
+    "https://brapi.dev/*",
+    "https://nominatim.openstreetmap.org/*",
+    "https://www.bing.com/*",
+    "https://api.nasa.gov/*",
     "https://generativelanguage.googleapis.com/*",
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",

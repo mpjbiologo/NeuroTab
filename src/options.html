@@ -110,6 +110,11 @@
         <div class="keybox"><select data-k="timerSound" id="timerSound"></select><button class="btn" id="testTimerSound" title="Ouvir">🔊</button></div>
       </div>
       <hr>
+      <h2>Permissões</h2>
+      <p class="hint">Cada acesso a um site existe por causa de um recurso. Os opcionais são pedidos só quando você usa o recurso e podem ser removidos aqui.</p>
+      <div id="permList" class="perm-list"></div>
+      <div id="permSites" class="perm-sites"></div>
+      <hr>
       <h2>Atualizações</h2>
       <p class="hint" id="storeUpd" hidden>✓ Instalada pela loja: as atualizações chegam automaticamente.</p>
       <div class="opt" id="updRow">
@@ -196,6 +201,7 @@
         <div class="keybox">
           <input type="password" id="apiKey" class="txt wide" placeholder="Cole sua chave aqui" autocomplete="off">
           <button class="btn" id="showKey" title="Mostrar/ocultar">👁</button>
+          <button class="btn" id="removeKey" title="Apagar a chave salva deste provedor">🗑</button>
         </div>
       </div>
       <div class="opt" id="baseRow">

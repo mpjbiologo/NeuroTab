@@ -1,5 +1,31 @@
 // Novidades exibidas uma vez após atualizar a extensão.
 export const WHATS_NEW = {
+  '0.6.0': {
+    pt: {
+      title: 'NeuroTab 0.6 — mais sólida por dentro',
+      items: [
+        ['🔒', 'Permissões só quando precisar', 'Cotações, Trânsito e fotos do Bing/NASA pedem acesso na hora de usar. Veja e remova acessos em Configurações → Geral → Permissões.'],
+        ['🔑', 'Chaves mais protegidas', 'Mensagens de erro nunca mostram sua chave de API, e dá para apagá-la com um clique.'],
+        ['🧪', 'Testes automáticos', 'Cada versão agora passa por dezenas de testes antes de ser publicada. Seus dados antigos são atualizados com segurança.'],
+      ],
+    },
+    en: {
+      title: 'NeuroTab 0.6 — sturdier on the inside',
+      items: [
+        ['🔒', 'Permissions only when needed', 'Quotes, Traffic and Bing/NASA photos ask for access when you use them. See and remove access in Settings → General → Permissions.'],
+        ['🔑', 'Better-protected keys', 'Error messages never show your API key, and you can delete it with one click.'],
+        ['🧪', 'Automated tests', 'Every version now goes through dozens of tests before release. Your old data is upgraded safely.'],
+      ],
+    },
+    es: {
+      title: 'NeuroTab 0.6 — más sólida por dentro',
+      items: [
+        ['🔒', 'Permisos solo cuando hacen falta', 'Cotizaciones, Tráfico y fotos de Bing/NASA piden acceso al usarlos. Mira y quita accesos en Configuración → General → Permisos.'],
+        ['🔑', 'Claves mejor protegidas', 'Los mensajes de error nunca muestran tu clave de API, y puedes borrarla con un clic.'],
+        ['🧪', 'Pruebas automáticas', 'Cada versión pasa ahora por decenas de pruebas antes de publicarse. Tus datos antiguos se actualizan con seguridad.'],
+      ],
+    },
+  },
   '0.5.7': {
     pt: {
       title: 'NeuroTab 0.5.7',
