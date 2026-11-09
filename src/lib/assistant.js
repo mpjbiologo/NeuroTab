@@ -6,6 +6,7 @@ import { fold, parseReminder, fmtDateTime, displayTitle } from './brain.js';
 import { parseDuration, fmtDur, startTimer, startPomo, addAlarm, pausePomo, stopPomo, resetTimer, stopSound } from './clock.js';
 import { smartCalc } from './calc.js';
 import { hostOf, normalizeUrl } from './store.js';
+import { tIn } from './i18n.js';
 
 const strip = (s, re) => s.replace(re, '').trim();
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
@@ -45,6 +46,7 @@ function parseClock(t) {
 // que removem o comando do texto original para preservar acentos do conteúdo.
 const LEX = {
   pt: {
+    code: 'pt',
     stop: /^(parar|para|pare|desligar|silencio)( o)?( (som|alarme|despertador|timer))?$/,
     remind: /^(me )?(lembre|lembra|lembrar|lembrete|avise|avisa)\b/,
     remindStrip: /^(me\s+)?(lembre|lembra|lembrar|lembrete|avise|avisa)(-me)?\s*((de|que|para|pra)\s+)?/i,
@@ -66,6 +68,8 @@ const LEX = {
     weather: /(tempo|clima|previsao|temperatura|chover|chuva)/,
     quotes: /(dolar|euro|bitcoin|cotac|bolsa|acoes)/,
     tasks: /^(ler |leia |quais |o que )?(sao )?(minhas |as )?(tarefas|lembretes|pendencias|tenho (pra|para) hoje|agenda)( de hoje| pra hoje| para hoje)?$/,
+    // Frases livres: "me diga aí, o que que eu tenho que fazer?", "o que tenho pra hoje", "quais são minhas pendências"
+    tasksAsk: /\b(o que|oque)( que)? (eu )?(tenho|preciso|devo) (que |de |pra |para )?(fazer|resolver)\b|\b(o que|oque)( que)? (eu )?tenho (pra|para) hoje\b|\b(minhas|quais (sao )?(as |minhas )?)(tarefas|pendencias|lembretes)\b|\bminha agenda\b|\bo que tem (pra|para) hoje\b/,
     route: /^(rota|ir|como chegar|navegar|transito)\s+(para|pro|pra|ate|ao|a|na|no|em)\s+(o |a )?(.+)$/,
     open: /^(abrir|abra|abre|ir para|vai para|acessar|entrar no|entrar na)\s+(o |a )?(.+)$/,
     search: /^(pesquisar|pesquisa|pesquise|procurar|procura|buscar|busca|google)\s+(por\s+|sobre\s+)?(.+)$/,
@@ -80,6 +84,7 @@ const LEX = {
     officialSite: ' site oficial',
   },
   en: {
+    code: 'en',
     stop: /^(stop|silence|quiet|turn off|shut up)( the)?( (sound|alarm|timer|music))?$/,
     remind: /^(remind me|reminder|set a reminder|alert me)\b/,
     remindStrip: /^(remind\s+me|reminder|set\s+a\s+reminder|alert\s+me)\s*((to|that|about|of)\s+)?/i,
@@ -101,6 +106,7 @@ const LEX = {
     weather: /(weather|forecast|temperature|rain|raining|sunny)/,
     quotes: /(dollar|euro|bitcoin|exchange rate|stock|quotes?)/,
     tasks: /^(read |what are )?(my )?(tasks|reminders|to ?dos|agenda)( for today| today)?$|^what do i have (to do )?today$/,
+    tasksAsk: /\bwhat (do|should|must|will) i (have|need|got)? ?to do\b|\bwhat do i have (to do )?today\b|\bwhat('?s| is) on my (list|agenda|plate|schedule)\b|\b(my|read my|list my) (tasks|to ?dos|reminders)\b/,
     route: /^(route|directions|navigate|go|take me|drive|how do i get)\s+(to|home)\s*(the )?(.*)$/,
     open: /^(open|go to|launch|visit|show me)\s+(the )?(.+)$/,
     search: /^(search|search for|google|look up|find on the web)\s+(for\s+|about\s+)?(.+)$/,
@@ -115,6 +121,7 @@ const LEX = {
     officialSite: ' official site',
   },
   es: {
+    code: 'es',
     stop: /^(parar|para|detener|deten|silencio|apagar|callate)( el| la)?( (sonido|alarma|despertador|temporizador))?$/,
     remind: /^(recuerdame|recordarme|recordatorio|avisame|recuerda)\b/,
     remindStrip: /^(recu[eé]rdame|recordarme|recordatorio|av[ií]same|recuerda)\s*((de|que|para)\s+)?/i,
@@ -136,6 +143,7 @@ const LEX = {
     weather: /(tiempo|clima|pronostico|temperatura|llover|lluvia)/,
     quotes: /(dolar|euro|bitcoin|cotizacion|bolsa|acciones)/,
     tasks: /^(leer |lee |cuales son |que )?(son )?(mis )?(tareas|recordatorios|pendientes|agenda|tengo (para )?hoy)( de hoy| para hoy)?$/,
+    tasksAsk: /\bque (tengo|debo|necesito) (que |de )?hacer\b|\bque tengo (para |pa )?hoy\b|\b(mis|cuales son (mis )?)(tareas|pendientes|recordatorios)\b|\bmi agenda\b/,
     route: /^(ruta|ir|como llegar|navegar|trafico)\s+(a|al|hacia|hasta|para)\s+(el |la |mi )?(.+)$/,
     open: /^(abrir|abre|ir a|entrar en|acceder a)\s+(el |la )?(.+)$/,
     search: /^(buscar|busca|busque|google)\s+(por\s+|sobre\s+)?(.+)$/,
@@ -228,7 +236,7 @@ export async function runCommand(raw, api, lang = 'pt') {
   if (L.date.test(t)) return { reply: `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}.` };
   if (L.weather.test(t) && t.split(' ').length <= 7) return { reply: await api.weatherText() };
   if (L.quotes.test(t) && t.split(' ').length <= 6) return { reply: await api.quotesText(t) };
-  if (L.tasks.test(t)) return { reply: api.tasksText() };
+  if (L.tasks.test(t) || (L.tasksAsk.test(t) && t.split(' ').length <= 14)) return api.items ? { reply: tasksSummary(api.items(), (x) => tIn(lang, x)), translated: true } : { reply: api.tasksText() };
 
   // Rotas (só se o lugar existir nos favoritos do widget Trânsito)
   if ((m = t.match(L.route))) {
@@ -343,7 +351,7 @@ async function runIntent(it, api, text, L) {
     case 'route': { const r = api.routeTo?.(s(it.target)); return r ? { reply: r } : null; }
     case 'weather': return { reply: await api.weatherText() };
     case 'quotes': return { reply: await api.quotesText(fold(s(it.query) || text)) };
-    case 'tasks': return { reply: api.tasksText() };
+    case 'tasks': return api.items ? { reply: tasksSummary(api.items(), (x) => tIn(L.code, x)), translated: true } : { reply: api.tasksText() };
     case 'time': return { reply: `São ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.` };
     case 'ask': {
       const { answer } = await api.ask(s(it.query) || text);
@@ -353,15 +361,20 @@ async function runIntent(it, api, text, L) {
   }
 }
 
-export function tasksSummary(items) {
+export function tasksSummary(items, tr = (x) => x) {
   const now = Date.now();
   const end = new Date(); end.setHours(23, 59, 59, 999);
-  const pend = items.filter((i) => !i.done && (i.type === 'task' || i.remindAt));
-  const late = pend.filter((i) => i.remindAt && i.remindAt < now);
-  const today = pend.filter((i) => i.remindAt && i.remindAt >= now && i.remindAt <= end);
-  if (!late.length && !today.length) return pend.length ? `Nada com horário para hoje. Você tem ${pend.length} tarefa(s) sem data.` : 'Você não tem tarefas pendentes. 🎉';
+  const time = (ts) => new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const pend = items.filter((i) => !i.done && !i.deletedAt && (i.type === 'task' || i.remindAt));
+  const late = pend.filter((i) => i.remindAt && i.remindAt < now).sort((a, b) => a.remindAt - b.remindAt);
+  const today = pend.filter((i) => i.remindAt && i.remindAt >= now && i.remindAt <= end).sort((a, b) => a.remindAt - b.remindAt);
+  const undated = pend.filter((i) => !i.remindAt).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || a.createdAt - b.createdAt);
+  if (!pend.length) return tr('Você não tem tarefas pendentes. 🎉');
+  const list = (arr, n, fmt = displayTitle) => arr.slice(0, n).map(fmt).join('; ') + (arr.length > n ? tr(`; e mais ${arr.length - n}`) : '');
   const parts = [];
-  if (late.length) parts.push(`${late.length} atrasada(s): ${late.slice(0, 3).map(displayTitle).join('; ')}`);
-  if (today.length) parts.push(`para hoje: ${today.slice(0, 5).map((i) => `${displayTitle(i)} às ${new Date(i.remindAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`).join('; ')}`);
-  return parts.join('. ') + '.';
+  if (late.length) parts.push(tr(`Atrasadas (${late.length}): ${list(late, 3)}.`));
+  if (today.length) parts.push(tr(`Para hoje: ${list(today, 5, (i) => tr(`${displayTitle(i)} às ${time(i.remindAt)}`))}.`));
+  if (!late.length && !today.length) parts.push(tr('Nada com horário para hoje.'));
+  if (undated.length) parts.push(tr(`Sem data (${undated.length}): ${list(undated, late.length || today.length ? 3 : 5)}.`));
+  return parts.join(' ');
 }

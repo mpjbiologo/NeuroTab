@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.5.7 — 2026-11-09
+**Voz mais útil, colar imagens e permissões mais enxutas.**
+
+**Voz** (#36)
+- "O que eu tenho que fazer?", "o que tenho pra hoje", "quais são minhas pendências" (e equivalentes em inglês e espanhol) agora leem suas tarefas: atrasadas, de hoje e algumas sem data, em vez de irem para a IA
+- Respostas longas da IA ficam numa caixa com rolagem, com listas e negrito formatados (sem asteriscos), e só fecham quando você fecha
+- Corrigido erro "Cannot read properties of undefined (reading 'join')" ao perguntar à IA quando alguma nota não tinha tags
+
+**Captura rápida** (#34)
+- Cole uma imagem com **Ctrl+V**: aparece uma prévia para salvar na Biblioteca de imagens ou cancelar
+- Se a área de transferência tiver texto e imagem, o texto é colado normalmente e a imagem vai para a prévia
+- Validação de tipo e de tamanho (até 12 MB) e proteção contra colagem duplicada
+
+**Biblioteca de imagens e permissões**
+- Removida a permissão opcional `http://*/*`: só imagens de endereços `https://` (ou embutidas na página) podem ser salvas pelo menu; para as outras, a dica é copiar e colar na Captura rápida
+- Se o navegador não aceitar o pedido de permissão direto do menu, abre uma janelinha para autorizar o site com um clique
+- Código da biblioteca centralizado em `src/lib/captures.js`, usado pelo menu, pela Captura rápida e pelo widget
+- Biblioteca e janela de permissão traduzidas para inglês e espanhol
+
 ## v0.5.6 — 2026-11-08
 **Correção da hierarquia visual.**
 
@@ -12,8 +31,6 @@
 - Corrigida a solicitação de permissão do domínio: agora ocorre diretamente no clique do menu de contexto, preservando o gesto do usuário exigido pelo Manifest V3.
 - A captura agora mostra um indicador de sucesso ou falha no ícone da extensão; ao passar o mouse, o título informa o resultado.
 - Mantidas as imagens e os dados existentes na biblioteca.
-
-# Changelog
 
 ## v0.5.1 — 2026-11-06
 **Biblioteca visual e captura de imagens.**
@@ -28,7 +45,6 @@
 
 **Teste:** esta versão é destinada à avaliação funcional da captura e da biblioteca visual. Ainda é necessário validar o comportamento em Chrome, Edge e Firefox.
 
-# Changelog
 
 ## v0.5.0 — 2026-11-05
 **Mais inteligente e fala sua língua.**

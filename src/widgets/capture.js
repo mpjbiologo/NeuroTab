@@ -1,6 +1,8 @@
 // Widget: captura rápida — nota, tarefa ou ideia, por texto ou voz.
 import { h, micButton, toLocalInput, fromLocalInput } from '../lib/ui.js';
 import { parseReminder, fmtDateTime } from '../lib/brain.js';
+import { saveCapture, validateImage } from '../lib/captures.js';
+import { t } from '../lib/i18n.js';
 
 export default {
   id: 'capture',
@@ -42,7 +44,54 @@ export default {
       ctx.toast(remindAt ? `Salvo com lembrete para ${fmtDateTime(remindAt)} ⏰` : 'Salvo no cérebro 🧠');
     }
 
-    el.append(ta, h('div', { class: 'toolbar' }, ...chips, clockBtn, when, h('span', { class: 'grow' }), mic, save), hint);
+    // ---------- Colar imagem (Ctrl+V) → Biblioteca de imagens ----------
+    // Texto colado continua indo para o campo; se houver imagem junto, ela aparece numa prévia para confirmar.
+    const pasteBox = h('div', { class: 'paste-preview', hidden: true });
+    let pending = null; // { blob, url }
+    let lastPaste = { sig: '', at: 0 };
+    const clearPaste = () => {
+      if (pending) URL.revokeObjectURL(pending.url);
+      pending = null;
+      pasteBox.hidden = true;
+      pasteBox.replaceChildren();
+    };
+    ta.addEventListener('paste', (e) => {
+      const file = [...(e.clipboardData?.items || [])].find((i) => i.kind === 'file' && i.type.startsWith('image/'))?.getAsFile();
+      if (!file) return; // só texto: comportamento normal
+      const hasText = !!e.clipboardData.getData('text/plain');
+      if (!hasText) e.preventDefault();
+      const sig = `${file.type}:${file.size}`;
+      if (sig === lastPaste.sig && Date.now() - lastPaste.at < 1500) return; // evento repetido
+      lastPaste = { sig, at: Date.now() };
+      try {
+        validateImage(file);
+      } catch (err) {
+        ctx.toast(t(err.message));
+        return;
+      }
+      clearPaste();
+      pending = { blob: file, url: URL.createObjectURL(file) };
+      const kb = file.size < 1024 * 1024 ? `${Math.max(1, Math.round(file.size / 1024))} KB` : `${(file.size / 1048576).toFixed(1).replace('.', ',')} MB`;
+      pasteBox.append(
+        h('img', { src: pending.url, alt: '' }),
+        h('div', { class: 'grow' }, h('b', {}, 'Imagem colada'), h('small', { class: 'muted' }, ` ${kb}`)),
+        h('button', { class: 'chip', type: 'button', onclick: clearPaste }, 'Cancelar'),
+        h('button', { class: 'btn primary', type: 'button', onclick: async () => {
+          const blob = pending?.blob;
+          if (!blob) return;
+          try {
+            await saveCapture({ blob, type: blob.type, fileName: blob.name && blob.name !== 'image.png' ? blob.name : `colada-${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.${(blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`, source: 'clipboard' });
+            clearPaste();
+            ctx.toast('Imagem salva na biblioteca 🖼️');
+          } catch (err) {
+            ctx.toast(t(err.message));
+          }
+        } }, 'Salvar na biblioteca'));
+      pasteBox.hidden = false;
+    });
+
+    el.append(ta, pasteBox, h('div', { class: 'toolbar' }, ...chips, clockBtn, when, h('span', { class: 'grow' }), mic, save), hint);
     updateHint();
+    return { destroy: clearPaste };
   },
 };

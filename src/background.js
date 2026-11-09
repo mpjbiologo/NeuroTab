@@ -6,7 +6,7 @@ import { K as CK, loadAlarms, saveAlarms, nextOccurrence, getTimer, getPomo, nex
 import { checkForUpdate, isStoreInstall, UPDATE_KEY, WHATSNEW_KEY } from './lib/update.js';
 import { setLang, t } from './lib/i18n.js';
 import { createPlayer } from './lib/sounds.js';
-import { openDB } from './lib/idb.js';
+import { saveCapture, downloadAndSave } from './lib/captures.js';
 
 const NEWTAB = chrome.runtime.getURL('src/newtab.html');
 loadData().then((d) => setLang(d.settings.lang)).catch(() => {});
@@ -53,54 +53,35 @@ async function captureAndEnrich(p) {
 }
 
 
+// Salvar imagem na biblioteca (menu de contexto).
+// Para baixar a imagem é preciso permissão para o domínio dela. O pedido é feito aqui, no clique do menu;
+// se o navegador não aceitar o pedido no service worker, abre uma janelinha onde a pessoa autoriza com um clique.
 async function captureImage(info, tab) {
   const sourceUrl = info.srcUrl || '';
   const pageUrl = info.pageUrl || tab?.url || '';
-  const parsed = new URL(sourceUrl);
-  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Formato de imagem não suportado.');
-  const origin = parsed.origin;
-  const permission = { origins: [origin + '/*'] };
-  // IMPORTANTE: request() precisa ser chamado imediatamente no gesto do menu.
-  // Não inserir nenhum await antes desta chamada, ou o navegador perde a ativação do usuário.
-  const granted = await chrome.permissions.request(permission);
+  const meta = { url: sourceUrl, pageUrl, pageTitle: tab?.title || '', source: 'context' };
+  if (sourceUrl.startsWith('data:image/')) {
+    const blob = await (await fetch(sourceUrl)).blob();
+    return saveCapture({ ...meta, blob, url: '', fileName: 'imagem' });
+  }
+  let parsed;
+  try { parsed = new URL(sourceUrl); } catch { throw new Error('Endereço de imagem inválido.'); }
+  if (parsed.protocol !== 'https:') throw new Error('Só é possível salvar imagens de endereços https://. Dica: copie a imagem e cole com Ctrl+V na Captura Rápida.');
+  const permission = { origins: [parsed.origin + '/*'] };
+  // IMPORTANTE: nenhum await antes deste pedido, para não perder o gesto do usuário.
+  let granted;
+  try {
+    granted = await chrome.permissions.request(permission);
+  } catch {
+    granted = null; // o navegador não deixou pedir aqui
+  }
+  if (granted === null) {
+    const q = new URLSearchParams({ src: sourceUrl, page: pageUrl, title: meta.pageTitle.slice(0, 300) });
+    await chrome.windows.create({ url: chrome.runtime.getURL('src/grant.html?' + q), type: 'popup', width: 460, height: 300 });
+    return null;
+  }
   if (!granted) throw new Error('Permissão para acessar a imagem não concedida. Tente novamente e autorize o domínio solicitado.');
-  const response = await fetch(sourceUrl, { credentials: 'omit', redirect: 'follow', referrerPolicy: 'no-referrer' });
-  if (!response.ok) throw new Error('Não foi possível baixar a imagem (' + response.status + ').');
-  const declaredSize = Number(response.headers.get('content-length') || 0);
-  if (declaredSize > 12 * 1024 * 1024) throw new Error('Imagem maior que 12 MB. Escolha uma versão menor.');
-  const blob = await response.blob();
-  const type = (blob.type || response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
-  if (!type.startsWith('image/')) throw new Error('O endereço não retornou um arquivo de imagem.');
-  if (blob.size > 12 * 1024 * 1024) throw new Error('Imagem maior que 12 MB. Escolha uma versão menor.');
-  if (!blob.size) throw new Error('A imagem está vazia.');
-  const db = await openDB();
-  let fileName = parsed.pathname.split('/').pop() || 'imagem';
-  try { fileName = decodeURIComponent(fileName); } catch { /* mantém o nome codificado */ }
-  const record = {
-    id: uid(),
-    blob: blob.type === type ? blob : blob.slice(0, blob.size, type),
-    type,
-    size: blob.size,
-    url: sourceUrl,
-    pageUrl,
-    pageTitle: (tab?.title || '').slice(0, 300),
-    fileName: fileName.slice(0, 160),
-    capturedAt: Date.now(),
-  };
-  await new Promise((resolve, reject) => {
-    if (!db.objectStoreNames.contains('captures')) {
-      reject(new Error('Biblioteca de imagens indisponível. Recarregue a extensão para atualizar o banco local.'));
-      return;
-    }
-    const tx = db.transaction('captures', 'readwrite');
-    tx.objectStore('captures').add(record);
-    tx.oncomplete = resolve;
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error || new Error('Falha ao salvar a imagem.'));
-  });
-  // Atualiza a biblioteca que já estiver aberta em outra aba/janela.
-  chrome.runtime.sendMessage({ type: 'imageCaptured', id: record.id }).catch(() => {});
-  return record;
+  return downloadAndSave(sourceUrl, meta);
 }
 
 async function flashBadge(tabId, ok, detail = '') {

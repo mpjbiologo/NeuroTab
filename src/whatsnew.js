@@ -1,5 +1,28 @@
 // Novidades exibidas uma vez após atualizar a extensão.
 export const WHATS_NEW = {
+  '0.5.7': {
+    pt: {
+      title: 'NeuroTab 0.5.7',
+      items: [
+        ['🗣', 'Pergunte "o que eu tenho que fazer?"', 'A voz agora lê suas tarefas atrasadas, de hoje e sem data. Respostas longas da IA têm rolagem e formatação.'],
+        ['🖼', 'Cole imagens na Captura rápida', 'Ctrl+V mostra uma prévia para salvar a imagem na Biblioteca.'],
+      ],
+    },
+    en: {
+      title: 'NeuroTab 0.5.7',
+      items: [
+        ['🗣', 'Ask "what do I have to do?"', 'Voice now reads your overdue, today and undated tasks. Long AI answers scroll and are formatted.'],
+        ['🖼', 'Paste images into Quick capture', 'Ctrl+V shows a preview to save the image to your Library.'],
+      ],
+    },
+    es: {
+      title: 'NeuroTab 0.5.7',
+      items: [
+        ['🗣', 'Pregunta "¿qué tengo que hacer?"', 'La voz ahora lee tus tareas atrasadas, de hoy y sin fecha. Las respuestas largas de la IA tienen desplazamiento y formato.'],
+        ['🖼', 'Pega imágenes en Captura rápida', 'Ctrl+V muestra una vista previa para guardar la imagen en la Biblioteca.'],
+      ],
+    },
+  },
   '0.5.0': {
     pt: {
       title: 'NeuroTab 0.5 — mais inteligente e fala sua língua',

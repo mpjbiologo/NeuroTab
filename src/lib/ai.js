@@ -236,7 +236,7 @@ export async function buildContext(settings, items, question, limit = 14) {
     found = [...found, ...recent];
   }
   const text = found.map((it, i) => {
-    const meta = [TYPES[it.type]?.label, new Date(it.createdAt).toLocaleDateString('pt-BR'), it.tags.length && '#' + it.tags.join(' #'), it.url && hostOf(it.url), it.remindAt && 'lembrete ' + new Date(it.remindAt).toLocaleString('pt-BR'), it.type === 'task' && (it.done ? 'concluída' : 'pendente')].filter(Boolean).join(' · ');
+    const meta = [TYPES[it.type]?.label, new Date(it.createdAt).toLocaleDateString('pt-BR'), it.tags?.length && '#' + it.tags.join(' #'), it.url && hostOf(it.url), it.remindAt && 'lembrete ' + new Date(it.remindAt).toLocaleString('pt-BR'), it.type === 'task' && (it.done ? 'concluída' : 'pendente')].filter(Boolean).join(' · ');
     return `[${i + 1}] ${displayTitle(it)} (${meta})\n${(it.text || it.summary || it.url).slice(0, 1500)}`;
   }).join('\n\n');
   return { found, text };

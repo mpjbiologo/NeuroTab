@@ -5,7 +5,7 @@ import {
 } from './lib/store.js';
 import * as Brain from './lib/brain.js';
 import { isConfigured, enrich } from './lib/ai.js';
-import { $, $$, h, toast, showCtx, micButton, toLocalInput, fromLocalInput, startDictation, hasDictation, speak } from './lib/ui.js';
+import { $, $$, h, toast, showCtx, micButton, toLocalInput, fromLocalInput, startDictation, hasDictation, speak, miniMarkdown } from './lib/ui.js';
 import { runCommand, tasksSummary, commandLang } from './lib/assistant.js';
 import { ask as aiAsk, interpretCommand } from './lib/ai.js';
 import { semanticOn, indexItems, hybridSearch, embedConfig } from './lib/semantic.js';
@@ -1600,6 +1600,7 @@ function voiceApi() {
         || data.links.find((l) => Brain.fold(hostOf(l.url)).includes(f));
     },
     tasksText: () => tasksSummary(items),
+    items: () => items,
     routeTo: (name) => {
       const f = Brain.fold(name);
       const p = (data.settings.mapPlaces || []).find((x) => Brain.fold(x.name) === f || Brain.fold(x.name).includes(f));
@@ -1834,10 +1835,14 @@ async function runVoice(said) {
     const lang = commandLang(voiceCode());
     const r = await runCommand(said, voiceApi(), lang);
     // A resposta sai no idioma em que a pessoa falou (respostas longas da IA já vêm no idioma da interface).
-    const text = r.long ? r.reply : tIn(lang, r.reply);
-    reply.textContent = text;
+    const text = r.long || r.translated ? r.reply : tIn(lang, r.reply);
+    // Respostas da IA vêm em Markdown (listas, negrito): formata em vez de mostrar os asteriscos.
+    if (r.long) reply.innerHTML = miniMarkdown(text);
+    else reply.textContent = text;
+    reply.scrollTop = 0;
     await speak(text, { ...data.settings, voiceLang: r.long ? data.settings.voiceLang : voiceCode() });
-    setTimeout(() => { if (!voiceSession) ov.hidden = true; }, r.long ? 6000 : 1800);
+    // Respostas longas ficam na tela até a pessoa fechar; as curtas somem sozinhas.
+    if (!r.long) setTimeout(() => { if (!voiceSession) ov.hidden = true; }, Math.min(15000, Math.max(1800, text.length * 55)));
   } catch (e) {
     reply.textContent = t(e.message);
     setTimeout(() => { if (!voiceSession) ov.hidden = true; }, 4000);

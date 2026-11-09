@@ -135,7 +135,7 @@ export function searchItems(items, query, limit = 20) {
     .map((it) => {
       const title = fold(displayTitle(it));
       const hay = fold([it.text, it.summary, it.pageTitle, it.url].join(' '));
-      const tags = fold(it.tags.join(' '));
+      const tags = fold((it.tags || []).join(' '));
       let score = 0;
       for (const t of ts) {
         if (title.includes(t)) score += 4;
@@ -261,7 +261,7 @@ export function toMarkdown(items) {
   for (const it of items) {
     lines.push(`## ${TYPES[it.type]?.icon || ''} ${displayTitle(it)}`.trim());
     const meta = [new Date(it.createdAt).toLocaleString('pt-BR')];
-    if (it.tags.length) meta.push(it.tags.map((t) => '#' + t.replace(/\s+/g, '-')).join(' '));
+    if (it.tags?.length) meta.push(it.tags.map((t) => '#' + t.replace(/\s+/g, '-')).join(' '));
     if (it.remindAt) meta.push('⏰ ' + fmtDateTime(it.remindAt));
     if (it.type === 'task') meta.push(it.done ? '✅ concluída' : '⬜ pendente');
     lines.push(`*${meta.join(' · ')}*`, '');

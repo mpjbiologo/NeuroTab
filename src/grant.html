@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>NeuroTab — salvar imagem</title>
+<style>
+  body { margin: 0; font: 14px/1.5 system-ui, "Segoe UI", sans-serif; background: #15151d; color: #eee; display: grid; place-items: center; min-height: 100vh; }
+  main { width: min(400px, 92vw); text-align: center; }
+  img { max-width: 120px; max-height: 80px; border-radius: 8px; margin-bottom: 10px; object-fit: contain; }
+  h1 { font-size: 17px; margin: 0 0 6px; }
+  p { margin: 0 0 14px; color: #bbb; }
+  b { color: #fff; }
+  button { font: inherit; padding: 8px 16px; border-radius: 10px; border: 1px solid #444; background: #262633; color: #eee; cursor: pointer; margin: 0 4px; }
+  button.primary { background: #7c5cff; border-color: #7c5cff; color: #fff; }
+  .msg { min-height: 20px; margin-top: 12px; }
+  .ok { color: #6fdc8c; } .err { color: #ff8a8a; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🖼️ Salvar imagem na biblioteca</h1>
+  <p>Para baixar esta imagem, a NeuroTab precisa de permissão para acessar <b id="host"></b>. A permissão vale só para esse site e pode ser removida nas configurações da extensão.</p>
+  <button id="cancel">Cancelar</button>
+  <button id="go" class="primary">Permitir e salvar</button>
+  <p id="msg" class="msg" role="status"></p>
+</main>
+<script type="module" src="grant.js"></script>
+</body>
+</html>

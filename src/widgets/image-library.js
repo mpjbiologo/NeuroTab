@@ -33,7 +33,7 @@ export default {
         records.sort((a, b) => b.capturedAt - a.capturedAt);
         status.textContent = records.length
           ? `${records.length} imagem(ns) salvas neste navegador.`
-          : 'Sua biblioteca está vazia. Clique com o botão direito em uma imagem → NeuroTab → Salvar imagem na biblioteca.';
+          : 'Sua biblioteca está vazia. Clique com o botão direito em uma imagem → NeuroTab → Salvar imagem na biblioteca, ou cole uma imagem (Ctrl+V) na Captura rápida.';
         for (const item of records) {
           const url = URL.createObjectURL(item.blob);
           urls.push(url);
@@ -70,12 +70,14 @@ export default {
     }
     const onMessage = (message) => { if (message?.type === 'imageCaptured') load(); };
     chrome.runtime.onMessage.addListener(onMessage);
+    window.addEventListener('nt-image-captured', load); // imagem colada nesta mesma aba
     refresh.addEventListener('click', load);
     load();
     return {
       destroy() {
         destroyed = true;
         chrome.runtime.onMessage.removeListener(onMessage);
+        window.removeEventListener('nt-image-captured', load);
         refresh.removeEventListener('click', load);
         urls.forEach((url) => URL.revokeObjectURL(url));
         urls = [];
