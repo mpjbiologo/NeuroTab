@@ -66,3 +66,13 @@ test('Edge: falta de credencial é avisada antes de chamar a API', async () => {
   await assert.rejects(publishEdge({ ...opts(fetchFn), apiKey: '' }), /Falta EDGE_API_KEY/);
   assert.equal(calls.length, 0);
 });
+
+test('Edge: conferência de credenciais não envia nada', async () => {
+  const { checkEdge } = await import('../../scripts/publish-edge.mjs');
+  const url = `${BASE}/operations/00000000-0000-0000-0000-000000000000`;
+  let api = fakeApi({ [`GET ${url}`]: [json(404, { message: 'not found' })] });
+  assert.equal(await checkEdge({ productId: 'prod-1', clientId: 'c', apiKey: 'k', fetchFn: api.fetchFn, log: () => {} }), 404);
+  assert.deepEqual(api.calls.map((c) => c.method), ['GET']);
+  api = fakeApi({ [`GET ${url}`]: [json(401, { message: 'Unauthorized' })] });
+  await assert.rejects(checkEdge({ productId: 'prod-1', clientId: 'c', apiKey: 'k', fetchFn: api.fetchFn, log: () => {} }), /HTTP 401/);
+});

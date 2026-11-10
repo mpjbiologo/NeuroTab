@@ -79,3 +79,15 @@ test('Chrome: JSON da chave inválido ou ausente é avisado antes de chamar a AP
   await assert.rejects(publishChrome(opts(fetchFn, { extensionId: '' })), /Falta CWS_EXTENSION_ID/);
   assert.equal(calls.length, 0);
 });
+
+test('Chrome: conferência de credenciais só lê o status', async () => {
+  const { checkChrome } = await import('../../scripts/publish-chrome.mjs');
+  const { fetchFn, calls } = fakeApi({
+    ...token(),
+    [`GET ${API}/v2/${NAME}:fetchStatus`]: [json(200, { publishedItemRevisionStatus: { state: 'PUBLISHED', distributionChannels: [{ crxVersion: '0.6.1' }] } })],
+  });
+  const lines = [];
+  await checkChrome({ publisherId: 'pub-1', extensionId: 'ext-1', serviceAccount: JSON.stringify(SA), fetchFn, log: (m) => lines.push(m) });
+  assert.match(lines[0], /0\.6\.1 \(PUBLISHED\)/);
+  assert.ok(!calls.some((c) => /:upload|:publish/.test(c.url)));
+});

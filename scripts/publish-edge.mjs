@@ -78,8 +78,28 @@ export async function publishEdge({ productId, clientId, apiKey, zip, notes = ''
   return done;
 }
 
+/**
+ * Confere as credenciais sem enviar nada: consulta uma operação que não existe.
+ * 401/403 = credencial recusada; qualquer outra resposta = a Microsoft aceitou a chave e o produto.
+ */
+export async function checkEdge({ productId, clientId, apiKey, fetchFn = fetch, log = console.log }) {
+  for (const [k, v] of Object.entries({ EDGE_PRODUCT_ID: productId, EDGE_CLIENT_ID: clientId, EDGE_API_KEY: apiKey })) if (!v) throw new Error(`Falta ${k}.`);
+  const url = `${API}/products/${encodeURIComponent(productId)}/submissions/operations/00000000-0000-0000-0000-000000000000`;
+  const res = await fetchFn(url, { headers: { Authorization: `ApiKey ${apiKey}`, 'X-ClientID': clientId } });
+  const body = await readBody(res);
+  if (res.status === 401 || res.status === 403) throw new Error(explain('Credenciais do Edge', res.status, body));
+  log(`✓ Edge: a Microsoft aceitou a chave e o Client ID (resposta ${res.status} à consulta de teste).`);
+  return res.status;
+}
+
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
-  const [file = 'dist/neurotab.zip', notes = ''] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  if (args[0] === '--check') {
+    try { await checkEdge({ productId: process.env.EDGE_PRODUCT_ID, clientId: process.env.EDGE_CLIENT_ID, apiKey: process.env.EDGE_API_KEY }); }
+    catch (e) { console.error(`::error::${e.message.replace(/\n/g, '%0A')}`); process.exit(1); }
+    process.exit(0);
+  }
+  const [file = 'dist/neurotab.zip', notes = ''] = args;
   try {
     await publishEdge({
       productId: process.env.EDGE_PRODUCT_ID, clientId: process.env.EDGE_CLIENT_ID, apiKey: process.env.EDGE_API_KEY,

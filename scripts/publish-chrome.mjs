@@ -108,9 +108,35 @@ export async function publishChrome({ publisherId, extensionId, zip, fetchFn = f
   return body;
 }
 
+/** Confere as credenciais sem enviar nada: obtém o token e consulta o status do item. */
+export async function checkChrome({ publisherId, extensionId, fetchFn = fetch, log = console.log, ...auth }) {
+  for (const [k, v] of Object.entries({ CWS_PUBLISHER_ID: publisherId, CWS_EXTENSION_ID: extensionId })) if (!v) throw new Error(`Falta ${k}.`);
+  const token = await getAccessToken({ ...auth, fetchFn });
+  const name = `publishers/${encodeURIComponent(publisherId)}/items/${encodeURIComponent(extensionId)}`;
+  const res = await fetchFn(`${API}/v2/${name}:fetchStatus`, { headers: { Authorization: `Bearer ${token}` } });
+  const body = await readBody(res);
+  if (!res.ok) throw new Error(explain('Credenciais da Chrome Web Store', res.status, body));
+  const pub = body?.publishedItemRevisionStatus;
+  const sub = body?.submittedItemRevisionStatus;
+  const ver = (r) => r?.distributionChannels?.map((d) => d.crxVersion).filter(Boolean).join(', ');
+  log(`✓ Chrome: acesso confirmado. Publicada: ${ver(pub) || '?'} (${pub?.state || '?'})${sub ? ` · em revisão: ${ver(sub) || '?'} (${sub.state || '?'})` : ''}.`);
+  return body;
+}
+
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
-  const [file = 'dist/neurotab.zip'] = process.argv.slice(2);
+  const args = process.argv.slice(2);
   const env = process.env;
+  const creds = {
+    publisherId: env.CWS_PUBLISHER_ID, extensionId: env.CWS_EXTENSION_ID,
+    serviceAccount: env.CWS_SERVICE_ACCOUNT || undefined,
+    clientId: env.CWS_CLIENT_ID, clientSecret: env.CWS_CLIENT_SECRET, refreshToken: env.CWS_REFRESH_TOKEN,
+  };
+  if (args[0] === '--check') {
+    try { await checkChrome(creds); }
+    catch (e) { console.error(`::error::${e.message.replace(/\n/g, '%0A')}`); process.exit(1); }
+    process.exit(0);
+  }
+  const [file = 'dist/neurotab.zip'] = args;
   try {
     await publishChrome({
       publisherId: env.CWS_PUBLISHER_ID, extensionId: env.CWS_EXTENSION_ID,
