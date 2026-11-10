@@ -69,3 +69,42 @@ jobs:
           --api-secret "$AMO_JWT_SECRET"
           --approval-timeout 0
           --timeout 900000
+
+  # 5) Envia a versão para a loja do Edge. A Microsoft revisa (alguns dias) e, aprovada, todo mundo atualiza sozinho.
+  #    Precisa dos segredos EDGE_PRODUCT_ID, EDGE_CLIENT_ID e EDGE_API_KEY (docs/store/EDGE.md). Sem eles, é pulado.
+  #    Job separado: se a loja do Edge falhar, a release e as outras lojas não são afetadas (e dá para rodar de novo só ele).
+  loja-edge:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-24.04
+    env:
+      EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+      EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+      EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+        if: env.EDGE_API_KEY != ''
+
+      - uses: actions/setup-node@v5
+        if: env.EDGE_API_KEY != ''
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@v4
+        if: env.EDGE_API_KEY != ''
+        with:
+          name: neurotab
+          path: dist
+
+      - name: Enviar para a loja do Edge
+        if: env.EDGE_API_KEY != ''
+        run: >
+          node scripts/publish-edge.mjs dist/neurotab.zip
+          "NeuroTab ${GITHUB_REF_NAME}. Release notes: https://github.com/mpjbiologo/NeuroTab/releases/tag/${GITHUB_REF_NAME}
+          No account or login is required; all data stays local. Test steps are the same as the previous submission:
+          open a new tab, add a note in Quick capture, press Ctrl+K to search, add widgets with the puzzle icon.
+          AI features are optional and need the user's own API key. Source: https://github.com/mpjbiologo/NeuroTab"
+
+      - name: Sem credenciais do Edge
+        if: env.EDGE_API_KEY == ''
+        run: echo "::notice::Envio para a loja do Edge pulado (faltam os segredos EDGE_*). Veja docs/store/EDGE.md."

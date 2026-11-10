@@ -105,4 +105,49 @@ As causas mais comuns de rejeição e o que responder:
 
 - O endereço fica `https://microsoftedge.microsoft.com/addons/detail/...`. Me mande o link que eu troco o botão de download do site e do README para a loja.
 - Quem instalar pela loja recebe atualizações automáticas. O aviso de versão nova via GitHub só aparece para quem instalou pelo zip.
-- Para publicar uma versão nova: suba a versão no `manifest.json`, gere o zip (`./scripts/build.sh`) e, no painel, **Update → Packages → Replace**, e depois **Publish** de novo.
+- Para publicar uma versão nova, use o envio automático abaixo. O caminho manual continua valendo: suba a versão no `manifest.json`, gere o zip (`./scripts/build.sh`) e, no painel, **Update → Packages → Replace**, e depois **Publish** de novo.
+
+## Envio automático de versões novas (configurar uma vez)
+
+Depois de configurado, cada release publicada no GitHub roda os testes, gera o zip e o envia sozinha para a loja do Edge (job **loja-edge** do workflow *Release*). A Microsoft revisa como sempre e, aprovada, todos os usuários recebem a atualização automaticamente, sem perder dados.
+
+### 1. Criar as credenciais da API (Partner Center)
+
+1. Abra https://partner.microsoft.com/dashboard/microsoftedge/publishapi (menu do Edge → **Publish API**).
+2. Se aparecer um botão para ativar a experiência nova (v1.1), clique nele.
+3. Clique em **Create API credentials**. Pode levar alguns minutos.
+4. Anote o **Client ID** e a **API key**. A chave só aparece inteira nessa hora; se perder, gere outra.
+5. Anote também a **data de validade** da chave: quando vencer, gere uma nova e troque o segredo `EDGE_API_KEY` (o envio falha com HTTP 401 e explica isso no log).
+
+### 2. Pegar o Product ID
+
+No Partner Center, abra a NeuroTab → **Extension overview**. Copie o **Product ID** (um GUID como `a1b2c3d4-...`). Não é o mesmo que o Extension ID da URL da loja.
+
+### 3. Guardar os segredos no GitHub
+
+Repositório → **Settings → Secrets and variables → Actions → New repository secret**. Crie três:
+
+| Nome | Valor |
+|---|---|
+| `EDGE_PRODUCT_ID` | o Product ID |
+| `EDGE_CLIENT_ID` | o Client ID |
+| `EDGE_API_KEY` | a API key |
+
+Sem esses segredos o job apenas avisa que pulou o envio; nada quebra.
+
+### 4. Lançar uma versão
+
+1. Suba a versão no `manifest.json` e no `package.json` e faça o commit na `main`.
+2. **Releases → Draft a new release**, tag `vX.Y.Z` no commit mais recente, escreva as novidades e **Publish release**.
+3. Acompanhe em **Actions → Release**: versão → testes → build → **loja-edge**.
+4. No Partner Center a versão aparece *In review*. A Microsoft avisa por e-mail quando publicar.
+
+### Se o job loja-edge falhar
+
+O log explica a causa em português. As mais comuns:
+
+- **Já existe uma versão em revisão**: só dá para enviar outra quando a anterior terminar a revisão. Espere e, em Actions, use **Re-run failed jobs** só no loja-edge.
+- **HTTP 401**: a chave venceu ou foi digitada errada. Gere outra no Partner Center e atualize `EDGE_API_KEY`.
+- **NoModulesUpdated**: o zip é igual ao que já está na loja; falta subir a versão no `manifest.json`.
+
+Também dá para enviar à mão, do seu computador: `EDGE_PRODUCT_ID=... EDGE_CLIENT_ID=... EDGE_API_KEY=... node scripts/publish-edge.mjs dist/neurotab.zip "notas"`.
