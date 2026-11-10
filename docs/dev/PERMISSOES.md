@@ -8,7 +8,7 @@ A fonte da verdade é `src/lib/permissions.js`; o teste `tests/unit/permissions.
 |---|---|
 | `storage`, `unlimitedStorage` | Guardar atalhos, notas e configurações no navegador |
 | `contextMenus` | Menu "NeuroTab" do botão direito (salvar trecho, página, link e imagem) |
-| `activeTab`, `scripting` | Ler o título e o texto selecionado da aba atual quando você usa o popup |
+| `activeTab`, `scripting` | Ler o título e o texto selecionado da aba atual quando você usa o popup ou o menu; no "Salvar imagem na biblioteca", ler a imagem de dentro da página (login, `blob:`) ou recortá-la de uma captura da parte visível da aba. Só no clique |
 | `favicon` (só Chromium) | Ícones dos atalhos |
 | `alarms`, `notifications` | Lembretes, despertador, timer e pomodoro |
 | `offscreen` (só Chromium) | Tocar o som do alarme em segundo plano |

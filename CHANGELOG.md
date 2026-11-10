@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.2 — (a lançar junto com a aprovação do Firefox)
+**Salvar imagens de qualquer site e novos jeitos de apoiar.**
+
+- Biblioteca de imagens: "Salvar imagem na biblioteca" agora funciona com imagens que só abrem logado (ChatGPT, Gemini, Google Fotos, Drive, webmail…), endereços `blob:` e `http:`, sites que bloqueiam cópia (hotlink) e servidores que não informam o tipo da imagem. Quando o download direto não dá, a NeuroTab pega a imagem de dentro da própria página (seu login não sai do navegador) e, em último caso, recorta a imagem da parte visível da tela
+- Biblioteca de imagens: o tipo da imagem é descoberto pelos primeiros bytes (PNG, JPEG, GIF, WebP, AVIF, BMP, ICO, SVG)
+- Mensagens de erro com a dica de copiar e colar quando o site não deixa extensões lerem a página
+- Apoie: nova chave Pix, Ko-fi e PayPal
+- Release: envio automático para as lojas do Edge e do Chrome (e conferência das credenciais sem publicar)
+
 ## v0.6.1 — 2026-11-09
 **Pronta para a loja do Firefox.**
 

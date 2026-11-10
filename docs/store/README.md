@@ -127,7 +127,7 @@ Privacidad: sin cuenta, sin servidor, sin analítica. Tus datos se quedan en el 
 |---|---|
 | storage, unlimitedStorage | Stores the user's shortcuts, notes, tasks, settings and background photos locally. |
 | contextMenus | "Save to NeuroTab" right-click menu for selected text, links and pages. |
-| activeTab, scripting | Reads the title, URL and selected text of the current tab when the user saves it from the popup or menu. |
+| activeTab, scripting | Reads the title, URL and selected text of the current tab when the user saves it from the popup or menu, and the image the user right-clicks (from inside the page, or cropped from a capture of the visible tab when needed). Only on user action; everything stays local. |
 | favicon | Shows site icons for shortcuts. |
 | alarms | Fires reminders, alarms, timers and pomodoro, and the periodic update check. |
 | notifications | Shows reminder, alarm and timer notifications. |

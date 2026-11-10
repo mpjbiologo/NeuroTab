@@ -6,6 +6,23 @@ import { uid } from './store.js';
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 const STORE = 'captures';
 
+/** Descobre o tipo pela assinatura dos primeiros bytes (para servidores que não informam o tipo certo). */
+export function sniffImageType(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+  const at = (i, ...xs) => xs.every((x, k) => b[i + k] === x);
+  const ascii = (i, s) => [...s].every((c, k) => b[i + k] === c.charCodeAt(0));
+  if (at(0, 0x89, 0x50, 0x4e, 0x47)) return 'image/png';
+  if (at(0, 0xff, 0xd8, 0xff)) return 'image/jpeg';
+  if (ascii(0, 'GIF8')) return 'image/gif';
+  if (ascii(0, 'RIFF') && ascii(8, 'WEBP')) return 'image/webp';
+  if (ascii(4, 'ftyp') && (ascii(8, 'avif') || ascii(8, 'avis'))) return 'image/avif';
+  if (ascii(0, 'BM')) return 'image/bmp';
+  if (at(0, 0x00, 0x00, 0x01, 0x00)) return 'image/x-icon';
+  const head = new TextDecoder().decode(b.slice(0, 256)).trimStart().toLowerCase();
+  if (head.startsWith('<svg') || (head.startsWith('<?xml') && head.includes('<svg'))) return 'image/svg+xml';
+  return '';
+}
+
 /** Valida tipo e tamanho; devolve o tipo MIME normalizado ou lança erro com mensagem amigável. */
 export function validateImage(blob, declaredType = '') {
   const type = (blob?.type || declaredType || '').split(';')[0].trim().toLowerCase();
@@ -17,6 +34,12 @@ export function validateImage(blob, declaredType = '') {
 
 /** Salva uma imagem na biblioteca e avisa as abas abertas. */
 export async function saveCapture({ blob, type = '', url = '', pageUrl = '', pageTitle = '', fileName = 'imagem', source = 'context' }) {
+  // Servidor sem tipo ou com tipo genérico (application/octet-stream)? Descobre pelos primeiros bytes.
+  const declared = (blob?.type || type || '').split(';')[0].trim().toLowerCase();
+  if (blob?.size && !declared.startsWith('image/')) {
+    const sniffed = sniffImageType(new Uint8Array(await blob.slice(0, 256).arrayBuffer()));
+    if (sniffed) { blob = blob.slice(0, blob.size, sniffed); type = sniffed; }
+  }
   const mime = validateImage(blob, type);
   const db = await openDB();
   if (!db.objectStoreNames.contains(STORE)) throw new Error('Biblioteca de imagens indisponível. Recarregue a extensão para atualizar o banco local.');

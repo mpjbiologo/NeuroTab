@@ -67,8 +67,8 @@ NeuroTab replaces the browser's new tab page with a personal dashboard: speed-di
 | storage | Stores the user's shortcuts, notes, tasks, reminders and settings locally in the browser. Nothing is sent to a developer server (there is none). |
 | unlimitedStorage | Users can save background photos and images and keep a large notes library locally; the default quota is too small for that. |
 | contextMenus | Adds a "Save to NeuroTab" item to the right-click menu to save selected text, a link or the current page as a note. |
-| activeTab | When the user clicks the toolbar button or the context menu, reads the title and URL of the current tab to save it as a note. Only on that user action. |
-| scripting | Together with activeTab, reads the text the user has selected on the current page when they choose to save it. Only on user action. |
+| activeTab | When the user clicks the toolbar button or a context menu item, reads the title and URL of the current tab to save it as a note. For "Save image to library", it can also read that image from the page or, as a last resort, capture the visible tab and crop just that image. Only on that user action; everything stays local. |
+| scripting | Together with activeTab, and only on user action: reads the text the user selected to save it, and reads the image the user right-clicked from inside the page (needed for images behind a login or created by the page, such as blob: URLs). |
 | favicon | Shows each site's icon on the speed-dial shortcuts. |
 | alarms | Fires the user's reminders, alarms, timers and pomodoro sessions, and a daily check for a new version (notice only). |
 | notifications | Shows the user's reminder, alarm and timer notifications. |

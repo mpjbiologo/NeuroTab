@@ -7,6 +7,7 @@ import { checkForUpdate, isStoreInstall, UPDATE_KEY, WHATSNEW_KEY } from './lib/
 import { setLang, t } from './lib/i18n.js';
 import { createPlayer } from './lib/sounds.js';
 import { saveCapture, downloadAndSave } from './lib/captures.js';
+import { grabAndSave } from './lib/page-image.js';
 
 const NEWTAB = chrome.runtime.getURL('src/newtab.html');
 loadData().then((d) => setLang(d.settings.lang)).catch(() => {});
@@ -54,19 +55,24 @@ async function captureAndEnrich(p) {
 
 
 // Salvar imagem na biblioteca (menu de contexto).
-// Para baixar a imagem é preciso permissão para o domínio dela. O pedido é feito aqui, no clique do menu;
-// se o navegador não aceitar o pedido no service worker, abre uma janelinha onde a pessoa autoriza com um clique.
+// 1) Download direto pelo endereço da imagem (qualidade original). Precisa de permissão para o domínio dela:
+//    o pedido é feito aqui, no clique do menu; se o navegador não aceitar o pedido no service worker,
+//    abre uma janelinha onde a pessoa autoriza com um clique.
+// 2) Se não der (login, blob:, http:, bloqueio do site, permissão negada), pega a imagem de dentro da
+//    própria página (lib/page-image.js), usando a permissão que o clique no menu já dá (activeTab).
 async function captureImage(info, tab) {
   const sourceUrl = info.srcUrl || '';
   const pageUrl = info.pageUrl || tab?.url || '';
   const meta = { url: sourceUrl, pageUrl, pageTitle: tab?.title || '', source: 'context' };
+  const where = { tabId: tab?.id, frameId: info.frameId ?? 0, windowId: tab?.windowId };
   if (sourceUrl.startsWith('data:image/')) {
     const blob = await (await fetch(sourceUrl)).blob();
     return saveCapture({ ...meta, blob, url: '', fileName: 'imagem' });
   }
-  let parsed;
-  try { parsed = new URL(sourceUrl); } catch { throw new Error('Endereço de imagem inválido.'); }
-  if (parsed.protocol !== 'https:') throw new Error('Só é possível salvar imagens de endereços https://. Dica: copie a imagem e cole com Ctrl+V na Captura Rápida.');
+  let parsed = null;
+  try { parsed = new URL(sourceUrl); } catch { /* endereço estranho: tenta pela página */ }
+  if (!parsed || parsed.protocol !== 'https:') return grabAndSave(sourceUrl, meta, where);
+
   const permission = { origins: [parsed.origin + '/*'] };
   // IMPORTANTE: nenhum await antes deste pedido, para não perder o gesto do usuário.
   let granted;
@@ -76,12 +82,18 @@ async function captureImage(info, tab) {
     granted = null; // o navegador não deixou pedir aqui
   }
   if (granted === null) {
-    const q = new URLSearchParams({ src: sourceUrl, page: pageUrl, title: meta.pageTitle.slice(0, 300) });
+    const q = new URLSearchParams({ src: sourceUrl, page: pageUrl, title: meta.pageTitle.slice(0, 300), tab: String(where.tabId ?? ''), frame: String(where.frameId), win: String(where.windowId ?? '') });
     await chrome.windows.create({ url: chrome.runtime.getURL('src/grant.html?' + q), type: 'popup', width: 460, height: 300 });
     return null;
   }
-  if (!granted) throw new Error('Permissão para acessar a imagem não concedida. Tente novamente e autorize o domínio solicitado.');
-  return downloadAndSave(sourceUrl, meta);
+  if (!granted) return grabAndSave(sourceUrl, meta, where);
+  try {
+    return await downloadAndSave(sourceUrl, meta);
+  } catch (e) {
+    if (/12 MB/.test(e?.message || '')) throw e;
+    console.info('NeuroTab: download direto falhou, tentando pela página', e?.message);
+    return grabAndSave(sourceUrl, meta, where);
+  }
 }
 
 async function flashBadge(tabId, ok, detail = '') {
@@ -390,6 +402,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   if (msg?.target === 'offscreen') return false;
   if (msg?.type === 'stopSound') { stopSound().then(() => reply({ ok: true })); return true; }
   if (msg?.type === 'previewSound') { playSound(msg.kind, { loop: false }).then(() => reply({ ok: true })); return true; }
+  if (msg?.type === 'grabImage') {
+    // Pedido da janelinha de permissão (grant.html) quando o download direto falhou.
+    grabAndSave(msg.src, msg.meta || {}, { tabId: msg.tabId, frameId: msg.frameId || 0, windowId: msg.windowId })
+      .then(() => { flashBadge(msg.tabId, true); reply({ ok: true }); })
+      .catch((e) => { flashBadge(msg.tabId, false, e?.message); reply({ ok: false, error: e?.message || String(e) }); });
+    return true;
+  }
   if (msg?.type === 'checkUpdate') {
     checkForUpdate()
       .then(async () => { await runUpdateCheck(); reply({ ok: true, u: (await chrome.storage.local.get(UPDATE_KEY))[UPDATE_KEY] }); })
