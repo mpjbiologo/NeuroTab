@@ -108,3 +108,41 @@ jobs:
       - name: Sem credenciais do Edge
         if: env.EDGE_API_KEY == ''
         run: echo "::notice::Envio para a loja do Edge pulado (faltam os segredos EDGE_*). Veja docs/store/EDGE.md."
+
+  # 6) Envia a versão para a Chrome Web Store. O Google revisa e, aprovada, todo mundo atualiza sozinho.
+  #    Precisa de CWS_PUBLISHER_ID, CWS_EXTENSION_ID e CWS_SERVICE_ACCOUNT (docs/store/CHROME.md). Sem eles, é pulado.
+  loja-chrome:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-24.04
+    env:
+      CWS_PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+      CWS_EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+      CWS_SERVICE_ACCOUNT: ${{ secrets.CWS_SERVICE_ACCOUNT }}
+      CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+      CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+      CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+    steps:
+      - name: Conferir credenciais
+        id: cred
+        run: |
+          if [ -n "$CWS_EXTENSION_ID" ] && { [ -n "$CWS_SERVICE_ACCOUNT" ] || [ -n "$CWS_REFRESH_TOKEN" ]; }; then echo "ok=1" >> "$GITHUB_OUTPUT";
+          else echo "::notice::Envio para a Chrome Web Store pulado (faltam os segredos CWS_*). Veja docs/store/CHROME.md."; fi
+
+      - uses: actions/checkout@v5
+        if: steps.cred.outputs.ok == '1'
+
+      - uses: actions/setup-node@v5
+        if: steps.cred.outputs.ok == '1'
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@v4
+        if: steps.cred.outputs.ok == '1'
+        with:
+          name: neurotab
+          path: dist
+
+      - name: Enviar para a Chrome Web Store
+        if: steps.cred.outputs.ok == '1'
+        run: node scripts/publish-chrome.mjs dist/neurotab.zip

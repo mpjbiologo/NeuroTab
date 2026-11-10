@@ -75,11 +75,13 @@ NeuroTab replaces the browser's new tab page with a personal dashboard: speed-di
 | offscreen | Plays the alarm/timer sound from the background when the new tab is not open. |
 | Host permission | open-meteo.com: weather widget and city search. api.github.com: shows a notice when a new version exists (it never downloads code). All other hosts are optional and requested at runtime only when the user turns on the related feature: quotes widget (awesomeapi.com.br, brapi.dev), traffic address search (nominatim.openstreetmap.org), Bing/NASA background photos, the AI provider the user configures (Gemini, OpenAI, Anthropic, OpenRouter, local Ollama) and https://*/* for an RSS feed or a custom AI endpoint the user adds, or to save an image from a site. The user can revoke them in Settings > Permissions. |
 
-Se o painel pedir justificativa para as permissões opcionais **topSites, sessions, tabs**:
+As permissões opcionais **topSites**, **sessions** e **tabs** também têm caixa própria:
 
-```
-Optional. Requested only when the user adds the "Browsing" widget, to show most-visited sites and recently closed tabs on the new tab page. Data stays local.
-```
+| Permissão | Texto |
+|---|---|
+| topSites | Optional permission, requested only when the user adds the "Browsing" widget to the new tab page. It reads the browser's list of most-visited sites (chrome.topSites.get) to show them as quick links inside the widget. The list is displayed locally on the new tab page only; it is never stored outside the browser or sent to any server. Users who don't add the widget are never asked for this permission, and it can be removed at any time in Settings > Permissions. |
+| sessions | Optional permission, requested only when the user adds the "Browsing" widget. It lists the recently closed tabs and windows (chrome.sessions.getRecentlyClosed) and lets the user reopen one with a click (chrome.sessions.restore). The data is shown locally on the new tab page only; it is never stored or sent anywhere. It can be removed at any time in Settings > Permissions. |
+| tabs | Optional permission, requested together with "sessions" only when the user adds the "Browsing" widget. Without the "tabs" permission, Chrome returns recently closed tabs without their title and URL, so the widget could not show which page each entry is. It is used only to display the title and address of recently closed tabs on the new tab page; the extension does not read, monitor or modify the user's open tabs, and nothing is stored or sent anywhere. It can be removed at any time in Settings > Permissions. |
 
 ### Remote code
 
@@ -152,4 +154,56 @@ O e-mail traz um código de violação. Os mais prováveis:
 
 - O endereço fica `https://chromewebstore.google.com/detail/neurotab/<id>`. Me mande o link para eu trocar os botões de download do site e do README.
 - Quem instala pela loja recebe atualizações automáticas.
-- Versão nova: suba a versão no `manifest.json`, gere o zip (`./scripts/build.sh`) e, no painel, **Package → Upload new package** e depois **Submit for review**.
+- Versão nova: use o envio automático abaixo. O caminho manual continua valendo: suba a versão no `manifest.json`, gere o zip (`./scripts/build.sh`) e, no painel, **Package → Upload new package** e depois **Submit for review**.
+
+## Envio automático de versões novas (configurar uma vez)
+
+Depois de configurado, cada release publicada no GitHub roda os testes, gera o zip e o envia sozinha para a Chrome Web Store (job **loja-chrome** do workflow *Release*). O Google revisa como sempre e, aprovada, todos os usuários recebem a atualização automaticamente, sem perder dados.
+
+Usamos uma **conta de serviço** do Google Cloud: é um "robô" com uma chave que não vence. (O outro caminho do Google, OAuth com app em modo de teste, gera um token que expira em 7 dias.)
+
+### 1. Ativar a API no Google Cloud
+
+1. Abra https://console.cloud.google.com/ com a mesma conta Google da Chrome Web Store.
+2. No topo, **Selecionar projeto → Novo projeto**, nome `neurotab-publicacao` → **Criar** (e selecione-o).
+3. Na barra de busca, digite **Chrome Web Store API** → **Ativar**.
+
+### 2. Criar a conta de serviço e a chave
+
+1. Menu ☰ → **IAM e administrador → Contas de serviço → + Criar conta de serviço**.
+2. Nome: `neurotab-ci` → **Criar e continuar**. Não precisa dar nenhum papel/permissão: clique em **Continuar** e **Concluir**.
+3. Copie o **e-mail** da conta criada (algo como `neurotab-ci@neurotab-publicacao.iam.gserviceaccount.com`).
+4. Clique na conta → aba **Chaves → Adicionar chave → Criar nova chave → JSON → Criar**. O navegador baixa um arquivo `.json`. Guarde-o com cuidado: ele dá acesso à publicação.
+
+> Se aparecer "a criação de chaves está desativada por uma política da organização", me avise: dá para usar o caminho alternativo com OAuth (segredos `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET` e `CWS_REFRESH_TOKEN`, que o script também aceita).
+
+### 3. Autorizar a conta de serviço na Chrome Web Store
+
+1. Abra https://chrome.google.com/webstore/devconsole → **Account** (ou **Publisher → Settings**).
+2. Em **Service accounts**, adicione o e-mail da conta de serviço e salve.
+3. Na mesma página, copie o **Publisher ID**.
+4. O **Extension ID** é o código de 32 letras no endereço da NeuroTab na loja (`.../detail/neurotab/<ID>`) ou no painel, em **Items**.
+
+### 4. Guardar os segredos no GitHub
+
+Repositório → **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Nome | Valor |
+|---|---|
+| `CWS_PUBLISHER_ID` | o Publisher ID |
+| `CWS_EXTENSION_ID` | o Extension ID |
+| `CWS_SERVICE_ACCOUNT` | **o conteúdo inteiro** do arquivo `.json` da chave (abra no Bloco de Notas, copie tudo, de `{` a `}`) |
+
+Depois de salvar o segredo, apague o arquivo `.json` do computador (ou guarde num lugar seguro). Sem esses segredos o job apenas avisa que pulou o envio; nada quebra.
+
+### 5. Lançar uma versão
+
+O mesmo da release do Edge: suba a versão, publique a release no GitHub e acompanhe em **Actions → Release** os jobs **loja-edge** e **loja-chrome**.
+
+### Se o job loja-chrome falhar
+
+O log explica a causa em português. As mais comuns:
+
+- **HTTP 403**: o e-mail da conta de serviço não foi adicionado em *Service accounts* no Developer Dashboard, ou a API não foi ativada no projeto.
+- **Já existe uma versão em revisão**: espere a revisão terminar e, em Actions, use **Re-run failed jobs** só no loja-chrome.
+- **A versão precisa ser maior**: falta subir a versão no `manifest.json`.
