@@ -6,6 +6,7 @@
 - Biblioteca de imagens: "Salvar imagem na biblioteca" agora funciona com imagens que só abrem logado (ChatGPT, Gemini, Google Fotos, Drive, webmail…), endereços `blob:` e `http:`, sites que bloqueiam cópia (hotlink) e servidores que não informam o tipo da imagem. Quando o download direto não dá, a NeuroTab pega a imagem de dentro da própria página (seu login não sai do navegador) e, em último caso, recorta a imagem da parte visível da tela
 - Biblioteca de imagens: o tipo da imagem é descoberto pelos primeiros bytes (PNG, JPEG, GIF, WebP, AVIF, BMP, ICO, SVG)
 - Mensagens de erro com a dica de copiar e colar quando o site não deixa extensões lerem a página
+- Plano de fundo: o crédito da foto do Bing/NASA não fica mais por cima dos widgets. Virou um botão 📷 acima do botão de voz; o nome e o link aparecem ao passar o mouse (#38)
 - Apoie: nova chave Pix, Ko-fi e PayPal
 - Release: envio automático para as lojas do Edge e do Chrome (e conferência das credenciais sem publicar)
 

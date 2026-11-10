@@ -68,3 +68,41 @@ test('camadas: a tela de voz fica acima dos widgets (#35)', async () => {
     await x.close();
   }
 });
+
+test('crédito da foto do dia (Bing/NASA): só o ícone sobre os widgets, abre ao passar o mouse', async () => {
+  const x = await launch({ viewport: { width: 1366, height: 768 } });
+  try {
+    const p = await x.open('src/newtab.html', { wait: 1200 });
+    // Mesmo conteúdo que nextSlide() monta para uma foto da web, com um título longo.
+    await p.evaluate(() => {
+      const cr = document.querySelector('#bgCredit');
+      const label = 'Farol na costa da Bretanha ao entardecer, França · © Fotógrafo Exemplo/Getty Images';
+      const a = document.createElement('a');
+      a.href = 'https://www.bing.com/'; a.title = label;
+      a.innerHTML = '<span class="cr-ic">📷</span><span class="cr-txt"></span>';
+      a.querySelector('.cr-txt').textContent = label;
+      cr.classList.remove('msg'); cr.replaceChildren(a); cr.hidden = false;
+    });
+    const overlap = () => p.evaluate(() => {
+      const c = document.querySelector('#bgCredit').getBoundingClientRect();
+      const hit = (r) => !(r.right <= c.left || r.left >= c.right || r.bottom <= c.top || r.top >= c.bottom);
+      return { w: Math.round(c.width), h: Math.round(c.height), hits: [...document.querySelectorAll('.widget')].filter((w) => hit(w.getBoundingClientRect())).length };
+    });
+    const closed = await overlap();
+    // Fechado é só o ícone 📷 (do tamanho dos botões flutuantes), não uma faixa de texto por cima dos widgets.
+    assert.ok(closed.w <= 36 && closed.h <= 36, `fechado deve ser só o ícone (${closed.w}x${closed.h})`);
+    await p.hover('#bgCredit');
+    await p.waitForTimeout(400);
+    const open = await overlap();
+    assert.ok(open.w > 200, `ao passar o mouse mostra o nome e o link (largura ${open.w})`);
+    // não pode colidir com o botão de voz
+    const fab = await p.evaluate(() => {
+      const a = document.querySelector('#bgCredit').getBoundingClientRect();
+      const b = document.querySelector('.voice-fab')?.getBoundingClientRect();
+      return b ? !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom) : false;
+    });
+    assert.equal(fab, false, 'não pode ficar em cima do botão de voz');
+  } finally {
+    await x.close();
+  }
+});

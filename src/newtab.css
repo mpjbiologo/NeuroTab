@@ -542,8 +542,22 @@ body.free.dock-top .update-bar { top: 64px; }
 .widget[data-id=photos] .ph-frame { flex: 1; }
 .bgl { position: absolute; inset: 0; background: center/cover no-repeat; opacity: 0; transition: opacity 1.6s ease; }
 .bgl.on { opacity: 1; }
-#bgCredit { position: fixed; right: 86px; bottom: 10px; z-index: 5; font-size: 11.5px; color: rgba(255,255,255,.7); text-shadow: 0 1px 4px #000; max-width: 40vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#bgCredit a { color: inherit; text-decoration: none; }
+/* Crédito da foto do dia (Bing/NASA): botão compacto 📷 acima do botão de voz, fora da área dos widgets.
+   O nome e o link só aparecem ao passar o mouse ou focar com o teclado (abre para a esquerda). */
+#bgCredit {
+  position: fixed; right: 31px; bottom: 84px; z-index: var(--z-floating);
+  display: flex; align-items: center; gap: 8px; height: 34px; max-width: 34px; padding: 0 8px; box-sizing: border-box;
+  border-radius: 999px; overflow: hidden; white-space: nowrap; font-size: 12px; color: rgba(255,255,255,.88);
+  background: rgba(20,20,28,.6); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(10px);
+  transition: max-width .25s ease, background .2s;
+}
+#bgCredit:hover, #bgCredit:focus-within { max-width: min(46vw, 560px); background: rgba(20,20,28,.85); }
+#bgCredit a { display: flex; align-items: center; gap: 8px; min-width: 0; color: inherit; text-decoration: none; }
+#bgCredit .cr-ic { flex: none; width: 16px; text-align: center; font-size: 14px; }
+#bgCredit .cr-txt { overflow: hidden; text-overflow: ellipsis; }
+#bgCredit.msg { max-width: min(46vw, 560px); white-space: normal; height: auto; padding: 8px 12px; border-radius: 12px; }
+body.dock-bottom #bgCredit, body.narrow #bgCredit { bottom: 136px; }
+body.dock-right #bgCredit { right: calc(var(--rail) + 31px); }
 /* hábitos */
 .hb-row { display: flex; align-items: center; gap: 10px; padding: 7px 4px; border-bottom: 1px solid var(--line); }
 .hb-row .body { flex: 1; min-width: 0; }
