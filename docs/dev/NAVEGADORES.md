@@ -17,7 +17,7 @@ Legenda: ✅ automatizado no CI (Chromium com Playwright; Firefox com Selenium, 
 | Biblioteca de imagens: colar | ✅ | 🖐 | 🖐 | 🖐 | |
 | Biblioteca de imagens: menu "Salvar imagem" | ➖ | 🖐 | 🖐 | 🖐 | O pedido de permissão no menu não é automatizável; há janela de reserva |
 | IA (Gemini etc.) e busca por significado | ✅ (simulada) | 🖐 | 🖐 | 🖐 | Testar com uma chave real |
-| Comandos de voz e palavra de ativação | ✅ (simulada) | 🖐 | 🖐 | ➖ | Firefox não tem reconhecimento de voz; a opção some |
+| Comandos de voz e palavra de ativação | ✅ (simulada) | 🖐 | 🖐 | 🖐 | Firefox até a 159 não tem reconhecimento de voz (a opção some); a partir da 160 tem, e a opção aparece. Testar à mão no Firefox 160+ |
 | Leitura em voz alta | ✅ (simulada) | 🖐 | 🖐 | 🖐 | |
 | Lembretes, alarmes e notificações | ➖ | 🖐 | 🖐 | 🖐 | Som: offscreen (Chromium) / página de fundo (Firefox) |
 | Permissões opcionais (Permitir/Remover) | ✅ (painel) | 🖐 | 🖐 | 🖐 | O clique em "Permitir" do navegador é manual |

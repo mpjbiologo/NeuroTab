@@ -89,8 +89,10 @@ test('Firefox: configurações abrem todas as abas; permissões e migração', a
   assert.match(perm, /Cotações/);
   const meta = await storage('nt_meta');
   assert.ok(meta?.schema >= 2, 'esquema de dados registrado');
-  // a palavra de ativação some no Firefox (sem reconhecimento de voz)
-  assert.equal(await driver.executeScript("return document.querySelector('#wakeRow').hidden"), true);
+  // A palavra de ativação só aparece se o navegador tiver reconhecimento de voz.
+  // Firefox até a 159 não tinha; a partir da 160 tem (SpeechRecognition). O teste acompanha o navegador.
+  const wake = await driver.executeScript("return { hidden: document.querySelector('#wakeRow').hidden, sr: !!(window.SpeechRecognition || window.webkitSpeechRecognition) }");
+  assert.equal(wake.hidden, !wake.sr, `opção da palavra de ativação deve seguir o suporte do navegador (${JSON.stringify(wake)})`);
   assert.deepEqual(await errors(), []);
 });
 
