@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.0 — 2026-11-12
+**Arquitetura modular: a nova aba dividida em partes independentes, base para as próximas versões.**
+
+- Nova aba: o arquivo principal (1.868 linhas) foi dividido em 14 módulos em `src/newtab/`, um para cada parte da tela (barra de atalhos, busca, widgets, modo livre, voz, palavra de ativação…). Nada muda no uso; mapa em `docs/dev/ARQUITETURA.md` (#14)
+- Botões flutuantes: o 🎙 e o 📷 não cobrem mais a borda dos widgets no modo grade (ex.: o "Enviar" do widget "Pergunte ao seu cérebro") (#38)
+- Palavra de ativação: regras separadas em `lib/wake-word.js`, com testes (base para a v0.8)
+- Layout: geometria do painel (colunas, espaço livre, encaixe) separada em `lib/layout-geometry.js`, com testes
+
 ## v0.6.3 — 2026-11-12
 **Manutenção: mais segurança no que aparece na tela e base pronta para as próximas versões.**
 
