@@ -57,6 +57,27 @@
     .store.soon { background: rgba(255,255,255,.05); border: 1px dashed var(--line); color: var(--muted); box-shadow: none; cursor: default; }
     .store.soon .ico { background: rgba(255,255,255,.06); }
     .compat { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); text-align: center; line-height: 1.4; }
+    /* Novidades (log de mudanças) */
+    .cl { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .cl details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+    .cl details[open] { border-color: rgba(124,92,255,.45); }
+    .cl summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 15px 46px 15px 18px; position: relative; }
+    .cl summary::-webkit-details-marker { display: none; }
+    .cl summary::after { content: '▾'; position: absolute; right: 18px; top: 17px; color: var(--muted); transition: transform .2s; }
+    .cl details[open] summary::after { transform: rotate(180deg); }
+    .cl .ver { font-weight: 750; font-size: 15px; padding: 3px 10px; border-radius: 8px; background: linear-gradient(135deg, var(--a1), #5a7bff); color: #fff; }
+    .cl .new { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: rgba(66,199,138,.18); color: var(--ok); text-transform: uppercase; letter-spacing: .04em; }
+    .cl time { color: var(--muted); font-size: 13.5px; }
+    .cl .head { flex-basis: 100%; color: var(--text); font-weight: 600; font-size: 15px; }
+    .cl .body { padding: 0 18px 16px; color: var(--muted); font-size: 14.5px; line-height: 1.6; border-top: 1px solid var(--line); }
+    .cl .body h4 { margin: 14px 0 4px; color: var(--text); font-size: 14.5px; }
+    .cl .body ul { margin: 6px 0; padding-left: 20px; }
+    .cl .body li { margin: 4px 0; }
+    .cl .body p { margin: 10px 0 4px; }
+    .cl code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 5px; font-size: .92em; }
+    .cl a { color: var(--a2); }
+    .cl-note { text-align: center; }
+    .cl-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
     .small { font-size: 13px; color: var(--muted); margin-top: 12px; }
     .shot { margin: 46px auto 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.6); max-width: 1100px; }
     .shot img { display: block; width: 100%; height: auto; }
@@ -152,6 +173,7 @@
       <div class="links">
         <a href="#historia" data-i="t100">A história</a>
         <a href="#recursos" data-i="t101">Recursos</a>
+        <a href="#novidades" data-i="t155">Novidades</a>
         <a href="#em-breve" data-i="t131">Em Breve</a>
         <a href="#instalar" data-i="t102">Instalar</a>
         <a href="#privacidade" data-i="t103">Privacidade</a>
@@ -227,6 +249,19 @@
         <div class="feat"><div class="ic">🌐</div><h3 data-i="t125">Português, inglês e espanhol</h3><p data-i="t126">A extensão e este site aparecem automaticamente no idioma do seu navegador.</p></div>
         <div class="feat"><div class="ic">✨</div><h3 data-i="t129">Busca por significado</h3><p data-i="t130">"Aquela nota sobre sono" encontra "dormi mal". A IA entende o sentido das suas notas, não só as palavras.</p></div>
         <div class="feat"><div class="ic">🔁</div><h3 data-i="t21">Importe tudo</h3><p data-i="t54">Traz o backup do antigo <b>Speed Dial</b> (.spd) e suas notas do <b>Google Keep</b>. Exporta em Markdown.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="novidades">
+    <div class="wrap">
+      <h2 data-i="t156">Novidades</h2>
+      <p class="sub" data-i="t157">O que mudou em cada versão da NeuroTab, da mais recente para a mais antiga.</p>
+      <p class="small cl-note" data-i="t158" hidden></p>
+      <div id="changelog" class="cl" aria-live="polite"><p class="small" style="text-align:center" data-i="t159">Carregando as novidades…</p></div>
+      <div class="cl-actions">
+        <button id="clMore" class="btn" type="button" hidden></button>
+        <a class="btn" href="https://github.com/mpjbiologo/NeuroTab/blob/main/CHANGELOG.md" target="_blank" rel="noopener" data-i="t160">Ver no GitHub</a>
       </div>
     </div>
   </section>
@@ -410,7 +445,7 @@
         t52: 'Tidy grid or <b>free mode</b>: drag widgets anywhere on the screen, with magnetic snapping. Save layouts (Work, Home).', t53: 'Select several notes, clear completed tasks and recover what you deleted by accident.',
         t54: 'Brings in the old <b>Speed Dial</b> backup (.spd) and your <b>Google Keep</b> notes. Exports to Markdown.',
         t55: 'The AI organizes notes (title, summary, tags and reminders) and answers questions about them. You use your own key — Gemini has a free tier.',
-        t152: 'Get it for', t153: 'Also works on Brave, Vivaldi, Opera and other Chromium-based browsers', t154: 'Coming soon for', t56: 'From your browser’s official store: one-click install and automatic updates, without losing your data.',
+        t152: 'Get it for', t153: 'Also works on Brave, Vivaldi, Opera and other Chromium-based browsers', t154: 'Coming soon for', t155: 'What’s new', t156: 'What’s new', t157: 'What changed in each NeuroTab version, newest first.', t158: 'The change log is written in Portuguese.', t159: 'Loading the change log…', t160: 'View on GitHub', t56: 'From your browser’s official store: one-click install and automatic updates, without losing your data.',
         t57: 'Click the button for your browser above.',
         t58: 'On Edge, click <b>Get</b>; on Chrome, <b>Add to Chrome</b>; on Firefox, <b>Add to Firefox</b>. Confirm when the browser asks.', t59: 'The browser asks whether to keep the new page: click <b>Keep changes</b>.',
         t60: 'New versions arrive on their own through the store, and your shortcuts, notes and settings stay saved.', t61: 'Coming from Speed Dial? Settings → Backup → choose the <code>.spd</code> file.',
@@ -451,7 +486,7 @@
         t52: 'Cuadrícula ordenada o <b>modo libre</b>: arrastra los widgets a cualquier lugar de la pantalla, con ajuste magnético. Guarda diseños (Trabajo, Casa).', t53: 'Selecciona varias notas, limpia tareas completadas y recupera lo que borraste sin querer.',
         t54: 'Trae la copia del antiguo <b>Speed Dial</b> (.spd) y tus notas de <b>Google Keep</b>. Exporta a Markdown.',
         t55: 'La IA organiza las notas (título, resumen, etiquetas y recordatorios) y responde preguntas sobre ellas. Usas tu propia clave: Gemini tiene un nivel gratuito.',
-        t152: 'Descárgala para', t153: 'También funciona en Brave, Vivaldi, Opera y otros navegadores basados en Chromium', t154: 'Muy pronto para', t56: 'Desde la tienda oficial de tu navegador: instalación con un clic y actualizaciones automáticas, sin perder tus datos.',
+        t152: 'Descárgala para', t153: 'También funciona en Brave, Vivaldi, Opera y otros navegadores basados en Chromium', t154: 'Muy pronto para', t155: 'Novedades', t156: 'Novedades', t157: 'Qué cambió en cada versión de NeuroTab, de la más reciente a la más antigua.', t158: 'El registro de cambios está escrito en portugués.', t159: 'Cargando las novedades…', t160: 'Ver en GitHub', t56: 'Desde la tienda oficial de tu navegador: instalación con un clic y actualizaciones automáticas, sin perder tus datos.',
         t57: 'Haz clic en el botón de tu navegador, arriba.',
         t58: 'En Edge, haz clic en <b>Obtener</b>; en Chrome, en <b>Añadir a Chrome</b>; en Firefox, en <b>Agregar a Firefox</b>. Confirma cuando el navegador lo pida.', t59: 'El navegador pregunta si quieres mantener la nueva página: haz clic en <b>Conservar cambios</b>.',
         t60: 'Las nuevas versiones llegan solas por la tienda, y tus accesos, notas y configuración siguen guardados.', t61: '¿Vienes de Speed Dial? Configuración → Copia de seguridad → elige el archivo <code>.spd</code>.',
@@ -496,12 +531,115 @@
       });
       document.querySelectorAll('.lang-switch button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang));
       window.renderGivers?.();
+      window.renderChangelog?.();
     }
     document.querySelectorAll('.lang-switch button').forEach((b) => b.addEventListener('click', () => {
       try { localStorage.setItem('neurotab-lang', b.dataset.lang); } catch {}
       applyLang(b.dataset.lang);
     }));
     applyLang(detectLang());
+  </script>
+  <script>
+    // ---------- Novidades: lidas do CHANGELOG.md do repositório (sempre atualizado) ----------
+    (() => {
+      const SRC = 'https://raw.githubusercontent.com/mpjbiologo/NeuroTab/main/CHANGELOG.md';
+      const SHOW = 4; // versões visíveis antes do "mostrar todas"
+      const UI = {
+        'pt-BR': { more: (n) => `Mostrar todas as versões (${n})`, less: 'Mostrar menos', fail: 'Não foi possível carregar as novidades agora.', latest: 'atual' },
+        en: { more: (n) => `Show all versions (${n})`, less: 'Show less', fail: 'Could not load the change log right now.', latest: 'latest' },
+        es: { more: (n) => `Mostrar todas las versiones (${n})`, less: 'Mostrar menos', fail: 'No se pudieron cargar las novedades ahora.', latest: 'actual' },
+      };
+      const box = document.getElementById('changelog');
+      const moreBtn = document.getElementById('clMore');
+      const note = document.querySelector('.cl-note');
+      let versions = [];
+      let expanded = false;
+
+      const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      // Markdown simples (o que o CHANGELOG usa): **negrito**, `código`, [link](url) e #issue.
+      const inline = (t) => esc(t)
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/(^|[\s(,])#(\d{1,4})\b/g, '$1<a href="https://github.com/mpjbiologo/NeuroTab/issues/$2" target="_blank" rel="noopener">#$2</a>');
+
+      function parse(md) {
+        const out = [];
+        let cur = null;
+        for (const raw of md.split(/\r?\n/)) {
+          const line = raw.trimEnd();
+          const h = line.match(/^##\s+v?(\d+\.\d+\.\d+)\s*(?:[—–-]\s*(.*))?$/);
+          if (h) { cur = { v: h[1], date: (h[2] || '').trim(), head: '', lines: [] }; out.push(cur); continue; }
+          if (!cur) continue;
+          if (!cur.head && !cur.lines.length && /^\*\*.+\*\*$/.test(line)) { cur.head = line.replace(/^\*\*|\*\*$/g, ''); continue; }
+          cur.lines.push(line);
+        }
+        return out;
+      }
+
+      function bodyHtml(lines) {
+        let html = '';
+        let inList = false;
+        const close = () => { if (inList) { html += '</ul>'; inList = false; } };
+        for (const l of lines) {
+          if (!l.trim()) { close(); continue; }
+          const li = l.match(/^\s*[-*]\s+(.*)$/);
+          if (li) { if (!inList) { html += '<ul>'; inList = true; } html += `<li>${inline(li[1])}</li>`; continue; }
+          close();
+          const sub = l.match(/^\*\*([^*]+)\*\*\s*(.*)$/);
+          if (sub && !sub[2].replace(/\(#\d+(?:,\s*#\d+)*\)/, '').trim()) { html += `<h4>${inline(sub[1])} ${inline(sub[2])}</h4>`; continue; }
+          if (/^#{3,}\s+/.test(l)) { html += `<h4>${inline(l.replace(/^#+\s+/, ''))}</h4>`; continue; }
+          html += `<p>${inline(l)}</p>`;
+        }
+        close();
+        return html;
+      }
+
+      function fmtDate(d) {
+        const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) return esc(d);
+        const dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
+        const lang = (typeof SITE_LANG !== 'undefined' ? SITE_LANG : 'pt-BR');
+        return new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(dt);
+      }
+
+      function render() {
+        const lang = (typeof SITE_LANG !== 'undefined' ? SITE_LANG : 'pt-BR');
+        const ui = UI[lang] || UI.en;
+        note.hidden = lang === 'pt-BR' || !versions.length;
+        if (!versions.length) return;
+        const open = new Set([...box.querySelectorAll('details[open]')].map((d) => d.dataset.v));
+        if (!box.querySelector('details')) open.add(versions[0].v);
+        const list = expanded ? versions : versions.slice(0, SHOW);
+        box.innerHTML = list.map((r, i) => `
+          <details data-v="${esc(r.v)}"${open.has(r.v) ? ' open' : ''}>
+            <summary>
+              <span class="ver">v${esc(r.v)}</span>
+              ${i === 0 ? `<span class="new">${ui.latest}</span>` : ''}
+              ${r.date ? `<time datetime="${esc(r.date)}">${fmtDate(r.date)}</time>` : ''}
+              ${r.head ? `<span class="head">${inline(r.head)}</span>` : ''}
+            </summary>
+            <div class="body">${bodyHtml(r.lines)}</div>
+          </details>`).join('');
+        moreBtn.hidden = versions.length <= SHOW;
+        moreBtn.textContent = expanded ? ui.less : ui.more(versions.length);
+      }
+
+      moreBtn.addEventListener('click', () => {
+        expanded = !expanded;
+        render();
+        if (!expanded) document.getElementById('novidades').scrollIntoView({ behavior: 'smooth' });
+      });
+      window.renderChangelog = render;
+
+      fetch(SRC, { cache: 'no-cache' })
+        .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then((md) => { versions = parse(md); render(); })
+        .catch(() => {
+          const lang = (typeof SITE_LANG !== 'undefined' ? SITE_LANG : 'pt-BR');
+          box.innerHTML = `<p class="small" style="text-align:center">${(UI[lang] || UI.en).fail}</p>`;
+        });
+    })();
   </script>
   <script>
     // ---------- Outras formas de doação ----------
