@@ -12,6 +12,8 @@ jobs:
   conferir:
     runs-on: ubuntu-24.04
     env:
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
       EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
       EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
       EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
@@ -26,6 +28,9 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+      - name: Firefox (AMO)
+        if: ${{ !cancelled() }}
+        run: node scripts/check-amo.mjs
       - name: Edge
         if: ${{ !cancelled() }}
         run: node scripts/publish-edge.mjs --check

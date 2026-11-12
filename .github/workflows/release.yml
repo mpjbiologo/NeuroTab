@@ -31,10 +31,6 @@ jobs:
   build:
     needs: testes
     runs-on: ubuntu-24.04
-    env:
-      # Credenciais da loja do Firefox (AMO). Sem elas, o envio é pulado.
-      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
-      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
     steps:
       - uses: actions/checkout@v5
 
@@ -57,18 +53,46 @@ jobs:
           tag_name: ${{ github.event.release.tag_name }}
           files: dist/*.zip
 
-      # 4) Envia a versão para a loja do Firefox. A Mozilla revisa e, aprovada, todo mundo atualiza sozinho.
-      #    Só funciona depois da primeira publicação manual (docs/store/FIREFOX.md).
+  # 4) Envia a versão para a loja do Firefox (AMO). A Mozilla revisa e, aprovada, todo mundo atualiza sozinho.
+  #    Precisa dos segredos AMO_JWT_ISSUER e AMO_JWT_SECRET (docs/store/FIREFOX.md). Sem eles, é pulado.
+  #    Job separado: se a AMO falhar, a release e as outras lojas não são afetadas (e dá para rodar de novo só ele).
+  loja-firefox:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-24.04
+    env:
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+    steps:
+      - name: Conferir credenciais
+        id: cred
+        run: |
+          if [ -n "$AMO_JWT_ISSUER" ] && [ -n "$AMO_JWT_SECRET" ]; then echo "ok=1" >> "$GITHUB_OUTPUT";
+          else echo "::notice::Envio para a loja do Firefox pulado (faltam os segredos AMO_*). Veja docs/store/FIREFOX.md."; fi
+
+      - uses: actions/setup-node@v5
+        if: steps.cred.outputs.ok == '1'
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@v4
+        if: steps.cred.outputs.ok == '1'
+        with:
+          name: neurotab
+          path: dist
+
       - name: Enviar para a loja do Firefox (AMO)
-        if: github.event_name == 'release' && env.AMO_JWT_ISSUER != ''
-        run: >
-          npx --yes web-ext@8 sign
-          --channel listed
-          --source-dir build/firefox
-          --api-key "$AMO_JWT_ISSUER"
-          --api-secret "$AMO_JWT_SECRET"
-          --approval-timeout 0
-          --timeout 900000
+        if: steps.cred.outputs.ok == '1'
+        run: |
+          mkdir -p build/firefox && unzip -q dist/neurotab-firefox.zip -d build/firefox
+          npx --yes web-ext@8 sign \
+            --channel listed \
+            --source-dir build/firefox \
+            --artifacts-dir dist/amo \
+            --api-key "$AMO_JWT_ISSUER" \
+            --api-secret "$AMO_JWT_SECRET" \
+            --approval-timeout 0 \
+            --timeout 900000
 
   # 5) Envia a versão para a loja do Edge. A Microsoft revisa (alguns dias) e, aprovada, todo mundo atualiza sozinho.
   #    Precisa dos segredos EDGE_PRODUCT_ID, EDGE_CLIENT_ID e EDGE_API_KEY (docs/store/EDGE.md). Sem eles, é pulado.

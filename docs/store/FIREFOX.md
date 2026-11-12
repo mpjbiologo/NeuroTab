@@ -84,6 +84,18 @@ Pronto. A partir daí, cada release publicada no GitHub:
 
 A Mozilla revisa e, aprovada, todo mundo recebe a atualização sozinho, com os dados intactos. Acompanhe a revisão no painel da loja ou pelo e-mail.
 
+Depois de criar os segredos, confira sem publicar nada: **Actions → Conferir credenciais das lojas → Run workflow**. O passo **Firefox (AMO)** mostra a conta, o endereço da NeuroTab na loja e a versão publicada.
+
+### Se o job loja-firefox falhar
+
+O envio roda no job **loja-firefox** do workflow *Release*, separado do Edge e do Chrome. As causas mais comuns:
+
+- **Version already exists / versão repetida**: falta subir a versão no `manifest.json`.
+- **401 / credenciais**: a chave foi apagada ou trocada na AMO. Gere outra e atualize os dois segredos.
+- **Erro de validação**: o log do `web-ext` lista o arquivo e a linha; rode `npm run lint:firefox` no computador para ver o mesmo aviso.
+
+Para repetir só esse envio: em Actions, abra a execução e use **Re-run failed jobs**.
+
 > As credenciais não vencem sozinhas. Se um dia vazarem, gere novas na mesma página e troque os secrets no GitHub.
 
 ---
