@@ -14,6 +14,7 @@
   <a href="https://mpjbiologo.github.io/NeuroTab/"><b>🌐 Site do projeto</b></a> ·
   <a href="https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl"><b>⬇ Edge</b></a> ·
   <a href="https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk"><b>⬇ Chrome</b></a> ·
+  <a href="https://addons.mozilla.org/firefox/addon/neurotab-secondbrain/"><b>⬇ Firefox</b></a> ·
   <a href="#-apoie-o-projeto"><b>❤ Apoiar</b></a>
 </p>
 
@@ -71,14 +72,11 @@ Para configurar, abra **⚙ Configurações → IA e voz**, escolha o provedor, 
 |---|---|
 | **Microsoft Edge** | [Loja de complementos do Edge](https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl) |
 | **Google Chrome** | [Chrome Web Store](https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk): também serve para Brave, Vivaldi, Opera e outros navegadores baseados em Chromium |
-| **Firefox** | Em breve (em análise na loja do Firefox) |
+| **Mozilla Firefox** | [Complementos do Firefox](https://addons.mozilla.org/firefox/addon/neurotab-secondbrain/) (Firefox 140 ou mais novo) |
 
-Clique em **Obter** (Edge) ou **Usar no Chrome** e abra uma nova aba. O navegador pergunta se você quer manter a nova página: clique em **Manter alterações**.
+Clique em **Obter** (Edge), **Usar no Chrome** ou **Adicionar ao Firefox** e abra uma nova aba. O navegador pergunta se você quer manter a nova página: clique em **Manter alterações**.
 
 Pela loja, as **atualizações chegam sozinhas** e seus dados são mantidos.
-
-### Firefox (enquanto não chega à loja)
-Baixe o `neurotab-firefox.zip` da [última versão](https://github.com/mpjbiologo/NeuroTab/releases/latest), abra `about:debugging#/runtime/this-firefox` → **Carregar extensão temporária** e escolha o zip (ela some ao fechar o Firefox). Requer Firefox 128 ou mais novo.
 
 ### Instalação manual (avançado)
 Para testar uma versão antes de ela chegar às lojas: baixe o `neurotab.zip` da [página de versões](https://github.com/mpjbiologo/NeuroTab/releases), descompacte numa pasta fixa, abra `edge://extensions` (ou `chrome://extensions`), ative o **Modo de desenvolvedor** e clique em **Carregar sem pacote**. Nesse caso a atualização é manual: a NeuroTab avisa quando sai versão nova.
@@ -105,7 +103,7 @@ O Google só libera a API do Keep para contas empresariais (Workspace). Para con
 | **v0.6** ✅ | Fundação: testes automáticos e CI, migrações de dados, permissões sob demanda, chaves de API mais protegidas |
 | **v0.7** | Maximizar/minimizar widgets, nome do assistente, agenda, imagens no cérebro |
 | **Depois** | Agenda, sincronização entre computadores, Google Fotos e OneDrive nos slides, palavra de ativação offline |
-| ✅ | Publicada nas lojas do [Edge](https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl) e do [Chrome](https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk); Firefox em análise ([guias das lojas](docs/store/README.md)) |
+| ✅ | Publicada nas lojas do [Edge](https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl), do [Chrome](https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk) e do [Firefox](https://addons.mozilla.org/firefox/addon/neurotab-secondbrain/) ([guias das lojas](docs/store/README.md)) |
 
 Ideias são bem-vindas nas [Issues](https://github.com/mpjbiologo/NeuroTab/issues).
 
