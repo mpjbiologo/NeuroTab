@@ -2,13 +2,14 @@
 import { SEARCH_ENGINES, hostOf } from '../lib/store.js';
 import * as Brain from '../lib/brain.js';
 import { isConfigured, ask as aiAsk, interpretCommand } from '../lib/ai.js';
-import { $, toast, startDictation, hasDictation } from '../lib/ui.js';
-import { tasksSummary } from '../lib/assistant.js';
-import { t } from '../lib/i18n.js';
+import { $, toast, startDictation, hasDictation, speak, miniMarkdown } from '../lib/ui.js';
+import { tasksSummary, runCommand, commandLang } from '../lib/assistant.js';
+import { t, tIn, LOCALE } from '../lib/i18n.js';
+import { setHTML } from '../lib/safe-html.js';
 import { getWeather } from '../lib/weather.js';
 import { S } from './state.js';
 import { ctx } from './context.js';
-import { processVoice, stopVoice, voiceCode } from './wake.js';
+import { whileWakePaused } from './wake.js';
 
 export function voiceApi() {
   const eng = SEARCH_ENGINES[S.data.settings.searchEngine] || SEARCH_ENGINES.google;
@@ -99,4 +100,43 @@ export function startVoice() {
     onError: (msg) => { reply.textContent = t(msg); },
   });
   if (!S.voiceSession) { ov.hidden = true; toast('Reconhecimento de voz indisponível neste navegador.'); }
+}
+
+/** Idioma dos comandos de voz: o escolhido em "IA e voz" ou o da interface. */
+export const voiceCode = () => S.data.settings.voiceLang || LOCALE;
+
+/** Mostra a frase ouvida, executa o comando e fala a resposta. */
+export function processVoice(said) {
+  return whileWakePaused(() => runVoice(said));
+}
+
+async function runVoice(said) {
+  const ov = $('#voice');
+  const heard = $('#voiceHeard');
+  const reply = $('#voiceReply');
+  ov.hidden = false;
+  heard.textContent = `“${said}”`;
+  heard.classList.remove('interim');
+  reply.textContent = t('Processando…');
+  try {
+    const lang = commandLang(voiceCode());
+    const r = await runCommand(said, voiceApi(), lang);
+    // A resposta sai no idioma em que a pessoa falou (respostas longas da IA já vêm no idioma da interface).
+    const text = r.long || r.translated ? r.reply : tIn(lang, r.reply);
+    // Respostas da IA vêm em Markdown (listas, negrito): formata em vez de mostrar os asteriscos.
+    if (r.long) setHTML(reply, miniMarkdown(text));
+    else reply.textContent = text;
+    reply.scrollTop = 0;
+    await speak(text, { ...S.data.settings, voiceLang: r.long ? S.data.settings.voiceLang : voiceCode() });
+    // Respostas longas ficam na tela até a pessoa fechar; as curtas somem sozinhas.
+    if (!r.long) setTimeout(() => { if (!S.voiceSession) ov.hidden = true; }, Math.min(15000, Math.max(1800, text.length * 55)));
+  } catch (e) {
+    reply.textContent = t(e.message);
+    setTimeout(() => { if (!S.voiceSession) ov.hidden = true; }, 4000);
+  }
+}
+
+export function stopVoice(close) {
+  if (S.voiceSession) S.voiceSession.stop();
+  if (close) { S.voiceSession = null; $('#voice').hidden = true; speechSynthesis?.cancel(); }
 }
