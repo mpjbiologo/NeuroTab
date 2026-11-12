@@ -1,21 +1,14 @@
 // NeuroTab — Montagem dos widgets: qual layout usar, quando remontar e entre grade e modo livre.
 import { $, h } from '../lib/ui.js';
 import { WIDGETS } from '../widgets/index.js';
+import { gridColsFor } from '../lib/layout-geometry.js';
 import { S, heroEl, omniEl } from './state.js';
 import { ctx } from './context.js';
 import { paintModeButtons, removeWidget, renderFree, setWidget } from './free.js';
 import { renderGrid } from './grid.js';
 
-export function layoutCols() {
-  const w = $('#widgets').clientWidth || innerWidth;
-  return w >= 1000 ? 12 : w >= 620 ? 6 : 1;
-}
-
-export function spanFor(w) {
-  if (S.gridCols === 12) return w;
-  if (S.gridCols === 6) return w >= 7 ? 6 : 3;
-  return 1;
-}
+/** Colunas da grade conforme a largura da área dos widgets (12, 6 ou 1). */
+export const layoutCols = () => gridColsFor($('#widgets').clientWidth || innerWidth);
 
 // ---------- Modo de layout ----------
 export const isFree = () => S.data.settings.layoutMode === 'free' && innerWidth >= 700;

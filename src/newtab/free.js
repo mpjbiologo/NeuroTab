@@ -6,7 +6,8 @@ import { bringToFront } from '../lib/window-manager.js';
 import { S, heroEl, omniEl } from './state.js';
 import { renderGrid } from './grid.js';
 import { renderLayoutPicker } from './layouts.js';
-import { buildCard, isFree, layoutSig, mountCard, renderWidgets, spanFor } from './widgets.js';
+import { buildCard, isFree, layoutSig, mountCard, renderWidgets } from './widgets.js';
+import { spanFor, overlapsAny, firstFreeSpot, nearestFreePosition, snapAxis } from '../lib/layout-geometry.js';
 
 // =====================================================================
 // LIVRE — widgets em qualquer lugar da tela
@@ -45,7 +46,7 @@ function repairLoadedFreeLayout() {
 
     let next = desired;
     if (overlapsFreeItem(rect(next), placed)) {
-      next = nearestFreePosition(box, frame, desired, placed);
+      next = nearestFree(box, desired, placed);
     }
 
     if (!next) {
@@ -173,15 +174,9 @@ function fitCanvas(extra = 0) {
 export function autoPlace(w, W) {
   const fw = Math.min(1, (w.w || WIDGETS[w.id]?.defaultW || 6) / 12);
   const fh = w.fh || 340;
-  const rects = $$('#widgets .free-item').map((f) => ({ l: f.offsetLeft, t: f.offsetTop, r: f.offsetLeft + f.offsetWidth, b: f.offsetTop + f.offsetHeight }));
-  const width = fw * W;
-  for (let y = 0; y < 6000; y += 20) {
-    for (let x = 0; x + width <= W + 1; x += Math.max(20, W / 48)) {
-      const r = { l: x, t: y, r: x + width, b: y + fh };
-      if (!rects.some((o) => r.l < o.r + 12 && r.r > o.l - 12 && r.t < o.b + 12 && r.b > o.t - 12)) return { fx: x / W, fy: y, fw, fh };
-    }
-  }
-  return { fx: 0, fy: 0, fw, fh };
+  const obstacles = $$('#widgets .free-item').map((f) => ({ l: f.offsetLeft, t: f.offsetTop, r: f.offsetLeft + f.offsetWidth, b: f.offsetTop + f.offsetHeight }));
+  const spot = firstFreeSpot({ width: fw * W, height: fh, W, obstacles });
+  return spot ? { fx: spot.x / W, fy: spot.y, fw, fh } : { fx: 0, fy: 0, fw, fh };
 }
 
 let guides = [];
@@ -193,15 +188,6 @@ function guide(dir, at) {
 }
 function clearGuides() { guides.forEach((g) => g.remove()); guides = []; }
 
-function snapAxis(cands, targets, th = 8) {
-  let best = null;
-  for (const c of cands) for (const t of targets) {
-    const d = t - c;
-    if (Math.abs(d) <= th && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, at: t };
-  }
-  return best;
-}
-
 /** Evita que janelas do layout livre terminem sobrepostas após mover/redimensionar. */
 function freeItemRects(box, except) {
   return Array.from(box.querySelectorAll('.free-item')).filter((item) => item !== except).map((item) => ({
@@ -210,48 +196,9 @@ function freeItemRects(box, except) {
   }));
 }
 
-function overlapsFreeItem(rect, obstacles, gap = 12) {
-  return obstacles.some((o) =>
-    rect.l < o.r + gap && rect.r > o.l - gap
-    && rect.t < o.b + gap && rect.b > o.t - gap
-  );
-}
-
-/** Procura a posição livre mais próxima, priorizando deslocamentos pequenos. */
-function nearestFreePosition(box, frame, desired, obstacles) {
-  const W = box.clientWidth;
-  const width = Math.min(W, desired.w);
-  const height = desired.h;
-  const xs = new Set([0, Math.max(0, W - width), Math.max(0, Math.min(W - width, desired.x))]);
-  const ys = new Set([0, Math.max(0, desired.y)]);
-  for (const o of obstacles) {
-    xs.add(Math.max(0, Math.min(W - width, o.l - width - 12)));
-    xs.add(Math.max(0, Math.min(W - width, o.r + 12)));
-    ys.add(Math.max(0, o.t - height - 12));
-    ys.add(Math.max(0, o.b + 12));
-  }
-  let candidates = [];
-  for (const x of xs) for (const y of ys) candidates.push({ x, y });
-  candidates.sort((a, b) =>
-    Math.abs(a.x - desired.x) + Math.abs(a.y - desired.y) * 1.15
-    - (Math.abs(b.x - desired.x) + Math.abs(b.y - desired.y) * 1.15)
-  );
-  const valid = (p) => !overlapsFreeItem(
-    { l: p.x, t: p.y, r: p.x + width, b: p.y + height }, obstacles
-  );
-  let found = candidates.find(valid);
-  if (found) return { ...found, w: width, h: height };
-
-  // Fallback em grade: útil quando as posições existentes ocupam quase toda a largura.
-  const bottom = Math.max(desired.y + 1600, ...obstacles.map((o) => o.b + height + 32));
-  for (let y = 0; y <= bottom; y += 24) {
-    for (let x = 0; x + width <= W + 1; x += 24) {
-      const p = { x, y };
-      if (valid(p)) return { ...p, w: width, h: height };
-    }
-  }
-  return null;
-}
+const overlapsFreeItem = (rect, obstacles) => overlapsAny(rect, obstacles);
+/** Posição livre mais próxima dentro da área dos widgets (ver lib/layout-geometry.js). */
+const nearestFree = (box, desired, obstacles) => nearestFreePosition({ W: box.clientWidth, desired, obstacles });
 
 function attachFree(frame, { handles, grip, fixedHeight, minW = 200, minH = 110, save }) {
   const box = $('#widgets');
@@ -318,7 +265,7 @@ function attachFree(frame, { handles, grip, fixedHeight, minW = 200, minH = 110,
       const obstacles = freeItemRects(box, frame);
       const proposed = { l: cur.x, t: cur.y, r: cur.x + cur.w, b: cur.y + cur.h };
       if (mode === 'move' && overlapsFreeItem(proposed, obstacles)) {
-        const free = nearestFreePosition(box, frame, cur, obstacles);
+        const free = nearestFree(box, cur, obstacles);
         if (free) {
           cur.x = free.x;
           cur.y = free.y;
@@ -410,7 +357,7 @@ export function paintModeButtons() {
 }
 
 export function applyWidgetSize(card, w) {
-  card.style.gridColumn = `span ${spanFor(w.w || 6)}`;
+  card.style.gridColumn = `span ${spanFor(w.w || 6, S.gridCols)}`;
   if (w.hpx && S.gridCols > 1) { card.style.height = w.hpx + 'px'; card.style.maxHeight = 'none'; card.classList.add('fixed-h'); }
   else { card.style.height = ''; card.style.maxHeight = ''; card.classList.remove('fixed-h'); }
   const ws = card.querySelector('.wsize');
