@@ -106,3 +106,33 @@ test('crédito da foto do dia (Bing/NASA): só o ícone sobre os widgets, abre a
     await x.close();
   }
 });
+
+test('botões flutuantes (🎙 e 📷) não cobrem widgets no modo grade (#38)', async () => {
+  for (const [w, hgt, colsEsperadas] of [[1366, 768, 12], [1280, 800, 12], [1920, 1080, 12], [900, 700, 6]]) {
+    const x = await launch({ viewport: { width: w, height: hgt } });
+    try {
+      const p = await x.open('src/newtab.html', { wait: 1200 });
+      await p.evaluate(() => { const cr = document.querySelector('#bgCredit'); cr.innerHTML = '<a href="#"><span class="cr-ic">📷</span><span class="cr-txt">Foto</span></a>'; cr.hidden = false; });
+      const r = await p.evaluate(() => {
+        const hit = (a, b) => !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+        const fabs = ['.voice-fab', '#bgCredit'].map((s) => document.querySelector(s)).filter((e) => e && !e.hidden).map((e) => e.getBoundingClientRect());
+        const out = [];
+        // percorre a página inteira: os botões são fixos e os widgets passam por baixo ao rolar
+        for (let y = 0; y <= document.documentElement.scrollHeight; y += 200) {
+          window.scrollTo(0, y);
+          for (const wdg of document.querySelectorAll('.widget')) {
+            const b = wdg.getBoundingClientRect();
+            if (fabs.some((f) => hit(f, b))) out.push(wdg.querySelector('h2,h3')?.textContent || wdg.className);
+          }
+        }
+        window.scrollTo(0, 0);
+        return { fabs: fabs.length, hits: [...new Set(out)], cols: getComputedStyle(document.querySelector('#widgets')).gridTemplateColumns.split(' ').length };
+      });
+      assert.ok(r.fabs >= 1, 'o botão de voz deve estar na tela');
+      assert.deepEqual(r.hits, [], `${w}x${hgt}: widgets embaixo dos botões flutuantes`);
+      assert.equal(r.cols, colsEsperadas, `${w}x${hgt}: colunas da grade`);
+    } finally {
+      await x.close();
+    }
+  }
+});

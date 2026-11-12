@@ -56,6 +56,7 @@ export function voiceApi() {
 export function setupVoice() {
   const fab = $('#voiceFab');
   fab.hidden = !hasDictation();
+  document.body.classList.toggle('has-fab', !fab.hidden);
   fab.addEventListener('click', () => startVoice());
   $('#voiceClose').addEventListener('click', () => stopVoice(true));
   $('#voice').addEventListener('click', (e) => { if (e.target.id === 'voice') stopVoice(true); });

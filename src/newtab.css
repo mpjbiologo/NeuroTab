@@ -352,6 +352,9 @@ body.editing .widget .wbody { pointer-events: none; opacity: .75; }
   .item .tx { -webkit-line-clamp: 1; }
 }
 body.narrow #center { padding: 0 12px 80px; }
+/* Faixa reservada para os botões flutuantes do canto (🎙 voz, 📷 crédito da foto) no modo grade,
+   para eles não cobrirem a borda dos widgets (#38). 22 px da borda + 52 px do botão + 12 px de folga. */
+body.has-fab:not(.free):not(.narrow) #center { padding-right: 86px; }
 body.narrow .hero { padding-top: 3vh; }
 body.narrow .clock { font-size: 48px; }
 body.narrow .rail-btn .lbl { display: none; }
