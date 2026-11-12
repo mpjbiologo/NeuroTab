@@ -1,3 +1,4 @@
+import { setHTML } from './safe-html.js';
 // NeuroTab — utilitários de interface compartilhados.
 import { LOCALE } from './i18n.js';
 
@@ -11,7 +12,7 @@ export function h(tag, attrs = {}, ...children) {
     if (k === 'class') el.className = v;
     else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
     else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
-    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'html') setHTML(el, v);
     else if (k in el && typeof v !== 'string') el[k] = v;
     else el.setAttribute(k, v === true ? '' : v);
   }

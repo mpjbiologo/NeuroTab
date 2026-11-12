@@ -15,6 +15,7 @@ import { PROVIDERS, aiConfig, requestPermission, listModels, complete } from './
 import { embedConfig, indexItems, indexStatus, clearIndex, EMBED_DEFAULTS } from './lib/semantic.js';
 import { pixPayload, qrSvg } from './lib/pix.js';
 import { PROJECT, DONATION } from './config.js';
+import { setHTML } from './lib/safe-html.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -510,7 +511,7 @@ function setupDonation() {
     const code = pixPayload(pix);
     $('#pixBox').hidden = false;
     $('#pixKey').textContent = pix.key;
-    $('#pixQr').innerHTML = qrSvg(code, { size: 200 });
+    setHTML($('#pixQr'), qrSvg(code, { size: 200 }));
     $('#pixCopyCode').onclick = async () => { await navigator.clipboard.writeText(code); toast('Pix copia e cola copiado — obrigado! ❤'); };
     $('#pixCopyKey').onclick = async () => { await navigator.clipboard.writeText(pix.key); toast('Chave Pix copiada — obrigado! ❤'); };
   }
@@ -641,7 +642,10 @@ function renderPlaces() {
   box.replaceChildren(...places.map((p, i) => {
     const row = document.createElement('div');
     row.className = 'pl';
-    row.innerHTML = `<b>${i === 0 ? '⭐' : '🕐'}</b><span></span><button class="btn">Remover</button>`;
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = 'Remover';
+    row.append(Object.assign(document.createElement('b'), { textContent: i === 0 ? '⭐' : '🕐' }), document.createElement('span'), btn);
     row.querySelector('span').textContent = `${p.name}${p.region ? ' · ' + p.region : ''}${p.tz ? ' · ' + p.tz : ''}`;
     if (i === 0) row.querySelector('span').append(document.createElement('small'));
     if (i === 0) row.querySelector('small').textContent = ' (principal)';

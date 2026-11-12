@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.3 — 2026-11-12
+**Manutenção: mais segurança no que aparece na tela e base pronta para as próximas versões.**
+
+- Segurança: todo HTML que a NeuroTab coloca na página (respostas da IA, textos traduzidos, QR Code do Pix) agora passa por uma limpeza que remove scripts, eventos e links `javascript:` antes de aparecer
+- Firefox: o validador da loja não aponta mais nenhum aviso (antes eram 8)
+- Release: componentes do GitHub atualizados para o Node 24 (sem avisos de versão antiga)
+- Testes: Firefox 160 tem reconhecimento de voz; o teste da palavra de ativação acompanha o navegador
+
 ## v0.6.2 — 2026-11-12
 **Salvar imagens de qualquer site e novos jeitos de apoiar.**
 

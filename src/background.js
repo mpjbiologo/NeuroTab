@@ -223,12 +223,15 @@ chrome.notifications.onClicked.addListener(async (nid) => {
 
 // ---------- Som (documento offscreen) ----------
 async function ensureOffscreen() {
-  const has = chrome.offscreen.hasDocument
-    ? await chrome.offscreen.hasDocument()
+  // Só existe no Chrome/Edge (no Firefox o som toca direto aqui, ver directPlayer).
+  const offscreen = globalThis.chrome?.offscreen;
+  if (!offscreen) return;
+  const has = offscreen.hasDocument
+    ? await offscreen.hasDocument()
     : (await chrome.runtime.getContexts({ contextTypes: ['OFFSCREEN_DOCUMENT'] })).length > 0;
   if (has) return;
   try {
-    await chrome.offscreen.createDocument({ url: 'src/offscreen.html', reasons: ['AUDIO_PLAYBACK'], justification: 'Tocar o som de despertadores e timers da NeuroTab' });
+    await offscreen.createDocument({ url: 'src/offscreen.html', reasons: ['AUDIO_PLAYBACK'], justification: 'Tocar o som de despertadores e timers da NeuroTab' });
   } catch (e) {
     if (!String(e).includes('single offscreen')) console.warn(e);
   }

@@ -3,6 +3,7 @@
 // conhecidos (dicionários em src/i18n/) e ajusta datas/números para o idioma escolhido.
 import EN from '../i18n/en.js';
 import ES from '../i18n/es.js';
+import { setHTML } from './safe-html.js';
 
 const DICTS = { en: EN, es: ES };
 export let LANG = 'pt-BR';
@@ -140,7 +141,7 @@ function trTree(root) {
       if (HTML_TAGS.has(n.tagName) && n.children.length && D.html) {
         const key = n.innerHTML.split(/\s+/).join(' ').trim();
         const h = D.html[key];
-        if (h) { n.innerHTML = h; n = walker.nextSibling() || nextOut(walker); continue; }
+        if (h) { setHTML(n, h); n = walker.nextSibling() || nextOut(walker); continue; }
       }
     }
     n = walker.nextNode();

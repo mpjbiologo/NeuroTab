@@ -18,6 +18,7 @@ import { requestFeature } from './lib/permissions.js';
 import { getWeather, searchCities, wxIcon, wxDesc, timeIn, tzOffsetLabel, dayIn, renderForecast } from './lib/weather.js';
 import { WIDGETS } from './widgets/index.js';
 import { initWindowManager, bringToFront } from './lib/window-manager.js';
+import { setHTML } from './lib/safe-html.js';
 
 const EMOJIS = ['🏠','⭐','📁','🚀','🎓','💲','💼','🤖','🎮','📚','🍺','🥗','🎬','🎵','🛒','💻','🔗','🧪','🧬','📰','✈️','⚙️','❤️','📷'];
 
@@ -1849,7 +1850,7 @@ async function runVoice(said) {
     // A resposta sai no idioma em que a pessoa falou (respostas longas da IA já vêm no idioma da interface).
     const text = r.long || r.translated ? r.reply : tIn(lang, r.reply);
     // Respostas da IA vêm em Markdown (listas, negrito): formata em vez de mostrar os asteriscos.
-    if (r.long) reply.innerHTML = miniMarkdown(text);
+    if (r.long) setHTML(reply, miniMarkdown(text));
     else reply.textContent = text;
     reply.scrollTop = 0;
     await speak(text, { ...data.settings, voiceLang: r.long ? data.settings.voiceLang : voiceCode() });
