@@ -101,11 +101,15 @@ O Google só libera a API do Keep para contas empresariais (Workspace). Para con
 | **v0.4** ✅ | Relógio + clima com várias cidades e fusos, trânsito com locais e rotas, slides de fotos, hábitos, notícias RSS, foco do dia, tradução (pt/en/es), versão para Firefox, material para as lojas |
 | **v0.5** ✅ | Busca por significado, comandos de voz em inglês e espanhol, palavra de ativação (experimental), backup com chaves de API, biblioteca de imagens |
 | **v0.6** ✅ | Fundação: testes automáticos e CI, migrações de dados, permissões sob demanda, chaves de API mais protegidas |
-| **v0.7** | Maximizar/minimizar widgets, nome do assistente, agenda, imagens no cérebro |
-| **Depois** | Agenda, sincronização entre computadores, Google Fotos e OneDrive nos slides, palavra de ativação offline |
+| **v0.6.x** ✅ | Nas lojas do Edge, Chrome e Firefox com atualização automática; imagens de sites com login; limpeza de HTML |
+| [**v0.7**](https://github.com/mpjbiologo/NeuroTab/milestone/3) | Base modular (o `newtab.js` dividido em módulos), botões flutuantes sem cobrir widgets, maximizar widgets, nome do assistente, o cérebro ler as imagens, agenda |
+| [**v0.8**](https://github.com/mpjbiologo/NeuroTab/milestone/4) | Assistente que responde falando e conversa, modo reunião (gravar, transcrever, resumir), visual novo da voz |
+| [**v0.9**](https://github.com/mpjbiologo/NeuroTab/milestone/5) | NeuroPilot, central de conhecimento e fontes, recorte de tela, captura de arquivos, Modo Estudante |
+| [**v1.0**](https://github.com/mpjbiologo/NeuroTab/milestone/6) | Estável e completa: sincronização opcional e criptografada entre computadores, painel de privacidade, mesma lista de testes em todos os navegadores |
+| [**1.x**](https://github.com/mpjbiologo/NeuroTab/milestone/7) | Modo Investigação, mapa de conhecimento, automações, espaços de trabalho, notificações, métricas, widgets de terceiros, versão desktop |
 | ✅ | Publicada nas lojas do [Edge](https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl), do [Chrome](https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk) e do [Firefox](https://addons.mozilla.org/firefox/addon/neurotab-secondbrain/) ([guias das lojas](docs/store/README.md)) |
 
-Ideias são bem-vindas nas [Issues](https://github.com/mpjbiologo/NeuroTab/issues).
+O caminho detalhado até a 1.0 está em [docs/ROADMAP.md](docs/ROADMAP.md). Ideias são bem-vindas nas [Issues](https://github.com/mpjbiologo/NeuroTab/issues).
 
 ## 🔒 Privacidade
 
