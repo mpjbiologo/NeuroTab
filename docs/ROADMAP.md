@@ -37,7 +37,7 @@ Primeiro a base, depois os recursos.
 - Revisão geral: textos, acessibilidade, desempenho e documentação.
 
 ### [1.x — Depois da 1.0](https://github.com/mpjbiologo/NeuroTab/milestone/7)
-Modo Investigação (#23), mapa de conhecimento (#22), automações visuais (#24), espaços de trabalho (#25), notificações de celular e e-mail (#19, #20), diálogo entre dois modelos de IA (#21), linha do tempo e métricas (#30, #31), widgets de terceiros (#32) e versão desktop (#33).
+Modo Investigação (#23), mapa de conhecimento (#22), automações visuais (#24), espaços de trabalho (#25), notificações de celular e e-mail (#19, #20), diálogo entre dois modelos de IA (#21), linha do tempo e métricas (#30, #31), widgets de terceiros (#32), versão desktop (#33) e navegador para Android baseado em Chromium com atualizações pelo GitHub (#42).
 
 ## Regras do caminho
 

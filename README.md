@@ -106,7 +106,7 @@ O Google só libera a API do Keep para contas empresariais (Workspace). Para con
 | [**v0.8**](https://github.com/mpjbiologo/NeuroTab/milestone/4) | Assistente que responde falando e conversa, modo reunião (gravar, transcrever, resumir), visual novo da voz |
 | [**v0.9**](https://github.com/mpjbiologo/NeuroTab/milestone/5) | NeuroPilot, central de conhecimento e fontes, recorte de tela, captura de arquivos, Modo Estudante |
 | [**v1.0**](https://github.com/mpjbiologo/NeuroTab/milestone/6) | Estável e completa: sincronização opcional e criptografada entre computadores, painel de privacidade, mesma lista de testes em todos os navegadores |
-| [**1.x**](https://github.com/mpjbiologo/NeuroTab/milestone/7) | Modo Investigação, mapa de conhecimento, automações, espaços de trabalho, notificações, métricas, widgets de terceiros, versão desktop |
+| [**1.x**](https://github.com/mpjbiologo/NeuroTab/milestone/7) | Modo Investigação, mapa de conhecimento, automações, espaços de trabalho, notificações, métricas, widgets de terceiros, versão desktop, navegador para Android |
 | ✅ | Publicada nas lojas do [Edge](https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl), do [Chrome](https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk) e do [Firefox](https://addons.mozilla.org/firefox/addon/neurotab-secondbrain/) ([guias das lojas](docs/store/README.md)) |
 
 O caminho detalhado até a 1.0 está em [docs/ROADMAP.md](docs/ROADMAP.md). Ideias são bem-vindas nas [Issues](https://github.com/mpjbiologo/NeuroTab/issues).
