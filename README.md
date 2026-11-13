@@ -103,7 +103,7 @@ O Google só libera a API do Keep para contas empresariais (Workspace). Para con
 | **v0.6** ✅ | Fundação: testes automáticos e CI, migrações de dados, permissões sob demanda, chaves de API mais protegidas |
 | **v0.6.x** ✅ | Nas lojas do Edge, Chrome e Firefox com atualização automática; imagens de sites com login; limpeza de HTML |
 | [**v0.7**](https://github.com/mpjbiologo/NeuroTab/milestone/3) | Base modular (o `newtab.js` dividido em módulos), botões flutuantes sem cobrir widgets, maximizar widgets, nome do assistente, o cérebro ler as imagens, agenda |
-| [**v0.8**](https://github.com/mpjbiologo/NeuroTab/milestone/4) | Assistente que responde falando e conversa, modo reunião (gravar, transcrever, resumir), visual novo da voz |
+| [**v0.8**](https://github.com/mpjbiologo/NeuroTab/milestone/4) | Assistente que responde falando, modo conversa (💬 microfone sempre ligado), modo reunião (📋 gravar, transcrever, resumir), visual novo da voz |
 | [**v0.9**](https://github.com/mpjbiologo/NeuroTab/milestone/5) | NeuroPilot, central de conhecimento e fontes, recorte de tela, captura de arquivos, Modo Estudante |
 | [**v1.0**](https://github.com/mpjbiologo/NeuroTab/milestone/6) | Estável e completa: sincronização opcional e criptografada entre computadores, painel de privacidade, mesma lista de testes em todos os navegadores |
 | [**1.x**](https://github.com/mpjbiologo/NeuroTab/milestone/7) | Modo Investigação, mapa de conhecimento, automações, espaços de trabalho, notificações, métricas, widgets de terceiros, versão desktop, navegador para Android |

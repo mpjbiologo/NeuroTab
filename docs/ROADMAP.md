@@ -20,7 +20,8 @@ Primeiro a base, depois os recursos.
 
 ### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 2 atualizações
 - Responder falando ao ser chamado e conversar até 1 minuto de silêncio (#40).
-- Modo reunião: gravar, transcrever, resumo, pontos importantes e tarefas (#41).
+- Modo reunião: gravar, transcrever, resumo, pontos importantes e tarefas, com botão 📋 perto do microfone (#41).
+- Modo conversa: microfone sempre ligado e o cérebro responde a tudo, com botão 💬 perto do microfone (#44).
 - Visual futurista da voz (#39).
 
 ### [v0.9 — Conhecimento e captura](https://github.com/mpjbiologo/NeuroTab/milestone/5) · 2 a 3 atualizações
