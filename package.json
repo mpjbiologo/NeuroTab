@@ -1,6 +1,6 @@
 {
   "name": "neurotab",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "Nova aba com segundo cérebro — testes e ferramentas de desenvolvimento",
   "type": "module",

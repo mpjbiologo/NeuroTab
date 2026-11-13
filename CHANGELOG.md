@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.1 — 2026-11-13
+**O cérebro conhece seus locais e trajetos, e os widgets ganham maximizar e minimizar.**
+
+- Mapas: o cérebro responde sobre os locais e rotas salvos no widget 🚦 Trânsito, como "quanto tempo até o trabalho?", "qual o endereço da academia?" e "quais rotas eu tenho?". Endereço, distância em linha reta e listas funcionam até sem IA; as respostas trazem botões do Google Maps e do Waze (trânsito ao vivo) e "🛣 Tempo pela rua" (OpenStreetMap, sem trânsito, pede permissão na primeira vez). Também por voz, em português, inglês e espanhol (#43)
+- Privacidade: nova opção "Enviar locais salvos à IA" (ligada por padrão; os endereços só vão quando a pergunta é sobre lugares)
+- Widgets: botões para maximizar (ocupa a área útil; Esc ou clique fora restauram), minimizar (fica só o cabeçalho, sem perder nada; o estado fica salvo) e restaurar, no modo grade e no livre (#18)
+- Por dentro: barramento de eventos entre as partes da nova aba (#5) e contrato dos widgets com limpeza automática ao desmontar (#6); documentação em `docs/dev/WIDGETS.md`
+
 ## v0.7.0 — 2026-11-12
 **Arquitetura modular: a nova aba dividida em partes independentes, base para as próximas versões.**
 
