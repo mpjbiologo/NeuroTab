@@ -16,7 +16,7 @@ A 1.0 não é "ter todos os recursos". É poder dizer: **pode confiar seus dados
 ### [v0.7 — Base modular e painel](https://github.com/mpjbiologo/NeuroTab/milestone/3) · 2 a 3 atualizações
 Primeiro a base, depois os recursos.
 - **0.7.0 — Arquitetura modular:** dividir o `newtab.js` em módulos, um por responsabilidade, sem mudar o comportamento (#14); contratos de módulos e do ciclo de vida dos widgets (#5, #6); botões flutuantes e painéis sem cobrir widgets (#38, #35).
-- **0.7.1 em diante:** maximizar, minimizar e restaurar widgets (#18); nome do assistente e frase de ativação (#15); o cérebro ler as imagens da biblioteca (#17); agenda e compromissos (#26).
+- **0.7.1 em diante:** maximizar, minimizar e restaurar widgets (#18); nome do assistente e frase de ativação (#15); o cérebro ler as imagens da biblioteca (#17) e o widget de mapas, para responder sobre locais e trajetos (#43); agenda e compromissos (#26).
 
 ### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 2 atualizações
 - Responder falando ao ser chamado e conversar até 1 minuto de silêncio (#40).
