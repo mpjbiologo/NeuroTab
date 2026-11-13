@@ -1,6 +1,12 @@
 // NeuroTab — Español. Las claves son los textos originales en portugués.
 export default {
   exact: {
+    'Tempo pela rua': 'Tiempo por la calle',
+    'Calculando…': 'Calculando…',
+    'Calcula pelo OpenStreetMap, sem o trânsito de agora': 'Calculado con OpenStreetMap, sin el tráfico de ahora',
+    'Não foi possível calcular a rota agora.': 'No se pudo calcular la ruta ahora.',
+    'Enviar locais salvos à IA': 'Enviar lugares guardados a la IA',
+    'Quando você pergunta sobre lugares e trajetos, a IA recebe os locais e rotas do widget de mapas (nome, endereço e posição).': 'Cuando preguntas sobre lugares y trayectos, la IA recibe los lugares y rutas del widget de mapas (nombre, dirección y posición).',
     '(cópia)': '(copia)', '(nenhuma nota salva ainda)': '(aún no hay notas guardadas)', '(separadas por vírgula)': '(separadas por comas)',
     '1 dia': '1 día', '1 hora': '1 hora', '1 minuto': '1 minuto', '10 min': '10 min', '15 minutos': '15 minutos', '30 min': '30 min', '30 segundos': '30 segundos', '5 minutos': '5 minutos',
     '35 ml por kg': '35 ml por kg',

@@ -1,4 +1,5 @@
 // NeuroTab — estado compartilhado da nova aba.
+import { createBus } from '../lib/events.js';
 // Variáveis que várias partes leem e alteram ficam em S (ex.: S.data, S.items, S.editing).
 
 export const S = {
@@ -19,4 +20,5 @@ export const EMOJIS = ['🏠','⭐','📁','🚀','🎓','💲','💼','🤖','�
 // Relógio e busca: referências fixas (no modo livre eles mudam de lugar no DOM).
 export const heroEl = document.getElementById('hero');
 export const omniEl = document.getElementById('omniWrap');
-export const listeners = { brain: new Set(), data: new Set(), ask: new Set() };
+/** Barramento de eventos da nova aba (lib/events.js). Widgets assinam via ctx.on(). */
+export const bus = createBus();

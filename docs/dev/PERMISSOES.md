@@ -22,6 +22,7 @@ A fonte da verdade é `src/lib/permissions.js`; o teste `tests/unit/permissions.
 | Aviso de versão nova | `api.github.com` | Sempre (não é usado em instalações pela loja) |
 | Cotações e conversão de moedas | `economia.awesomeapi.com.br`, `brapi.dev` | Botão "Permitir" no widget Cotações |
 | Endereços do widget Trânsito | `nominatim.openstreetmap.org` | Ao buscar um endereço |
+| Distância e tempo pela rua | `routing.openstreetmap.de` | Ao clicar em "🛣 Tempo pela rua" numa resposta do "Pergunte ao seu cérebro" |
 | Fotos do dia nos slides | `www.bing.com`, `api.nasa.gov` | Ao escolher Bing ou NASA como origem das fotos |
 | Provedores de IA | Gemini, OpenAI, Anthropic, OpenRouter | Ao salvar o provedor em IA e voz |
 | IA local | `localhost`, `127.0.0.1` | Ao configurar Ollama/LM Studio |

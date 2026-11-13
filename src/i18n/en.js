@@ -1,6 +1,12 @@
 // NeuroTab — English. Keys are the original Portuguese strings.
 export default {
   exact: {
+    'Tempo pela rua': 'Time by road',
+    'Calculando…': 'Calculating…',
+    'Calcula pelo OpenStreetMap, sem o trânsito de agora': 'Calculated with OpenStreetMap, without current traffic',
+    'Não foi possível calcular a rota agora.': 'Could not calculate the route right now.',
+    'Enviar locais salvos à IA': 'Send saved places to the AI',
+    'Quando você pergunta sobre lugares e trajetos, a IA recebe os locais e rotas do widget de mapas (nome, endereço e posição).': 'When you ask about places and trips, the AI receives the places and routes from the map widget (name, address and position).',
     '(cópia)': '(copy)', '(nenhuma nota salva ainda)': '(no notes saved yet)', '(separadas por vírgula)': '(comma-separated)',
     '1 dia': '1 day', '1 hora': '1 hour', '1 minuto': '1 minute', '10 min': '10 min', '15 minutos': '15 minutes', '30 min': '30 min', '30 segundos': '30 seconds', '5 minutos': '5 minutes',
     '35 ml por kg': '35 ml per kg',

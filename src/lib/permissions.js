@@ -27,6 +27,12 @@ export const FEATURES = {
     origins: ['https://nominatim.openstreetmap.org/*'],
     data: ['locationInfo'],
   },
+  routing: {
+    label: 'Distância e tempo pela rua',
+    why: 'Calcula a distância e o tempo de um trajeto entre seus locais salvos (OpenStreetMap), quando você pede no "Pergunte ao seu cérebro". Não considera o trânsito de agora.',
+    origins: ['https://routing.openstreetmap.de/*'],
+    data: ['locationInfo'],
+  },
   slides: {
     label: 'Fotos do dia nos slides',
     why: 'Baixa a foto do dia do Bing e da NASA para o fundo da nova aba.',

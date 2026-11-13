@@ -48,6 +48,7 @@
     "https://economia.awesomeapi.com.br/*",
     "https://brapi.dev/*",
     "https://nominatim.openstreetmap.org/*",
+    "https://routing.openstreetmap.de/*",
     "https://www.bing.com/*",
     "https://api.nasa.gov/*",
     "https://generativelanguage.googleapis.com/*",

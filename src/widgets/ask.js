@@ -2,7 +2,10 @@
 import { h, micButton, miniMarkdown, speak } from '../lib/ui.js';
 import { ask, aiConfig } from '../lib/ai.js';
 import { displayTitle, searchItems } from '../lib/brain.js';
-import { t } from '../lib/i18n.js';
+import { t, LOCALE } from '../lib/i18n.js';
+import { localAnswer, gmapsRoute, wazeTo, streetEstimate, formatKm, formatMin, placesText } from '../lib/places.js';
+import { commandLang } from '../lib/assistant.js';
+import { requestFeature } from '../lib/permissions.js';
 
 export default {
   id: 'ask',
@@ -39,12 +42,53 @@ export default {
       return h('div', { class: 'srcs' }, ...cited.map((n) => h('button', { onclick: () => ctx.openItem(sources[n - 1]) }, `[${n}] ${displayTitle(sources[n - 1]).slice(0, 40)}`)));
     }
 
+    const lang = commandLang(LOCALE);
+
+    /** Botões do trajeto: Google Maps, Waze e, se pedir, distância e tempo pela rua (OpenStreetMap). */
+    function tripBar(trip) {
+      const T = placesText(lang);
+      const bar = h('div', { class: 'srcs trip' },
+        h('a', { href: gmapsRoute(trip.from, trip.to, trip.mode), target: '_blank', rel: 'noopener' }, '🗺 Google Maps'),
+        h('a', { href: wazeTo(trip.to), target: '_blank', rel: 'noopener' }, '🚙 Waze'));
+      if (trip.from) {
+        const btn = h('button', {
+          title: t('Calcula pelo OpenStreetMap, sem o trânsito de agora'),
+          onclick: async () => {
+            // Pedido direto no clique (sem await antes), para o navegador aceitar.
+            const ok = await requestFeature('routing');
+            if (!ok) return;
+            btn.disabled = true;
+            btn.textContent = t('Calculando…');
+            try {
+              const est = await streetEstimate(trip.from, trip.to, trip.mode);
+              btn.replaceWith(h('p', { class: 'street' }, est ? T.street(formatKm(est.km, lang), formatMin(est.min, lang)) : t('Não foi possível calcular a rota agora.')));
+            } catch {
+              btn.replaceWith(h('p', { class: 'street' }, t('Não foi possível calcular a rota agora.')));
+            }
+            chat.scrollTop = chat.scrollHeight;
+          },
+        }, '🛣 ' + t('Tempo pela rua'));
+        bar.append(btn);
+      }
+      return bar;
+    }
+
     async function go(text, byVoice) {
       const q = (text || '').trim();
       if (!q) return;
       input.value = '';
       chat.append(h('div', { class: 'msg user' }, q));
+      // Perguntas sobre os locais e rotas do widget de mapas (funcionam até sem IA).
+      const local = localAnswer(q, ctx.settings, lang);
       if (!ctx.aiReady()) {
+        if (local) {
+          const msg = h('div', { class: 'msg bot' }, h('p', {}, local.text));
+          if (local.trip) msg.append(tripBar(local.trip));
+          chat.append(msg);
+          chat.scrollTop = chat.scrollHeight;
+          if (ctx.settings.speakAnswers || byVoice) speak(local.text, ctx.settings);
+          return;
+        }
         const found = searchItems(ctx.items, q, 5);
         chat.append(h('div', { class: 'msg bot' },
           h('p', {}, t(found.length ? 'Sem IA configurada — encontrei estes itens:' : 'Sem IA configurada e nada encontrado nas notas.')),
@@ -56,7 +100,7 @@ export default {
       chat.append(wait);
       chat.scrollTop = chat.scrollHeight;
       try {
-        const { answer, sources } = await ask(ctx.settings, ctx.items, q, history);
+        const { answer, sources } = await ask(ctx.settings, ctx.items, q, history, ctx.brainExtras?.(q) || []);
         history.push({ role: 'user', content: q }, { role: 'assistant', content: answer });
         const msg = h('div', { class: 'msg bot', html: miniMarkdown(answer) });
         msg.addEventListener('click', (e) => {
@@ -65,6 +109,7 @@ export default {
         });
         const bar = sourcesBar(sources, answer);
         if (bar) msg.append(bar);
+        if (local?.trip) msg.append(tripBar(local.trip));
         wait.replaceWith(msg);
         if (ctx.settings.speakAnswers || byVoice) speak(answer, ctx.settings);
       } catch (e) {

@@ -4,7 +4,8 @@ import * as Brain from '../lib/brain.js';
 import { isConfigured } from '../lib/ai.js';
 import { toast } from '../lib/ui.js';
 import { semanticOn, hybridSearch, embedConfig } from '../lib/semantic.js';
-import { S, listeners } from './state.js';
+import { WIDGETS } from '../widgets/index.js';
+import { S, bus } from './state.js';
 import { openItemDialog } from './editor.js';
 import { editLink } from './rail.js';
 
@@ -20,7 +21,8 @@ export const ctx = {
     Object.assign(S.data.settings, patch);
     await saveData(S.data);
   },
-  on(evt, fn) { listeners[evt].add(fn); return () => listeners[evt].delete(fn); },
+  /** Assina um evento do barramento (lib/events.js); devolve a função para cancelar. */
+  on: (evt, fn) => bus.on(evt, fn),
   openItem: (it) => openItemDialog(it),
   newItem: (p) => openItemDialog(null, p),
   async capture(p) {
@@ -37,4 +39,16 @@ export const ctx = {
   openLinkDialog: (link, preset) => editLink(link, preset),
   faviconFor: (l) => l.favicon || faviconUrl(l.url),
   openSettings: (hash = '') => { location.href = 'options.html' + hash; },
+  /** Trechos de dados dos widgets para o cérebro (contrato brainContext, docs/dev/WIDGETS.md). */
+  brainExtras: (question) => brainExtras(question),
 };
+
+/** Junta o que cada widget oferece ao cérebro para esta pergunta (mesmo sem o widget na tela). */
+export function brainExtras(question) {
+  const out = [];
+  for (const def of Object.values(WIDGETS)) {
+    if (typeof def.brainContext !== 'function') continue;
+    try { const x = def.brainContext(S.data.settings, question); if (x?.text) out.push(x); } catch (e) { console.error('NeuroTab: brainContext de', def.id, e); }
+  }
+  return out;
+}

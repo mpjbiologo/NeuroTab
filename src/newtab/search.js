@@ -3,7 +3,7 @@ import { SEARCH_ENGINES, saveData, hostOf, normalizeUrl } from '../lib/store.js'
 import * as Brain from '../lib/brain.js';
 import { $, $$, h, toast, micButton } from '../lib/ui.js';
 import { looksLikeMath, smartCalc } from '../lib/calc.js';
-import { S, listeners } from './state.js';
+import { S, bus } from './state.js';
 import { ctx } from './context.js';
 import { openItemDialog } from './editor.js';
 import { renderWidgets } from './widgets.js';
@@ -108,8 +108,8 @@ export function setupOmni() {
 function askBrain(q) {
   if (!S.data.settings.widgets.some((w) => w.id === 'ask')) {
     S.data.settings.widgets.unshift({ id: 'ask', size: 'l' });
-    saveData(S.data).then(() => { renderWidgets(); setTimeout(() => listeners.ask.forEach((fn) => fn(q)), 50); });
+    saveData(S.data).then(() => { renderWidgets(); setTimeout(() => bus.emit('ask.requested', q), 50); });
     return;
   }
-  listeners.ask.forEach((fn) => fn(q));
+  bus.emit('ask.requested', q);
 }

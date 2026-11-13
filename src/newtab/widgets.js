@@ -2,7 +2,8 @@
 import { $, h } from '../lib/ui.js';
 import { WIDGETS } from '../widgets/index.js';
 import { gridColsFor } from '../lib/layout-geometry.js';
-import { S, heroEl, omniEl } from './state.js';
+import { S, bus, heroEl, omniEl } from './state.js';
+import { createScope } from '../lib/widget-scope.js';
 import { ctx } from './context.js';
 import { paintModeButtons, removeWidget, renderFree, setWidget } from './free.js';
 import { renderGrid } from './grid.js';
@@ -33,20 +34,41 @@ export function buildCard(w, idx) {
   return { def, card, header, body, grip, actions };
 }
 
+/**
+ * Monta um widget seguindo o contrato (docs/dev/WIDGETS.md): o widget recebe o ctx
+ * e um escopo que limpa sozinho, ao desmontar, o que ele assinou (ctx.on) e agendou
+ * (ctx.every, ctx.after, ctx.listen, ctx.onCleanup).
+ */
 export function mountCard({ def, body, actions }, w, idx) {
+  const scope = createScope();
   try {
-    const wctx = Object.assign(Object.create(ctx), { actions, saveWidget: (patch) => setWidget(idx, patch, true) });
+    const wctx = Object.assign(Object.create(ctx), {
+      actions,
+      saveWidget: (patch) => setWidget(idx, patch, true),
+      on: (evt, fn) => scope.add(bus.on(evt, fn)),
+      every: (ms, fn) => scope.every(ms, fn),
+      after: (ms, fn) => scope.after(ms, fn),
+      listen: (target, type, fn, opts) => scope.listen(target, type, fn, opts),
+      onCleanup: (fn) => scope.add(fn),
+    });
     Object.defineProperty(wctx, 'widget', { get: () => S.data.settings.widgets[idx] || w });
     const inst = def.mount(body, wctx);
-    S.mounted.push({ id: w.id, destroy: inst?.destroy });
+    S.mounted.push({
+      id: w.id,
+      destroy: () => {
+        try { inst?.destroy?.(); } finally { scope.dispose(); bus.emit('widget.unmounted', { id: w.id, idx }); }
+      },
+    });
+    bus.emit('widget.mounted', { id: w.id, idx });
   } catch (err) {
+    scope.dispose();
     console.error(err);
     body.append(h('p', { class: 'muted' }, 'Erro ao carregar este widget.'));
   }
 }
 
 export function renderWidgets() {
-  S.mounted.forEach((m) => { try { m.destroy?.(); } catch {} });
+  S.mounted.forEach((m) => { try { m.destroy?.(); } catch (e) { console.error('NeuroTab: ao desmontar widget', e); } });
   S.mounted = [];
   $('#center').prepend(heroEl, omniEl); // tira de dentro dos quadros antes de redesenhar
   S.widgetsSig = layoutSig();

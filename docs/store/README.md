@@ -136,6 +136,7 @@ Privacidad: sin cuenta, sin servidor, sin analítica. Tus datos se quedan en el 
 | Host: open-meteo.com | Weather and city search. |
 | Optional host: awesomeapi.com.br, brapi.dev | Currency and stock quotes widget. Requested when the user enables the widget. |
 | Optional host: nominatim.openstreetmap.org | Address search for saved places in the traffic widget. Requested on first search. |
+| Optional host: routing.openstreetmap.de | Road distance and travel time between the user's saved places (OpenStreetMap routing), only when the user clicks "Time by road" in an answer. Requested on first use. |
 | Optional host: bing.com, api.nasa.gov | Photo-of-the-day background slideshow. Requested when the user picks that source. |
 | Host: api.github.com | Checks GitHub for new releases. |
 | Optional hosts (AI providers, https://*/*) | Requested only when the user configures an AI provider or adds an RSS feed. |

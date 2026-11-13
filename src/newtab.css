@@ -252,6 +252,8 @@ body.editing .widget .wbody { pointer-events: none; opacity: .75; }
 .msg.bot { align-self: flex-start; background: rgba(255,255,255,.08); }
 .msg.err { background: rgba(255,122,112,.15); color: #ffc4be; }
 .msg .srcs { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+.msg .srcs a { font-size: 11.5px; border: 1px solid var(--line); background: rgba(0,0,0,.25); border-radius: 7px; padding: 2px 7px; color: #cfe0ff; text-decoration: none; }
+.msg .street { margin: 6px 0 0; font-size: 13px; }
 .msg .srcs button { font-size: 11.5px; border: 1px solid var(--line); background: rgba(0,0,0,.25); border-radius: 7px; padding: 2px 7px; cursor: pointer; color: #cfe0ff; }
 .cite { color: #9cc3ff; text-decoration: none; font-weight: 600; }
 .row-input { display: flex; gap: 8px; align-items: center; }

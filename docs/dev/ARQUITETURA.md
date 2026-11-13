@@ -61,6 +61,6 @@ Por **análise de escopo** do código (espree + eslint-scope), não por recorte 
 
 ## Próximos passos
 
-- **Contratos dos módulos e do ciclo de vida dos widgets** (#5, #6): formalizar o que entra no `ctx` e os eventos entre partes.
+- **Contrato dos widgets e eventos**: ver `docs/dev/WIDGETS.md` (#5, #6, v0.7.1).
 - **v0.8 (voz)** mexe em `voice.js`, `wake.js` e `lib/wake-word.js`.
 - **Recorte de tela (#37)** pode usar `lib/layout-geometry.js` para a seleção de área.

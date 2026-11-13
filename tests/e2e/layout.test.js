@@ -136,3 +136,26 @@ test('botões flutuantes (🎙 e 📷) não cobrem widgets no modo grade (#38)',
     }
   }
 });
+
+test('montar e desmontar os widgets várias vezes não acumula assinaturas (#6)', async () => {
+  const x = await launch();
+  try {
+    const p = await x.open('src/newtab.html', { wait: 1200 });
+    const r = await p.evaluate(async () => {
+      const { bus, S } = await import('/src/newtab/state.js');
+      const { renderWidgets } = await import('/src/newtab/widgets.js');
+      const count = () => ({ data: bus.count('data.changed'), brain: bus.count('brain.changed'), ask: bus.count('ask.requested'), mounted: S.mounted.length });
+      const before = count();
+      let unmounted = 0;
+      const off = bus.on('widget.unmounted', () => unmounted++);
+      for (let i = 0; i < 5; i++) renderWidgets();
+      off();
+      return { before, after: count(), unmounted };
+    });
+    assert.ok(r.before.mounted > 0, 'há widgets montados');
+    assert.deepEqual(r.after, r.before, 'mesmo número de assinaturas depois de remontar 5 vezes');
+    assert.equal(r.unmounted, r.before.mounted * 5);
+  } finally {
+    await x.close();
+  }
+});

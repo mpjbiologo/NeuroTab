@@ -234,6 +234,12 @@ export async function runCommand(raw, api, lang = 'pt') {
   // Informações
   if (L.time.test(t)) return { reply: `São ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.` };
   if (L.date.test(t)) return { reply: `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}.` };
+  // Locais e rotas do widget de mapas: endereço, distância, tempo, listas (funciona sem IA).
+  // Vem antes do clima ("quanto tempo até o trabalho" não é sobre o tempo lá fora); "rota para…" abre o mapa (abaixo).
+  if (!L.route.test(t)) {
+    const placeReply = api.placesAnswer?.(text, lang);
+    if (placeReply) return { reply: placeReply, translated: true };
+  }
   if (L.weather.test(t) && t.split(' ').length <= 7) return { reply: await api.weatherText() };
   if (L.quotes.test(t) && t.split(' ').length <= 6) return { reply: await api.quotesText(t) };
   if (L.tasks.test(t) || (L.tasksAsk.test(t) && t.split(' ').length <= 14)) return api.items ? { reply: tasksSummary(api.items(), (x) => tIn(lang, x)), translated: true } : { reply: api.tasksText() };

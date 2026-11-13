@@ -8,7 +8,8 @@ import { t, tIn, LOCALE } from '../lib/i18n.js';
 import { setHTML } from '../lib/safe-html.js';
 import { getWeather } from '../lib/weather.js';
 import { S } from './state.js';
-import { ctx } from './context.js';
+import { ctx, brainExtras } from './context.js';
+import { localAnswer } from '../lib/places.js';
 import { whileWakePaused } from './wake.js';
 
 export function voiceApi() {
@@ -16,7 +17,8 @@ export function voiceApi() {
   return {
     capture: (p) => ctx.capture(p),
     aiReady: () => isConfigured(S.data.settings),
-    ask: (q) => aiAsk(S.data.settings, S.items, q, []),
+    ask: (q) => aiAsk(S.data.settings, S.items, q, [], brainExtras(q)),
+    placesAnswer: (q, lang) => localAnswer(q, S.data.settings, lang)?.text || null,
     interpret: (text) => interpretCommand(S.data.settings, text),
     open: (url) => { location.href = url; },
     searchUrl: (q) => eng.url + encodeURIComponent(q),

@@ -5,7 +5,8 @@ import { $ } from './lib/ui.js';
 import { semanticOn, indexItems, embedConfig } from './lib/semantic.js';
 import { initI18n } from './lib/i18n.js';
 import { initWindowManager } from './lib/window-manager.js';
-import { S, listeners } from './newtab/state.js';
+import { S, bus } from './newtab/state.js';
+import { brainEvents } from './lib/events.js';
 import { applyBackground, applySettings } from './newtab/appearance.js';
 import { openItemDialog } from './newtab/editor.js';
 import { repositionFree, setEditing } from './newtab/free.js';
@@ -56,13 +57,15 @@ async function init() {
       renderDock();
       if (layoutSig() !== S.widgetsSig) renderWidgets();
       if (S.editing) renderLayoutPicker();
-      listeners.data.forEach((fn) => fn(S.data));
+      bus.emit('data.changed', S.data);
       scheduleIndex();
       updateWake(true);
     }
     if (changes[BRAIN_KEY]) {
+      const prev = S.items;
       S.items = changes[BRAIN_KEY].newValue || [];
-      listeners.brain.forEach((fn) => fn(S.items));
+      bus.emit('brain.changed', S.items);
+      for (const [evt, it] of brainEvents(prev, S.items)) bus.emit(evt, it);
       scheduleIndex();
     }
     if (changes[BG_KEY]) { S.bgCache = changes[BG_KEY].newValue || null; applyBackground(); }

@@ -112,3 +112,22 @@ test('resumo de tarefas sem pendências e código de idioma', () => {
   assert.equal(commandLang('es-MX'), 'es');
   assert.equal(commandLang(''), 'pt');
 });
+
+test('voz: perguntas sobre os locais do widget de mapas (#43)', async () => {
+  const { localAnswer } = await import('../../src/lib/places.js');
+  const pt = { mapPlaces: [{ id: 'c', name: 'Casa', lat: -20.07, lon: -44.57 }, { id: 't', name: 'Trabalho', address: 'Av. B, 200', lat: -20.06, lon: -44.56 }], mapRoutes: [] };
+  const en = { mapPlaces: [{ id: 'h', name: 'Home', lat: -20.07, lon: -44.57 }, { id: 'o', name: 'Office', lat: -20.06, lon: -44.56 }], mapRoutes: [] };
+  const run = async (lang, text) => {
+    const log = [];
+    const api = { ...mockApi(log), placesAnswer: (q, l) => localAnswer(q, l === 'en' ? en : pt, l)?.text || null };
+    return { r: await runCommand(text, api, lang), log };
+  };
+  assert.match((await run('pt', 'quanto tempo até o trabalho?')).r.reply, /linha reta, de Casa até Trabalho[\s\S]*Waze/);
+  assert.match((await run('pt', 'qual o endereço do trabalho')).r.reply, /Av\. B, 200/);
+  assert.match((await run('en', 'how far is the office')).r.reply, /from Home to Office/);
+  // não atrapalha os outros comandos
+  assert.equal((await run('pt', 'rota para o trabalho')).r.reply.startsWith('ROTA'), true, 'rota continua abrindo o mapa');
+  assert.equal((await run('pt', 'como está o tempo')).r.reply, 'CLIMA', 'tempo = clima');
+  const n = await run('pt', 'anotar ligar para o trabalho');
+  assert.deepEqual(n.log[0].slice(1), ['note', 'ligar para o trabalho']);
+});

@@ -2,19 +2,12 @@
 import { requestFeature } from '../lib/permissions.js';
 import { h, showCtx } from '../lib/ui.js';
 import { uid } from '../lib/store.js';
+import { gmapsRoute, wazeTo, placesContext } from '../lib/places.js';
 
 const ICONS = ['🏠', '💼', '🏫', '🏋️', '🏥', '🛒', '🍽️', '⛪', '✈️', '⭐', '👪', '🅿️'];
 const MODES = { driving: '🚗 Carro', transit: '🚌 Transporte', walking: '🚶 A pé', bicycling: '🚲 Bicicleta' };
 
-export function gmapsRoute(from, to, mode = 'driving') {
-  const u = new URL('https://www.google.com/maps/dir/');
-  u.searchParams.set('api', '1');
-  if (from) u.searchParams.set('origin', `${from.lat},${from.lon}`);
-  u.searchParams.set('destination', `${to.lat},${to.lon}`);
-  u.searchParams.set('travelmode', mode);
-  return u.toString();
-}
-export const wazeTo = (to) => `https://waze.com/ul?ll=${to.lat},${to.lon}&navigate=yes`;
+export { gmapsRoute, wazeTo }; // continuam disponíveis por aqui (compatibilidade)
 
 async function searchAddress(q) {
   // Pedido direto no clique de "Buscar" (se já houver acesso, não aparece nada).
@@ -29,6 +22,8 @@ export default {
   title: 'Trânsito',
   icon: '🚦',
   description: 'Mapa com trânsito ao vivo (Waze), seus locais favoritos (casa, trabalho…) e rotas com um clique.',
+  /** O cérebro conhece os locais e rotas salvos quando a pergunta é sobre lugares (#43). */
+  brainContext: (settings, question) => placesContext(settings, question),
   defaultW: 6,
   mount(el, ctx) {
     let view = 'map';

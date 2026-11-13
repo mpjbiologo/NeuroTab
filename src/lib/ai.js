@@ -252,14 +252,19 @@ export async function buildContext(settings, items, question, limit = 14) {
   return { found, text };
 }
 
-export async function ask(settings, items, question, history = []) {
+/**
+ * Pergunta ao cérebro. `extras` são trechos de dados dos widgets ({ title, text, note? }),
+ * ex.: locais e rotas do widget de mapas (lib/places.js), incluídos só quando a pergunta pede.
+ */
+export async function ask(settings, items, question, history = [], extras = []) {
   const { found, text } = await buildContext(settings, items, question);
+  const extra = (extras || []).filter((x) => x?.text).map((x) => `\n\n${x.title}:${x.note ? `\n(${x.note})` : ''}\n${x.text}`).join('');
   const system = `Você é o assistente do "segundo cérebro" do usuário, dentro da extensão NeuroTab. Responda em ${aiLanguageName()}, de forma direta e curta (use listas quando ajudar).
 ${nowContext()}
 Use as notas abaixo como fonte principal e cite-as como [1], [2]… Se a resposta não estiver nas notas, diga isso em uma linha e então responda com conhecimento geral, deixando claro que não veio das notas.
 
 NOTAS DO USUÁRIO:
-${text || '(nenhuma nota salva ainda)'}`;
+${text || '(nenhuma nota salva ainda)'}${extra}`;
   const messages = [...history.slice(-6), { role: 'user', content: question }];
   const answer = await complete(settings, { system, messages, maxTokens: 900 });
   return { answer, sources: found };
