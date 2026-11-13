@@ -1,6 +1,9 @@
 // NeuroTab — Español. Las claves son los textos originales en portugués.
 export default {
   exact: {
+    'Minimizar': 'Minimizar',
+    'Maximizar': 'Maximizar',
+    'Restaurar': 'Restaurar',
     'Tempo pela rua': 'Tiempo por la calle',
     'Calculando…': 'Calculando…',
     'Calcula pelo OpenStreetMap, sem o trânsito de agora': 'Calculado con OpenStreetMap, sin el tráfico de ahora',

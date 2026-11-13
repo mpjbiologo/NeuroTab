@@ -1,6 +1,9 @@
 // NeuroTab — English. Keys are the original Portuguese strings.
 export default {
   exact: {
+    'Minimizar': 'Minimize',
+    'Maximizar': 'Maximize',
+    'Restaurar': 'Restore',
     'Tempo pela rua': 'Time by road',
     'Calculando…': 'Calculating…',
     'Calcula pelo OpenStreetMap, sem o trânsito de agora': 'Calculated with OpenStreetMap, without current traffic',

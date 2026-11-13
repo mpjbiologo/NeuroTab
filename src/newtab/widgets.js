@@ -4,6 +4,7 @@ import { WIDGETS } from '../widgets/index.js';
 import { gridColsFor } from '../lib/layout-geometry.js';
 import { S, bus, heroEl, omniEl } from './state.js';
 import { createScope } from '../lib/widget-scope.js';
+import { windowButtons, restoreMax } from './wincontrols.js';
 import { ctx } from './context.js';
 import { paintModeButtons, removeWidget, renderFree, setWidget } from './free.js';
 import { renderGrid } from './grid.js';
@@ -31,6 +32,7 @@ export function buildCard(w, idx) {
     ),
   );
   const card = h('article', { class: 'widget', 'data-id': w.id, 'data-idx': idx }, header, body, grip);
+  actions.after(windowButtons(card, w, idx));
   return { def, card, header, body, grip, actions };
 }
 
@@ -68,6 +70,7 @@ export function mountCard({ def, body, actions }, w, idx) {
 }
 
 export function renderWidgets() {
+  restoreMax(); // o cartão maximizado vai ser recriado
   S.mounted.forEach((m) => { try { m.destroy?.(); } catch (e) { console.error('NeuroTab: ao desmontar widget', e); } });
   S.mounted = [];
   $('#center').prepend(heroEl, omniEl); // tira de dentro dos quadros antes de redesenhar

@@ -184,6 +184,24 @@ body.dock-top #pinDock, body.dock-bottom #pinDock { display: none; }
   background: rgba(255,255,255,.05); cursor: pointer; font-size: 12px; color: var(--muted);
 }
 .widget > header .wact button:hover, .wtools button:hover { background: rgba(255,255,255,.14); color: #fff; }
+/* Controles de janela (#18): sempre disponíveis, discretos até passar o mouse */
+.wwin { display: flex; gap: 2px; opacity: .35; transition: opacity .15s; }
+.widget:hover .wwin, .wwin:focus-within, .widget.minimized .wwin, .widget.maximized .wwin { opacity: 1; }
+.wwin button { height: 24px; min-width: 24px; padding: 0 5px; border-radius: 7px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; line-height: 1; }
+.wwin button:hover { background: rgba(255,255,255,.12); color: #fff; }
+.wwin button:focus-visible { outline: 2px solid var(--accent); }
+.widget.minimized > .wbody, .widget.minimized > .grip { display: none; }
+.widget.minimized { max-height: none; }
+.free-item.widget.minimized { height: auto !important; }
+.widget.maximized {
+  position: fixed !important; z-index: 100000 !important;
+  top: var(--mx-top) !important; right: var(--mx-right) !important; bottom: var(--mx-bottom) !important; left: var(--mx-left) !important;
+  width: auto !important; height: auto !important; max-height: none !important;
+  background: rgba(20,20,27,.97); box-shadow: 0 30px 80px rgba(0,0,0,.6);
+}
+.widget.maximized > .grip { display: none; }
+.widget.maximized > .wbody { flex: 1; }
+.wmax-backdrop { position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); }
 .wtools { display: none; gap: 4px; }
 body.editing .wtools { display: flex; }
 body.editing .widget { outline: 2px dashed rgba(106,168,255,.55); outline-offset: 2px; cursor: grab; }

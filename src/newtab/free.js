@@ -204,6 +204,7 @@ function attachFree(frame, { handles, grip, fixedHeight, minW = 200, minH = 110,
   const box = $('#widgets');
   const begin = (e, mode) => {
     if (e.button !== 0) return;
+    if (frame.classList.contains('maximized')) return; // maximizado não se arrasta nem redimensiona
     if (mode === 'move' && e.target.closest('button, input, select, textarea, a, label, .wact, .wtools')) return;
     if (mode === 'move' && frame.classList.contains('free-fixed') && !S.editing) return;
     e.preventDefault();

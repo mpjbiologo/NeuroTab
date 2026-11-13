@@ -17,6 +17,7 @@ import { setupOmni } from './newtab/search.js';
 import { setupUpdates } from './newtab/updates.js';
 import { setupVoice } from './newtab/voice.js';
 import { setupWake, updateWake } from './newtab/wake.js';
+import { setupWindowControls } from './newtab/wincontrols.js';
 import { isFree, layoutCols, layoutSig, renderWidgets } from './newtab/widgets.js';
 
 init();
@@ -44,6 +45,7 @@ async function init() {
   renderWidgets();
   setupOmni();
   setupClock();
+  setupWindowControls();
   scheduleIndex(3000);
 
   chrome.storage.onChanged.addListener(async (changes, area) => {
