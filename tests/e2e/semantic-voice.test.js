@@ -105,3 +105,60 @@ test('palavra de ativação: escuta, executa, volta a escutar e pausa', async ()
     await x.close();
   }
 });
+
+test('nome do assistente e frase composta: bipe, estados, cancelar e tempo esgotado (#15)', async () => {
+  const { x, p } = await setup();
+  try {
+    await x.settings(p, { wakeWord: true, assistantName: 'Verônica', wakePhrase: 'Acorde Verônica', wakeCommandSecs: 3 });
+    await p.bringToFront();
+    await p.evaluate(() => window.dispatchEvent(new Event('focus')));
+    // Conta os bipes trocando o gerador de som por um falso
+    await p.evaluate(() => {
+      window.__beeps = 0;
+      window.AudioContext = class {
+        constructor() { this.currentTime = 0; this.state = 'running'; this.destination = {}; }
+        createOscillator() { return { frequency: {}, connect: (g) => g, start() { window.__beeps += 0.5; }, stop() {} }; }
+        createGain() { return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect: (d) => d }; }
+      };
+    });
+    await p.waitForTimeout(600);
+    assert.equal(await p.getAttribute('#wakePill', 'data-state'), 'waiting');
+    assert.match(await p.textContent('#wakePill'), /Ouvindo “Acorde Verônica”/);
+
+    // Só o nome não basta quando a frase é composta
+    await p.evaluate(() => window.__lastSR.say('Verônica anotar comprar pão'));
+    await p.waitForTimeout(800);
+    assert.equal((await x.storage(p, 'nt_brain')).some((i) => /pão/.test(i.text)), false);
+
+    // Com um erro comum do reconhecimento ("acorda Berônica") e o pedido junto: executa direto
+    await p.evaluate(() => window.__lastSR.say('acorda Berônica anotar comprar café'));
+    await p.waitForTimeout(1500);
+    assert.ok((await x.storage(p, 'nt_brain')).some((i) => /comprar café/.test(i.text)), 'nota criada');
+    assert.equal(await p.evaluate(() => window.__beeps), 1, 'um bipe');
+    await p.waitForTimeout(2500);
+
+    // Só a frase: abre a escuta do comando com o nome; "cancelar" desiste
+    await p.evaluate(() => window.__lastSR.say('Acorde Verônica'));
+    await p.waitForTimeout(500);
+    assert.equal(await p.getAttribute('#wakePill', 'data-state'), 'listening');
+    assert.match(await p.textContent('#voiceHeard'), /Verônica: pode falar/);
+    await p.evaluate(() => { window.__lastSR.say('cancelar'); window.__lastSR.stop(); });
+    await p.waitForTimeout(400);
+    assert.match(await p.textContent('#voiceHeard'), /Cancelado/);
+    const before = (await x.storage(p, 'nt_brain')).length;
+    await p.waitForTimeout(2500);
+    assert.equal((await x.storage(p, 'nt_brain')).length, before, 'nada foi criado');
+
+    // Só a frase e silêncio: encerra sozinho depois do tempo configurado (3 s)
+    await p.evaluate(() => window.__lastSR.say('Acorde Verônica'));
+    await p.waitForTimeout(500);
+    assert.equal(await p.isVisible('#voice'), true);
+    await p.waitForTimeout(3300);
+    assert.equal(await p.isVisible('#voice'), false, 'fechou por tempo esgotado');
+    await p.waitForTimeout(1200);
+    assert.equal(await p.getAttribute('#wakePill', 'data-state'), 'waiting', 'voltou a aguardar a frase');
+    assert.deepEqual(x.errors, []);
+  } finally {
+    await x.close();
+  }
+});

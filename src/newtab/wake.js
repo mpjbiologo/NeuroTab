@@ -1,7 +1,7 @@
 // NeuroTab — Palavra de ativação (experimental): escuta contínua com a nova aba visível e em foco.
-import { $, toast, hasDictation } from '../lib/ui.js';
+import { $, toast, hasDictation, beep } from '../lib/ui.js';
 import { t } from '../lib/i18n.js';
-import { wakeVariants, afterWake, wakeWindowMs, shouldListen } from '../lib/wake-word.js';
+import { wakeVariants, afterWake, wakeWindowMs, shouldListen, wakePhraseOf, assistantName, isCancel, wakeState } from '../lib/wake-word.js';
 import { S } from './state.js';
 import { processVoice, startVoice, voiceCode } from './voice.js';
 
@@ -12,7 +12,7 @@ import { processVoice, startVoice, voiceCode } from './voice.js';
 // =====================================================================
 const wake = { rec: null, until: 0, paused: false, external: false, busy: false, blocked: false, backoff: 0, retry: null, lang: '' };
 
-const variants = () => wakeVariants(S.data.settings.wakePhrase);
+const variants = () => wakeVariants(wakePhraseOf(S.data.settings));
 const wakeMs = () => wakeWindowMs(S.data.settings.wakeMinutes);
 const wakeEnabled = () => !!S.data.settings.wakeWord && hasDictation();
 const wakeShouldListen = () => shouldListen({
@@ -21,18 +21,26 @@ const wakeShouldListen = () => shouldListen({
   now: Date.now(), until: wake.until,
 });
 
-function paintWake() {
+/** Indicador da escuta: mostra sempre em que estado ela está (#15). */
+export function paintWake() {
   const pill = $('#wakePill');
   if (!pill) return;
-  pill.hidden = !wakeEnabled();
+  const state = wakeState({ enabled: wakeEnabled(), blocked: wake.blocked, rec: wake.rec, session: !!S.voiceSession, busy: wake.busy });
+  pill.hidden = state === 'off';
+  pill.dataset.state = state;
   if (pill.hidden) return;
-  const phrase = S.data.settings.wakePhrase || 'NeuroTab';
-  pill.classList.toggle('on', !!wake.rec);
-  pill.classList.toggle('blocked', wake.blocked);
-  pill.textContent = wake.blocked ? t('Permitir microfone')
-    : wake.rec ? `${t('Ouvindo')} “${phrase}”`
-      : t('Palavra de ativação pausada');
-  pill.title = wake.rec ? t('Clique para pausar a escuta') : t('Clique para voltar a ouvir');
+  const phrase = wakePhraseOf(S.data.settings);
+  const name = assistantName(S.data.settings);
+  pill.classList.toggle('on', state === 'waiting' || state === 'listening');
+  pill.classList.toggle('blocked', state === 'error');
+  pill.textContent = {
+    error: t('Permitir microfone'),
+    processing: `${name}: ${t('processando…')}`,
+    listening: `${name}: ${t('ouvindo o comando…')}`,
+    waiting: `${t('Ouvindo')} “${phrase}”`,
+    paused: t('Palavra de ativação pausada'),
+  }[state];
+  pill.title = state === 'waiting' ? t('Clique para pausar a escuta') : state === 'error' ? t('Clique para liberar o microfone') : t('Clique para voltar a ouvir');
 }
 
 function startWake() {
@@ -52,8 +60,10 @@ function startWake() {
       wake.busy = true;
       stopWake();
       wake.busy = false;
+      if (S.data.settings.wakeBeep !== false) beep();
+      if (isCancel(rest)) { toast(t('Cancelado')); updateWake(); return; }
       if (rest.length >= 2) processVoice(rest);
-      else startVoice();
+      else startVoice({ fromWake: true });
       return;
     }
   };
@@ -130,5 +140,5 @@ export function setupWake() {
 export async function whileWakePaused(fn) {
   wake.busy = true;
   stopWake();
-  try { return await fn(); } finally { wake.busy = false; setTimeout(() => updateWake(), 400); }
+  try { return await fn(); } finally { wake.busy = false; paintWake(); setTimeout(() => updateWake(), 400); }
 }

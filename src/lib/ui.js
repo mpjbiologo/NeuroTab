@@ -206,3 +206,32 @@ export function toLocalInput(ts) {
 export function fromLocalInput(v) {
   return v ? new Date(v).getTime() : null;
 }
+
+/**
+ * Sinal sonoro curto (dois tons) para avisar que a frase de ativação foi ouvida (#15).
+ * Gerado na hora (Web Audio), sem arquivo de som. Devolve false se não deu para tocar.
+ */
+export function beep() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    const ac = (beep.ac ||= new AC());
+    if (ac.state === 'suspended') ac.resume().catch(() => {});
+    const t0 = ac.currentTime;
+    for (const [freq, at] of [[660, 0], [990, 0.09]]) {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t0 + at);
+      gain.gain.exponentialRampToValueAtTime(0.18, t0 + at + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + at + 0.12);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(t0 + at);
+      osc.stop(t0 + at + 0.13);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}

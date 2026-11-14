@@ -10,7 +10,8 @@ import { getWeather } from '../lib/weather.js';
 import { S } from './state.js';
 import { ctx, brainExtras } from './context.js';
 import { localAnswer } from '../lib/places.js';
-import { whileWakePaused } from './wake.js';
+import { whileWakePaused, paintWake } from './wake.js';
+import { assistantName, isCancel, commandWindowMs } from '../lib/wake-word.js';
 
 export function voiceApi() {
   const eng = SEARCH_ENGINES[S.data.settings.searchEngine] || SEARCH_ENGINES.google;
@@ -70,39 +71,49 @@ export function setupVoice() {
   if (location.hash === '#voice') { history.replaceState(null, '', location.pathname); setTimeout(startVoice, 300); }
 }
 
-export function startVoice() {
+export function startVoice({ fromWake = false } = {}) {
   if (S.voiceSession) return;
   const ov = $('#voice');
   const heard = $('#voiceHeard');
   const reply = $('#voiceReply');
   ov.hidden = false;
   ov.classList.add('listening');
-  heard.textContent = t('Pode falar…');
+  const name = assistantName(S.data.settings);
+  const prompt = name === 'NeuroTab' ? t('Pode falar…') : `${name}: ${t('pode falar…')}`;
+  heard.textContent = prompt;
   heard.classList.add('interim');
   reply.textContent = '';
   speechSynthesis?.cancel();
   let finalText = '';
   let silence;
+  let heardSomething = false;
+  // Chamado pela frase de ativação: se ninguém falar o comando a tempo, encerra (#15).
+  const giveUp = fromWake ? setTimeout(() => { if (!heardSomething) stopVoice(true); }, commandWindowMs(S.data.settings.wakeCommandSecs)) : null;
   S.voiceSession = startDictation({
     lang: voiceCode(),
     onText: (fin, interim) => {
       finalText = fin;
-      heard.textContent = (fin + ' ' + interim).trim() || t('Pode falar…');
+      if (fin || interim) heardSomething = true;
+      heard.textContent = (fin + ' ' + interim).trim() || prompt;
       heard.classList.toggle('interim', !fin);
       clearTimeout(silence);
       silence = setTimeout(() => S.voiceSession?.stop(), 1600); // termina após pausa
     },
     onEnd: async (fin) => {
       clearTimeout(silence);
+      clearTimeout(giveUp);
       S.voiceSession = null;
       ov.classList.remove('listening');
+      paintWake();
       const said = (fin || finalText).trim();
+      if (said && isCancel(said)) { heard.textContent = t('Cancelado'); setTimeout(() => { if (!S.voiceSession) ov.hidden = true; }, 1200); return; }
       if (!said) { heard.textContent = t('Não ouvi nada. Toque em 🎙 para tentar de novo.'); setTimeout(() => { if (!S.voiceSession) ov.hidden = true; }, 2500); return; }
       await processVoice(said);
     },
     onError: (msg) => { reply.textContent = t(msg); },
   });
-  if (!S.voiceSession) { ov.hidden = true; toast('Reconhecimento de voz indisponível neste navegador.'); }
+  if (!S.voiceSession) { clearTimeout(giveUp); ov.hidden = true; toast('Reconhecimento de voz indisponível neste navegador.'); }
+  paintWake();
 }
 
 /** Idioma dos comandos de voz: o escolhido em "IA e voz" ou o da interface. */
@@ -142,4 +153,5 @@ async function runVoice(said) {
 export function stopVoice(close) {
   if (S.voiceSession) S.voiceSession.stop();
   if (close) { S.voiceSession = null; $('#voice').hidden = true; speechSynthesis?.cancel(); }
+  paintWake();
 }

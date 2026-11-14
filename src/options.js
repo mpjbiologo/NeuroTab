@@ -16,6 +16,8 @@ import { embedConfig, indexItems, indexStatus, clearIndex, EMBED_DEFAULTS } from
 import { pixPayload, qrSvg } from './lib/pix.js';
 import { PROJECT, DONATION } from './config.js';
 import { setHTML } from './lib/safe-html.js';
+import { assistantName, wakePhraseOf, phraseSuggestions } from './lib/wake-word.js';
+import { commandLang } from './lib/assistant.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -308,6 +310,34 @@ function setupAi() {
   $('#wakeNo').hidden = hasSR;
   const paintWake = () => { $('#wakeWord').checked = !!data.settings.wakeWord; $('#wakeBox').hidden = !data.settings.wakeWord; };
   paintWake();
+
+  // Nome do assistente e sugestões de frase (#15)
+  const paintSuggest = () => {
+    const box = $('#wakeSuggest');
+    const lang = commandLang(data.settings.voiceLang || LOCALE);
+    box.replaceChildren(...phraseSuggestions(assistantName(data.settings), lang).map((p) => h('button', {
+      type: 'button',
+      class: 'chip' + (wakePhraseOf(data.settings) === p ? ' on' : ''),
+      onclick: async () => {
+        $('#wakePhrase').value = p;
+        data.settings.wakePhrase = p;
+        await saveData(data);
+        paintSuggest();
+        toast('Salvo ✓');
+      },
+    }, '“' + p + '”')));
+  };
+  // Trocar o nome leva a frase junto, se ela ainda era o nome antigo
+  $('#assistantName').addEventListener('input', (e) => {
+    const old = assistantName(data.settings);
+    const next = e.target.value.trim() || 'NeuroTab';
+    const cur = String(data.settings.wakePhrase || '').trim();
+    if (!cur || cur === old) { data.settings.wakePhrase = next; $('#wakePhrase').value = next; }
+    data.settings.assistantName = e.target.value;
+    paintSuggest();
+  });
+  $('#wakePhrase').addEventListener('input', () => setTimeout(paintSuggest, 600));
+  paintSuggest();
   $('#wakeWord').addEventListener('change', async (e) => {
     if (e.target.checked) {
       const ok = confirm('Ligar a palavra de ativação?\n\nEnquanto a nova aba estiver aberta e em foco, o navegador vai ouvir continuamente. No Edge e no Chrome, o áudio é enviado ao serviço de reconhecimento da Microsoft ou do Google.\n\nVocê pode pausar a qualquer momento pelo indicador no canto da tela.');

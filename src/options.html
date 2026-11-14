@@ -273,6 +273,10 @@
         <input type="range" min="0.6" max="1.6" step="0.1" data-k="ttsPitch" data-num>
       </div>
       <div class="opt">
+        <div><b>Nome do assistente</b><small>Como o assistente se apresenta na tela de voz (ex.: Verônica). Também vira a palavra de ativação, se você não escolher outra.</small></div>
+        <input type="text" class="txt" data-k="assistantName" id="assistantName" placeholder="NeuroTab" maxlength="30">
+      </div>
+      <div class="opt">
         <div><b>Ler as respostas da IA em voz alta</b></div>
         <label class="sw"><input type="checkbox" data-k="speakAnswers"><span></span></label>
       </div>
@@ -283,8 +287,21 @@
       <div class="sem-box" id="wakeBox" hidden>
         <p class="hint">⚠️ No Edge e no Chrome, o reconhecimento de voz envia o áudio para os servidores da Microsoft ou do Google. Com a palavra de ativação ligada, isso acontece o tempo todo enquanto a nova aba estiver aberta e em foco. Um indicador vermelho no canto da tela mostra quando está ouvindo; clique nele para pausar.</p>
         <div class="opt">
-          <div><b>Palavra</b><small>Use algo curto e incomum.</small></div>
-          <input type="text" class="txt" data-k="wakePhrase" placeholder="NeuroTab">
+          <div><b>Frase de ativação</b><small>Só o nome ("Verônica") ou uma frase ("Acorde Verônica"). Frases de 2 palavras disparam menos por engano.</small></div>
+          <input type="text" class="txt" data-k="wakePhrase" id="wakePhrase" placeholder="NeuroTab" maxlength="40">
+        </div>
+        <div class="chips" id="wakeSuggest" aria-label="Sugestões de frase"></div>
+        <div class="opt">
+          <div><b>Sinal sonoro</b><small>Um bipe curto quando o assistente ouvir a frase.</small></div>
+          <label class="sw"><input type="checkbox" data-k="wakeBeep"><span></span></label>
+        </div>
+        <div class="opt">
+          <div><b>Tempo para falar o comando</b><small>Depois da frase, se ninguém falar nada, a escuta encerra. Diga "cancelar" para desistir.</small></div>
+          <select data-k="wakeCommandSecs" data-num>
+            <option value="5">5 segundos</option>
+            <option value="8">8 segundos</option>
+            <option value="15">15 segundos</option>
+          </select>
         </div>
         <div class="opt">
           <div><b>Desligar sozinha após</b></div>

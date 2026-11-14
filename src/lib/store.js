@@ -85,8 +85,11 @@ export const DEFAULT_SETTINGS = {
   // IA e voz
   ai: DEFAULT_AI,
   voiceLang: '', // vazio = idioma da interface
+  assistantName: 'NeuroTab', // nome do assistente (#15)
   wakeWord: false, // palavra de ativação (experimental)
-  wakePhrase: 'NeuroTab',
+  wakePhrase: 'NeuroTab', // frase de ativação; vazia = o nome do assistente
+  wakeBeep: true, // sinal sonoro curto ao ouvir a frase
+  wakeCommandSecs: 8, // tempo para falar o comando depois da frase
   wakeMinutes: 10, // desliga sozinha após X min sem ser chamada
   speakAnswers: false,
   ttsVoice: '',

@@ -1,6 +1,22 @@
 // NeuroTab — Español. Las claves son los textos originales en portugués.
 export default {
   exact: {
+    'processando…': 'procesando…',
+    'ouvindo o comando…': 'escuchando la orden…',
+    'pode falar…': 'puedes hablar…',
+    'Cancelado': 'Cancelado',
+    'Clique para liberar o microfone': 'Haz clic para permitir el micrófono',
+    'Nome do assistente': 'Nombre del asistente',
+    'Frase de ativação': 'Frase de activación',
+    'Sinal sonoro': 'Señal sonora',
+    'Tempo para falar o comando': 'Tiempo para decir la orden',
+    '5 segundos': '5 segundos',
+    '8 segundos': '8 segundos',
+    '15 segundos': '15 segundos',
+    'Como o assistente se apresenta na tela de voz (ex.: Verônica). Também vira a palavra de ativação, se você não escolher outra.': 'Cómo se presenta el asistente en la pantalla de voz (ej.: Verónica). También es la palabra de activación si no eliges otra.',
+    'Só o nome ("Verônica") ou uma frase ("Acorde Verônica"). Frases de 2 palavras disparam menos por engano.': 'Solo el nombre ("Verónica") o una frase ("Despierta Verónica"). Las frases de 2 palabras se activan menos por error.',
+    'Um bipe curto quando o assistente ouvir a frase.': 'Un pitido corto cuando el asistente oiga la frase.',
+    'Depois da frase, se ninguém falar nada, a escuta encerra. Diga "cancelar" para desistir.': 'Después de la frase, si nadie habla, la escucha termina. Di "cancelar" para desistir.',
     'Minimizar': 'Minimizar',
     'Maximizar': 'Maximizar',
     'Restaurar': 'Restaurar',

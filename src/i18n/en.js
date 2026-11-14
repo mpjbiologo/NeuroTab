@@ -1,6 +1,22 @@
 // NeuroTab — English. Keys are the original Portuguese strings.
 export default {
   exact: {
+    'processando…': 'processing…',
+    'ouvindo o comando…': 'listening for the command…',
+    'pode falar…': 'go ahead…',
+    'Cancelado': 'Canceled',
+    'Clique para liberar o microfone': 'Click to allow the microphone',
+    'Nome do assistente': 'Assistant name',
+    'Frase de ativação': 'Wake phrase',
+    'Sinal sonoro': 'Sound cue',
+    'Tempo para falar o comando': 'Time to say the command',
+    '5 segundos': '5 seconds',
+    '8 segundos': '8 seconds',
+    '15 segundos': '15 seconds',
+    'Como o assistente se apresenta na tela de voz (ex.: Verônica). Também vira a palavra de ativação, se você não escolher outra.': 'How the assistant introduces itself on the voice screen (e.g. Veronica). It is also the wake word unless you choose another.',
+    'Só o nome ("Verônica") ou uma frase ("Acorde Verônica"). Frases de 2 palavras disparam menos por engano.': 'Just the name ("Veronica") or a phrase ("Wake up Veronica"). Two-word phrases trigger by mistake less often.',
+    'Um bipe curto quando o assistente ouvir a frase.': 'A short beep when the assistant hears the phrase.',
+    'Depois da frase, se ninguém falar nada, a escuta encerra. Diga "cancelar" para desistir.': 'After the phrase, if nobody speaks, listening stops. Say "cancel" to give up.',
     'Minimizar': 'Minimize',
     'Maximizar': 'Maximize',
     'Restaurar': 'Restore',
