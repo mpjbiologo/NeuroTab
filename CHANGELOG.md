@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.2 — 2026-11-15
+**O assistente ganha nome e as janelas param de se atropelar.**
+
+- Voz: dê um nome ao assistente (ex.: Verônica) e escolha a frase de ativação, só o nome ou algo como "Acorde Verônica", com sugestões prontas em português, inglês e espanhol. A frase entende pequenos erros do reconhecimento ("Berônica", "acorda") e frases curtas só valem exatas, para não disparar à toa (#15)
+- Voz: bipe curto ao ouvir a frase (opcional), "cancelar" desiste do pedido e a escuta do comando encerra sozinha se ninguém falar (5, 8 ou 15 segundos)
+- Voz: o indicador mostra sempre o estado: aguardando a frase, ouvindo o comando, processando, pausada ou microfone bloqueado
+- Janelas: a ordem das camadas não muda mais com o uso (antes, clicar no 🎙, num aviso ou num menu podia deixá-los por cima de janelas importantes); menus e a previsão do tempo nunca saem da tela e viram para cima quando falta espaço; Esc fecha uma coisa de cada vez, a de cima primeiro (#35)
+- Documentação: `docs/dev/VOZ.md` (como a voz funciona e limites de cada navegador) e regras de camadas em `docs/dev/ARQUITETURA.md`
+
 ## v0.7.1 — 2026-11-13
 **O cérebro conhece seus locais e trajetos, e os widgets ganham maximizar e minimizar.**
 
