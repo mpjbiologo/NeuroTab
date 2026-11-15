@@ -57,7 +57,7 @@ export default {
       };
       let t;
       input.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => run(false), 250); });
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') run(true); if (e.key === 'Escape') { input.value = ''; run(); } });
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') run(true); if (e.key === 'Escape' && input.value) { e.preventDefault(); input.value = ''; run(); } });
       out.addEventListener('click', async () => {
         if (!last) return;
         await navigator.clipboard.writeText(Number.isFinite(last.value) && !/\D{3,}/.test(out.textContent) ? String(last.value).replace('.', ',') : last.text);

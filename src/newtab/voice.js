@@ -12,6 +12,7 @@ import { ctx, brainExtras } from './context.js';
 import { localAnswer } from '../lib/places.js';
 import { whileWakePaused, paintWake } from './wake.js';
 import { assistantName, isCancel, commandWindowMs } from '../lib/wake-word.js';
+import { onEscape } from '../lib/window-manager.js';
 
 export function voiceApi() {
   const eng = SEARCH_ENGINES[S.data.settings.searchEngine] || SEARCH_ENGINES.google;
@@ -65,8 +66,8 @@ export function setupVoice() {
   $('#voice').addEventListener('click', (e) => { if (e.target.id === 'voice') stopVoice(true); });
   document.addEventListener('keydown', (e) => {
     if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 'm') { e.preventDefault(); S.voiceSession ? stopVoice() : startVoice(); }
-    if (e.key === 'Escape' && !$('#voice').hidden) stopVoice(true);
   });
+  onEscape({ layer: 'overlay', isOpen: () => !$('#voice').hidden, close: () => stopVoice(true) });
   chrome.runtime.onMessage.addListener((msg) => { if (msg?.type === 'startVoice' && document.visibilityState === 'visible') startVoice(); });
   if (location.hash === '#voice') { history.replaceState(null, '', location.pathname); setTimeout(startVoice, 300); }
 }

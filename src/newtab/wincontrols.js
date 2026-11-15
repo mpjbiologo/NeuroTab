@@ -6,6 +6,7 @@ import { $, h } from '../lib/ui.js';
 import { t } from '../lib/i18n.js';
 import { setWidget, repositionFree } from './free.js';
 import { isFree } from './widgets.js';
+import { onEscape } from '../lib/window-manager.js';
 
 let maxed = null; // { card, backdrop }
 
@@ -80,7 +81,7 @@ export function restoreMax() {
 export const isMaximized = () => !!maxed;
 
 export function setupWindowControls() {
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && maxed) { e.stopPropagation(); restoreMax(); } }, true);
+  onEscape({ layer: 'maximized', isOpen: () => !!maxed, close: () => restoreMax() });
   window.addEventListener('resize', () => {
     if (!maxed) return;
     const box = usableInset();

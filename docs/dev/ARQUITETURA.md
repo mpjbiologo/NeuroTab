@@ -55,6 +55,14 @@ newtab.js (inicialização)
 4. **Lógica sem tela vai para `src/lib/`**, com teste de unidade. O módulo da nova aba só liga a lógica à página.
 5. **Nada roda ao carregar um módulo** além de declarações (e pegar elementos da página em `state.js`). Quem liga cada parte é `init()` em `newtab.js`. Isso evita problemas de ordem entre módulos que se importam (ex.: `grid` ⇄ `free`, `voice` ⇄ `wake`).
 
+## Camadas e janelas (#35)
+
+- **Camadas globais** (fora da área central) usam só os tokens `--z-*` de `newtab.css`, iguais a `LAYERS` em `lib/layers.js`: conteúdo 1 · barra 30 · flutuantes (🎙, 📷, indicador) 40 · menus e painéis 50 · barras de ferramenta 60 · tela de voz 70 · diálogos 80 · avisos 90. Nenhum código troca essas camadas em tempo de uso. Um teste confere que o CSS não tem nenhum `z-index` numérico solto.
+- **Dentro da área central** (`#center`, isolada) vale `CONTENT`: widgets livres entre 100 e 8000 (o clique traz para a frente; acima de 8000 tudo é renumerado mantendo a ordem), guias 9000, fundo do maximizado 9998, maximizado 9999.
+- **Posição:** menus e painéis usam `placeInViewport()` (`lib/layers.js`): abaixo da âncora quando cabe, vira para cima quando não, encosta nas bordas e limita a altura com rolagem por dentro.
+- **Esc:** uma pilha única (`onEscape()` em `lib/window-manager.js`) fecha só a superfície de cima: tela de voz → menus/painel do clima → painel de atalhos → widget maximizado. Campos que usam o Esc (busca, calculadora) tratam primeiro. Diálogos nativos (`<dialog>`) fecham sozinhos.
+- **Teste:** `tests/e2e/layers.test.js` abre tudo ao mesmo tempo em 4 tamanhos de tela (inclusive celular e zoom de 125%) e confere que nada sai da tela, que a tela de voz fica por cima e a ordem do Esc.
+
 ## Como a divisão foi feita
 
 Por **análise de escopo** do código (espree + eslint-scope), não por recorte manual: cada referência a cada variável foi localizada, as alteradas por várias seções viraram `S.*`, cada seção virou um módulo com os imports que realmente usa, e o que uma seção usa de outra passou a ser exportado/importado. Depois, uma verificação confirmou que nenhum nome ficou indefinido e nenhum import ficou sem uso. Todos os testes (unidade, ponta a ponta no Chromium e Firefox) passaram sem nenhuma alteração.

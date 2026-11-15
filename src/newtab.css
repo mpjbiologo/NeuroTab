@@ -23,6 +23,12 @@
   --z-overlay: 70;
   --z-modal: 80;
   --z-notification: 90;
+  /* Camadas DENTRO da área central (#center é isolado; não competem com as de cima). Iguais a CONTENT em lib/layers.js. */
+  --z-in-active: 5;        /* widget sendo redimensionado */
+  --z-in-handle: 3;        /* alça dentro do widget livre */
+  --z-in-guides: 9000;     /* guias de encaixe, acima dos widgets livres (100–8000) */
+  --z-in-backdrop: 9998;   /* fundo escurecido do widget maximizado */
+  --z-in-maximized: 9999;  /* widget maximizado */
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: dark;
 }
@@ -194,14 +200,14 @@ body.dock-top #pinDock, body.dock-bottom #pinDock { display: none; }
 .widget.minimized { max-height: none; }
 .free-item.widget.minimized { height: auto !important; }
 .widget.maximized {
-  position: fixed !important; z-index: 100000 !important;
+  position: fixed !important; z-index: var(--z-in-maximized) !important;
   top: var(--mx-top) !important; right: var(--mx-right) !important; bottom: var(--mx-bottom) !important; left: var(--mx-left) !important;
   width: auto !important; height: auto !important; max-height: none !important;
   background: rgba(20,20,27,.97); box-shadow: 0 30px 80px rgba(0,0,0,.6);
 }
 .widget.maximized > .grip { display: none; }
 .widget.maximized > .wbody { flex: 1; }
-.wmax-backdrop { position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); }
+.wmax-backdrop { position: fixed; inset: 0; z-index: var(--z-in-backdrop); background: rgba(0,0,0,.45); backdrop-filter: blur(3px); }
 .wtools { display: none; gap: 4px; }
 body.editing .wtools { display: flex; }
 body.editing .widget { outline: 2px dashed rgba(106,168,255,.55); outline-offset: 2px; cursor: grab; }
@@ -312,7 +318,7 @@ body.editing .widget .wbody { pointer-events: none; opacity: .75; }
 .pill span { overflow: hidden; text-overflow: ellipsis; }
 
 /* ================= MENU, DIÁLOGOS, AVISOS ================= */
-.ctx { position: fixed; z-index: var(--z-popover); min-width: 190px; padding: 4px; border-radius: 10px; background: #23232a; border: 1px solid #3a3a44; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+.ctx { position: fixed; z-index: var(--z-popover); overflow-y: auto; min-width: 190px; padding: 4px; border-radius: 10px; background: #23232a; border: 1px solid #3a3a44; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
 .ctx button { display: block; width: 100%; text-align: left; padding: 8px 12px; border: 0; border-radius: 6px; background: none; color: #eee; font-size: 13px; cursor: pointer; }
 .ctx button:hover { background: #33333d; }
 .ctx button.danger { color: var(--bad); }
@@ -359,7 +365,7 @@ body.editing .widget .wbody { pointer-events: none; opacity: .75; }
   border-bottom-right-radius: 14px; touch-action: none;
 }
 .widget:hover .grip, body.editing .grip, .widget.resizing .grip { opacity: 1; }
-.widget.resizing { outline: 2px solid var(--accent); outline-offset: 2px; z-index: 5; }
+.widget.resizing { outline: 2px solid var(--accent); outline-offset: 2px; z-index: var(--z-in-active); }
 .wsize { font-size: 11px; color: var(--muted); align-self: center; min-width: 34px; text-align: center; }
 .layout-sel { height: 34px; border-radius: 9px; border: 1px solid rgba(255,255,255,.16); background: rgba(0,0,0,.3); padding: 0 8px; }
 .layout-sel option { background: #1e1e25; }
@@ -488,19 +494,19 @@ body.free.editing .widget .wbody { pointer-events: auto; opacity: 1; }
 .free-fixed .omni-wrap { width: 100%; margin: 0; }
 .free-fixed .grip { opacity: 0; }
 .ff-handle {
-  display: none; position: absolute; top: 4px; left: 4px; z-index: 3; height: 24px; padding: 0 10px; border-radius: 8px;
+  display: none; position: absolute; top: 4px; left: 4px; z-index: var(--z-in-handle); height: 24px; padding: 0 10px; border-radius: 8px;
   background: rgba(106,168,255,.85); color: #001; font-size: 12px; font-weight: 600; line-height: 24px; cursor: grab; user-select: none; touch-action: none; white-space: nowrap;
 }
 body.editing .ff-handle { display: block; }
 body.editing .free-fixed { outline: 2px dashed rgba(106,168,255,.55); outline-offset: 4px; border-radius: 10px; }
 body.editing .free-fixed .grip { opacity: 1; }
 .free-fixed.moving .ff-handle { cursor: grabbing; }
-.guide { position: absolute; z-index: 10; pointer-events: none; background: #ff4fd8; }
+.guide { position: absolute; z-index: var(--z-in-guides); pointer-events: none; background: #ff4fd8; }
 .guide-v { top: 0; bottom: 0; width: 1px; }
 .guide-h { left: 0; right: 0; height: 1px; }
 .free-empty { position: absolute; top: 320px; left: 0; right: 0; text-align: center; }
 body.free .edit-bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: var(--z-toolbar); width: min(1100px, 94vw); margin: 0; backdrop-filter: blur(16px); background: rgba(30,40,70,.85); box-shadow: 0 16px 40px rgba(0,0,0,.5); }
-body.free .update-bar { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 60; width: min(900px, 94vw); margin: 0; backdrop-filter: blur(16px); }
+body.free .update-bar { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: var(--z-toolbar); width: min(900px, 94vw); margin: 0; backdrop-filter: blur(16px); }
 body.free.dock-top .update-bar { top: 64px; }
 .seg { display: inline-flex; }
 .seg .btn { border-radius: 0; }
@@ -536,7 +542,7 @@ body.free.dock-top .update-bar { top: 64px; }
 .pl-add { color: rgba(255,255,255,.7); opacity: 0; transition: opacity .15s; }
 .hero:hover .pl-add, .places:only-child .pl-add, .pl-add:focus { opacity: 1; }
 .wx-pop {
-  position: absolute; z-index: var(--z-popover); width: 340px; padding: 14px 16px; border-radius: 14px; text-align: left; text-shadow: none;
+  position: absolute; z-index: var(--z-popover); overflow-y: auto; width: min(340px, calc(100vw - 16px)); padding: 14px 16px; border-radius: 14px; text-align: left; text-shadow: none;
   background: var(--glass-strong); backdrop-filter: blur(18px); border: 1px solid var(--line); box-shadow: 0 16px 40px rgba(0,0,0,.5);
 }
 .wx-pop .pop-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }

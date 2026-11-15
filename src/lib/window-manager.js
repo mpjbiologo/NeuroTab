@@ -1,79 +1,57 @@
-// NeuroTab — gerenciamento central de camadas e foco de superfícies.
-const BASE_Z = 100;
-let topZ = BASE_Z;
+// NeuroTab — camadas dos widgets livres e tecla Esc (#35).
+//
+// Regras (ver lib/layers.js e docs/dev/ARQUITETURA.md):
+// - Elementos globais (barra, 🎙, avisos, menus, tela de voz, diálogos) ficam SEMPRE na camada do token
+//   --z-* deles; este módulo não mexe neles (antes, qualquer clique dava a eles um número novo e a
+//   ordem mudava com o uso).
+// - Só os widgets do modo livre (.free-item, dentro da área central isolada) trocam de ordem ao clicar,
+//   numa faixa própria (CONTENT.freeMin–freeMax), renumerada quando passa do limite.
+// - Esc fecha só a superfície de cima (pilha única); diálogos nativos (<dialog>) tratam o Esc sozinhos.
+import { CONTENT, normalizeStack, createEscapeStack } from './layers.js';
+
+let topZ = CONTENT.freeMin;
 let initialized = false;
+const escStack = createEscapeStack();
 
-function currentZ(element) {
-  const value = Number.parseInt(element?.style?.zIndex || getComputedStyle(element).zIndex, 10);
-  return Number.isFinite(value) ? value : BASE_Z;
-}
+const zOf = (el) => {
+  const v = Number.parseInt(el?.style?.zIndex, 10);
+  return Number.isFinite(v) ? v : CONTENT.freeMin;
+};
 
-function isVisible(element) {
-  return !!element && !element.hidden && element.isConnected
-    && getComputedStyle(element).display !== 'none'
-    && getComputedStyle(element).visibility !== 'hidden';
-}
-
-/** Traz uma superfície para a frente sem depender de valores arbitrários no CSS. */
+/** Traz um widget livre para a frente (dentro da faixa dos widgets livres). */
 export function bringToFront(element) {
   if (!element || !element.isConnected) return 0;
-  topZ = Math.max(topZ, currentZ(element)) + 1;
+  if (topZ >= CONTENT.freeMax) {
+    // Renumera todos mantendo a ordem, para nunca passar das guias nem do maximizado.
+    const frames = [...document.querySelectorAll('.free-item')];
+    const order = normalizeStack(frames.map((f, i) => [i, zOf(f)]));
+    for (const [i, z] of order) frames[i].style.zIndex = String(z);
+    topZ = CONTENT.freeMin + frames.length - 1;
+  }
+  topZ = Math.max(topZ, zOf(element)) + 1;
   element.style.zIndex = String(topZ);
   element.dataset.ntLayerOrder = String(topZ);
   return topZ;
 }
 
-/** Registra uma superfície flutuante para receber prioridade ao interagir. */
-export function registerSurface(element, { focus = true } = {}) {
-  if (!element || element.dataset.ntWindowManaged === 'true') return () => {};
-  element.dataset.ntWindowManaged = 'true';
-  topZ = Math.max(topZ, currentZ(element));
+/**
+ * Registra uma superfície na pilha do Esc.
+ * entry: { layer: 'overlay' | 'popover' | 'dock' | 'maximized' | …, isOpen: () => bool, close: () => void }
+ * Devolve a função que tira o registro.
+ */
+export const onEscape = (entry) => escStack.register(entry);
 
-  const activate = () => {
-    if (isVisible(element)) bringToFront(element);
-  };
-  element.addEventListener('pointerdown', activate);
-  if (focus) element.addEventListener('focusin', activate);
+/** Para testes: qual superfície o Esc fecharia agora. */
+export const escapeTarget = () => escStack.top();
 
-  return () => {
-    element.removeEventListener('pointerdown', activate);
-    if (focus) element.removeEventListener('focusin', activate);
-    delete element.dataset.ntWindowManaged;
-  };
-}
-
-/** Inicializa o gerenciamento progressivo das superfícies da nova aba. */
 export function initWindowManager() {
   if (initialized) return;
   initialized = true;
-
-  const selector = '.free-item, .voice, .wx-pop, .ctx, .toast, .wake-pill, .voice-fab';
-  const register = (root) => {
-    if (root.nodeType !== 1) return;
-    if (root.matches(selector)) registerSurface(root);
-    root.querySelectorAll?.(selector).forEach((element) => registerSurface(element));
-  };
-
-  register(document.body);
-  const observer = new MutationObserver((records) => {
-    for (const record of records) {
-      record.addedNodes.forEach(register);
-      if (record.type === 'attributes' && record.target.matches?.(selector)) {
-        topZ = Math.max(topZ, currentZ(record.target));
-      }
-    }
+  for (const f of document.querySelectorAll('.free-item')) topZ = Math.max(topZ, zOf(f));
+  // Fase de "bolha": campos que tratam o Esc sozinhos (ex.: limpar a calculadora) chamam preventDefault.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || e.defaultPrevented) return;
+    if (document.querySelector('dialog[open]')) return; // o navegador fecha o diálogo de cima
+    if (escStack.escape()) { e.preventDefault(); e.stopPropagation(); }
   });
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['style', 'class', 'hidden'],
-  });
-
-  // Mantém o foco dentro de diálogos nativos; o navegador já os coloca na top layer.
-  document.addEventListener('close', (event) => {
-    if (event.target instanceof HTMLDialogElement) {
-      event.target.style.removeProperty('z-index');
-    }
-  }, true);
 }

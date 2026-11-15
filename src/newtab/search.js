@@ -97,7 +97,7 @@ export function setupOmni() {
       const q = input.value.trim();
       if (q) { await ctx.capture({ text: q }); input.value = ''; box.hidden = true; toast('Salvo no cérebro 🧠'); }
     } else if (e.key === 'Enter' && results[sel]) { e.preventDefault(); run(results[sel]); }
-    else if (e.key === 'Escape') { input.value = ''; box.hidden = true; input.blur(); }
+    else if (e.key === 'Escape') { e.preventDefault(); input.value = ''; box.hidden = true; input.blur(); }
   });
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); input.focus(); input.select(); }

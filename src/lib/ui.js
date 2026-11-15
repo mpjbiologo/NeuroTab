@@ -1,6 +1,8 @@
 import { setHTML } from './safe-html.js';
 // NeuroTab — utilitários de interface compartilhados.
 import { LOCALE } from './i18n.js';
+import { initWindowManager, onEscape } from './window-manager.js';
+import { placeInViewport } from './layers.js';
 
 export const $ = (s, root = document) => root.querySelector(s);
 export const $$ = (s, root = document) => [...root.querySelectorAll(s)];
@@ -77,7 +79,8 @@ export function showCtx(e, items) {
     m = h('div', { id: 'ctx', class: 'ctx' });
     document.body.append(m);
     document.addEventListener('click', () => { m.hidden = true; });
-    document.addEventListener('keydown', (ev) => ev.key === 'Escape' && (m.hidden = true));
+    initWindowManager();
+    onEscape({ layer: 'popover', isOpen: () => !m.hidden, close: () => { m.hidden = true; } });
     window.addEventListener('blur', () => { m.hidden = true; });
   }
   m.replaceChildren(...items.map((it) => {
@@ -86,9 +89,12 @@ export function showCtx(e, items) {
     return h('button', { class: cls || '', onclick: (ev) => { ev.stopPropagation(); m.hidden = true; fn(); } }, label);
   }));
   m.hidden = false;
+  m.style.maxHeight = '';
   const r = m.getBoundingClientRect();
-  m.style.left = Math.min(e.clientX, innerWidth - r.width - 8) + 'px';
-  m.style.top = Math.min(e.clientY, innerHeight - r.height - 8) + 'px';
+  const pos = placeInViewport({ anchor: { left: e.clientX, right: e.clientX, top: e.clientY, bottom: e.clientY }, size: { width: r.width, height: r.height }, viewport: { width: innerWidth, height: innerHeight }, gap: 2 });
+  m.style.left = pos.left + 'px';
+  m.style.top = pos.top + 'px';
+  m.style.maxHeight = pos.maxHeight + 'px';
 }
 
 // ---------- Voz ----------

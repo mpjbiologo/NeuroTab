@@ -6,6 +6,8 @@ import { requestFeature } from '../lib/permissions.js';
 import { getWeather, searchCities, wxIcon, wxDesc, timeIn, tzOffsetLabel, dayIn, renderForecast } from '../lib/weather.js';
 import { S } from './state.js';
 import { ctx } from './context.js';
+import { onEscape } from '../lib/window-manager.js';
+import { placeInViewport } from '../lib/layers.js';
 
 export function setupClock() {
   const tick = () => {
@@ -23,6 +25,7 @@ export function setupClock() {
   setInterval(renderHeroWeather, 30 * 60e3);
   ctx.on('data', () => renderHeroWeather());
   document.addEventListener('click', (e) => { if (!e.target.closest('#wxPop, .wx-pill, .pl-chip, #placeAdd')) $('#wxPop').hidden = true; });
+  onEscape({ layer: 'popover', isOpen: () => !$('#wxPop').hidden, close: () => { $('#wxPop').hidden = true; } });
 }
 
 // ---------- Clima e outras cidades junto do relógio ----------
@@ -114,9 +117,18 @@ function popAt(anchor) {
   const hero = $('#hero');
   const r = anchor.getBoundingClientRect();
   const hr = hero.getBoundingClientRect();
-  pop.style.left = Math.max(0, Math.min(r.left - hr.left + r.width / 2 - 170, hr.width - 340)) + 'px';
-  pop.style.top = (r.bottom - hr.top + 8) + 'px';
   pop.hidden = false;
+  pop.style.maxHeight = '';
+  // Calcula na tela inteira (vira para cima / encosta nas bordas) e converte para dentro do relógio.
+  const place = () => {
+    const pr = pop.getBoundingClientRect();
+    const pos = placeInViewport({ anchor: r, size: { width: pr.width || 340, height: pr.height || 200 }, viewport: { width: innerWidth, height: innerHeight }, align: 'center', gap: 8 });
+    pop.style.left = (pos.left - hr.left) + 'px';
+    pop.style.top = (pos.top - hr.top) + 'px';
+    pop.style.maxHeight = pos.maxHeight + 'px';
+  };
+  place();
+  pop._place = place; // reposiciona quando o conteúdo carregar (fica mais alto)
   return pop;
 }
 
@@ -129,6 +141,7 @@ async function toggleForecast(anchor, place) {
   if (!d) { pop.replaceChildren(h('p', { class: 'muted' }, 'Clima indisponível.')); return; }
   const body = h('div');
   renderForecast(body, d, place);
+  queueMicrotask(() => pop._place?.());
   pop.replaceChildren(
     h('div', { class: 'pop-head' }, h('b', {}, place.name), h('span', { class: 'muted' }, [place.region, place.tz && `${timeIn(place.tz)} ${tzOffsetLabel(place.tz)}`].filter(Boolean).join(' · ')),
       h('button', { class: 'icon-btn', title: 'Trocar cidade', onclick: (e) => { e.stopPropagation(); openPlacePicker(anchor, place === S.data.settings.places[0], place.id); } }, '📍')),

@@ -3,6 +3,7 @@ import { ACTIVE_KEY, saveData, uid, hostOf, normalizeUrl, faviconUrl, inspectFav
 import { $, $$, h, toast, showCtx } from '../lib/ui.js';
 import { S, EMOJIS } from './state.js';
 import { ctx } from './context.js';
+import { onEscape } from '../lib/window-manager.js';
 
 // =====================================================================
 // BARRA DE ATALHOS
@@ -112,7 +113,7 @@ export function setupPanelBehaviour() {
   document.addEventListener('click', (e) => {
     if (!dock.contains(e.target) && !e.target.closest('dialog, .ctx')) closePanel(true);
   });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !document.querySelector('dialog[open]')) closePanel(true); });
+  onEscape({ layer: 'dock', isOpen: () => !$('#panel').hidden && !isPinned(), close: () => closePanel(true) });
 }
 
 function renderPanel() {

@@ -10,7 +10,10 @@ test('dados da v0.3 são migrados ao abrir a nova aba', async () => {
     const g = await x.open('src/grant.html', { wait: 200 });
     await x.seed(g, fixtureJSON('legacy-v0.3-storage.json'), { clear: true, reload: false });
     await g.close();
-    const p = await x.open('src/newtab.html', { wait: 1500 });
+    const p = await x.open('src/newtab.html', { wait: 300 });
+    // Espera a migração terminar (em vez de um tempo fixo, que falhava com a máquina carregada).
+    await p.waitForFunction(async () => ((await chrome.storage.local.get('nt_meta')).nt_meta?.schema || 0) >= 2, null, { timeout: 10000, polling: 150 });
+    await p.waitForFunction(() => document.body.textContent.includes('Ligar para o banco'), null, { timeout: 10000 });
     const meta = await x.storage(p, 'nt_meta');
     assert.ok(meta.schema >= 2);
     const brain = await x.storage(p, 'nt_brain');
