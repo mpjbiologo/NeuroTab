@@ -573,7 +573,7 @@
         let cur = null;
         for (const raw of md.split(/\r?\n/)) {
           const line = raw.trimEnd();
-          const h = line.match(/^##\s+v?(\d+\.\d+\.\d+)\s*(?:[—–-]\s*(.*))?$/);
+          const h = line.match(/^##\s+v?(\d+\.\d+\.\d+(?:\.\d+)?)\s*(?:[—–-]\s*(.*))?$/);
           if (h) { cur = { v: h[1], date: (h[2] || '').trim(), head: '', lines: [] }; out.push(cur); continue; }
           if (!cur) continue;
           if (!cur.head && !cur.lines.length && /^\*\*.+\*\*$/.test(line)) { cur.head = line.replace(/^\*\*|\*\*$/g, ''); continue; }
