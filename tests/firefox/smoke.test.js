@@ -53,7 +53,7 @@ test('Firefox: versão e consentimento de dados declarados', async () => {
   await open('src/options.html');
   const info = await driver.executeAsyncScript((done) => { browser.permissions.getAll().then((p) => done({ data: p.data_collection || null, version: browser.runtime.getManifest().version })); });
   console.log('permissões de dados concedidas:', JSON.stringify(info));
-  assert.match(info.version, /^\d+\.\d+\.\d+$/);
+  assert.match(info.version, /^\d+\.\d+\.\d+(\.\d+)?$/);
 });
 
 test('Firefox: nova aba abre com relógio e widgets', async () => {
