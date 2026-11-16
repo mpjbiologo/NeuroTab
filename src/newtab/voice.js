@@ -24,6 +24,7 @@ export function voiceApi() {
     placesAnswer: (q, lang) => {
       const a = localAnswer(q, S.data.settings, lang);
       if (!a) return null;
+      if (a.kind === 'traffic') { showRoute({ live: true, to: a.place }); return a.text; }
       if (a.kind !== 'route' || !a.trip) return a.text;
       // Pedido de rota por voz: mostra o trajeto no widget Trânsito (maximizado), sem sair da NeuroTab.
       showRoute(a.trip);

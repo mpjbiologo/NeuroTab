@@ -109,3 +109,23 @@ test('pedidos de rota em linguagem natural (#43)', () => {
   // sem locais salvos, a IA é avisada de que a NeuroTab abre rotas
   assert.match(placesContext({}, 'você consegue me mostrar rotas no mapa?').note, /nunca diga que não consegue traçar rotas/);
 });
+
+test('"como está o trânsito no centro de BH" mostra o trânsito ao vivo, sem ir para a IA', async () => {
+  const { trafficAsk, placeQuery } = await import('../../src/lib/places.js');
+  const tgt = (q) => trafficAsk(q)?.target;
+  assert.equal(tgt('Me diga como está o trânsito no centro de BH'), 'centro de BH');
+  assert.equal(tgt('tem trânsito na Av. Amazonas?'), 'Av. Amazonas');
+  assert.equal(tgt('Verônica, como tá o trânsito em Itaúna hoje'), 'Itaúna');
+  assert.equal(tgt('como está o trânsito agora?'), null);
+  assert.equal(tgt('¿cómo está el tráfico en Madrid?'), 'Madrid');
+  assert.equal(trafficAsk('qual o valor da multa de trânsito?'), null);
+  assert.equal(trafficAsk('o trânsito me atrasou hoje'), null);
+  const a = localAnswer('Me diga como está o trânsito no centro de BH', settings);
+  assert.equal(a.kind, 'traffic');
+  assert.deepEqual(a.place, { name: 'centro de BH', query: 'centro de BH' });
+  assert.match(a.text, /Trânsito ao vivo em centro de BH no widget Trânsito/);
+  assert.equal(localAnswer('como está o trânsito para o trabalho?', settings).place.id, 't', 'local salvo');
+  assert.equal(localAnswer('como está o trânsito?', settings).place.id, 'c', 'sem lugar: casa');
+  assert.equal(placeQuery('centro de BH'), 'Centro, Belo Horizonte');
+  assert.equal(placeQuery('Rio Branco'), 'Rio Branco');
+});

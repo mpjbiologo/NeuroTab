@@ -28,9 +28,10 @@ export const FEATURES = {
     data: ['locationInfo'],
   },
   routing: {
-    label: 'Distância e tempo pela rua',
-    why: 'Calcula a distância e o tempo de um trajeto entre seus locais salvos (OpenStreetMap), quando você pede no "Pergunte ao seu cérebro". Não considera o trânsito de agora.',
-    origins: ['https://routing.openstreetmap.de/*'],
+    label: 'Rotas pela rua',
+    why: 'Traça o caminho, a distância e o tempo de um trajeto no widget Trânsito (servidores do OpenStreetMap), quando você pede uma rota. Só os dois pontos do trajeto são enviados. Não considera o trânsito de agora.',
+    // três servidores gratuitos do OpenStreetMap: se um recusar, o próximo responde
+    origins: ['https://routing.openstreetmap.de/*', 'https://valhalla1.openstreetmap.de/*', 'https://router.project-osrm.org/*'],
     data: ['locationInfo'],
   },
   slides: {

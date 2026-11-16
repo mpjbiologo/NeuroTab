@@ -82,7 +82,7 @@ export default {
       // Perguntas sobre os locais e rotas do widget de mapas (funcionam até sem IA).
       const local = localAnswer(q, ctx.settings, lang);
       // Pedido de rota se resolve aqui mesmo, com ou sem IA: a resposta é o trajeto com os botões dos mapas.
-      const routeAsk = local && (local.kind === 'route' || local.kind === 'route-where');
+      const routeAsk = local && (local.kind === 'route' || local.kind === 'route-where' || local.kind === 'traffic');
       if (!ctx.aiReady() || routeAsk) {
         if (local) {
           // "Traçar rota para…": o trajeto aparece no widget Trânsito, maximizado, sem abrir outro site.
@@ -90,6 +90,7 @@ export default {
             local.text = placesText(lang).showing(local.trip.to.name);
             ctx.showRoute(local.trip);
           }
+          if (local.kind === 'traffic') ctx.showRoute({ live: true, to: local.place });
           const msg = h('div', { class: 'msg bot' }, h('p', {}, local.text));
           if (local.trip) msg.append(tripBar(local.trip));
           chat.append(msg);

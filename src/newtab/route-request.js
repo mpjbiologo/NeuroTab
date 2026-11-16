@@ -8,9 +8,9 @@ import { $ } from '../lib/ui.js';
 
 let pending = null;
 
-/** trip = { from, to, mode } (from/to: local salvo, { name, query } ou null). */
+/** trip = { from, to, mode } (from/to: local salvo, { name, query } ou null) ou { live: true, to } para o trânsito ao vivo. */
 export async function showRoute(trip) {
-  if (!trip?.to) return false;
+  if (!trip || (!trip.to && !trip.live)) return false;
   pending = trip;
   const widgets = S.data.settings.widgets;
   if (!widgets.some((w) => w.id === 'traffic')) {

@@ -21,15 +21,20 @@ const OSRM = {
   }],
 };
 
-async function setup({ widgets = [{ id: 'ask', w: 6 }, { id: 'traffic', w: 6 }], access = true } = {}) {
+async function setup({ widgets = [{ id: 'ask', w: 6 }, { id: 'traffic', w: 6 }], access = true, osrmDown = false } = {}) {
   const x = await launch({ ai: () => 'NÃO DEVIA PERGUNTAR À IA' });
-  const net = { geo: [], osrm: [] };
+  const net = { geo: [], osrm: [], valhalla: [] };
   if (access) await x.ctx.addInitScript(() => { if (globalThis.chrome?.permissions) { chrome.permissions.contains = async () => true; chrome.permissions.request = async () => true; } });
   await x.ctx.route('https://nominatim.openstreetmap.org/**', (r) => {
     net.geo.push(new URL(r.request().url()).searchParams.get('q'));
     r.fulfill({ json: [{ name: 'Shopping Itaúna', display_name: 'Shopping Itaúna, Centro, Itaúna, MG, Brasil', lat: '-20.066', lon: '-44.561' }], headers: CORS });
   });
-  await x.ctx.route('https://routing.openstreetmap.de/**', (r) => { net.osrm.push(r.request().url()); r.fulfill({ json: OSRM, headers: CORS }); });
+  await x.ctx.route('https://routing.openstreetmap.de/**', (r) => { net.osrm.push(r.request().url()); r.fulfill(osrmDown ? { status: 403, body: 'blocked', headers: CORS } : { json: OSRM, headers: CORS }); });
+  await x.ctx.route('https://valhalla1.openstreetmap.de/**', (r) => {
+    net.valhalla.push(JSON.parse(new URL(r.request().url()).searchParams.get('json')));
+    // dois pontos em polilinha de precisão 6: (-20.075,-44.576) → (-20.066,-44.561)
+    r.fulfill({ json: { trip: { status: 0, summary: { length: 2.1, time: 360 }, legs: [{ shape: 'n~ghe@~nu_tAoqPoh\\', maneuvers: [{ instruction: 'Siga na Rua A.', length: 2.1, type: 1 }, { instruction: 'Você chegou.', length: 0, type: 4 }] }] } }, headers: CORS });
+  });
   const p = await x.open('src/newtab.html');
   const data = await x.storage(p, 'nt_data');
   data.settings.ai = { ...data.settings.ai, keys: { gemini: 'K' }, autoEnrich: false, semantic: false };
@@ -127,6 +132,40 @@ test('sem acesso ao OpenStreetMap, pede permissão em vez de falhar', async () =
     await ask('traçar rota para o centro');
     await p.waitForSelector('.widget[data-id="traffic"].maximized .route-msg');
     assert.equal(await traffic.getByRole('button', { name: /Permitir e traçar/ }).count(), 1);
+  } finally {
+    await x.close();
+  }
+});
+
+test('servidor de rotas fora do ar: usa o próximo (Valhalla) e desenha a rota', async () => {
+  const { x, p, ask, traffic, net } = await setup({ osrmDown: true });
+  try {
+    await ask('rota para o trabalho');
+    await p.waitForSelector('.widget[data-id="traffic"].maximized .rmap-route');
+    assert.equal(net.osrm.length, 1);
+    assert.equal(net.valhalla[0].costing, 'auto');
+    assert.match(await traffic.locator('.route-sum').textContent(), /2,1 km · 6 min/);
+    assert.deepEqual(await traffic.locator('.route-steps li').allTextContents(), ['Siga na Rua A. · 2,1 km', '🏁 Você chegou.']);
+  } finally {
+    await x.close();
+  }
+});
+
+test('"como está o trânsito no centro de BH" abre o mapa ao vivo ali, maximizado, sem a IA', async () => {
+  const { x, p, ask, traffic, net } = await setup();
+  try {
+    const m = await ask('Me diga como está o trânsito no centro de BH');
+    assert.match(await m.textContent(), /Trânsito ao vivo em centro de BH no widget Trânsito/);
+    await p.waitForSelector('.widget[data-id="traffic"].maximized iframe.map[src*="lat=-20.066"]');
+    assert.deepEqual(net.geo, ['Centro, Belo Horizonte'], 'sigla da cidade por extenso');
+    const src = await traffic.locator('iframe.map').getAttribute('src');
+    assert.match(src, /embed\.waze\.com\/.*zoom=14&lat=-20\.066&lon=-44\.561/);
+    assert.equal(x.calls.ai.filter((s) => s.includes('NOTAS DO USUÁRIO')).length, 0, 'a IA não foi chamada');
+    // o lugar procurado pode virar favorito ali mesmo
+    await traffic.getByRole('button', { name: '⭐ Salvar centro de BH' }).click();
+    await traffic.getByRole('button', { name: '⭐ Salvar nos favoritos' }).click();
+    await p.waitForTimeout(300);
+    assert.equal((await x.storage(p, 'nt_data')).settings.mapPlaces.at(-1).name, 'centro de BH');
   } finally {
     await x.close();
   }

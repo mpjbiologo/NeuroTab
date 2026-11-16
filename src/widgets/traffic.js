@@ -37,6 +37,7 @@ export default {
     let trip = null; // { from, to, mode } pedido
     let result = null; // { status, from, to, route, error }
     let rmap = null;
+    let mapMsg = null; // aviso no mapa ao vivo: { loading } | { need: lugar } | { error }
     const places = () => ctx.settings.mapPlaces || [];
     const routes = () => ctx.settings.mapRoutes || [];
     const body = h('div', { class: 'traffic' });
@@ -72,6 +73,23 @@ export default {
       compute();
     }
 
+    /** "Como está o trânsito em X?": mapa ao vivo do Waze centrado em X, maximizado. */
+    async function liveAt(p) {
+      view = 'map';
+      maximize();
+      if (!p) { center = null; mapMsg = null; render(); return; } // perto de casa
+      if (hasCoordsOf(p)) { center = p; zoom = 14; mapMsg = null; render(); return; }
+      if (!(await hasFeature('traffic'))) { mapMsg = { need: p }; render(); return; }
+      mapMsg = { loading: p.name };
+      render();
+      const [hit] = await geocode(p.query || p.name, { near: nearRef() }).catch(() => []);
+      if (!hit) { mapMsg = { error: `Não encontrei "${p.name}" no mapa. Tente com a cidade (ex.: "centro de Belo Horizonte").` }; render(); return; }
+      center = { ...hit, name: p.name || hit.name, address: hit.address };
+      zoom = 14;
+      mapMsg = null;
+      render();
+    }
+
     async function resolvePoint(p) {
       if (!p) return null;
       if (typeof p === 'string') p = { name: p, query: p };
@@ -96,11 +114,17 @@ export default {
         if (!from) throw new Error('De onde você sai? Salve sua casa (⭐) ou escolha a origem acima.');
         const route = await streetRoute(from, to, t0.mode);
         if (trip !== t0) return; // chegou outro pedido no meio
-        if (!route) throw new Error('Não achei um caminho pela rua entre esses dois pontos.');
+        if (!route) {
+          const why = streetRoute.lastErrors.join(' · ');
+          const blocked = /HTTP 4\d\d|Failed to fetch|NetworkError/i.test(why);
+          throw new Error(blocked
+            ? `Os servidores de rotas não responderam (${why}). Verifique a internet ou tente de novo em instantes.`
+            : `Não achei um caminho pela rua entre ${from.name} e ${to.name}.${why ? ` (${why})` : ''}`);
+        }
         result = { status: 'ok', from, to, route };
       } catch (e) {
         if (trip !== t0) return;
-        result = { status: 'error', error: e?.message && !/fetch|network/i.test(e.message) ? e.message : 'Sem conexão com o OpenStreetMap agora.' };
+        result = { status: 'error', error: e?.message && !/^(Failed to fetch|NetworkError)/i.test(e.message) ? e.message : 'Sem conexão com o OpenStreetMap agora.' };
       }
       render();
     }
@@ -197,7 +221,18 @@ export default {
       const fallback = ctx.settings.places?.[0];
       const c = center || ps[0] || fallback;
       const out = [];
-      const addBtn = h('button', { class: 'chip add', title: 'Salvar um local favorito', onclick: () => { view = 'manage'; render(); } }, '⭐ Salvar local');
+      const temp = c && center === c && !ps.includes(c) && hasCoordsOf(c) && c.address ? c : null; // lugar procurado, ainda não salvo
+      const slot = h('div', {});
+      const addBtn = h('button', { class: 'chip add', title: temp ? `Salvar "${temp.name}" nos favoritos` : 'Salvar um local favorito', onclick: () => {
+        if (temp) slot.replaceChildren(savePlaceForm(temp, (np) => { center = np; render(); }));
+        else { view = 'manage'; render(); }
+      } }, temp ? `⭐ Salvar ${temp.name}` : '⭐ Salvar local');
+      if (mapMsg) {
+        out.push(h('div', { class: 'route-msg' }, mapMsg.need
+          ? [h('p', {}, `Para achar "${mapMsg.need.name}" no mapa, a NeuroTab consulta o OpenStreetMap (só o nome do lugar é enviado).`),
+            h('button', { class: 'btn primary', onclick: async () => { const p = mapMsg.need; if (await requestFeature('traffic')) liveAt(p); } }, '🔓 Permitir e mostrar')]
+          : h('p', { class: 'muted' }, mapMsg.loading ? `Procurando ${mapMsg.loading}…` : mapMsg.error)));
+      }
       out.push(h('div', { class: 'toolbar' }, ...ps.map((p) => {
         const chip = h('button', { class: 'chip' + (c === p ? ' sel' : ''), title: p.address, onclick: () => { center = p; render(); } }, `${p.icon} ${p.name}`);
         chip.oncontextmenu = (e) => showCtx(e, [
@@ -208,7 +243,7 @@ export default {
           ['🗑 Remover local', () => savePlaces(ps.filter((x) => x !== p)).then(render), 'danger'],
         ]);
         return chip;
-      }), addBtn));
+      }), temp ? h('span', { class: 'chip sel' }, `🚦 ${temp.name}`) : '', addBtn), slot);
       const rs = routes().filter((r) => byId(r.to));
       if (rs.length) {
         out.push(h('div', { class: 'routes' }, ...rs.map((r) => {
@@ -295,6 +330,7 @@ export default {
 
     function render() {
       if (view !== 'route' && rmap) { rmap.destroy(); rmap = null; }
+      if (view !== 'map') mapMsg = null;
       routeBtn.classList.toggle('sel', view === 'route');
       cfgBtn.classList.toggle('sel', view === 'manage');
       zoomIn.hidden = zoomOut.hidden = view !== 'map';
@@ -304,9 +340,10 @@ export default {
 
     render();
     ctx.on('data', () => { if (view === 'map') render(); });
-    ctx.on('route.requested', (next) => { ctx.takeRoute?.(); openRoute(next); });
+    const handle = (next) => (next.live ? liveAt(next.to) : openRoute(next));
+    ctx.on('route.requested', (next) => { ctx.takeRoute?.(); handle(next); });
     const pending = ctx.takeRoute?.();
-    if (pending) setTimeout(() => openRoute(pending), 0);
+    if (pending) setTimeout(() => handle(pending), 0);
     return { destroy: () => { rmap?.destroy(); rmap = null; } };
   },
 };

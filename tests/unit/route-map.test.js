@@ -77,3 +77,32 @@ test('ladrilhos: se o OpenStreetMap recusar (sem Referer), usa o próximo servid
   resetProvider();
   assert.match(PROVIDERS.find((x) => x.id === 'esri').url(5, 10, 20), /tile\/5\/20\/10$/, 'Esri usa z/y/x');
 });
+
+test('rota: se o primeiro servidor recusar, usa o Valhalla (e explica as falhas)', async () => {
+  const { decodePolyline } = await import('../../src/lib/places.js');
+  const asked = [];
+  // polilinha precisão 6 de dois pontos
+  const enc = (pts) => { let out = '', plat = 0, plon = 0; const e = (v) => { v = v < 0 ? ~(v << 1) : v << 1; let s = ''; while (v >= 0x20) { s += String.fromCharCode((0x20 | (v & 0x1f)) + 63); v >>= 5; } return s + String.fromCharCode(v + 63); }; for (const [lon, lat] of pts) { const a = Math.round(lat * 1e6), b = Math.round(lon * 1e6); out += e(a - plat) + e(b - plon); plat = a; plon = b; } return out; };
+  const shape = enc([[-43.94, -19.92], [-43.93, -19.91]]);
+  assert.deepEqual(decodePolyline(shape, 6), [[-43.94, -19.92], [-43.93, -19.91]]);
+  const fetchFn = async (u) => {
+    const host = new URL(u).host;
+    asked.push(host);
+    if (host === 'routing.openstreetmap.de') return { ok: false, status: 403, json: async () => ({}) };
+    return { ok: true, json: async () => ({ trip: { status: 0, summary: { length: 1.6, time: 300 }, legs: [{ shape, maneuvers: [{ instruction: 'Siga para o norte na Rua X.', length: 1.6, type: 1 }, { instruction: 'Você chegou ao seu destino.', length: 0, type: 4 }] }] } }) };
+  };
+  const r = await streetRoute({ lat: '-19.92', lon: '-43.94' }, { lat: -19.91, lon: -43.93 }, 'driving', fetchFn);
+  assert.deepEqual(asked, ['routing.openstreetmap.de', 'valhalla1.openstreetmap.de']);
+  assert.equal(r.router, 'fossgis-valhalla');
+  assert.equal(r.km, 1.6);
+  assert.equal(r.min, 5);
+  assert.equal(r.coords.length, 2);
+  assert.deepEqual(r.steps.map((s) => stepText(s)), ['Siga para o norte na Rua X.', '🏁 Você chegou ao seu destino.']);
+  assert.deepEqual(streetRoute.lastErrors, ['fossgis-osrm: HTTP 403']);
+  // todos fora: null e os três motivos
+  assert.equal(await streetRoute({ lat: 1, lon: 1 }, { lat: 2, lon: 2 }, 'driving', async () => { throw new Error('Failed to fetch'); }), null);
+  assert.equal(streetRoute.lastErrors.length, 3);
+  // a pé: o servidor de demonstração (só carro) não é tentado
+  await streetRoute({ lat: 1, lon: 1 }, { lat: 2, lon: 2 }, 'walking', async () => { throw new Error('x'); });
+  assert.equal(streetRoute.lastErrors.length, 2);
+});

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.2.3 — 2026-11-16
+**Rotas que funcionam e trânsito ao vivo pelo cérebro.**
+
+- Rotas: o servidor de rotas do OpenStreetMap recusava os pedidos e toda rota terminava em "Não achei um caminho pela rua". Agora a NeuroTab tenta três servidores gratuitos em ordem (FOSSGIS OSRM, FOSSGIS Valhalla e o servidor de demonstração do OSRM); se todos falharem, a mensagem diz o motivo de cada um. Na primeira rota depois da atualização, o navegador pede a permissão de novo, por causa dos servidores novos (#43)
+- "Como está o trânsito no centro de BH?", no cérebro ou por voz, abre o mapa ao vivo do Waze no lugar citado, com o widget Trânsito maximizado, em vez de a IA dizer que não tem acesso ao trânsito. Sem lugar ("como está o trânsito?"), mostra perto de casa
+- O lugar procurado pode virar favorito ali mesmo: "⭐ Salvar centro de BH"
+- Siglas de cidades viram o nome inteiro na busca de endereços: BH, SP, RJ, POA, BSB, JF… ("centro de BH" vira "Centro, Belo Horizonte")
+- A IA é avisada de que a NeuroTab mostra o trânsito ao vivo e traça rotas, para não responder que não consegue
+
 ## v0.7.2.2 — 2026-11-16
 **A rota aparece no widget Trânsito, sem abrir outro site.**
 

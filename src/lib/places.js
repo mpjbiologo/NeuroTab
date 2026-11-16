@@ -87,8 +87,26 @@ function matchRoute(orig) {
   return { from: cut(1), target };
 }
 
+// ---------- "Como está o trânsito no centro de BH?" ----------
+const TRAFFIC_WORD = '(?:transito|trafego|congestionamento|engarrafamento|lentidao|traffic|congestion|trafico|atasco|atascos|embotellamiento)';
+const TRAFFIC_Q = new RegExp(`\\b(?:como|qual|quais|tem|ha|esta|ta|mostr|ver|veja|me (?:diga|diz|fala|fale)|how|what|is there|any|show|cual|como|hay|muestra|dime)\\b[^?]*\\b${TRAFFIC_WORD}\\b|\\b${TRAFFIC_WORD}\\b[^?]*\\?|^\\s*${TRAFFIC_WORD}\\b`);
+const TRAFFIC_NOT = /\b(multa|multas|codigo|lei|leis|infracao|cnh|detran|placa|ticket|fine|law|ley|multa)\b/;
+const TRAFFIC_AT = new RegExp(`\\b${TRAFFIC_WORD}\\b(?:\\s+(?:agora|hoje|neste momento|ao vivo|right now|now|today|ahora|hoy))?\\s+(?:(?:la|por)\\s+)?(?:(?:n[oa]s?|em|para|pra|pro|perto d[eoa]s?|ate|d[oa]s?|de|in|on|near|at|to|around|en|cerca de|hacia|al|del)\\s+)(.+?)\\s*(?:agora|hoje|now|today|ahora|hoy)?[\\s?.!]*$`, 'd');
+
+/** Pergunta sobre o trânsito? Devolve { target } (o lugar citado, ou null = perto de casa) ou null. */
+export function trafficAsk(text) {
+  const orig = [...String(text || '').normalize('NFC')].join('').trim().replace(/^[^,]{1,30},\s*(?=\S)/, (m) => (TRAFFIC_Q.test(deaccent(m).toLowerCase()) ? m : ''));
+  const flat = deaccent(orig).toLowerCase();
+  if (!TRAFFIC_Q.test(flat) || TRAFFIC_NOT.test(flat)) return null;
+  const m = TRAFFIC_AT.exec(flat);
+  let target = m ? orig.slice(m.indices[1][0], m.indices[1][1]).trim() : null;
+  if (target) target = target.replace(/^(o|a|os|as|the|el|la|los|las)\s+/i, '');
+  if (target && /^(agora|hoje|ai|aqui|here|now|today|ahora|hoy)$/i.test(deaccent(target))) target = null;
+  return { target };
+}
+
 const KEYWORDS = /\b(rota|rotas|caminho|chegar|chego|distancia|longe|perto|tempo|demora|demoro|transito|endereco|onde fica|trajeto|trajetos|percurso|leva|navegar|navigate|take me|locais|lugares|route|routes|directions|distance|far|near|how long|traffic|address|where is|commute|places|locations|ruta|rutas|lejos|cerca|cuanto tarda|cuanto tiempo|trafico|direccion|donde queda|donde esta|lugares|llego|llegar)\b/;
-const ROUTE_WORDS = /\b(rota|rotas|trajeto|percurso|caminho|mapa|maps|navegar|route|directions|navigate|map|ruta|mapa|recorrido)\b/;
+const ROUTE_WORDS = /\b(rota|rotas|trajeto|percurso|caminho|mapa|maps|navegar|route|directions|navigate|map|ruta|mapa|recorrido|transito|trafego|traffic|trafico)\b/;
 const HOME = /^(casa|home|hogar|minha casa|mi casa)$/;
 
 /** Lugares salvos citados no texto (pelo nome), do mais longo para o mais curto. */
@@ -165,6 +183,7 @@ const TXT = {
     where: 'Para onde? Diga, por exemplo: "rota para o centro" ou "rota de casa até o trabalho".',
     opening: (b) => `Abrindo a rota para ${b}.`,
     showing: (b) => `🧭 Rota até ${b} no widget Trânsito.`,
+    trafficLive: (b) => `🚦 Trânsito ao vivo ${b ? `em ${b}` : 'perto de você'} no widget Trânsito (Waze): vermelho é lento, laranja é moderado e verde é livre.`,
     modes: { driving: 'carro', walking: 'a pé', bicycling: 'bicicleta', transit: 'transporte' },
   },
   en: {
@@ -183,6 +202,7 @@ const TXT = {
     where: 'Where to? Say, for example: "route to downtown" or "route from home to work".',
     opening: (b) => `Opening the route to ${b}.`,
     showing: (b) => `🧭 Route to ${b} in the Traffic widget.`,
+    trafficLive: (b) => `🚦 Live traffic ${b ? `in ${b}` : 'near you'} in the Traffic widget (Waze): red is slow, orange is moderate, green is clear.`,
     modes: { driving: 'car', walking: 'walking', bicycling: 'bike', transit: 'transit' },
   },
   es: {
@@ -201,6 +221,7 @@ const TXT = {
     where: '¿A dónde? Di, por ejemplo: "ruta al centro" o "ruta de casa al trabajo".',
     opening: (b) => `Abriendo la ruta a ${b}.`,
     showing: (b) => `🧭 Ruta hasta ${b} en el widget Tráfico.`,
+    trafficLive: (b) => `🚦 Tráfico en vivo ${b ? `en ${b}` : 'cerca de ti'} en el widget Tráfico (Waze): rojo es lento, naranja es moderado y verde está libre.`,
     modes: { driving: 'auto', walking: 'a pie', bicycling: 'bici', transit: 'transporte' },
   },
 };
@@ -221,6 +242,13 @@ const ASK_HOW = /\b(como chego|como chegar|caminho|rota|how do i get|how to get|
 export function localAnswer(question, { mapPlaces: places = [], mapRoutes: routes = [] } = {}, lang = 'pt') {
   const T = placesText(lang);
   const q = fold(question);
+  // Trânsito: mostra o mapa ao vivo (Waze) no widget Trânsito, no lugar citado ou perto de casa.
+  const tr = trafficAsk(question);
+  if (tr) {
+    const saved = tr.target ? placesIn(tr.target, places).find((p) => fold(p.name).trim() === fold(tr.target).trim()) : null;
+    const place = tr.target ? saved || { name: tr.target, query: tr.target } : homeOf(places) || null;
+    return { kind: 'traffic', place, text: T.trafficLive(place?.name) };
+  }
   const ask = routeTarget(question);
   if (!ask && isBareRouteAsk(question)) return { kind: 'route-where', text: T.where };
   if (!ask && !KEYWORDS.test(q) && !placesIn(question, places).length) return null;
@@ -260,7 +288,7 @@ export function localAnswer(question, { mapPlaces: places = [], mapRoutes: route
 export function placesContext(settings, question) {
   const places = settings?.mapPlaces || [];
   const routes = settings?.mapRoutes || [];
-  const NEVER = 'A NeuroTab traça rotas no widget Trânsito e abre no Google Maps e no Waze: nunca diga que não consegue traçar rotas ou abrir mapas. Para um trajeto, peça que a pessoa diga "rota para" e o destino.';
+  const NEVER = 'A NeuroTab traça rotas e mostra o trânsito ao vivo (Waze) no widget Trânsito, e abre no Google Maps e no Waze: nunca diga que não consegue traçar rotas, abrir mapas ou ver o trânsito. Para um trajeto, peça que a pessoa diga "rota para" e o destino.';
   if (!places.length && ROUTE_WORDS.test(fold(question))) return { title: 'ROTAS E MAPAS', note: NEVER, text: 'Nenhum local salvo no widget de mapas.' };
   if (settings?.ai?.sharePlaces === false || !isPlacesQuestion(question, places)) return null;
   const byId = (id) => places.find((p) => p.id === id);
@@ -271,43 +299,110 @@ export function placesContext(settings, question) {
   });
   return {
     title: 'LOCAIS E ROTAS SALVOS NO WIDGET DE MAPAS',
-    note: 'Distâncias aqui são em linha reta; você não sabe o trânsito agora. A NeuroTab traça a rota no widget Trânsito (e tem botões para o Google Maps e o Waze): nunca diga que não consegue traçar rotas; diga que a rota está no widget Trânsito e nos botões abaixo. Diga que usou os locais salvos.',
+    note: 'Distâncias aqui são em linha reta. O trânsito ao vivo aparece no mapa do Waze, no widget Trânsito: nunca diga que não tem acesso ao trânsito; mande a pessoa perguntar "como está o trânsito em…". A NeuroTab traça a rota no widget Trânsito (e tem botões para o Google Maps e o Waze): nunca diga que não consegue traçar rotas; diga que a rota está no widget Trânsito e nos botões abaixo. Diga que usou os locais salvos.',
     text: [`Locais:\n${lines.join('\n')}`, rs.length ? `Rotas favoritas:\n${rs.join('\n')}` : ''].filter(Boolean).join('\n\n'),
   };
 }
 
-// ---------- Distância e tempo pela rua (OpenStreetMap / OSRM, sem trânsito) ----------
+// ---------- Distância e tempo pela rua (OpenStreetMap, sem trânsito) ----------
+// Três servidores gratuitos, tentados em ordem: se um recusar ou estiver fora do ar, o próximo responde.
 export const ROUTER_ORIGIN = 'https://routing.openstreetmap.de';
+export const VALHALLA_ORIGIN = 'https://valhalla1.openstreetmap.de';
+export const OSRM_DEMO_ORIGIN = 'https://router.project-osrm.org';
+export const ROUTER_ORIGINS = [ROUTER_ORIGIN, VALHALLA_ORIGIN, OSRM_DEMO_ORIGIN];
 const PROFILES = { driving: ['routed-car', 'driving'], walking: ['routed-foot', 'foot'], bicycling: ['routed-bike', 'bike'] };
+const COSTING = { driving: 'auto', walking: 'pedestrian', bicycling: 'bicycle' };
 
-/** Distância e tempo pela rua (sem trânsito). Precisa de acesso a ROUTER_ORIGIN. Devolve { km, min } ou null. */
-export async function streetEstimate(from, to, mode = 'driving', fetchFn = fetch) {
-  const p = PROFILES[mode] || PROFILES.driving;
-  const url = `${ROUTER_ORIGIN}/${p[0]}/route/v1/${p[1]}/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`;
-  const r = await fetchFn(url, { headers: { Accept: 'application/json' } });
-  if (!r.ok) return null;
-  const j = await r.json();
-  const route = j?.routes?.[0];
-  if (j?.code !== 'Ok' || !route) return null;
-  return { km: route.distance / 1000, min: route.duration / 60 };
+const num = (v) => (typeof v === 'string' ? Number(v.replace(',', '.')) : Number(v));
+const pt = (p) => ({ lat: num(p.lat), lon: num(p.lon) });
+
+/** Polilinha codificada (Google/Valhalla) → [[lon, lat]…]. Valhalla usa precisão 6. */
+export function decodePolyline(str, precision = 6) {
+  const f = 10 ** precision;
+  const out = [];
+  let i = 0, lat = 0, lon = 0;
+  while (i < str.length) {
+    for (const k of [0, 1]) {
+      let shift = 0, result = 0, b;
+      do { b = str.charCodeAt(i++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      const d = result & 1 ? ~(result >> 1) : result >> 1;
+      if (k === 0) lat += d; else lon += d;
+    }
+    out.push([lon / f, lat / f]);
+  }
+  return out;
 }
 
-/**
- * Trajeto completo pela rua (sem trânsito): distância, tempo, a linha [[lon,lat]…] para desenhar no mapa
- * e o passo a passo. Devolve null se não houver rota.
- */
-export async function streetRoute(from, to, mode = 'driving', fetchFn = fetch) {
-  const p = PROFILES[mode] || PROFILES.driving;
-  const url = `${ROUTER_ORIGIN}/${p[0]}/route/v1/${p[1]}/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson&steps=true`;
-  const r = await fetchFn(url, { headers: { Accept: 'application/json' } });
-  if (!r.ok) return null;
-  const j = await r.json();
+function osrmParse(j) {
   const route = j?.routes?.[0];
   if (j?.code !== 'Ok' || !route) return null;
   const steps = (route.legs || []).flatMap((l) => l.steps || []).map((st) => ({
     type: st.maneuver?.type || '', modifier: st.maneuver?.modifier || '', name: st.name || '', km: (st.distance || 0) / 1000,
   }));
   return { km: route.distance / 1000, min: route.duration / 60, coords: route.geometry?.coordinates || [], steps };
+}
+
+const ROUTERS = [
+  {
+    id: 'fossgis-osrm',
+    url: (a, b, mode) => { const p = PROFILES[mode] || PROFILES.driving; return `${ROUTER_ORIGIN}/${p[0]}/route/v1/${p[1]}/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson&steps=true`; },
+    parse: osrmParse,
+  },
+  {
+    id: 'fossgis-valhalla',
+    url: (a, b, mode, lang) => `${VALHALLA_ORIGIN}/route?json=${encodeURIComponent(JSON.stringify({
+      locations: [{ lat: a.lat, lon: a.lon }, { lat: b.lat, lon: b.lon }], costing: COSTING[mode] || 'auto',
+      directions_options: { units: 'kilometers', language: { pt: 'pt-BR', en: 'en-US', es: 'es-ES' }[lang] || 'pt-BR' },
+    }))}`,
+    parse: (j) => {
+      const tr = j?.trip;
+      if (!tr || tr.status !== 0 || !tr.legs?.length) return null;
+      return {
+        km: tr.summary.length, min: tr.summary.time / 60,
+        coords: tr.legs.flatMap((l) => decodePolyline(l.shape || '', 6)),
+        steps: tr.legs.flatMap((l) => l.maneuvers || []).map((m) => ({ text: m.instruction || '', type: m.type === 4 || m.type === 5 || m.type === 6 ? 'arrive' : '', km: m.length || 0 })),
+      };
+    },
+  },
+  {
+    // Servidor de demonstração do OSRM: só tem carro.
+    id: 'osrm-demo',
+    url: (a, b, mode) => (mode && mode !== 'driving' ? null : `${OSRM_DEMO_ORIGIN}/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson&steps=true`),
+    parse: osrmParse,
+  },
+];
+
+/**
+ * Trajeto completo pela rua (sem trânsito): distância, tempo, a linha [[lon,lat]…] para desenhar no mapa
+ * e o passo a passo. Tenta os servidores em ordem. Devolve a rota ({ …, router }) ou null; o motivo de cada
+ * falha fica em `streetRoute.lastErrors` (ajuda a explicar o erro na tela).
+ */
+export async function streetRoute(from, to, mode = 'driving', fetchFn = fetch, lang = 'pt') {
+  const a = pt(from), b = pt(to);
+  const errors = [];
+  streetRoute.lastErrors = errors;
+  if (![a.lat, a.lon, b.lat, b.lon].every(Number.isFinite)) { errors.push('coordenadas inválidas'); return null; }
+  for (const R of ROUTERS) {
+    const url = R.url(a, b, mode, lang);
+    if (!url) continue;
+    try {
+      const r = await fetchFn(url, { headers: { Accept: 'application/json' } });
+      if (!r.ok) { errors.push(`${R.id}: HTTP ${r.status}`); continue; }
+      const route = R.parse(await r.json());
+      if (route && Number.isFinite(route.km)) return { ...route, router: R.id };
+      errors.push(`${R.id}: sem rota`);
+    } catch (e) {
+      errors.push(`${R.id}: ${e?.message || 'falhou'}`);
+    }
+  }
+  return null;
+}
+streetRoute.lastErrors = [];
+
+/** Distância e tempo pela rua (sem trânsito). Devolve { km, min } ou null. */
+export async function streetEstimate(from, to, mode = 'driving', fetchFn = fetch) {
+  const r = await streetRoute(from, to, mode, fetchFn);
+  return r ? { km: r.km, min: r.min } : null;
 }
 
 // ---------- Endereço → coordenadas (OpenStreetMap Nominatim) ----------
@@ -317,9 +412,22 @@ export const GEOCODER_ORIGIN = 'https://nominatim.openstreetmap.org';
  * Procura um lugar pelo nome/endereço, de preferência perto de `near` ({lat, lon}). Devolve a lista
  * [{ name, address, lat, lon }]. Precisa de acesso a GEOCODER_ORIGIN.
  */
+const ABBREV = {
+  bh: 'Belo Horizonte', sp: 'São Paulo', sampa: 'São Paulo', rj: 'Rio de Janeiro', rio: 'Rio de Janeiro', poa: 'Porto Alegre', bsb: 'Brasília',
+  df: 'Brasília', jf: 'Juiz de Fora', bc: 'Balneário Camboriú', ssa: 'Salvador', cwb: 'Curitiba', floripa: 'Florianópolis', sjc: 'São José dos Campos',
+  nyc: 'New York City', bcn: 'Barcelona',
+};
+/** "centro de BH" → "Centro, Belo Horizonte": siglas de cidade e "centro de X" que o Nominatim entende. */
+export function placeQuery(q) {
+  let t = String(q || '').trim().replace(/[?.!]+$/, '');
+  t = t.replace(/\b([A-Za-z]{2,6})\b/g, (w) => (w === w.toUpperCase() || /^(sampa|floripa)$/i.test(w) || (/^rio$/i.test(w) && /^rio$/i.test(t))) && ABBREV[w.toLowerCase()] ? ABBREV[w.toLowerCase()] : w);
+  t = t.replace(/^(?:o\s+|the\s+|el\s+)?(centro|downtown|centro historico|centro histórico)\s+(?:d[eoa]s?|of|del?)\s+(.+)$/i, (_, c, city) => `${c[0].toUpperCase()}${c.slice(1)}, ${city}`);
+  return t;
+}
+
 export async function geocode(q, { near = null, limit = 1, lang = 'pt-BR', fetchFn = fetch } = {}) {
   const u = new URL(`${GEOCODER_ORIGIN}/search`);
-  u.search = new URLSearchParams({ format: 'jsonv2', limit: String(limit), addressdetails: '0', 'accept-language': lang, q: String(q || '').trim() }).toString();
+  u.search = new URLSearchParams({ format: 'jsonv2', limit: String(limit), addressdetails: '0', 'accept-language': lang, q: placeQuery(q) }).toString();
   if (near && Number.isFinite(+near.lat) && Number.isFinite(+near.lon)) {
     const d = 0.6; // ~60 km em volta: "shopping" acha o da cidade da pessoa, sem impedir outra cidade
     u.searchParams.set('viewbox', [+near.lon - d, +near.lat + d, +near.lon + d, +near.lat - d].join(','));
@@ -355,6 +463,7 @@ const STEP_WORDS = {
 
 /** "Vire à direita na Rua A" a partir de um passo do OSRM. */
 export function stepText(st, lang = 'pt') {
+  if (st.text) return st.type === 'arrive' ? `🏁 ${st.text}` : st.text; // Valhalla já manda a frase pronta
   const W = STEP_WORDS[lang] || STEP_WORDS.pt;
   if (st.type === 'arrive') return `🏁 ${W.arrive}${st.name ? ` — ${st.name}` : ''}`;
   const kind = { 'new name': 'continue', 'end of road': 'end', 'on ramp': 'ramp', 'off ramp': 'ramp', rotary: 'roundabout', 'roundabout turn': 'roundabout', notification: 'continue' }[st.type] || st.type;
