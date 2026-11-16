@@ -1,6 +1,6 @@
 # Caminho até a 1.0
 
-Cada versão grande é um marco no GitHub, com as issues que entram nela. As versões grandes saem em atualizações menores (0.7.0, 0.7.1…) para as revisões das lojas serem rápidas. Estimativa: **10 a 12 atualizações** até a 1.0.
+Cada versão grande é um marco no GitHub, com as issues que entram nela. As versões grandes saem em atualizações menores (0.7.0, 0.7.1…) para as revisões das lojas serem rápidas. Estimativa: **11 a 13 atualizações** até a 1.0.
 
 ## O que a 1.0 promete
 
@@ -13,13 +13,15 @@ A 1.0 não é "ter todos os recursos". É poder dizer: **pode confiar seus dados
 
 ## Marcos
 
-### [v0.7 — Base modular e painel](https://github.com/mpjbiologo/NeuroTab/milestone/3) · 5 atualizações
+### [v0.7 — Base modular e painel](https://github.com/mpjbiologo/NeuroTab/milestone/3) · 6 atualizações
 Primeiro a base, depois os recursos.
 - ✅ **0.7.0 — Arquitetura modular:** `newtab.js` dividido em módulos (#14); botões flutuantes sem cobrir widgets (#38).
 - ✅ **0.7.1:** barramento de eventos (#5) e contrato dos widgets (#6); o cérebro lê o widget de mapas (#43); maximizar, minimizar e restaurar widgets (#18).
-- **0.7.2 — Assistente com nome e janelas organizadas:** nome do assistente, frase de ativação composta ("Acorde Verônica"), sinal sonoro e estados da escuta (#15); camadas centralizadas e nenhum painel fora da tela ou sobreposto sem querer (#35).
-- **0.7.3 — Processamento local:** voz transcrita no próprio computador (reconhecimento local do navegador ou Whisper local, com o Ollama respondendo) e modo "somente local" (#49); o cérebro lê as imagens da biblioteca pela IA da pessoa (com consentimento) e por leitura de texto local, sem enviar nada (#17).
-- **0.7.4 — Agenda:** agenda própria (dia, semana, mês, recorrência), importação de `.ics` e o cérebro respondendo sobre compromissos; contas Google/Microsoft numa etapa seguinte (#26).
+- ✅ **0.7.2 — Assistente com nome e janelas organizadas:** nome do assistente, frase de ativação composta ("Acorde Verônica"), sinal sonoro e estados da escuta (#15); camadas centralizadas e nenhum painel fora da tela ou sobreposto sem querer (#35).
+  - ✅ 0.7.2.1 a 0.7.2.3: rotas e trânsito ao vivo dentro do widget Trânsito, favoritos salvos ali (#43).
+- **0.7.3 — Voz local:** voz transcrita no próprio computador (reconhecimento local do navegador ou Whisper local, com o Ollama respondendo) e modo "somente local" (#49).
+- **0.7.4 — O cérebro lê as imagens:** leitura das imagens da biblioteca pela IA da pessoa (com consentimento) e por leitura de texto local, sem enviar nada (#17).
+- **0.7.5 — Agenda:** agenda própria (dia, semana, mês, recorrência), importação de `.ics` e o cérebro respondendo sobre compromissos; contas Google/Microsoft numa etapa seguinte (#26).
 
 ### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 2 atualizações
 - Responder falando ao ser chamado e conversar até 1 minuto de silêncio (#40).
