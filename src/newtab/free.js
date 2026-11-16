@@ -116,29 +116,33 @@ export function renderFree() {
 
   // Widgets
   const list = s.widgets;
-  list.forEach((w, idx) => {
-    if (!WIDGETS[w.id]) return;
-    if (w.fx == null) Object.assign(w, autoPlace(w, W));
-    const parts = buildCard(w, idx);
-    const { card, header, grip } = parts;
-    card.classList.add('free-item');
-    box.append(card);
-    placeFrame(card, w, W, true);
-    S.zTop = Math.max(S.zTop, w.fz || 0);
-    grip.addEventListener('dblclick', async () => { card.style.height = 'auto'; const hpx = Math.min(900, card.offsetHeight); card.style.height = hpx + 'px'; await setWidget(idx, { fh: hpx }, true); fitCanvas(); });
-    attachFree(card, {
-      handles: [header],
-      grip,
-      fixedHeight: true,
-      minW: 200,
-      minH: 110,
-      save: (p) => setWidget(idx, p, true),
-    });
-    mountCard(parts, w, idx);
-  });
+  list.forEach((w, idx) => addFreeCard(w, idx, W));
   if (!list.length) box.append(h('p', { class: 'muted free-empty' }, 'Nenhum widget. Clique em 🧩 → ＋ Widget.'));
   repairLoadedFreeLayout();
   fitCanvas();
+}
+
+/** Monta um widget no modo livre sem redesenhar os outros (usado também para acrescentar um só). */
+export function addFreeCard(w, idx, W = $('#widgets').clientWidth) {
+  const box = $('#widgets');
+  if (!WIDGETS[w.id]) return;
+  if (w.fx == null) Object.assign(w, autoPlace(w, W));
+  const parts = buildCard(w, idx);
+  const { card, header, grip } = parts;
+  card.classList.add('free-item');
+  box.append(card);
+  placeFrame(card, w, W, true);
+  S.zTop = Math.max(S.zTop, w.fz || 0);
+  grip.addEventListener('dblclick', async () => { card.style.height = 'auto'; const hpx = Math.min(900, card.offsetHeight); card.style.height = hpx + 'px'; await setWidget(idx, { fh: hpx }, true); fitCanvas(); });
+  attachFree(card, {
+    handles: [header],
+    grip,
+    fixedHeight: true,
+    minW: 200,
+    minH: 110,
+    save: (p) => setWidget(idx, p, true),
+  });
+  mountCard(parts, w, idx);
 }
 
 function placeFrame(frame, p, W, fixedHeight) {

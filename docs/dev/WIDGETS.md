@@ -51,6 +51,7 @@ Todos devolvem uma função para limpar antes, se quiser. `destroy()` continua v
 | `ctx.smartSearch(q, limite)`, `ctx.semanticOn()` | Busca (por significado, se ligada) |
 | `ctx.aiReady()` | Há IA configurada? |
 | `ctx.brainExtras(pergunta)` | Dados de todos os widgets para o cérebro (ver abaixo) |
+| `ctx.showRoute({ from, to, mode })` | Mostra o trajeto no widget Trânsito, maximizado (acrescenta o widget se faltar, sem redesenhar os outros) |
 | `ctx.openLinkDialog(link, preset)`, `ctx.faviconFor(link)` | Atalhos da barra |
 | `ctx.openSettings(hash)` | Abre as configurações (ex.: `'#ia'`) |
 | `ctx.toast(texto)` | Aviso rápido |
@@ -69,6 +70,7 @@ Mudar ou remover algo desta tabela é **mudança de contrato**: atualize este do
 | `task.created` | O item novo é uma tarefa | item (`id`) |
 | `task.completed` | Uma tarefa foi marcada como concluída | item (`id`) |
 | `widget.mounted`, `widget.unmounted` | Ciclo de vida dos widgets | `{ id, idx }` |
+| `route.requested` | O cérebro ou a voz pediu um trajeto; o widget Trânsito mostra, maximizado | `{ from, to, mode }` |
 | `knowledge.source.added`, `study.review.due` | Reservados para a v0.9 | `{ id, … }` |
 
 Regras: um assinante com erro não impede os outros; nome desconhecido ou dados sem os campos obrigatórios geram erro na hora (para pegar enganos cedo). Evento novo: acrescente em `EVENTS` (`lib/events.js`) e nesta tabela.

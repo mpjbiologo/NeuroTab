@@ -75,7 +75,7 @@ test('com IA: "traçar rota para…" responde com o trajeto, sem perguntar à IA
   const { x, ask } = await setup({ withAi: true });
   try {
     const m = await ask('Traçar rota para o Shopping Itaúna');
-    assert.match(await m.textContent(), /Rota até Shopping Itaúna saindo de Casa/);
+    assert.match(await m.textContent(), /Rota até Shopping Itaúna no widget Trânsito/);
     const links = await m.locator('a').evaluateAll((as) => as.map((a) => a.href));
     assert.ok(links.some((u) => u.includes('destination=Shopping+Ita%C3%BAna')), links.join(' '));
     assert.equal(calls.n, 0, 'a IA não foi chamada (não pode responder que não traça rotas)');

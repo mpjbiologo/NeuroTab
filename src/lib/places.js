@@ -164,6 +164,7 @@ const TXT = {
     routeTo: (b, a) => `Rota até ${b}${a ? ` saindo de ${a}` : ', saindo de onde você estiver'}:`,
     where: 'Para onde? Diga, por exemplo: "rota para o centro" ou "rota de casa até o trabalho".',
     opening: (b) => `Abrindo a rota para ${b}.`,
+    showing: (b) => `🧭 Rota até ${b} no widget Trânsito.`,
     modes: { driving: 'carro', walking: 'a pé', bicycling: 'bicicleta', transit: 'transporte' },
   },
   en: {
@@ -181,6 +182,7 @@ const TXT = {
     routeTo: (b, a) => `Route to ${b}${a ? ` from ${a}` : ', from wherever you are'}:`,
     where: 'Where to? Say, for example: "route to downtown" or "route from home to work".',
     opening: (b) => `Opening the route to ${b}.`,
+    showing: (b) => `🧭 Route to ${b} in the Traffic widget.`,
     modes: { driving: 'car', walking: 'walking', bicycling: 'bike', transit: 'transit' },
   },
   es: {
@@ -198,6 +200,7 @@ const TXT = {
     routeTo: (b, a) => `Ruta hasta ${b}${a ? ` desde ${a}` : ', desde donde estés'}:`,
     where: '¿A dónde? Di, por ejemplo: "ruta al centro" o "ruta de casa al trabajo".',
     opening: (b) => `Abriendo la ruta a ${b}.`,
+    showing: (b) => `🧭 Ruta hasta ${b} en el widget Tráfico.`,
     modes: { driving: 'auto', walking: 'a pie', bicycling: 'bici', transit: 'transporte' },
   },
 };
@@ -257,7 +260,7 @@ export function localAnswer(question, { mapPlaces: places = [], mapRoutes: route
 export function placesContext(settings, question) {
   const places = settings?.mapPlaces || [];
   const routes = settings?.mapRoutes || [];
-  const NEVER = 'A NeuroTab abre rotas no Google Maps e no Waze: nunca diga que não consegue traçar rotas ou abrir mapas. Para um trajeto, peça que a pessoa diga "rota para" e o destino.';
+  const NEVER = 'A NeuroTab traça rotas no widget Trânsito e abre no Google Maps e no Waze: nunca diga que não consegue traçar rotas ou abrir mapas. Para um trajeto, peça que a pessoa diga "rota para" e o destino.';
   if (!places.length && ROUTE_WORDS.test(fold(question))) return { title: 'ROTAS E MAPAS', note: NEVER, text: 'Nenhum local salvo no widget de mapas.' };
   if (settings?.ai?.sharePlaces === false || !isPlacesQuestion(question, places)) return null;
   const byId = (id) => places.find((p) => p.id === id);
@@ -268,7 +271,7 @@ export function placesContext(settings, question) {
   });
   return {
     title: 'LOCAIS E ROTAS SALVOS NO WIDGET DE MAPAS',
-    note: 'Distâncias aqui são em linha reta; você não sabe o trânsito agora. A NeuroTab mostra junto da sua resposta botões que abrem a rota no Google Maps e no Waze: nunca diga que não consegue traçar rotas; diga que a rota está nos botões abaixo. Diga que usou os locais salvos.',
+    note: 'Distâncias aqui são em linha reta; você não sabe o trânsito agora. A NeuroTab traça a rota no widget Trânsito (e tem botões para o Google Maps e o Waze): nunca diga que não consegue traçar rotas; diga que a rota está no widget Trânsito e nos botões abaixo. Diga que usou os locais salvos.',
     text: [`Locais:\n${lines.join('\n')}`, rs.length ? `Rotas favoritas:\n${rs.join('\n')}` : ''].filter(Boolean).join('\n\n'),
   };
 }
@@ -287,4 +290,76 @@ export async function streetEstimate(from, to, mode = 'driving', fetchFn = fetch
   const route = j?.routes?.[0];
   if (j?.code !== 'Ok' || !route) return null;
   return { km: route.distance / 1000, min: route.duration / 60 };
+}
+
+/**
+ * Trajeto completo pela rua (sem trânsito): distância, tempo, a linha [[lon,lat]…] para desenhar no mapa
+ * e o passo a passo. Devolve null se não houver rota.
+ */
+export async function streetRoute(from, to, mode = 'driving', fetchFn = fetch) {
+  const p = PROFILES[mode] || PROFILES.driving;
+  const url = `${ROUTER_ORIGIN}/${p[0]}/route/v1/${p[1]}/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson&steps=true`;
+  const r = await fetchFn(url, { headers: { Accept: 'application/json' } });
+  if (!r.ok) return null;
+  const j = await r.json();
+  const route = j?.routes?.[0];
+  if (j?.code !== 'Ok' || !route) return null;
+  const steps = (route.legs || []).flatMap((l) => l.steps || []).map((st) => ({
+    type: st.maneuver?.type || '', modifier: st.maneuver?.modifier || '', name: st.name || '', km: (st.distance || 0) / 1000,
+  }));
+  return { km: route.distance / 1000, min: route.duration / 60, coords: route.geometry?.coordinates || [], steps };
+}
+
+// ---------- Endereço → coordenadas (OpenStreetMap Nominatim) ----------
+export const GEOCODER_ORIGIN = 'https://nominatim.openstreetmap.org';
+
+/**
+ * Procura um lugar pelo nome/endereço, de preferência perto de `near` ({lat, lon}). Devolve a lista
+ * [{ name, address, lat, lon }]. Precisa de acesso a GEOCODER_ORIGIN.
+ */
+export async function geocode(q, { near = null, limit = 1, lang = 'pt-BR', fetchFn = fetch } = {}) {
+  const u = new URL(`${GEOCODER_ORIGIN}/search`);
+  u.search = new URLSearchParams({ format: 'jsonv2', limit: String(limit), addressdetails: '0', 'accept-language': lang, q: String(q || '').trim() }).toString();
+  if (near && Number.isFinite(+near.lat) && Number.isFinite(+near.lon)) {
+    const d = 0.6; // ~60 km em volta: "shopping" acha o da cidade da pessoa, sem impedir outra cidade
+    u.searchParams.set('viewbox', [+near.lon - d, +near.lat + d, +near.lon + d, +near.lat - d].join(','));
+  }
+  const r = await fetchFn(u.href, { headers: { Accept: 'application/json' } });
+  if (!r.ok) return [];
+  const list = await r.json();
+  return (Array.isArray(list) ? list : []).map((x) => ({
+    name: x.name || String(x.display_name || '').split(',')[0], address: x.display_name || '', lat: +x.lat, lon: +x.lon,
+  })).filter((x) => Number.isFinite(x.lat) && Number.isFinite(x.lon));
+}
+
+export const hasCoordsOf = (p) => !!p && Number.isFinite(+p.lat) && Number.isFinite(+p.lon) && p.lat !== '' && p.lon !== '';
+
+// ---------- Passo a passo em texto ----------
+const STEP_WORDS = {
+  pt: {
+    depart: 'Saia', arrive: 'Chegada', roundabout: 'Na rotatória, saia', continue: 'Siga', turn: 'Vire', merge: 'Entre', fork: 'Mantenha-se', ramp: 'Pegue a saída', end: 'No fim da via, vire',
+    left: 'à esquerda', right: 'à direita', 'slight left': 'levemente à esquerda', 'slight right': 'levemente à direita', 'sharp left': 'acentuadamente à esquerda', 'sharp right': 'acentuadamente à direita', straight: 'em frente', uturn: 'fazendo o retorno',
+    on: 'na', to: 'em direção a', dest: 'ao destino',
+  },
+  en: {
+    depart: 'Head out', arrive: 'Arrive', roundabout: 'At the roundabout, exit', continue: 'Continue', turn: 'Turn', merge: 'Merge', fork: 'Keep', ramp: 'Take the ramp', end: 'At the end of the road, turn',
+    left: 'left', right: 'right', 'slight left': 'slightly left', 'slight right': 'slightly right', 'sharp left': 'sharp left', 'sharp right': 'sharp right', straight: 'straight', uturn: 'making a U-turn',
+    on: 'on', to: 'toward', dest: 'at the destination',
+  },
+  es: {
+    depart: 'Sal', arrive: 'Llegada', roundabout: 'En la rotonda, sal', continue: 'Sigue', turn: 'Gira', merge: 'Incorpórate', fork: 'Mantente', ramp: 'Toma la salida', end: 'Al final de la vía, gira',
+    left: 'a la izquierda', right: 'a la derecha', 'slight left': 'ligeramente a la izquierda', 'slight right': 'ligeramente a la derecha', 'sharp left': 'cerrado a la izquierda', 'sharp right': 'cerrado a la derecha', straight: 'recto', uturn: 'dando la vuelta',
+    on: 'por', to: 'hacia', dest: 'al destino',
+  },
+};
+
+/** "Vire à direita na Rua A" a partir de um passo do OSRM. */
+export function stepText(st, lang = 'pt') {
+  const W = STEP_WORDS[lang] || STEP_WORDS.pt;
+  if (st.type === 'arrive') return `🏁 ${W.arrive}${st.name ? ` — ${st.name}` : ''}`;
+  const kind = { 'new name': 'continue', 'end of road': 'end', 'on ramp': 'ramp', 'off ramp': 'ramp', rotary: 'roundabout', 'roundabout turn': 'roundabout', notification: 'continue' }[st.type] || st.type;
+  const verb = W[kind] || W.continue;
+  const dir = st.modifier && kind !== 'depart' && kind !== 'roundabout' ? ` ${W[st.modifier] || ''}` : '';
+  const road = st.name ? ` ${W.on} ${st.name}` : '';
+  return `${verb}${dir}${road}`.replace(/\s+/g, ' ').trim();
 }

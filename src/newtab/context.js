@@ -8,6 +8,7 @@ import { WIDGETS } from '../widgets/index.js';
 import { S, bus } from './state.js';
 import { openItemDialog } from './editor.js';
 import { editLink } from './rail.js';
+import { showRoute, takeRoute } from './route-request.js';
 
 
 // ---------- Contexto entregue aos widgets ----------
@@ -41,6 +42,10 @@ export const ctx = {
   openSettings: (hash = '') => { location.href = 'options.html' + hash; },
   /** Trechos de dados dos widgets para o cérebro (contrato brainContext, docs/dev/WIDGETS.md). */
   brainExtras: (question) => brainExtras(question),
+  /** Mostra um trajeto no widget Trânsito, maximizado (acrescenta o widget se faltar). */
+  showRoute: (trip) => showRoute(trip),
+  /** Usado pelo widget Trânsito ao montar: pedido de rota que chegou antes dele existir. */
+  takeRoute: () => takeRoute(),
 };
 
 /** Junta o que cada widget oferece ao cérebro para esta pergunta (mesmo sem o widget na tela). */

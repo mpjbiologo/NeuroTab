@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.2.2 — 2026-11-16
+**A rota aparece no widget Trânsito, sem abrir outro site.**
+
+- "Traçar rota para…" (no cérebro ou por voz) agora desenha o trajeto no próprio widget Trânsito, que se maximiza sozinho. Se o widget não estiver na tela, ele é acrescentado, sem apagar a conversa com o cérebro. Esc volta ao tamanho normal (#43)
+- Mapa próprio com o caminho pelas ruas (OpenStreetMap): distância, tempo sem o trânsito de agora e passo a passo. Arraste para mover, roda do mouse ou ＋/－ para aproximar, ⟲ para enquadrar
+- Novo botão 🧭 no widget: escolha a origem, digite o destino (local salvo, endereço ou nome do lugar) e o modo (carro, a pé ou bicicleta)
+- Favoritos no próprio widget: botão "⭐ Salvar local" sempre à vista, "⭐ Salvar destino" depois de traçar uma rota e "🧭 Salvar rota" quando origem e destino são favoritos. Rotas salvas ganham o botão "🧭 Traçar"
+- Google Maps e Waze continuam disponíveis, mas só abrem se você clicar
+- O mapa usa ladrilhos do OpenStreetMap e troca de servidor sozinho se um deles recusar o acesso
+
 ## v0.7.2.1 — 2026-11-16
 **Correção: o cérebro traça rotas de novo.**
 

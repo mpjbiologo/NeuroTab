@@ -553,6 +553,30 @@ body.free.dock-top .update-bar { top: 64px; }
 .traffic { display: flex; flex-direction: column; gap: 8px; height: 100%; }
 .traffic .map { width: 100%; flex: 1; min-height: 260px; border: 0; border-radius: 12px; background: #222; }
 .widget.fixed-h .traffic, .free-item .traffic { min-height: 100%; }
+.traffic .chip.add { border-style: dashed; }
+.traffic .chip.ext { opacity: .75; font-size: 12px; }
+.traffic .route-form { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.traffic .route-form input { flex: 1 1 180px; min-width: 0; }
+.traffic .route-form select { flex: 0 1 auto; max-width: 180px; }
+.traffic .route-sum { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+.traffic .route-map { flex: 1; min-height: 260px; position: relative; }
+.traffic .route-acts { flex-wrap: wrap; }
+.traffic .route-steps { font-size: 13px; max-height: 30vh; overflow: auto; }
+.traffic .route-steps ol { margin: 6px 0 0; padding-left: 22px; }
+.traffic .route-steps li { margin: 2px 0; }
+.widget.maximized .traffic .route-steps { max-height: 22vh; }
+/* Mapa próprio do trajeto (lib/route-map.js) */
+.rmap { position: absolute; inset: 0; overflow: hidden; border-radius: 12px; background: #dfe3e8; touch-action: none; cursor: grab; user-select: none; }
+.rmap.dragging { cursor: grabbing; }
+.rmap-tiles img { position: absolute; left: 0; top: 0; width: 256px; height: 256px; max-width: none; pointer-events: none; }
+.rmap-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.rmap-casing { fill: none; stroke: #fff; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.rmap-route { fill: none; stroke: #7c5cff; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.rmap-pins { position: absolute; inset: 0; pointer-events: none; }
+.rmap-pin { position: absolute; left: -14px; top: -30px; width: 28px; height: 28px; display: grid; place-items: center; font-size: 22px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+.rmap-ui { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.rmap-ui button { width: 30px; height: 30px; border-radius: 8px; border: 0; background: rgba(20,20,27,.85); color: #fff; cursor: pointer; font-size: 15px; }
+.rmap-attr { position: absolute; right: 4px; bottom: 2px; font-size: 10px; color: #333; background: rgba(255,255,255,.7); padding: 0 4px; border-radius: 4px; pointer-events: none; }
 .routes { display: grid; gap: 6px; }
 .route { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .route .rt-name { flex: 1; font-size: 13.5px; }

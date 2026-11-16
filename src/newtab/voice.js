@@ -9,7 +9,8 @@ import { setHTML } from '../lib/safe-html.js';
 import { getWeather } from '../lib/weather.js';
 import { S } from './state.js';
 import { ctx, brainExtras } from './context.js';
-import { localAnswer, gmapsRoute, placesText } from '../lib/places.js';
+import { localAnswer, placesText } from '../lib/places.js';
+import { showRoute } from './route-request.js';
 import { whileWakePaused, paintWake } from './wake.js';
 import { assistantName, isCancel, commandWindowMs } from '../lib/wake-word.js';
 import { onEscape } from '../lib/window-manager.js';
@@ -24,10 +25,9 @@ export function voiceApi() {
       const a = localAnswer(q, S.data.settings, lang);
       if (!a) return null;
       if (a.kind !== 'route' || !a.trip) return a.text;
-      // Pedido de rota por voz: fala e abre o trajeto no Google Maps.
-      const url = gmapsRoute(a.trip.from, a.trip.to, a.trip.mode);
-      setTimeout(() => { location.href = url; }, 1200);
-      return placesText(lang).opening(a.trip.to.name);
+      // Pedido de rota por voz: mostra o trajeto no widget Trânsito (maximizado), sem sair da NeuroTab.
+      showRoute(a.trip);
+      return placesText(lang).showing(a.trip.to.name);
     },
     interpret: (text) => interpretCommand(S.data.settings, text),
     open: (url) => { location.href = url; },
@@ -44,8 +44,8 @@ export function voiceApi() {
       const f = Brain.fold(name);
       const p = (S.data.settings.mapPlaces || []).find((x) => Brain.fold(x.name) === f || Brain.fold(x.name).includes(f));
       if (!p) return null;
-      location.href = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}&travelmode=driving`;
-      return `Abrindo a rota para ${p.name}.`;
+      showRoute({ from: null, to: p, mode: 'driving' });
+      return placesText('pt').showing(p.name);
     },
     weatherText: async () => {
       const w = S.data.settings.places?.[0];

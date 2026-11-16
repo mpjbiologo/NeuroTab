@@ -48,6 +48,7 @@ export default {
     function tripBar(trip) {
       const T = placesText(lang);
       const bar = h('div', { class: 'srcs trip' },
+        h('button', { title: t('Mostra o trajeto no widget Trânsito, sem sair da NeuroTab'), onclick: () => ctx.showRoute(trip) }, '🧭 ' + t('Ver no Trânsito')),
         h('a', { href: gmapsRoute(trip.from, trip.to, trip.mode), target: '_blank', rel: 'noopener' }, '🗺 Google Maps'),
         h('a', { href: wazeTo(trip.to), target: '_blank', rel: 'noopener' }, '🚙 Waze'));
       if (trip.from) {
@@ -84,6 +85,11 @@ export default {
       const routeAsk = local && (local.kind === 'route' || local.kind === 'route-where');
       if (!ctx.aiReady() || routeAsk) {
         if (local) {
+          // "Traçar rota para…": o trajeto aparece no widget Trânsito, maximizado, sem abrir outro site.
+          if (local.kind === 'route' && local.trip) {
+            local.text = placesText(lang).showing(local.trip.to.name);
+            ctx.showRoute(local.trip);
+          }
           const msg = h('div', { class: 'msg bot' }, h('p', {}, local.text));
           if (local.trip) msg.append(tripBar(local.trip));
           chat.append(msg);

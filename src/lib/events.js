@@ -18,6 +18,7 @@ export const EVENTS = {
   'brain.item.created': { payload: 'item criado', requires: ['id', 'type'] },
   'task.created': { payload: 'tarefa criada', requires: ['id'] },
   'task.completed': { payload: 'tarefa concluída', requires: ['id'] },
+  'route.requested': { payload: 'trajeto pedido pelo cérebro ou pela voz, para o widget Trânsito: { from, to, mode }', requires: ['to'] },
   'widget.mounted': { payload: 'widget montado', requires: ['id'] },
   'widget.unmounted': { payload: 'widget desmontado', requires: ['id'] },
   'knowledge.source.added': { payload: 'fonte de conhecimento adicionada (v0.9)', requires: ['id'] },
