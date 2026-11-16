@@ -9,7 +9,7 @@ import { setHTML } from '../lib/safe-html.js';
 import { getWeather } from '../lib/weather.js';
 import { S } from './state.js';
 import { ctx, brainExtras } from './context.js';
-import { localAnswer } from '../lib/places.js';
+import { localAnswer, gmapsRoute, placesText } from '../lib/places.js';
 import { whileWakePaused, paintWake } from './wake.js';
 import { assistantName, isCancel, commandWindowMs } from '../lib/wake-word.js';
 import { onEscape } from '../lib/window-manager.js';
@@ -20,7 +20,15 @@ export function voiceApi() {
     capture: (p) => ctx.capture(p),
     aiReady: () => isConfigured(S.data.settings),
     ask: (q) => aiAsk(S.data.settings, S.items, q, [], brainExtras(q)),
-    placesAnswer: (q, lang) => localAnswer(q, S.data.settings, lang)?.text || null,
+    placesAnswer: (q, lang) => {
+      const a = localAnswer(q, S.data.settings, lang);
+      if (!a) return null;
+      if (a.kind !== 'route' || !a.trip) return a.text;
+      // Pedido de rota por voz: fala e abre o trajeto no Google Maps.
+      const url = gmapsRoute(a.trip.from, a.trip.to, a.trip.mode);
+      setTimeout(() => { location.href = url; }, 1200);
+      return placesText(lang).opening(a.trip.to.name);
+    },
     interpret: (text) => interpretCommand(S.data.settings, text),
     open: (url) => { location.href = url; },
     searchUrl: (q) => eng.url + encodeURIComponent(q),

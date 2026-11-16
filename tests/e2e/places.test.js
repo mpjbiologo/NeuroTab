@@ -8,9 +8,11 @@ const PLACES = [
   { id: 't', name: 'Trabalho', icon: '💼', address: 'Av. B, 200, Itaúna - MG', lat: -20.06, lon: -44.56 },
 ];
 
+const calls = { n: 0 };
 async function setup({ withAi = false, sharePlaces } = {}) {
+  calls.n = 0;
   let sysSeen = '';
-  const x = await launch({ ai: (sys) => { if (sys.includes('NOTAS DO USUÁRIO')) { sysSeen = sys; return 'Usei seus locais salvos: de Casa até o Trabalho são uns 2,3 km.'; } return null; } });
+  const x = await launch({ ai: (sys) => { if (sys.includes('NOTAS DO USUÁRIO')) { sysSeen = sys; calls.n++; return 'Usei seus locais salvos: de Casa até o Trabalho são uns 2,3 km.'; } return null; } });
   const p = await x.open('src/newtab.html');
   const data = await x.storage(p, 'nt_data');
   data.settings.ai = { ...data.settings.ai, keys: withAi ? { gemini: 'K' } : {}, autoEnrich: false, semantic: false, ...(sharePlaces === false ? { sharePlaces: false } : {}) };
@@ -64,6 +66,22 @@ test('opção de não enviar endereços à IA', async () => {
   try {
     await ask('quanto tempo até o trabalho?');
     assert.doesNotMatch(sys(), /LOCAIS E ROTAS|Av\. B/);
+  } finally {
+    await x.close();
+  }
+});
+
+test('com IA: "traçar rota para…" responde com o trajeto, sem perguntar à IA', async () => {
+  const { x, ask } = await setup({ withAi: true });
+  try {
+    const m = await ask('Traçar rota para o Shopping Itaúna');
+    assert.match(await m.textContent(), /Rota até Shopping Itaúna saindo de Casa/);
+    const links = await m.locator('a').evaluateAll((as) => as.map((a) => a.href));
+    assert.ok(links.some((u) => u.includes('destination=Shopping+Ita%C3%BAna')), links.join(' '));
+    assert.equal(calls.n, 0, 'a IA não foi chamada (não pode responder que não traça rotas)');
+    const w = await ask('traçar rota');
+    assert.match(await w.textContent(), /Para onde\?/);
+    assert.equal(calls.n, 0);
   } finally {
     await x.close();
   }

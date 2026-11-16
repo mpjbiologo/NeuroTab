@@ -6,12 +6,18 @@ import { fold } from './brain.js';
 export function gmapsRoute(from, to, mode = 'driving') {
   const u = new URL('https://www.google.com/maps/dir/');
   u.searchParams.set('api', '1');
-  if (from) u.searchParams.set('origin', `${from.lat},${from.lon}`);
-  u.searchParams.set('destination', `${to.lat},${to.lon}`);
+  if (from) u.searchParams.set('origin', where(from));
+  u.searchParams.set('destination', where(to));
   u.searchParams.set('travelmode', mode);
   return u.toString();
 }
-export const wazeTo = (to) => `https://waze.com/ul?ll=${to.lat},${to.lon}&navigate=yes`;
+export const wazeTo = (to) => (hasCoords(to)
+  ? `https://waze.com/ul?ll=${to.lat},${to.lon}&navigate=yes`
+  : `https://waze.com/ul?q=${encodeURIComponent(to.query || to.name)}&navigate=yes`);
+
+/** Lugar salvo tem coordenadas; destino falado/escrito ("Praça da Liberdade") vai como texto. */
+const hasCoords = (p) => p && p.lat !== undefined && p.lat !== null && Number.isFinite(+p.lat) && Number.isFinite(+p.lon);
+const where = (p) => (hasCoords(p) ? `${p.lat},${p.lon}` : (p.query || p.name));
 
 // ---------- Distância ----------
 /** Distância em linha reta (km) entre dois pontos { lat, lon } (fórmula de haversine). */
@@ -39,7 +45,50 @@ export function formatMin(min, lang = 'pt') {
 }
 
 // ---------- Entender a pergunta ----------
-const KEYWORDS = /\b(rota|rotas|caminho|chegar|chego|distancia|longe|perto|tempo|demora|demoro|transito|endereco|onde fica|trajeto|trajetos|locais|lugares|route|routes|directions|distance|far|near|how long|traffic|address|where is|commute|places|locations|ruta|rutas|lejos|cerca|cuanto tarda|cuanto tiempo|trafico|direccion|donde queda|donde esta|lugares|llego|llegar)\b/;
+// Tira acentos letra a letra, mantendo as posições, para recortar o destino do texto original ("Praça", não "Praca").
+const deaccent = (s) => [...String(s || '').normalize('NFC')].map((c) => c.normalize('NFD').replace(/[\u0300-\u036f]/g, '') || ' ').join('');
+// Pedido explícito de trajeto, no começo da frase: "traçar rota para X", "rota até X", "como chego no X",
+// "me leva para X", "route to X", "trazar ruta a X". Ancorado no início para não pegar "a melhor rota para emagrecer".
+const ROUTE_ASK = new RegExp(
+  '^(?:(?:por favor|pode|voce pode|consegue|can you|please|puedes|podes)\\s+)?(?:me\\s+)?'
+  + '(?:(?:qual(?: e)?|what is|whats|cual es|tracar|traca|trace|tracca|fazer|faca|faz|abrir|abra|abre|mostrar|mostra|mostre|criar|cria|crie|gerar|gere|da|de|dar|quero|calcular|calcule|calcula|plot|draw|make|show|open|get|give me|find|trazar|traza|traceme|hacer|haz|abrir|muestra|muestrame|dame|calcula)\\s+)?'
+  + '(?:(?:a|uma|um|o|the|a|la|una|el|me a)\\s+)?(?:(?:melhor|best|mejor)\\s+)?'
+  + '(?:rota|caminho|mapa|map|trajeto|percurso|route|directions|ruta|camino|recorrido|como (?:eu )?(?:chego|chegar|faco para chegar|vou)|how (?:do i|to|can i) get|como (?:llego|llegar|voy)|(?:me )?(?:leva|leve|levar)|take me|navegar|navega|navigate|llevame|ir)'
+  + '(?:\\s+(?:de|from|desde)\\s+(.+?))?'
+  + '\\s+(?:para|pra|pro|ate|ao|a|aos|na|no|em|to|hasta|hacia|al|para el|para la)\\s+(?:o |a |os |as |the |el |la |los |las )?(.+?)[\\s?.!]*$',
+  'i',
+);
+
+/** Pedido de rota com destino em texto livre: { from?, target } ou null. */
+export function routeTarget(text) {
+  const full = [...String(text || '').normalize('NFC')].join('').trim();
+  // "Verônica, traça a rota…": o chamado antes da vírgula não faz parte do pedido.
+  const voc = /^[^,]{1,30},\s*(.+)$/.exec(full);
+  return matchRoute(full) || (voc ? matchRoute(voc[1]) : null);
+}
+
+/** Pedido de rota sem destino ("traçar rota", "me leva"): pergunte para onde. */
+const ROUTE_BARE = /^(?:(?:por favor|pode|voce pode|consegue|can you|please|puedes)\s+)?(?:me\s+)?(?:(?:tracar|traca|trace|fazer|faca|faz|abrir|abra|abre|mostrar|mostra|mostre|criar|cria|crie|make|show|open|trazar|traza|hacer|haz|muestra)\s+)?(?:(?:a|uma|um|o|the|una|la|el)\s+)?(?:rota|trajeto|percurso|route|directions|ruta|recorrido)[\s?.!]*$/;
+export const isBareRouteAsk = (text) => {
+  const t = fold(text).trim();
+  const voc = /^[^,]{1,30},\s*(.+)$/.exec(t);
+  return ROUTE_BARE.test(t) || (!!voc && ROUTE_BARE.test(voc[1]));
+};
+
+function matchRoute(orig) {
+  const flat = deaccent(orig);
+  const m = new RegExp(ROUTE_ASK.source, 'id').exec(flat);
+  if (!m) return null;
+  const cut = (i) => (m[i] ? orig.slice(m.indices[i][0], m.indices[i][1]).trim() : null);
+  const target = cut(2);
+  if (!target || /^(salvas|saved|guardadas|favoritas)$/i.test(m[2].trim())) return null;
+  // "a melhor rota para emagrecer": destino que começa com verbo no infinitivo não é lugar.
+  if (/^[a-z]{4,}(ar|er|ir)$/i.test(m[2].trim().split(/\s+/)[0]) && !/^[A-Z]/.test(target)) return null;
+  return { from: cut(1), target };
+}
+
+const KEYWORDS = /\b(rota|rotas|caminho|chegar|chego|distancia|longe|perto|tempo|demora|demoro|transito|endereco|onde fica|trajeto|trajetos|percurso|leva|navegar|navigate|take me|locais|lugares|route|routes|directions|distance|far|near|how long|traffic|address|where is|commute|places|locations|ruta|rutas|lejos|cerca|cuanto tarda|cuanto tiempo|trafico|direccion|donde queda|donde esta|lugares|llego|llegar)\b/;
+const ROUTE_WORDS = /\b(rota|rotas|trajeto|percurso|caminho|mapa|maps|navegar|route|directions|navigate|map|ruta|mapa|recorrido)\b/;
 const HOME = /^(casa|home|hogar|minha casa|mi casa)$/;
 
 /** Lugares salvos citados no texto (pelo nome), do mais longo para o mais curto. */
@@ -79,6 +128,25 @@ export function resolveTrip(text, places = [], routes = []) {
   return { from: home && home !== to ? home : null, to, mode: 'driving' };
 }
 
+/** Trajeto de um pedido explícito: destino e origem pelo texto; sem origem, a rota salva ou "Casa". */
+function askTrip(ask, places, routes) {
+  const pick = (txt) => {
+    const f = fold(txt).trim();
+    const hit = placesIn(txt, places)[0];
+    // Só usa o local salvo se o texto é o nome dele (com ou sem artigo), não "centro perto de casa".
+    return hit && fold(hit.name).trim() === f.replace(/^(o|a|os|as|the|el|la|meu|minha|my|mi)\s+/, '') ? hit : { name: txt, query: txt };
+  };
+  const to = pick(ask.target);
+  let from = ask.from ? pick(ask.from) : null;
+  let mode = 'driving';
+  if (!from && to.id) {
+    const saved = routes.find((r) => r.to === to.id && places.some((p) => p.id === r.from));
+    if (saved) { from = places.find((p) => p.id === saved.from); mode = saved.mode || 'driving'; }
+  }
+  if (!from) { const home = homeOf(places); if (home && home !== to) from = home; }
+  return { from, to, mode };
+}
+
 // ---------- Textos (pt / en / es) ----------
 const TXT = {
   pt: {
@@ -93,6 +161,9 @@ const TXT = {
     traffic: 'O tempo com trânsito agora você vê no Waze ou no Google Maps:',
     open: 'Abrir a rota:',
     street: (d, t) => `Pela rua: ${d}, cerca de ${t} (sem considerar o trânsito).`,
+    routeTo: (b, a) => `Rota até ${b}${a ? ` saindo de ${a}` : ', saindo de onde você estiver'}:`,
+    where: 'Para onde? Diga, por exemplo: "rota para o centro" ou "rota de casa até o trabalho".',
+    opening: (b) => `Abrindo a rota para ${b}.`,
     modes: { driving: 'carro', walking: 'a pé', bicycling: 'bicicleta', transit: 'transporte' },
   },
   en: {
@@ -107,6 +178,9 @@ const TXT = {
     traffic: 'For the time with traffic right now, check Waze or Google Maps:',
     open: 'Open the route:',
     street: (d, t) => `By road: ${d}, about ${t} (not counting traffic).`,
+    routeTo: (b, a) => `Route to ${b}${a ? ` from ${a}` : ', from wherever you are'}:`,
+    where: 'Where to? Say, for example: "route to downtown" or "route from home to work".',
+    opening: (b) => `Opening the route to ${b}.`,
     modes: { driving: 'car', walking: 'walking', bicycling: 'bike', transit: 'transit' },
   },
   es: {
@@ -121,6 +195,9 @@ const TXT = {
     traffic: 'El tiempo con tráfico ahora lo ves en Waze o Google Maps:',
     open: 'Abrir la ruta:',
     street: (d, t) => `Por la calle: ${d}, unos ${t} (sin contar el tráfico).`,
+    routeTo: (b, a) => `Ruta hasta ${b}${a ? ` desde ${a}` : ', desde donde estés'}:`,
+    where: '¿A dónde? Di, por ejemplo: "ruta al centro" o "ruta de casa al trabajo".',
+    opening: (b) => `Abriendo la ruta a ${b}.`,
     modes: { driving: 'auto', walking: 'a pie', bicycling: 'bici', transit: 'transporte' },
   },
 };
@@ -141,7 +218,9 @@ const ASK_HOW = /\b(como chego|como chegar|caminho|rota|how do i get|how to get|
 export function localAnswer(question, { mapPlaces: places = [], mapRoutes: routes = [] } = {}, lang = 'pt') {
   const T = placesText(lang);
   const q = fold(question);
-  if (!KEYWORDS.test(q) && !placesIn(question, places).length) return null;
+  const ask = routeTarget(question);
+  if (!ask && isBareRouteAsk(question)) return { kind: 'route-where', text: T.where };
+  if (!ask && !KEYWORDS.test(q) && !placesIn(question, places).length) return null;
   if (ASK_ROUTES.test(q)) {
     const byId = (id) => places.find((p) => p.id === id);
     const rs = routes.filter((r) => byId(r.from) && byId(r.to)).map((r) => `${r.name || `${byId(r.from).name} → ${byId(r.to).name}`} (${T.modes[r.mode] || r.mode})`);
@@ -151,9 +230,13 @@ export function localAnswer(question, { mapPlaces: places = [], mapRoutes: route
     if (!places.length) return { kind: 'list', text: T.noPlaces };
     return { kind: 'list', text: T.list(places.map((p) => `${p.icon || '📍'} ${p.name}`).join(', ')) };
   }
-  if (!places.length) return null;
-  const trip = resolveTrip(question, places, routes);
+  // Pedido explícito de rota ("traçar rota para X"): o destino é o que vem depois de "para",
+  // seja um local salvo ou um nome livre, que o mapa procura (#43).
+  const trip = ask ? askTrip(ask, places, routes) : places.length ? resolveTrip(question, places, routes) : null;
   if (!trip) return null;
+  if (ask && !(hasCoords(trip.from) && hasCoords(trip.to) && (ASK_DISTANCE.test(q) || ASK_TIME.test(q)))) {
+    return { kind: 'route', trip, text: T.routeTo(trip.to.name, trip.from?.name) };
+  }
   if (ASK_ADDRESS.test(q)) {
     return { kind: 'address', trip: { from: null, to: trip.to, mode: 'driving' }, text: trip.to.address ? T.address(trip.to.name, trip.to.address) : T.noAddress(trip.to.name) };
   }
@@ -162,7 +245,7 @@ export function localAnswer(question, { mapPlaces: places = [], mapRoutes: route
     const d = formatKm(haversineKm(trip.from, trip.to), lang);
     const lines = [T.distance(trip.from.name, trip.to.name, d)];
     lines.push(ASK_TIME.test(q) ? T.traffic : T.open);
-    return { kind: ASK_TIME.test(q) ? 'time' : 'trip', trip, text: lines.join(' ') };
+    return { kind: ASK_TIME.test(q) ? 'time' : ask ? 'route' : 'trip', trip, text: lines.join(' ') };
   }
   return null;
 }
@@ -174,6 +257,8 @@ export function localAnswer(question, { mapPlaces: places = [], mapRoutes: route
 export function placesContext(settings, question) {
   const places = settings?.mapPlaces || [];
   const routes = settings?.mapRoutes || [];
+  const NEVER = 'A NeuroTab abre rotas no Google Maps e no Waze: nunca diga que não consegue traçar rotas ou abrir mapas. Para um trajeto, peça que a pessoa diga "rota para" e o destino.';
+  if (!places.length && ROUTE_WORDS.test(fold(question))) return { title: 'ROTAS E MAPAS', note: NEVER, text: 'Nenhum local salvo no widget de mapas.' };
   if (settings?.ai?.sharePlaces === false || !isPlacesQuestion(question, places)) return null;
   const byId = (id) => places.find((p) => p.id === id);
   const lines = places.map((p) => `- ${p.icon || '📍'} ${p.name}${p.address ? ` — ${p.address}` : ''} (lat ${(+p.lat).toFixed(5)}, lon ${(+p.lon).toFixed(5)})`);
@@ -183,7 +268,7 @@ export function placesContext(settings, question) {
   });
   return {
     title: 'LOCAIS E ROTAS SALVOS NO WIDGET DE MAPAS',
-    note: 'Distâncias aqui são em linha reta; você não sabe o trânsito agora. Para trânsito ao vivo, sugira abrir no Waze ou no Google Maps. Diga que usou os locais salvos.',
+    note: 'Distâncias aqui são em linha reta; você não sabe o trânsito agora. A NeuroTab mostra junto da sua resposta botões que abrem a rota no Google Maps e no Waze: nunca diga que não consegue traçar rotas; diga que a rota está nos botões abaixo. Diga que usou os locais salvos.',
     text: [`Locais:\n${lines.join('\n')}`, rs.length ? `Rotas favoritas:\n${rs.join('\n')}` : ''].filter(Boolean).join('\n\n'),
   };
 }

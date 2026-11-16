@@ -80,7 +80,9 @@ export default {
       chat.append(h('div', { class: 'msg user' }, q));
       // Perguntas sobre os locais e rotas do widget de mapas (funcionam até sem IA).
       const local = localAnswer(q, ctx.settings, lang);
-      if (!ctx.aiReady()) {
+      // Pedido de rota se resolve aqui mesmo, com ou sem IA: a resposta é o trajeto com os botões dos mapas.
+      const routeAsk = local && (local.kind === 'route' || local.kind === 'route-where');
+      if (!ctx.aiReady() || routeAsk) {
         if (local) {
           const msg = h('div', { class: 'msg bot' }, h('p', {}, local.text));
           if (local.trip) msg.append(tripBar(local.trip));

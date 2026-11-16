@@ -1,7 +1,7 @@
 // Locais e rotas do widget de mapas: o cérebro responde sobre lugares e trajetos (#43).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { haversineKm, formatKm, formatMin, placesIn, isPlacesQuestion, resolveTrip, localAnswer, placesContext, streetEstimate, gmapsRoute, wazeTo } from '../../src/lib/places.js';
+import { routeTarget, isBareRouteAsk, haversineKm, formatKm, formatMin, placesIn, isPlacesQuestion, resolveTrip, localAnswer, placesContext, streetEstimate, gmapsRoute, wazeTo } from '../../src/lib/places.js';
 
 const casa = { id: 'c', name: 'Casa', icon: '🏠', address: 'Rua A, 10, Itaúna - MG', lat: -20.0750, lon: -44.5760 };
 const trab = { id: 't', name: 'Trabalho', icon: '💼', address: 'Av. B, 200, Itaúna - MG', lat: -20.0600, lon: -44.5600 };
@@ -86,4 +86,26 @@ test('tempo pela rua (OSRM) e links dos apps', async () => {
   assert.equal(await streetEstimate(casa, trab, 'driving', async () => new Response(JSON.stringify({ code: 'NoRoute' }))), null);
   assert.match(gmapsRoute(casa, trab), /origin=-20\.075%2C-44\.576&destination=-20\.06%2C-44\.56&travelmode=driving/);
   assert.equal(wazeTo(trab), 'https://waze.com/ul?ll=-20.06,-44.56&navigate=yes');
+});
+
+test('pedidos de rota em linguagem natural (#43)', () => {
+  const tgt = (q) => routeTarget(q)?.target ?? null;
+  assert.equal(tgt('Traçar rota para o Shopping Itaúna'), 'Shopping Itaúna');
+  assert.equal(tgt('qual a rota para Divinópolis?'), 'Divinópolis');
+  assert.equal(tgt('Verônica, traça a rota pro trabalho'), 'trabalho', 'chamado antes da vírgula');
+  assert.equal(tgt('abre o mapa até o hospital'), 'hospital');
+  assert.equal(tgt('quero ir para o centro'), 'centro');
+  assert.equal(tgt('qual a melhor rota para emagrecer?'), null, 'verbo no infinitivo não é lugar');
+  assert.equal(tgt('rota para ganhar massa'), null);
+  assert.ok(isBareRouteAsk('traçar rota') && isBareRouteAsk('Verônica, me mostra a rota'));
+  assert.equal(localAnswer('traçar rota', settings).kind, 'route-where');
+  // origem e destino pelo texto: "de casa até o centro" vai ao centro, não à Casa
+  const a = localAnswer('faça uma rota de casa até o centro', settings);
+  assert.equal(a.kind, 'route');
+  assert.equal(a.trip.from.id, 'c');
+  assert.deepEqual(a.trip.to, { name: 'centro', query: 'centro' });
+  // destino salvo usa a rota favorita (de Casa)
+  assert.equal(localAnswer('rota para o trabalho', settings).trip.from.id, 'c');
+  // sem locais salvos, a IA é avisada de que a NeuroTab abre rotas
+  assert.match(placesContext({}, 'você consegue me mostrar rotas no mapa?').note, /nunca diga que não consegue traçar rotas/);
 });

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.2.1 — 2026-11-16
+**Correção: o cérebro traça rotas de novo.**
+
+- Com uma IA configurada, "traçar rota para…" era enviado à IA, que respondia que não consegue traçar rotas. Agora o pedido de rota é resolvido na própria NeuroTab, com ou sem IA: a resposta traz o trajeto e os botões do Google Maps e do Waze (#43)
+- Entende mais jeitos de pedir: "qual a rota para…", "abre o mapa até…", "quero ir para…", "de casa até o centro" (origem e destino pelo texto) e o nome do assistente antes da vírgula ("Verônica, traça a rota pro trabalho"). "Traçar rota" sem destino pergunta para onde
+- Voz: rota para um lugar que não está salvo no widget de mapas também abre o Google Maps, em vez de cair na IA
+- "A melhor rota para emagrecer" continua indo para a IA: destino que começa com verbo não é lugar
+
 ## v0.7.2 — 2026-11-15
 **O assistente ganha nome e as janelas param de se atropelar.**
 

@@ -249,6 +249,9 @@ export async function runCommand(raw, api, lang = 'pt') {
     const target = (m[2] === 'home' ? 'home ' + (m[4] || '') : m[4] || '').trim();
     const r = target && (api.routeTo?.(target) || (lang === 'en' && /^home/.test(target) && (api.routeTo?.('casa') || api.routeTo?.('home'))));
     if (r) return { reply: r };
+    // Destino fora dos favoritos: abre o mapa pelo nome em vez de cair na IA (#43).
+    const placeReply = api.placesAnswer?.(text, lang);
+    if (placeReply) return { reply: placeReply, translated: true };
   }
 
   // Abrir sites
@@ -354,7 +357,12 @@ async function runIntent(it, api, text, L) {
     case 'stop': await stopSound(); return { reply: 'Som parado.' };
     case 'open': return s(it.target) ? doOpen(api, s(it.target), L) : null;
     case 'search': api.open(api.searchUrl(s(it.query) || text)); return { reply: 'Pesquisando.' };
-    case 'route': { const r = api.routeTo?.(s(it.target)); return r ? { reply: r } : null; }
+    case 'route': {
+      const r = api.routeTo?.(s(it.target));
+      if (r) return { reply: r };
+      const p = s(it.target) && api.placesAnswer?.(`rota para ${s(it.target)}`, L.code);
+      return p ? { reply: p, translated: true } : null;
+    }
     case 'weather': return { reply: await api.weatherText() };
     case 'quotes': return { reply: await api.quotesText(fold(s(it.query) || text)) };
     case 'tasks': return api.items ? { reply: tasksSummary(api.items(), (x) => tIn(L.code, x)), translated: true } : { reply: api.tasksText() };

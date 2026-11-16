@@ -5,6 +5,7 @@ import { parseReminder, searchItems, fold } from '../../src/lib/brain.js';
 import { parseDuration } from '../../src/lib/clock.js';
 import { smartCalc, convert } from '../../src/lib/calc.js';
 import { runCommand, stripWhen, tasksSummary, commandLang } from '../../src/lib/assistant.js';
+import { localAnswer as placesLocal } from '../../src/lib/places.js';
 
 const NOW = new Date(2026, 10, 5, 8, 0); // qui, 05/11/2026 08:00
 const at = (ts) => { const d = new Date(ts); return `${d.getDate()}/${d.getMonth() + 1} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
@@ -130,4 +131,18 @@ test('voz: perguntas sobre os locais do widget de mapas (#43)', async () => {
   assert.equal((await run('pt', 'como está o tempo')).r.reply, 'CLIMA', 'tempo = clima');
   const n = await run('pt', 'anotar ligar para o trabalho');
   assert.deepEqual(n.log[0].slice(1), ['note', 'ligar para o trabalho']);
+});
+
+test('voz: rota para lugar fora dos favoritos abre o mapa em vez de ir para a IA (#43)', async () => {
+  const opened = [];
+  const api = {
+    ...mockApi([]),
+    routeTo: () => null,
+    ask: async () => { throw new Error('não devia perguntar à IA'); },
+    placesAnswer: (q, l) => { const a = placesLocal(q, {}, l); if (a?.kind === 'route') opened.push(a.trip.to.name); return a?.text || null; },
+  };
+  assert.match((await runCommand('rota para a rodoviária', api, 'pt')).reply, /Rota até rodoviária/);
+  assert.match((await runCommand('traçar rota para o Shopping Itaúna', api, 'pt')).reply, /Rota até Shopping Itaúna/);
+  assert.match((await runCommand('traçar rota', api, 'pt')).reply, /Para onde\?/);
+  assert.deepEqual(opened, ['rodoviária', 'Shopping Itaúna']);
 });
