@@ -261,7 +261,38 @@
         </select>
       </div>
       <div class="opt">
-        <div><b>Voz de leitura</b><small>As vozes "Natural/Online" do Edge são as mais realistas.</small></div>
+        <div><b>Onde a fala é reconhecida</b><small>No computador, o áudio não sai daqui. O serviço do navegador (Chrome/Edge) envia o áudio para os servidores do Google ou da Microsoft.</small></div>
+        <select data-k="voiceEngine" id="voiceEngine">
+          <option value="auto">Automático: no computador quando der</option>
+          <option value="device">No computador (pelo navegador)</option>
+          <option value="whisper">Whisper local (seu servidor)</option>
+          <option value="cloud">Serviço do navegador (nuvem)</option>
+        </select>
+      </div>
+      <div class="sem-box" id="deviceBox">
+        <p class="hint" id="deviceStatus">Verificando o reconhecimento no computador…</p>
+        <button class="btn" id="deviceInstall" hidden>⬇ Baixar o reconhecimento do idioma</button>
+      </div>
+      <div class="sem-box" id="whisperBox" hidden>
+        <div class="opt">
+          <div><b>Endereço do Whisper local</b><small>Servidor de transcrição rodando no seu computador. A NeuroTab grava, separa as falas pelo silêncio e manda só para este endereço.</small></div>
+          <input type="text" class="txt" data-k="whisperUrl" id="whisperUrl" placeholder="http://127.0.0.1:8080/inference" spellcheck="false">
+        </div>
+        <div class="chips" id="whisperPresets" aria-label="Servidores conhecidos"></div>
+        <div class="opt">
+          <div><b>Modelo</b><small>Só para servidores no formato OpenAI (Speaches, LocalAI). Vazio usa o padrão do servidor.</small></div>
+          <input type="text" class="txt" data-k="whisperModel" placeholder="whisper-1" spellcheck="false">
+        </div>
+        <div class="keybox"><button class="btn" id="whisperTest">🔌 Testar conexão</button><span id="whisperMsg" class="hint"></span></div>
+        <p class="hint">Como instalar: <a href="https://github.com/mpjbiologo/NeuroTab/blob/main/docs/dev/VOZ.md#whisper-local" target="_blank" rel="noopener">guia do Whisper local</a>. Junto com o Ollama em "IA", nada da voz sai do computador.</p>
+      </div>
+      <div class="opt">
+        <div><b>Somente local</b><small>A voz nunca vai para a internet: nem o reconhecimento, nem a leitura das respostas (só vozes instaladas no computador). Sem um jeito local de ouvir, o microfone avisa em vez de usar a nuvem.</small></div>
+        <label class="sw"><input type="checkbox" data-k="voiceLocalOnly" id="voiceLocalOnly"><span></span></label>
+      </div>
+      <p class="hint" id="localAiNote" hidden></p>
+      <div class="opt">
+        <div><b>Voz de leitura</b><small>As vozes "Natural/Online" do Edge são as mais realistas, mas vão para a nuvem (☁). As sem ☁ ficam no computador.</small></div>
         <div class="keybox"><select id="ttsVoice" class="wide-sel"></select><button class="btn" id="testVoice">▶ Testar</button></div>
       </div>
       <div class="opt">
@@ -285,7 +316,7 @@
         <label class="sw"><input type="checkbox" id="wakeWord"><span></span></label>
       </div>
       <div class="sem-box" id="wakeBox" hidden>
-        <p class="hint">⚠️ No Edge e no Chrome, o reconhecimento de voz envia o áudio para os servidores da Microsoft ou do Google. Com a palavra de ativação ligada, isso acontece o tempo todo enquanto a nova aba estiver aberta e em foco. Um indicador vermelho no canto da tela mostra quando está ouvindo; clique nele para pausar.</p>
+        <p class="hint">⚠️ Com o reconhecimento pelo serviço do navegador (☁), o áudio vai para os servidores da Microsoft ou do Google o tempo todo enquanto a nova aba estiver aberta e em foco. Com a fala reconhecida no computador ou no Whisper local (🔒), nada sai daqui. O indicador no canto da tela mostra 🔒 ou ☁ e quando está ouvindo; clique nele para pausar.</p>
         <div class="opt">
           <div><b>Frase de ativação</b><small>Só o nome ("Verônica") ou uma frase ("Acorde Verônica"). Frases de 2 palavras disparam menos por engano.</small></div>
           <input type="text" class="txt" data-k="wakePhrase" id="wakePhrase" placeholder="NeuroTab" maxlength="40">
@@ -313,7 +344,7 @@
           </select>
         </div>
       </div>
-      <p class="hint" id="wakeNo" hidden>A palavra de ativação precisa do reconhecimento de voz do navegador, que o Firefox não oferece.</p>
+      <p class="hint" id="wakeNo" hidden>A palavra de ativação precisa de reconhecimento de voz: este navegador não oferece. Configure um Whisper local acima para usar.</p>
       <div class="opt">
         <div><b>Atalho para comandos de voz</b><small>Padrão: <b>Alt+Shift+V</b> em qualquer aba (abre a NeuroTab ouvindo) e <b>Alt+M</b> na nova aba.</small></div>
         <button class="btn" id="shortcutsBtn">Mudar atalhos</button>

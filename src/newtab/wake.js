@@ -1,5 +1,6 @@
 // NeuroTab — Palavra de ativação (experimental): escuta contínua com a nova aba visível e em foco.
 import { $, toast, hasDictation, beep } from '../lib/ui.js';
+import { createRecognizer, currentEngine } from '../lib/speech-engine.js';
 import { t } from '../lib/i18n.js';
 import { wakeVariants, afterWake, wakeWindowMs, shouldListen, wakePhraseOf, assistantName, isCancel, wakeState } from '../lib/wake-word.js';
 import { S } from './state.js';
@@ -33,21 +34,27 @@ export function paintWake() {
   const name = assistantName(S.data.settings);
   pill.classList.toggle('on', state === 'waiting' || state === 'listening');
   pill.classList.toggle('blocked', state === 'error');
-  pill.textContent = {
-    error: t('Permitir microfone'),
+  pill.textContent = (state === 'off' || state === 'error' ? '' : wake.local ? '🔒 ' : '☁ ') + {
+    error: wake.reason ? t('Voz indisponível') : t('Permitir microfone'),
     processing: `${name}: ${t('processando…')}`,
     listening: `${name}: ${t('ouvindo o comando…')}`,
     waiting: `${t('Ouvindo')} “${phrase}”`,
     paused: t('Palavra de ativação pausada'),
   }[state];
-  pill.title = state === 'waiting' ? t('Clique para pausar a escuta') : state === 'error' ? t('Clique para liberar o microfone') : t('Clique para voltar a ouvir');
+  pill.title = (state === 'error' && wake.reason ? `${t(wake.reason)} ` : '')
+    + (state === 'waiting' ? t('Clique para pausar a escuta') : state === 'error' ? t('Clique para liberar o microfone') : t('Clique para voltar a ouvir'))
+    + (state !== 'error' ? ` · ${wake.local ? t('Voz processada no seu computador') : t('Voz processada pelo serviço do navegador')}` : '');
 }
 
 function startWake() {
   if (wake.rec || !wakeShouldListen()) { paintWake(); return; }
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const rec = new SR();
-  rec.lang = wake.lang = voiceCode();
+  // Mesmo motor do comando de voz: no computador, Whisper local ou o padrão do navegador (#49).
+  const made = createRecognizer(voiceCode());
+  if (!made.rec) { wake.blocked = true; wake.reason = made.error; paintWake(); return; }
+  const rec = made.rec;
+  wake.lang = voiceCode();
+  wake.local = made.local;
+  wake.engine = made.engine;
   rec.continuous = true;
   rec.interimResults = false;
   rec.maxAlternatives = 1;
@@ -69,6 +76,8 @@ function startWake() {
   };
   rec.onerror = (ev) => {
     if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') wake.blocked = true;
+    else if (ev.error === 'language-not-supported') { wake.blocked = true; wake.reason = 'Baixe o reconhecimento do idioma em Opções → IA e voz.'; }
+    else if (ev.error === 'network' && made.engine === 'whisper') { wake.blocked = true; wake.reason = ev.message; }
     else if (ev.error === 'network') wake.backoff = Math.min((wake.backoff || 5000) * 2, 60000);
   };
   rec.onend = () => {
@@ -98,8 +107,9 @@ function stopWake() {
 /** Liga/desliga conforme o estado da aba e das configurações. renew=true reinicia o prazo. */
 export function updateWake(renew = false) {
   if (!wakeEnabled()) { stopWake(); return; }
+  if (wake.reason && renew) { wake.blocked = false; wake.reason = ''; } // configurações mudaram: tenta de novo
   if (renew && !wake.paused) wake.until = Date.now() + wakeMs();
-  if (wake.rec && wake.lang !== voiceCode()) stopWake(); // idioma mudou
+  if (wake.rec && (wake.lang !== voiceCode() || currentEngine(voiceCode()).engine !== wake.engine)) stopWake(); // idioma ou motor mudou
   if (wakeShouldListen()) startWake(); else if (wake.rec && !(Date.now() < wake.until && document.visibilityState === 'visible')) stopWake();
   else paintWake();
 }
@@ -107,6 +117,12 @@ export function updateWake(renew = false) {
 export function setupWake() {
   wake.until = Date.now() + wakeMs();
   $('#wakePill').addEventListener('click', async () => {
+    if (wake.blocked && wake.reason) {
+      wake.blocked = false;
+      wake.reason = '';
+      chrome.runtime.openOptionsPage?.();
+      return;
+    }
     if (wake.blocked) {
       try {
         const st = await navigator.mediaDevices.getUserMedia({ audio: true });

@@ -1,5 +1,6 @@
 import { setHTML } from './safe-html.js';
 // NeuroTab — utilitários de interface compartilhados.
+import { createRecognizer, speechAvailable, speechConfig } from './speech-engine.js';
 import { LOCALE } from './i18n.js';
 import { initWindowManager, onEscape } from './window-manager.js';
 import { placeInViewport } from './layers.js';
@@ -99,19 +100,19 @@ export function showCtx(e, items) {
 
 // ---------- Voz ----------
 export function hasDictation() {
-  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  return speechAvailable();
 }
 
 /** Ditado: chama onText(textoFinal, parcial). Retorna { stop() } ou null se não suportado. */
 export function startDictation({ lang, onText, onEnd, onError }) {
   lang = lang || LOCALE;
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    onError?.('Seu navegador não oferece reconhecimento de voz.');
+  // Motor escolhido em Opções → IA e voz: no computador, Whisper local ou o padrão do navegador (#49).
+  const made = createRecognizer(lang);
+  if (!made.rec) {
+    onError?.(made.error);
     return null;
   }
-  const rec = new SR();
-  rec.lang = lang;
+  const rec = made.rec;
   rec.interimResults = true;
   rec.continuous = true;
   let finalText = '';
@@ -128,8 +129,9 @@ export function startDictation({ lang, onText, onEnd, onError }) {
     const map = {
       'not-allowed': 'Microfone bloqueado. Clique no ícone de cadeado/câmera na barra de endereço e permita o microfone.',
       'no-speech': 'Não ouvi nada. Tente de novo.',
-      network: 'O reconhecimento de voz precisa de internet.',
+      network: made.engine === 'whisper' ? ev.message || 'Não consegui falar com o Whisper local.' : 'O reconhecimento de voz precisa de internet.',
       'audio-capture': 'Nenhum microfone encontrado.',
+      'language-not-supported': 'O reconhecimento deste idioma no computador ainda não foi baixado. Baixe em Opções → IA e voz.',
     };
     onError?.(map[ev.error] || 'Erro no reconhecimento de voz: ' + ev.error);
   };
@@ -140,7 +142,7 @@ export function startDictation({ lang, onText, onEnd, onError }) {
   // Avisa a palavra de ativação para liberar o microfone enquanto este ditado roda.
   window.dispatchEvent(new CustomEvent('nt-dictation', { detail: 'start' }));
   rec.start();
-  return { stop: () => rec.stop() };
+  return { stop: () => rec.stop(), engine: made.engine, local: made.local };
 }
 
 export function voicesFor(lang = 'pt-BR') {
@@ -160,10 +162,14 @@ export function speak(text, opts = 'pt-BR') {
   u.lang = lang;
   u.rate = o.ttsRate || 1;
   u.pitch = o.ttsPitch || 1;
-  const all = speechSynthesis.getVoices();
+  // Voz só local: só vozes instaladas no computador (as "online/natural" do Edge e do Chrome vão para a nuvem).
+  const localOnly = !!(o.voiceLocalOnly ?? speechConfig().voiceLocalOnly);
+  const ok = (v) => !localOnly || v.localService;
+  const all = speechSynthesis.getVoices().filter(ok);
+  const pool = voicesFor(lang).filter(ok);
   const voice = (o.ttsVoice && all.find((v) => v.voiceURI === o.ttsVoice))
-    || voicesFor(lang).find((v) => /natural|online|neural/i.test(v.name))
-    || voicesFor(lang)[0];
+    || (!localOnly && pool.find((v) => /natural|online|neural/i.test(v.name)))
+    || pool[0];
   if (voice) { u.voice = voice; u.lang = voice.lang; }
   return new Promise((res) => {
     u.onend = res;

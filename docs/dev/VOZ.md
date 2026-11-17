@@ -8,6 +8,46 @@
 | Comando de voz | `src/newtab/voice.js` | abre a tela de voz, ouve um pedido, executa (`lib/assistant.js`) e responde falando |
 | Palavra de ativação | `src/newtab/wake.js` | escuta contínua, só com a nova aba visível e em foco |
 | Comandos | `src/lib/assistant.js` | entende o pedido (pt/en/es) e, sem regra, pergunta à IA |
+| Motores de voz | `src/lib/speech-engine.js` | escolhe onde a fala é reconhecida (no computador, Whisper local ou serviço do navegador) e devolve um objeto no formato do `SpeechRecognition` (com testes) |
+
+## Onde a voz é processada (#49)
+
+Opções → IA e voz → **Onde a fala é reconhecida** (`settings.voiceEngine`):
+
+| Motor | Valor | Onde o áudio vai | Precisa de |
+|---|---|---|---|
+| Automático (padrão) | `auto` | no computador quando o idioma já está baixado; senão, o serviço do navegador | — |
+| No computador | `device` | fica no computador (`processLocally`) | Chrome/Edge 139+ e o pacote do idioma (~60 MB, baixado uma vez pelo botão nas opções) |
+| Whisper local | `whisper` | só para o endereço local configurado | um servidor Whisper rodando no computador (abaixo) |
+| Serviço do navegador | `cloud` | Google (Chrome) ou Microsoft (Edge) | internet |
+
+**Somente local** (`settings.voiceLocalOnly`): a nuvem nunca é usada. Sem motor local disponível, o microfone avisa o que fazer em vez de cair para a nuvem. A leitura das respostas também fica só com as vozes instaladas no computador (`localService`). Se a IA configurada for de nuvem, as opções avisam: para tudo ficar local, use o Ollama.
+
+O indicador mostra onde está sendo processado: **🔒** no computador, **☁** serviço do navegador (na tela de voz e na pílula da palavra de ativação).
+
+### Whisper local
+
+O Ollama não transcreve áudio; ele responde ao texto. Para a fala ficar no computador fora do Chrome/Edge (ou com mais precisão), rode um servidor Whisper. A NeuroTab grava o microfone, separa cada fala pelo silêncio, converte para WAV 16 kHz mono e envia **só para o endereço configurado**. Dois formatos são aceitos:
+
+| Servidor | Endereço | Formato |
+|---|---|---|
+| [whisper.cpp](https://github.com/ggml-org/whisper.cpp) (`whisper-server`) | `http://127.0.0.1:8080/inference` | campos `file`, `language`, `response_format=json` |
+| [Speaches](https://github.com/speaches-ai/speaches) (faster-whisper) | `http://127.0.0.1:8000/v1/audio/transcriptions` | formato OpenAI (`file`, `model`, `language`) |
+| [LocalAI](https://localai.io) | `http://127.0.0.1:8080/v1/audio/transcriptions` | formato OpenAI |
+
+Exemplo com whisper.cpp:
+
+```sh
+git clone https://github.com/ggml-org/whisper.cpp && cd whisper.cpp
+cmake -B build && cmake --build build -j --config Release
+sh ./models/download-ggml-model.sh small        # ou base / medium
+./build/bin/whisper-server -m models/ggml-small.bin --host 127.0.0.1 --port 8080 -l auto
+```
+
+Depois, nas opções: escolha **Whisper local**, clique em **whisper.cpp** e em **🔌 Testar conexão** (o navegador pede acesso ao `localhost` uma vez).
+
+Detalhes da gravação (`WhisperRecognizer`): fala começa com 120 ms acima do limiar de volume e termina após 0,9 s de silêncio; trechos com menos de 0,25 s são descartados; uma fala é cortada em 30 s. No comando de voz, sem fala em 8 s, encerra com "Não ouvi nada". Na palavra de ativação (escuta contínua), cada fala é transcrita e procurada a frase.
+
 
 ## Nome do assistente e frase de ativação (#15)
 
@@ -34,12 +74,14 @@
 ## Privacidade e limites (por navegador)
 
 - **Nada é gravado.** O reconhecimento devolve texto; o áudio não é guardado pela NeuroTab.
-- **Chrome e Edge:** o reconhecimento de voz do navegador envia o áudio aos servidores do Google ou da Microsoft. Com a palavra de ativação ligada, isso acontece continuamente enquanto a nova aba estiver aberta e em foco. Por isso: é opcional, vem desligada, pede confirmação, mostra o indicador o tempo todo e desliga sozinha após X minutos sem uso.
+- **Chrome e Edge (motor `cloud`, ou `auto` sem o idioma baixado):** o reconhecimento de voz do navegador envia o áudio aos servidores do Google ou da Microsoft. Com a palavra de ativação ligada, isso acontece continuamente enquanto a nova aba estiver aberta e em foco. Por isso: é opcional, vem desligada, pede confirmação, mostra o indicador o tempo todo e desliga sozinha após X minutos sem uso.
 - **Firefox:** sem reconhecimento de voz até a versão 159 (as opções de voz somem). A partir da 160 ele existe e as opções aparecem; comportamento real a conferir manualmente (ver `NAVEGADORES.md`).
 - **Escuta em segundo plano:** não existe. O navegador só deixa ouvir com a página visível e em foco; a NeuroTab não tenta contornar isso.
-- **Detecção local da frase (sem enviar áudio):** os navegadores não oferecem hoje uma palavra de ativação local confiável pela Web Speech API. Alternativas a avaliar no futuro: reconhecimento no próprio aparelho, se o navegador passar a oferecer, ou um detector local de palavra-chave empacotado na extensão. A detecção fica isolada em `lib/wake-word.js` (`afterWake`/`matchesWake`) para poder ser trocada.
+- **Detecção local da frase (sem enviar áudio):** com o motor "no computador" ou "Whisper local", a palavra de ativação também roda sem mandar áudio para fora. A detecção da frase continua em `lib/wake-word.js` (`afterWake`/`matchesWake`).
 
 ## Testes
 
 - Unidade: `tests/unit/wake-word.test.js` (frase composta, tolerância, frases curtas, cancelar, prazos, estados).
+- Unidade: `tests/unit/speech-engine.test.js` (escolha do motor, WAV, separação das falas, pedido ao Whisper, texto da resposta).
+- Ponta a ponta: `tests/e2e/voice-local.test.js` — Whisper local com o microfone falso do Chrome (um tom, silêncio e a transcrição simulada no `127.0.0.1`), servidor fora do ar, `processLocally` e "somente local", e as opções.
 - Ponta a ponta (voz simulada): `tests/e2e/semantic-voice.test.js` — palavra de ativação padrão; nome e frase composta com bipe, estados, cancelar e tempo esgotado.

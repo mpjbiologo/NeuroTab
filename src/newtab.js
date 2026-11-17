@@ -3,7 +3,8 @@ import { DATA_KEY, BG_KEY, ACTIVE_KEY, BRAIN_KEY, loadData, saveData, loadBg } f
 import * as Brain from './lib/brain.js';
 import { $ } from './lib/ui.js';
 import { semanticOn, indexItems, embedConfig } from './lib/semantic.js';
-import { initI18n } from './lib/i18n.js';
+import { initI18n, LOCALE } from './lib/i18n.js';
+import { configureSpeech } from './lib/speech-engine.js';
 import { initWindowManager } from './lib/window-manager.js';
 import { S, bus } from './newtab/state.js';
 import { brainEvents } from './lib/events.js';
@@ -36,6 +37,7 @@ async function init() {
   initWindowManager();
   S.data = await loadData();
   initI18n(S.data.settings.lang);
+  const speechReady = configureSpeech(S.data.settings, S.data.settings.voiceLang || LOCALE);
   S.items = await Brain.loadItems();
   const r = await chrome.storage.local.get(ACTIVE_KEY);
   S.activeId = S.data.groups.some((g) => g.id === r[ACTIVE_KEY]) ? r[ACTIVE_KEY] : S.data.groups[0].id;
@@ -54,6 +56,7 @@ async function init() {
       const prevLang = S.data.settings.lang;
       S.data = await loadData();
       if ((S.data.settings.lang || 'auto') !== (prevLang || 'auto')) { location.reload(); return; }
+      configureSpeech(S.data.settings, S.data.settings.voiceLang || LOCALE).then(() => updateWake());
       if (!S.data.groups.some((g) => g.id === S.activeId)) S.activeId = S.data.groups[0].id;
       applySettings();
       renderDock();
@@ -100,6 +103,7 @@ async function init() {
   setupUpdates();
   setupVoice();
   setupWake();
+  speechReady.then(() => updateWake()); // reconhecimento no computador confirmado: troca de motor se precisar
   setupExternalDrop();
 
   const m = location.hash.match(/item=([\w]+)/);

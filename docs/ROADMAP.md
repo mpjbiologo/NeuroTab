@@ -19,7 +19,7 @@ Primeiro a base, depois os recursos.
 - ✅ **0.7.1:** barramento de eventos (#5) e contrato dos widgets (#6); o cérebro lê o widget de mapas (#43); maximizar, minimizar e restaurar widgets (#18).
 - ✅ **0.7.2 — Assistente com nome e janelas organizadas:** nome do assistente, frase de ativação composta ("Acorde Verônica"), sinal sonoro e estados da escuta (#15); camadas centralizadas e nenhum painel fora da tela ou sobreposto sem querer (#35).
   - ✅ 0.7.2.1 a 0.7.2.3: rotas e trânsito ao vivo dentro do widget Trânsito, favoritos salvos ali (#43).
-- **0.7.3 — Voz local:** voz transcrita no próprio computador (reconhecimento local do navegador ou Whisper local, com o Ollama respondendo) e modo "somente local" (#49).
+- ✅ **0.7.3 — Voz local:** voz transcrita no próprio computador (reconhecimento local do navegador ou Whisper local, com o Ollama respondendo) e modo "somente local" (#49); janelas lembram o estado, maximizado incluído (#50).
 - **0.7.4 — O cérebro lê as imagens:** leitura das imagens da biblioteca pela IA da pessoa (com consentimento) e por leitura de texto local, sem enviar nada (#17).
 - **0.7.5 — Agenda:** agenda própria (dia, semana, mês, recorrência), importação de `.ics` e o cérebro respondendo sobre compromissos; contas Google/Microsoft numa etapa seguinte (#26).
 

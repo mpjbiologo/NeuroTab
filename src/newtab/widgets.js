@@ -14,7 +14,9 @@ export const layoutCols = () => gridColsFor($('#widgets').clientWidth || innerWi
 
 // ---------- Modo de layout ----------
 export const isFree = () => S.data.settings.layoutMode === 'free' && innerWidth >= 700;
-export const layoutSig = (s = S.data.settings) => JSON.stringify([s.widgets, s.freeFixed, s.layoutMode]);
+/** JSON com as chaves em ordem: o armazenamento do navegador devolve os objetos com as chaves reordenadas. */
+const stable = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x));
+export const layoutSig = (s = S.data.settings) => stable([s.widgets, s.freeFixed, s.layoutMode]);
 
 export function buildCard(w, idx) {
   const def = WIDGETS[w.id];
@@ -70,7 +72,7 @@ export function mountCard({ def, body, actions }, w, idx) {
 }
 
 export function renderWidgets() {
-  restoreMax(); // o cartão maximizado vai ser recriado
+  restoreMax({ save: false }); // o cartão maximizado vai ser recriado (e volta maximizado se estiver salvo)
   S.mounted.forEach((m) => { try { m.destroy?.(); } catch (e) { console.error('NeuroTab: ao desmontar widget', e); } });
   S.mounted = [];
   $('#center').prepend(heroEl, omniEl); // tira de dentro dos quadros antes de redesenhar

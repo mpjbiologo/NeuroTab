@@ -61,3 +61,50 @@ for (const mode of ['grid', 'free']) {
     }
   });
 }
+
+for (const mode of ['grid', 'free']) {
+  test(`maximizado fica salvo: aba nova e recarregar voltam maximizadas (${mode === 'grid' ? 'grade' : 'livre'})`, async () => {
+    const x = await launch({ viewport: { width: 1366, height: 850 } });
+    try {
+      const p = await x.open('src/newtab.html');
+      const data = await x.storage(p, 'nt_data');
+      data.settings.layoutMode = mode;
+      data.settings.widgets = [{ id: 'calc', w: 4 }, { id: 'capture', w: 4, min: true }, { id: 'reminders', w: 4 }];
+      await x.seed(p, { nt_data: data });
+      const ws = async (pg) => (await x.storage(pg, 'nt_data')).settings.widgets.map((w) => `${w.id}:${w.max ? 'max' : w.min ? 'min' : '-'}`);
+
+      await p.click('.widget[data-id="calc"] .wwin-max');
+      await p.waitForTimeout(300);
+      assert.deepEqual(await ws(p), ['calc:max', 'capture:min', 'reminders:-']);
+
+      // Aba nova: volta maximizado, com o foco na busca (não no botão do widget)
+      const p2 = await x.open('src/newtab.html');
+      await p2.waitForSelector('.widget[data-id="calc"].maximized');
+      assert.equal(await p2.locator('.wmax-backdrop').count(), 1);
+      assert.equal(await p2.evaluate(() => document.activeElement?.classList.contains('wwin-max')), false);
+      assert.equal(await p2.isVisible('.widget[data-id="capture"] .wbody'), false, 'o minimizado continua minimizado');
+
+      // Maximizar outro: só um fica marcado; maximizar um minimizado tira o "minimizado"
+      await p2.click('.widget[data-id="calc"] .wwin-max'); // restaura
+      await p2.click('.widget[data-id="capture"] .wwin-max');
+      await p2.waitForTimeout(300);
+      assert.deepEqual(await ws(p2), ['calc:-', 'capture:max', 'reminders:-']);
+      // a outra aba aberta acompanha
+      await p.waitForSelector('.widget[data-id="capture"].maximized');
+      assert.equal(await p.locator('.widget.maximized').count(), 1);
+
+      // Recarregar mantém; Esc desfaz e apaga o estado salvo
+      await p2.reload();
+      await p2.waitForSelector('.widget[data-id="capture"].maximized');
+      await p2.keyboard.press('Escape');
+      await p2.waitForTimeout(300);
+      assert.deepEqual(await ws(p2), ['calc:-', 'capture:-', 'reminders:-']);
+      const p3 = await x.open('src/newtab.html');
+      await p3.waitForTimeout(500);
+      assert.equal(await p3.locator('.widget.maximized').count(), 0);
+      assert.deepEqual(x.errors, []);
+    } finally {
+      await x.close();
+    }
+  });
+}

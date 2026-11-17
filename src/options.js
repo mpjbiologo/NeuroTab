@@ -18,6 +18,7 @@ import { PROJECT, DONATION } from './config.js';
 import { setHTML } from './lib/safe-html.js';
 import { assistantName, wakePhraseOf, phraseSuggestions } from './lib/wake-word.js';
 import { commandLang } from './lib/assistant.js';
+import { configureSpeech, deviceStatus, deviceSupported, installDevice, currentEngine, speechAvailable, ENGINE_ERRORS, WHISPER_PRESETS, encodeWav, transcribeRequest } from './lib/speech-engine.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -304,10 +305,71 @@ function setupAi() {
   paintSem();
   $('#semantic').addEventListener('repaint', paintSem);
 
+  // ---------- Onde a voz é processada (#49) ----------
+  const voiceLangNow = () => data.settings.voiceLang || LOCALE;
+  const paintEngine = async () => {
+    configureSpeech(data.settings);
+    const eng = data.settings.voiceEngine || 'auto';
+    $('#whisperBox').hidden = !(eng === 'whisper' || data.settings.whisperUrl || (data.settings.voiceLocalOnly && !deviceSupported()));
+    const st = await deviceStatus(voiceLangNow(), { fresh: true });
+    const lang = voiceLangNow();
+    $('#deviceStatus').textContent = {
+      available: `🔒 O reconhecimento de ${lang} já está no computador: a fala não sai daqui.`,
+      downloadable: `O reconhecimento de ${lang} pode rodar no computador. Baixe uma vez (cerca de 60 MB) e o áudio deixa de ir para a nuvem.`,
+      downloading: `Baixando o reconhecimento de ${lang}…`,
+      unavailable: `Este navegador não tem reconhecimento de ${lang} no computador. Use o Whisper local para não mandar o áudio para a nuvem.`,
+      unsupported: 'Este navegador não reconhece a fala no próprio computador (precisa do Chrome ou Edge 139+). Use o Whisper local.',
+    }[st] || '';
+    $('#deviceInstall').hidden = st !== 'downloadable';
+    const pick = currentEngine(lang);
+    const prov = data.settings.ai?.provider;
+    const aiLocal = prov === 'ollama' || /localhost|127\.0\.0\.1/.test(data.settings.ai?.baseUrls?.[prov] || '');
+    $('#localAiNote').hidden = !(data.settings.voiceLocalOnly && !aiLocal);
+    $('#localAiNote').textContent = `ℹ️ A fala fica no computador, mas as perguntas para a IA vão para ${PROVIDERS[prov]?.name || prov}. Para tudo ficar local, escolha Ollama em "IA".`;
+    $('#voiceEngine').title = pick.engine ? (pick.local ? 'Agora: no computador 🔒' : 'Agora: serviço do navegador ☁') : (ENGINE_ERRORS[pick.reason] || '');
+    const hasSR = speechAvailable();
+    $('#wakeRow').hidden = !hasSR;
+    $('#wakeNo').hidden = hasSR;
+  };
+  $('#deviceInstall').addEventListener('click', async (e) => {
+    const b = e.currentTarget;
+    b.disabled = true;
+    b.textContent = 'Baixando… (pode levar alguns minutos)';
+    const ok = await installDevice(voiceLangNow());
+    b.disabled = false;
+    b.textContent = '⬇ Baixar o reconhecimento do idioma';
+    toast(ok ? 'Reconhecimento baixado: a fala agora fica no computador 🔒' : 'Não foi possível baixar agora. Tente de novo mais tarde ou use o Whisper local.');
+    paintEngine();
+  });
+  $('#whisperPresets').replaceChildren(...WHISPER_PRESETS.map((p) => h('button', { class: 'chip', type: 'button', title: p.url, onclick: async () => {
+    await requestFeature('local'); // acesso ao localhost, direto no clique
+    $('#whisperUrl').value = p.url;
+    data.settings.whisperUrl = p.url;
+    if (!data.settings.voiceEngine || data.settings.voiceEngine === 'auto') { data.settings.voiceEngine = 'whisper'; $('#voiceEngine').value = 'whisper'; }
+    await saveData(data);
+    toast(`${p.label} ✓`);
+    paintEngine();
+  } }, p.label)));
+  $('#whisperTest').addEventListener('click', async () => {
+    const msg = $('#whisperMsg');
+    const url = $('#whisperUrl').value.trim();
+    if (!url) { msg.textContent = 'Escreva o endereço primeiro.'; return; }
+    // Acesso ao localhost: pedido aqui, no clique.
+    if (/^http:\/\/(localhost|127\.0\.0\.1)(:|\/)/.test(url) && !(await requestFeature('local'))) { msg.textContent = 'Sem permissão para acessar o computador (localhost).'; return; }
+    msg.textContent = 'Testando…';
+    try {
+      const silence = encodeWav(new Float32Array(16000 * 0.6), 16000);
+      const { init } = transcribeRequest(url, silence, { lang: voiceLangNow(), model: data.settings.whisperModel });
+      const r = await fetch(url, init);
+      msg.textContent = r.ok ? '✅ O Whisper respondeu. A voz pode ser reconhecida aqui no computador.' : `❌ O servidor respondeu ${r.status}. Confira o endereço (whisper.cpp usa /inference; Speaches e LocalAI usam /v1/audio/transcriptions).`;
+    } catch {
+      msg.textContent = '❌ Não consegui conectar. O servidor está ligado nesse endereço?';
+    }
+  });
+  for (const k of ['voiceEngine', 'voiceLocalOnly', 'whisperUrl', 'voiceLang']) $(`[data-k="${k}"]`)?.addEventListener('change', () => setTimeout(paintEngine, 50));
+  paintEngine();
+
   // ---------- Palavra de ativação ----------
-  const hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-  $('#wakeRow').hidden = !hasSR;
-  $('#wakeNo').hidden = hasSR;
   const paintWake = () => { $('#wakeWord').checked = !!data.settings.wakeWord; $('#wakeBox').hidden = !data.settings.wakeWord; };
   paintWake();
 

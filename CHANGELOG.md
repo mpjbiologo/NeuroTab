@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.7.3 — 2026-11-17
+**Voz no seu computador e janelas que lembram como estavam.**
+
+- 🔒 **Voz local (#49):** em Opções → IA e voz, escolha onde a fala é reconhecida:
+  - **Automático** (padrão): no computador quando o idioma já está baixado; senão, como antes.
+  - **No computador**: o reconhecimento do próprio Chrome/Edge (139+), sem mandar áudio. Um botão baixa o pacote do idioma uma vez (cerca de 60 MB).
+  - **Whisper local**: um servidor Whisper no seu computador (whisper.cpp, Speaches ou LocalAI), com botão para testar a conexão. Funciona também no Firefox. Junto com o Ollama, a voz inteira fica no computador.
+  - **Serviço do navegador**: o de sempre (o áudio vai para o Google ou a Microsoft).
+- **Somente local:** a voz nunca vai para a internet, nem para ouvir, nem para ler as respostas (só vozes instaladas no computador). Sem um jeito local de ouvir, o microfone avisa o que fazer em vez de usar a nuvem. Se a IA for de nuvem, as opções avisam
+- 🔒 / ☁ na tela de voz e no indicador da palavra de ativação mostram onde a voz está sendo processada
+- 🪟 **Janelas lembram o estado (#50):** um widget maximizado continua maximizado numa aba nova, ao recarregar e ao reabrir o navegador (minimizado já ficava salvo). Esc, o botão ou um clique fora desfazem. Só um widget fica maximizado por vez, e as outras abas abertas acompanham
+- Correção: salvar algo num widget (minimizar, mover, maximizar) redesenhava todos os widgets da aba, apagando o que estava sendo digitado. O navegador devolve os dados com as chaves em outra ordem e a NeuroTab achava que o layout tinha mudado
+
 ## v0.7.2.3 — 2026-11-16
 **Rotas que funcionam e trânsito ao vivo pelo cérebro.**
 

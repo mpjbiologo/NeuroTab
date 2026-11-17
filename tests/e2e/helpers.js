@@ -1,7 +1,7 @@
 // Ajudantes dos testes de ponta a ponta: abre um Chromium com a extensão carregada da pasta do projeto,
 // simula a rede (nenhum teste depende de internet) e, se pedido, simula microfone e voz.
 import { chromium } from 'playwright';
-import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -92,7 +92,23 @@ const FAKE_VOICE = () => {
   if (navigator.mediaDevices) navigator.mediaDevices.getUserMedia = async () => ({ getTracks: () => [] });
 };
 
-export async function launch({ locale = 'pt-BR', viewport = { width: 1366, height: 850 }, voice = false, ai } = {}) {
+/** WAV que o Chrome usa como microfone falso: `pattern` = [[segundos, volume]…] de um tom de 300 Hz (repete). */
+export function fakeMicWav(pattern = [[1.2, 0.4], [2.5, 0]], rate = 16000) {
+  const n = Math.round(pattern.reduce((a, [sec]) => a + sec, 0) * rate);
+  const buf = Buffer.alloc(44 + n * 2);
+  buf.write('RIFF', 0); buf.writeUInt32LE(36 + n * 2, 4); buf.write('WAVE', 8); buf.write('fmt ', 12);
+  buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20); buf.writeUInt16LE(1, 22); buf.writeUInt32LE(rate, 24);
+  buf.writeUInt32LE(rate * 2, 28); buf.writeUInt16LE(2, 32); buf.writeUInt16LE(16, 34); buf.write('data', 36); buf.writeUInt32LE(n * 2, 40);
+  let i = 0;
+  for (const [sec, vol] of pattern) {
+    for (let k = 0; k < Math.round(sec * rate); k++, i++) buf.writeInt16LE(Math.round(Math.sin((2 * Math.PI * 300 * i) / rate) * vol * 32767), 44 + i * 2);
+  }
+  const file = join(mkdtempSync(join(tmpdir(), 'neurotab-mic-')), 'mic.wav');
+  writeFileSync(file, buf);
+  return file;
+}
+
+export async function launch({ locale = 'pt-BR', viewport = { width: 1366, height: 850 }, voice = false, ai, fakeMic = null } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'neurotab-e2e-'));
   const ctx = await chromium.launchPersistentContext(dir, {
     headless: true,
@@ -100,7 +116,8 @@ export async function launch({ locale = 'pt-BR', viewport = { width: 1366, heigh
     locale,
     viewport,
     acceptDownloads: true,
-    args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`, `--lang=${locale}`],
+    args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`, `--lang=${locale}`,
+      ...(fakeMic ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${fakeMic}`, '--autoplay-policy=no-user-gesture-required'] : [])],
   });
   if (voice) await ctx.addInitScript(FAKE_VOICE);
   const calls = await mockNetwork(ctx, { ai });

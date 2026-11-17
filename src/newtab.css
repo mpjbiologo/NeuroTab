@@ -662,3 +662,7 @@ body.dock-right .wake-pill { right: calc(var(--rail) + 84px); }
 .paste-preview { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 8px 10px; border-radius: 12px; background: rgba(124,92,255,.10); border: 1px dashed rgba(124,92,255,.5); }
 .paste-preview img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; flex: none; background: rgba(255,255,255,.06); }
 .paste-preview .grow { flex: 1; min-width: 0; }
+
+/* Onde a voz é processada (#49): 🔒 no computador, ☁ serviço do navegador */
+.voice-where { position: absolute; top: 10px; left: 14px; font-size: 13px; opacity: .75; cursor: help; }
+.voice-card { position: relative; }

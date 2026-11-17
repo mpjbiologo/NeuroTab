@@ -97,6 +97,7 @@ export function startVoice({ fromWake = false } = {}) {
   let finalText = '';
   let silence;
   let heardSomething = false;
+  let lastError = '';
   // Chamado pela frase de ativação: se ninguém falar o comando a tempo, encerra (#15).
   const giveUp = fromWake ? setTimeout(() => { if (!heardSomething) stopVoice(true); }, commandWindowMs(S.data.settings.wakeCommandSecs)) : null;
   S.voiceSession = startDictation({
@@ -120,9 +121,15 @@ export function startVoice({ fromWake = false } = {}) {
       if (!said) { heard.textContent = t('Não ouvi nada. Toque em 🎙 para tentar de novo.'); setTimeout(() => { if (!S.voiceSession) ov.hidden = true; }, 2500); return; }
       await processVoice(said);
     },
-    onError: (msg) => { reply.textContent = t(msg); },
+    onError: (msg) => { lastError = msg; reply.textContent = t(msg); },
   });
-  if (!S.voiceSession) { clearTimeout(giveUp); ov.hidden = true; toast('Reconhecimento de voz indisponível neste navegador.'); }
+  if (!S.voiceSession) { clearTimeout(giveUp); ov.hidden = true; toast(t(lastError || 'Reconhecimento de voz indisponível neste navegador.')); paintWake(); return; }
+  // 🔒 no computador · ☁ serviço do navegador (#49)
+  const where = $('#voiceWhere');
+  if (where) {
+    where.textContent = S.voiceSession.local ? '🔒' : '☁';
+    where.title = t(S.voiceSession.local ? 'Voz processada no seu computador' : 'Voz processada pelo serviço do navegador');
+  }
   paintWake();
 }
 

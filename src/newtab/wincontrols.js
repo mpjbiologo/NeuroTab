@@ -1,14 +1,16 @@
 // NeuroTab — Controles de janela dos widgets (#18): minimizar, maximizar e restaurar.
 // - Minimizar: o cartão fica só com o cabeçalho; continua montado (nada se perde) e o estado fica salvo.
 // - Maximizar: o cartão ocupa a área útil da nova aba (sem cobrir a barra de atalhos nem os botões
-//   flutuantes); Esc, o botão ou um clique fora restauram. Não fica salvo: ao recarregar, volta ao normal.
+//   flutuantes); Esc, o botão ou um clique fora restauram. Fica salvo (w.max): numa aba nova ou depois de
+//   reabrir o navegador, o widget volta maximizado. Só um widget fica maximizado de cada vez.
 import { $, h } from '../lib/ui.js';
 import { t } from '../lib/i18n.js';
 import { setWidget, repositionFree } from './free.js';
 import { isFree } from './widgets.js';
 import { onEscape } from '../lib/window-manager.js';
+import { S } from './state.js';
 
-let maxed = null; // { card, backdrop }
+let maxed = null; // { card, backdrop, idx }
 
 /** Botões ▁ e ⤢ do cabeçalho de um widget. */
 export function windowButtons(card, w, idx) {
@@ -25,18 +27,21 @@ export function windowButtons(card, w, idx) {
     maxBtn.setAttribute('aria-pressed', String(max));
   };
   minBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMin(card, idx).then(paint); });
-  maxBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMax(card); paint(); });
+  maxBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMax(card, idx); paint(); });
   card.addEventListener('nt-window', paint);
-  if (w.min) card.classList.add('minimized');
+  if (w.min && !w.max) card.classList.add('minimized');
+  // Estado salvo: maximiza depois que o cartão entra na página e a grade/tela livre se acomoda.
+  if (w.max) requestAnimationFrame(() => { if (card.isConnected && !maxed) { toggleMax(card, idx, { save: false }); paint(); } });
   paint();
   return h('div', { class: 'wwin' }, minBtn, maxBtn);
 }
 
 async function toggleMin(card, idx) {
-  if (card.classList.contains('maximized')) restoreMax();
+  const wasMax = card.classList.contains('maximized');
+  if (wasMax) restoreMax({ save: false });
   const min = !card.classList.contains('minimized');
   card.classList.toggle('minimized', min);
-  await setWidget(idx, { min: min || null }, true);
+  await setWidget(idx, { min: min || null, ...(wasMax ? { max: null } : {}) }, true);
   if (isFree()) repositionFree();
 }
 
@@ -54,24 +59,39 @@ function usableInset() {
   return { top, right, bottom, left };
 }
 
-function toggleMax(card) {
+function toggleMax(card, idx, { save = true } = {}) {
   if (card.classList.contains('maximized')) { restoreMax(); return; }
-  restoreMax();
+  const prev = maxed?.idx;
+  restoreMax({ save: false });
+  const wasMin = card.classList.contains('minimized');
   card.classList.remove('minimized');
   const box = usableInset();
   for (const [k, v] of Object.entries(box)) card.style.setProperty(`--mx-${k}`, `${Math.round(v)}px`);
   const backdrop = h('div', { class: 'wmax-backdrop', onclick: () => restoreMax() });
   card.before(backdrop);
   card.classList.add('maximized');
-  maxed = { card, backdrop };
-  card.querySelector('.wwin-max')?.focus();
+  maxed = { card, backdrop, idx };
+  if (save) card.querySelector('.wwin-max')?.focus({ preventScroll: true }); // ao abrir a aba, o foco fica na busca
+  if (save && idx != null) saveMax(idx, prev, wasMin);
 }
 
-/** Volta o widget maximizado ao tamanho e posição de antes. */
-export function restoreMax() {
+/** Guarda qual widget está maximizado (e tira a marca do anterior), sem redesenhar a tela. */
+async function saveMax(idx, prev, wasMin) {
+  const ws = S.data.settings.widgets;
+  if (prev != null && prev !== idx && ws[prev]) delete ws[prev].max;
+  for (const [i, w] of ws.entries()) if (i !== idx && w.max) delete w.max;
+  await setWidget(idx, { max: true, ...(wasMin ? { min: null } : {}) }, true);
+}
+
+/**
+ * Volta o widget maximizado ao tamanho e posição de antes. save:false só desfaz na tela (o cartão vai ser
+ * redesenhado e volta maximizado); o padrão também apaga o estado salvo.
+ */
+export function restoreMax({ save = true } = {}) {
   if (!maxed) return;
-  const { card, backdrop } = maxed;
+  const { card, backdrop, idx } = maxed;
   maxed = null;
+  if (save && idx != null && S.data.settings.widgets[idx]?.max) setWidget(idx, { max: null }, true);
   backdrop.remove();
   card.classList.remove('maximized');
   for (const k of ['top', 'right', 'bottom', 'left']) card.style.removeProperty(`--mx-${k}`);

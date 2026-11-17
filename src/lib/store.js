@@ -90,6 +90,10 @@ export const DEFAULT_SETTINGS = {
   wakePhrase: 'NeuroTab', // frase de ativação; vazia = o nome do assistente
   wakeBeep: true, // sinal sonoro curto ao ouvir a frase
   wakeCommandSecs: 8, // tempo para falar o comando depois da frase
+  voiceEngine: 'auto', // auto | device (no computador) | whisper (servidor local) | cloud (serviço do navegador)
+  voiceLocalOnly: false, // a voz nunca vai para a nuvem (reconhecimento e leitura)
+  whisperUrl: '', // ex.: http://127.0.0.1:8080/inference (whisper.cpp)
+  whisperModel: '',
   wakeMinutes: 10, // desliga sozinha após X min sem ser chamada
   speakAnswers: false,
   ttsVoice: '',
