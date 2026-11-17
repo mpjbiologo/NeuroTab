@@ -116,3 +116,35 @@ test('Opções: escolha do motor, servidores conhecidos e teste de conexão do W
     await x.close();
   }
 });
+
+test('Opções: navegador sem pt-BR no computador baixa pt-PT; falha explica o motivo e mostra o Whisper', async () => {
+  const x = await launch({ voice: true });
+  try {
+    await x.ctx.addInitScript(() => {
+      const SR = window.SpeechRecognition;
+      SR.prototype.processLocally = false;
+      window.__ok = new Set();
+      SR.available = async ({ langs: [l] }) => (window.__ok.has(l) ? 'available' : l === 'pt-PT' ? 'downloadable' : 'unavailable');
+      SR.install = async ({ langs: [l] }) => { if (window.__refuse) return false; window.__ok.add(l); return true; };
+    });
+    const p = await x.open('src/options.html');
+    await x.settings(p, { voiceLang: 'pt-BR' });
+    await p.click('[data-tab="ia"]');
+    await p.waitForFunction(() => /pt-PT/.test(document.querySelector('#deviceStatus').textContent));
+    assert.match(await p.textContent('#deviceStatus'), /não tem pt-BR no computador; vamos usar pt-PT/);
+    // recusa: motivo na tela e o Whisper aparece como alternativa
+    await p.evaluate(() => { window.__refuse = true; });
+    await p.click('#deviceInstall');
+    await p.waitForFunction(() => /Não foi possível baixar/.test(document.querySelector('#deviceStatus').textContent));
+    assert.match(await p.textContent('#deviceStatus'), /recusou o pacote de pt-PT/);
+    assert.equal(await p.isVisible('#whisperBox'), true);
+    // aceita
+    await p.evaluate(() => { window.__refuse = false; });
+    await p.click('#deviceInstall');
+    await p.waitForFunction(() => /já está no computador/.test(document.querySelector('#deviceStatus').textContent));
+    assert.match(await p.textContent('#deviceStatus'), /🔒 O reconhecimento de pt-PT já está no computador/);
+    assert.deepEqual(x.errors, []);
+  } finally {
+    await x.close();
+  }
+});

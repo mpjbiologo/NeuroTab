@@ -18,6 +18,8 @@ Opções → IA e voz → **Onde a fala é reconhecida** (`settings.voiceEngine`
 |---|---|---|---|
 | Automático (padrão) | `auto` | no computador quando o idioma já está baixado; senão, o serviço do navegador | — |
 | No computador | `device` | fica no computador (`processLocally`) | Chrome/Edge 139+ e o pacote do idioma (~60 MB, baixado uma vez pelo botão nas opções) |
+
+**Idiomas no computador:** cada navegador oferece só alguns. O Edge, por exemplo, não tem pt-BR, só pt-PT (além de en-US, de-DE, it-IT, es-ES e ko-KR). Quando falta o idioma exato, a NeuroTab usa um parecido (`deviceLangCandidates`: pt-BR → pt-PT, es-MX → es-ES, en-GB → en-US), que entende bem a mesma língua. Se o navegador recusar o download, as opções mostram o motivo, o próximo clique tenta o idioma parecido e o Whisper local aparece como alternativa.
 | Whisper local | `whisper` | só para o endereço local configurado | um servidor Whisper rodando no computador (abaixo) |
 | Serviço do navegador | `cloud` | Google (Chrome) ou Microsoft (Edge) | internet |
 

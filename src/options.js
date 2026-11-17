@@ -18,7 +18,7 @@ import { PROJECT, DONATION } from './config.js';
 import { setHTML } from './lib/safe-html.js';
 import { assistantName, wakePhraseOf, phraseSuggestions } from './lib/wake-word.js';
 import { commandLang } from './lib/assistant.js';
-import { configureSpeech, deviceStatus, deviceSupported, installDevice, currentEngine, speechAvailable, ENGINE_ERRORS, WHISPER_PRESETS, encodeWav, transcribeRequest } from './lib/speech-engine.js';
+import { configureSpeech, deviceLangFor, deviceStatus, deviceSupported, installDevice, currentEngine, speechAvailable, ENGINE_ERRORS, WHISPER_PRESETS, encodeWav, transcribeRequest } from './lib/speech-engine.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -313,10 +313,12 @@ function setupAi() {
     $('#whisperBox').hidden = !(eng === 'whisper' || data.settings.whisperUrl || (data.settings.voiceLocalOnly && !deviceSupported()));
     const st = await deviceStatus(voiceLangNow(), { fresh: true });
     const lang = voiceLangNow();
+    const use = deviceLangFor(lang);
+    const sub = use !== lang ? ` Este navegador não tem ${lang} no computador; vamos usar ${use}, que também entende essa fala (pode errar um pouco mais em palavras regionais).` : '';
     $('#deviceStatus').textContent = {
-      available: `🔒 O reconhecimento de ${lang} já está no computador: a fala não sai daqui.`,
-      downloadable: `O reconhecimento de ${lang} pode rodar no computador. Baixe uma vez (cerca de 60 MB) e o áudio deixa de ir para a nuvem.`,
-      downloading: `Baixando o reconhecimento de ${lang}…`,
+      available: `🔒 O reconhecimento de ${use} já está no computador: a fala não sai daqui.${sub}`,
+      downloadable: `O reconhecimento de ${use} pode rodar no computador. Baixe uma vez (cerca de 60 MB) e o áudio deixa de ir para a nuvem.${sub}`,
+      downloading: `Baixando o reconhecimento de ${use}…${sub}`,
       unavailable: `Este navegador não tem reconhecimento de ${lang} no computador. Use o Whisper local para não mandar o áudio para a nuvem.`,
       unsupported: 'Este navegador não reconhece a fala no próprio computador (precisa do Chrome ou Edge 139+). Use o Whisper local.',
     }[st] || '';
@@ -335,10 +337,16 @@ function setupAi() {
     const b = e.currentTarget;
     b.disabled = true;
     b.textContent = 'Baixando… (pode levar alguns minutos)';
-    const ok = await installDevice(voiceLangNow());
+    const res = await installDevice(voiceLangNow());
     b.disabled = false;
     b.textContent = '⬇ Baixar o reconhecimento do idioma';
-    toast(ok ? 'Reconhecimento baixado: a fala agora fica no computador 🔒' : 'Não foi possível baixar agora. Tente de novo mais tarde ou use o Whisper local.');
+    const why = res.error === 'timeout' ? 'o navegador não respondeu em 3 minutos'
+      : /NotAllowed/.test(res.error) ? 'o navegador pediu um novo clique; clique de novo no botão'
+      : res.error ? res.error
+      : `o navegador recusou o pacote de ${res.lang} (o Edge, por exemplo, só oferece alguns idiomas no computador)`;
+    if (res.ok) toast(`Reconhecimento de ${res.lang} baixado: a fala agora fica no computador 🔒`);
+    else $('#deviceStatus').textContent = `Não foi possível baixar: ${why}. Clique de novo para tentar outro idioma parecido, ou use o Whisper local abaixo.`;
+    if (!res.ok) { $('#whisperBox').hidden = false; return; }
     paintEngine();
   });
   $('#whisperPresets').replaceChildren(...WHISPER_PRESETS.map((p) => h('button', { class: 'chip', type: 'button', title: p.url, onclick: async () => {
@@ -355,7 +363,7 @@ function setupAi() {
     const url = $('#whisperUrl').value.trim();
     if (!url) { msg.textContent = 'Escreva o endereço primeiro.'; return; }
     // Acesso ao localhost: pedido aqui, no clique.
-    if (/^http:\/\/(localhost|127\.0\.0\.1)(:|\/)/.test(url) && !(await requestFeature('local'))) { msg.textContent = 'Sem permissão para acessar o computador (localhost).'; return; }
+    if (/^http:\/\/(localhost|127\.0\.0\.1)(:|\/)/.test(url) && !(await requestFeature('local'))) { msg.textContent = '❌ Sem permissão para acessar o computador (localhost). Clique em Testar de novo e aceite o pedido do navegador.'; return; }
     msg.textContent = 'Testando…';
     try {
       const silence = encodeWav(new Float32Array(16000 * 0.6), 16000);
@@ -363,7 +371,7 @@ function setupAi() {
       const r = await fetch(url, init);
       msg.textContent = r.ok ? '✅ O Whisper respondeu. A voz pode ser reconhecida aqui no computador.' : `❌ O servidor respondeu ${r.status}. Confira o endereço (whisper.cpp usa /inference; Speaches e LocalAI usam /v1/audio/transcriptions).`;
     } catch {
-      msg.textContent = '❌ Não consegui conectar. O servidor está ligado nesse endereço?';
+      msg.textContent = '❌ Nada respondeu nesse endereço. O Whisper local é um programa à parte: ele precisa estar instalado e aberto no seu computador (veja o guia abaixo). Se ele já está aberto, confira a porta no endereço.';
     }
   });
   for (const k of ['voiceEngine', 'voiceLocalOnly', 'whisperUrl', 'voiceLang']) $(`[data-k="${k}"]`)?.addEventListener('change', () => setTimeout(paintEngine, 50));

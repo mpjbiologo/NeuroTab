@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.3.1 — 2026-11-17
+**Correção: baixar o reconhecimento de voz no computador.**
+
+- O Edge não oferece português do Brasil no computador (só de Portugal), então o download falhava. Agora a NeuroTab usa o idioma parecido que o navegador tem (pt-BR → pt-PT, es-MX → es-ES, en-GB → en-US) e avisa nas opções. O português de Portugal entende bem a fala brasileira (#49)
+- Se o download falhar, a mensagem diz o motivo (o navegador recusou, pediu outro clique ou não respondeu), o próximo clique tenta o idioma parecido e o Whisper local aparece como alternativa
+- "Testar conexão" do Whisper explica que o Whisper é um programa à parte, que precisa estar instalado e aberto no computador
+
 ## v0.7.3 — 2026-11-17
 **Voz no seu computador e janelas que lembram como estavam.**
 

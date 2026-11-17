@@ -22,7 +22,19 @@ export const deviceSupported = () => { const SR = SRClass(); return !!SR && type
 export const canRecordAudio = () => !!globalThis.navigator?.mediaDevices?.getUserMedia && !!(globalThis.AudioContext || globalThis.webkitAudioContext);
 
 let cfg = { voiceEngine: 'auto', voiceLocalOnly: false, whisperUrl: '', whisperModel: '' };
-const deviceCache = new Map(); // idioma → 'available' | 'downloadable' | 'downloading' | 'unavailable' | 'unsupported'
+const deviceCache = new Map(); // idioma → { status, use } (use = idioma do pacote local usado no lugar)
+
+/**
+ * Idiomas parecidos para o reconhecimento no computador. O Edge, por exemplo, só tem português de
+ * Portugal (pt-PT) no computador; ele entende bem a fala brasileira, então serve para pt-BR.
+ */
+const NEAR = { pt: ['pt-BR', 'pt-PT'], es: ['es-ES', 'es-MX', 'es-US'], en: ['en-US', 'en-GB'], de: ['de-DE'], it: ['it-IT'], fr: ['fr-FR'], ko: ['ko-KR'], ja: ['ja-JP'] };
+export const deviceLangCandidates = (lang) => {
+  const near = NEAR[String(lang).split('-')[0].toLowerCase()] || [];
+  return [lang, ...near.filter((l) => l.toLowerCase() !== String(lang).toLowerCase())];
+};
+const RANK = { available: 3, downloading: 2, downloadable: 1 };
+const failedInstall = new Set();
 
 /** Lê as escolhas das configurações (chamado ao abrir e quando os dados mudam). */
 export function configureSpeech(settings = {}, lang) {
@@ -37,30 +49,55 @@ export function configureSpeech(settings = {}, lang) {
 }
 export const speechConfig = () => cfg;
 
-/** Situação do reconhecimento no próprio computador para o idioma. */
+/**
+ * Situação do reconhecimento no próprio computador para o idioma: o melhor entre o idioma pedido e os
+ * parecidos (o próprio idioma ganha empate). deviceLangFor(lang) diz qual pacote vai ser usado.
+ */
 export async function deviceStatus(lang, { fresh = false } = {}) {
   if (!deviceSupported()) return 'unsupported';
-  if (!fresh && deviceCache.get(lang) === 'available') return 'available';
-  try {
-    const s = await SRClass().available({ langs: [lang], processLocally: true });
-    deviceCache.set(lang, s);
-    return s;
-  } catch {
-    deviceCache.set(lang, 'unavailable');
-    return 'unavailable';
+  const hit = deviceCache.get(lang);
+  if (!fresh && hit?.status === 'available') return 'available';
+  let best = { status: 'unavailable', use: lang };
+  for (const cand of deviceLangCandidates(lang)) {
+    let st = 'unavailable';
+    try { st = await SRClass().available({ langs: [cand], processLocally: true }); } catch { /* não suportado */ }
+    if ((RANK[st] || 0) > (RANK[best.status] || 0)) best = { status: st, use: cand };
+    if (st === 'available') break;
   }
+  deviceCache.set(lang, best);
+  return best.status;
 }
-export const cachedDeviceStatus = (lang) => (deviceSupported() ? deviceCache.get(lang) || 'unknown' : 'unsupported');
+export const cachedDeviceStatus = (lang) => (deviceSupported() ? deviceCache.get(lang)?.status || 'unknown' : 'unsupported');
+/** Idioma do pacote local usado para `lang` (ex.: pt-PT no lugar de pt-BR no Edge). */
+export const deviceLangFor = (lang) => deviceCache.get(lang)?.use || lang;
 
-/** Baixa o pacote do idioma (precisa de um clique). Desiste depois de `timeout` (alguns navegadores travam). */
+/**
+ * Baixa o pacote do idioma (precisa de um clique: chame direto no clique, sem esperar nada antes).
+ * Tenta o idioma pedido e, se o navegador não tiver, os parecidos. Desiste depois de `timeout`
+ * (alguns navegadores nunca respondem). Devolve { ok, lang, error }.
+ */
 export async function installDevice(lang, timeout = 180000) {
-  if (!deviceSupported()) return false;
-  const ok = await Promise.race([
-    SRClass().install({ langs: [lang], processLocally: true }).catch(() => false),
-    new Promise((r) => setTimeout(() => r(false), timeout)),
-  ]);
+  if (!deviceSupported()) return { ok: false, lang, error: 'unsupported' };
+  const SR = SRClass();
+  const first = deviceLangFor(lang);
+  // Idiomas que já falharam vão para o fim: o próximo clique tenta outro primeiro.
+  const order = [first, ...deviceLangCandidates(lang).filter((l) => l !== first)].sort((a, b) => failedInstall.has(a) - failedInstall.has(b));
+  let error = '';
+  for (const cand of order) {
+    // A primeira chamada sai no mesmo instante do clique (o navegador exige).
+    let timer;
+    const ok = await Promise.race([
+      Promise.resolve().then(() => SR.install({ langs: [cand], processLocally: true })).catch((e) => { error = `${e?.name || 'Erro'}: ${e?.message || e}`; return false; }),
+      new Promise((r) => { timer = setTimeout(() => r('timeout'), timeout); }),
+    ]);
+    clearTimeout(timer);
+    if (ok === 'timeout') { error = 'timeout'; break; }
+    if (!ok && !/NotAllowed/.test(error)) failedInstall.add(cand);
+    if (ok) { failedInstall.delete(cand); deviceCache.set(lang, { status: 'available', use: cand }); await deviceStatus(lang, { fresh: true }); return { ok: true, lang: cand, error: '' }; }
+    if (/NotAllowed/.test(error)) break; // perdeu o clique: não adianta tentar os outros
+  }
   await deviceStatus(lang, { fresh: true });
-  return !!ok;
+  return { ok: false, lang: first, error };
 }
 
 /**
@@ -115,7 +152,7 @@ export function createRecognizer(lang) {
     rec = new SR();
     if (pick.engine === 'device') rec.processLocally = true;
   }
-  rec.lang = lang;
+  rec.lang = pick.engine === 'device' ? deviceLangFor(lang) : lang;
   return { rec, ...pick };
 }
 

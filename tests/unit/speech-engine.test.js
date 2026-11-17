@@ -104,3 +104,43 @@ test('WhisperRecognizer: microfone negado vira erro "not-allowed" e termina', as
   await p;
   assert.equal(ends, 1);
 });
+
+test('no computador: sem pt-BR (como no Edge), usa pt-PT; install conta o motivo da falha', async () => {
+  const { deviceStatus, deviceLangFor, installDevice, configureSpeech, createRecognizer, deviceLangCandidates } = await import('../../src/lib/speech-engine.js');
+  const installed = new Set();
+  const calls = [];
+  class FakeSR { constructor() { this.lang = ''; } }
+  FakeSR.prototype.processLocally = false;
+  FakeSR.available = async ({ langs: [l] }) => (installed.has(l) ? 'available' : ['pt-PT', 'en-US'].includes(l) ? 'downloadable' : 'unavailable');
+  FakeSR.install = async ({ langs: [l] }) => { calls.push(l); if (l === 'pt-PT') { installed.add(l); return true; } return false; };
+  globalThis.SpeechRecognition = FakeSR;
+  try {
+    assert.deepEqual(deviceLangCandidates('pt-BR'), ['pt-BR', 'pt-PT']);
+    assert.equal(await deviceStatus('pt-BR', { fresh: true }), 'downloadable');
+    assert.equal(deviceLangFor('pt-BR'), 'pt-PT');
+    const r = await installDevice('pt-BR');
+    assert.deepEqual(r, { ok: true, lang: 'pt-PT', error: '' });
+    assert.deepEqual(calls, ['pt-PT'], 'baixa direto o que o navegador tem');
+    assert.equal(await deviceStatus('pt-BR'), 'available');
+    configureSpeech({ voiceEngine: 'device' });
+    const made = createRecognizer('pt-BR');
+    assert.equal(made.engine, 'device');
+    assert.equal(made.rec.lang, 'pt-PT');
+    assert.equal(made.rec.processLocally, true);
+    // idioma sem pacote nenhum: falha com motivo, e o próximo clique tenta outro
+    calls.length = 0;
+    FakeSR.available = async () => 'downloadable';
+    await deviceStatus('es-MX', { fresh: true });
+    const bad = await installDevice('es-MX');
+    assert.equal(bad.ok, false);
+    assert.deepEqual(calls, ['es-MX', 'es-ES', 'es-US']);
+    calls.length = 0;
+    FakeSR.install = async () => { throw new DOMException('needs a gesture', 'NotAllowedError'); };
+    const na = await installDevice('es-MX');
+    assert.match(na.error, /NotAllowedError/);
+    assert.equal(calls.length, 0);
+  } finally {
+    delete globalThis.SpeechRecognition;
+    configureSpeech({});
+  }
+});
