@@ -41,7 +41,7 @@ export default {
         list.append(h('div', { class: 'group-label' }, `${label} · ${arr.length}`));
         arr.slice(0, 30).forEach((it) => list.append(itemRow(it, ctx, { checkbox: true })));
       }
-      if (!total) list.append(h('p', { class: 'muted' }, 'Nada pendente 🎉  Escreva "me lembre amanhã às 9h de…" na Captura rápida.'));
+      if (!total) list.append(h('p', { class: 'empty', title: 'Escreva “me lembre amanhã às 9h de…” na Captura rápida ou fale pelo microfone.' }, '✅ Nada pendente. Tente: “me lembre amanhã às 9h de…”'));
     }
     el.append(list);
     render();

@@ -18,6 +18,8 @@ import { PROJECT, DONATION } from './config.js';
 import { setHTML } from './lib/safe-html.js';
 import { assistantName, wakePhraseOf, phraseSuggestions } from './lib/wake-word.js';
 import { commandLang } from './lib/assistant.js';
+import { applyTheme, themeOf, THEMES } from './lib/theme.js';
+import { icon, startIconizer } from './lib/icons.js';
 import { configureSpeech, deviceLangFor, deviceStatus, deviceSupported, installDevice, currentEngine, speechAvailable, ENGINE_ERRORS, WHISPER_PRESETS, encodeWav, transcribeRequest } from './lib/speech-engine.js';
 
 const $ = (s) => document.querySelector(s);
@@ -41,6 +43,8 @@ async function init() {
 
   data = await loadData();
   initI18n(data.settings.lang);
+  applyTheme(themeOf(data.settings));
+  setupThemePicker();
   fillSettings();
   bindSettings();
   setupTabs();
@@ -54,9 +58,10 @@ async function init() {
   renderPlaces();
   setupUpdatesOptions();
   setupCleanup();
+  startIconizer();
 
   chrome.storage.onChanged.addListener(async (c, area) => {
-    if (area === 'local' && c[DATA_KEY]) { data = await loadData(); fillSettings(); showStats(); renderPlaces(); }
+    if (area === 'local' && c[DATA_KEY]) { data = await loadData(); applyTheme(themeOf(data.settings)); paintThemePicker(); fillSettings(); showStats(); renderPlaces(); }
   });
 }
 
@@ -75,6 +80,45 @@ function setupTabs() {
 }
 
 // ---------- Configurações simples (data-k) ----------
+// ---------- Tema (#51) ----------
+function setupThemePicker() {
+  const box = $('#themePick');
+  box.replaceChildren(...Object.entries(THEMES).map(([id, th]) => {
+    // Cada cartão usa o próprio tema (data-theme), então a prévia mostra as cores de verdade.
+    const card = h('button', { class: 'theme-card', type: 'button', role: 'radio', 'data-theme': id, 'data-id': id, onclick: () => chooseTheme(id) },
+      h('span', { class: 'sw-prev', 'aria-hidden': 'true' }, h('i'), h('i'), h('b', {}, 'Salvar')),
+      h('span', { class: 'tn' }, th.label, ' ', icon('check')),
+      h('small', {}, th.desc));
+    return card;
+  }));
+  box.addEventListener('keydown', (e) => {
+    const ids = Object.keys(THEMES);
+    const i = ids.indexOf(themeOf(data.settings));
+    const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    const next = ids[(i + d + ids.length) % ids.length];
+    chooseTheme(next);
+    box.querySelector(`[data-id="${next}"]`)?.focus();
+  });
+  paintThemePicker();
+}
+function paintThemePicker() {
+  const cur = themeOf(data.settings);
+  for (const b of $$('#themePick .theme-card')) {
+    const on = b.dataset.id === cur;
+    b.setAttribute('aria-checked', String(on));
+    b.tabIndex = on ? 0 : -1;
+  }
+}
+async function chooseTheme(id) {
+  data.settings.theme = id;
+  applyTheme(id);
+  paintThemePicker();
+  await saveData(data);
+  toast(`Tema ${THEMES[id].label} aplicado`);
+}
+
 function fillSettings() {
   for (const el of $$('[data-k]')) {
     const v = data.settings[el.dataset.k];

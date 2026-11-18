@@ -60,7 +60,7 @@ export default {
     };
 
     const search = h('input', { type: 'search', placeholder: 'Buscar no cérebro…' });
-    const chips = FILTERS.map(([k, label]) => h('button', { class: 'chip' + (k === filter ? ' sel' : ''), type: 'button', title: k === 'trash' ? `Lixeira (${TRASH_DAYS} dias)` : '', onclick: () => setFilter(k) }, label));
+    const chips = FILTERS.map(([k, label]) => h('button', { class: 'chip' + (k === filter ? ' sel' : ''), type: 'button', title: k === 'trash' ? `Lixeira (${TRASH_DAYS} dias)` : k === 'pinned' ? 'Fixados' : null, onclick: () => setFilter(k) }, label));
     const bar = h('div', { class: 'sel-bar', hidden: true });
     const list = h('div', { class: 'items' });
     const selBtn = h('button', { title: 'Selecionar vários', onclick: () => { selecting = !selecting; picked.clear(); render(); } }, '☑');
@@ -166,7 +166,7 @@ export default {
       if (!arr.length) {
         list.append(h('p', { class: 'muted' }, filter === 'trash' ? 'A lixeira está vazia.' : ctx.items.length
           ? 'Nada encontrado.'
-          : 'Seu cérebro está vazio. Use a Captura rápida, o botão direito em qualquer página (NeuroTab → Salvar trecho) ou o ícone da extensão.'));
+          : h('span', { class: 'empty' }, '🧠 Tudo que você salvar aparece aqui: notas, trechos e páginas.')));
         return;
       }
       arr.slice(0, limit).forEach((it) => list.append(itemRow(it, ctx, { select: selecting || filter === 'trash' ? select : null, semantic: !!sem?.semIds.has(it.id) && sem.key === filter + '|' + q.trim() })));

@@ -118,7 +118,9 @@ export function startVoice({ fromWake = false } = {}) {
       paintWake();
       const said = (fin || finalText).trim();
       if (said && isCancel(said)) { heard.textContent = t('Cancelado'); setTimeout(() => { if (!S.voiceSession) ov.hidden = true; }, 1200); return; }
-      if (!said) { heard.textContent = t('Não ouvi nada. Toque em 🎙 para tentar de novo.'); setTimeout(() => { if (!S.voiceSession) ov.hidden = true; }, 2500); return; }
+      // Com erro (microfone bloqueado, Whisper fora…), a explicação do erro é a mensagem: não diz "não ouvi".
+      if (!said && lastError) { heard.textContent = t('Não deu para ouvir'); return; }
+      if (!said) { heard.textContent = t('Não ouvi nada. Toque no microfone para tentar de novo.'); setTimeout(() => { if (!S.voiceSession) ov.hidden = true; }, 2500); return; }
       await processVoice(said);
     },
     onError: (msg) => { lastError = msg; reply.textContent = t(msg); },

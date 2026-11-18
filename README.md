@@ -102,7 +102,7 @@ O Google só libera a API do Keep para contas empresariais (Workspace). Para con
 | **v0.5** ✅ | Busca por significado, comandos de voz em inglês e espanhol, palavra de ativação (experimental), backup com chaves de API, biblioteca de imagens |
 | **v0.6** ✅ | Fundação: testes automáticos e CI, migrações de dados, permissões sob demanda, chaves de API mais protegidas |
 | **v0.6.x** ✅ | Nas lojas do Edge, Chrome e Firefox com atualização automática; imagens de sites com login; limpeza de HTML |
-| [**v0.7**](https://github.com/mpjbiologo/NeuroTab/milestone/3) | ✅ base modular, eventos, contrato dos widgets, cérebro lê o mapa, maximizar widgets, nome do assistente, janelas organizadas, rotas e trânsito no widget · a seguir: voz local (0.7.3), cérebro lê as imagens (0.7.4), agenda (0.7.5) |
+| [**v0.7**](https://github.com/mpjbiologo/NeuroTab/milestone/3) | ✅ base modular, eventos, contrato dos widgets, cérebro lê o mapa, maximizar widgets, nome do assistente, janelas organizadas, rotas e trânsito no widget, voz local, novo visual com 3 temas · a seguir: cérebro lê as imagens (0.7.5), agenda (0.7.6) |
 | [**v0.8**](https://github.com/mpjbiologo/NeuroTab/milestone/4) | Assistente que responde falando, modo conversa (💬 microfone sempre ligado), modo reunião (📋 gravar, transcrever, resumir), visual novo da voz |
 | [**v0.9**](https://github.com/mpjbiologo/NeuroTab/milestone/5) | NeuroPilot, central de conhecimento e fontes, recorte de tela, captura de arquivos, pasta das mídias, Modo Estudante |
 | [**v1.0**](https://github.com/mpjbiologo/NeuroTab/milestone/6) | Estável e completa: sincronização opcional e criptografada entre computadores, painel de privacidade, configurações com visual novo, mesma lista de testes em todos os navegadores |

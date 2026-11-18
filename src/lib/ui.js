@@ -60,7 +60,7 @@ let toastTimer;
 export function toast(msg, actionLabel, action) {
   let t = $('#toast');
   if (!t) {
-    t = h('div', { id: 'toast', class: 'toast' });
+    t = h('div', { id: 'toast', class: 'toast', role: 'status', 'aria-live': 'polite' });
     document.body.append(t);
   }
   t.replaceChildren(document.createTextNode(msg));

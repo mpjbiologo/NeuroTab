@@ -3,6 +3,7 @@ import { SEARCH_ENGINES } from '../lib/store.js';
 import { $, $$, h } from '../lib/ui.js';
 import { photoList, photoUrl, preload } from '../lib/photos.js';
 import { t } from '../lib/i18n.js';
+import { applyTheme, themeOf } from '../lib/theme.js';
 import { S, heroEl, omniEl } from './state.js';
 import { dockPos, openPanel } from './rail.js';
 
@@ -13,7 +14,10 @@ export function applySettings() {
   root.setProperty('--cols', s.columns);
   root.setProperty('--radius', s.tileRadius + 'px');
   root.setProperty('--dim', s.bgDim);
-  root.setProperty('--bg-color', s.bgColor);
+  // Cor de fundo própria só se a pessoa trocou a padrão; senão vale a do tema.
+  if (s.bgColor && !/^#141418$/i.test(s.bgColor)) root.setProperty('--bg-color', s.bgColor);
+  else root.removeProperty('--bg-color');
+  applyTheme(themeOf(s));
   const b = document.body.classList;
   const pos = dockPos();
   ['left', 'right', 'top', 'bottom'].forEach((p) => b.toggle('dock-' + p, pos === p));

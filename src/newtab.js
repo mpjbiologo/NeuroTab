@@ -5,6 +5,7 @@ import { $ } from './lib/ui.js';
 import { semanticOn, indexItems, embedConfig } from './lib/semantic.js';
 import { initI18n, LOCALE } from './lib/i18n.js';
 import { configureSpeech } from './lib/speech-engine.js';
+import { startIconizer } from './lib/icons.js';
 import { initWindowManager } from './lib/window-manager.js';
 import { S, bus } from './newtab/state.js';
 import { brainEvents } from './lib/events.js';
@@ -103,6 +104,7 @@ async function init() {
   setupUpdates();
   setupVoice();
   setupWake();
+  startIconizer(); // ícones desenhados no lugar dos emojis da interface (#51)
   speechReady.then(() => updateWake()); // reconhecimento no computador confirmado: troca de motor se precisar
   setupExternalDrop();
 

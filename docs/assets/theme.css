@@ -1,0 +1,168 @@
+/* NeuroTab — sistema de design (ver docs/dev/DESIGN.md).
+   Três temas com a mesma estrutura de tokens: futurista (padrão), sóbria e calorosa.
+   Todo componente usa só estes tokens; cor solta em CSS é exceção documentada (mapa, prévia de cor). */
+
+@font-face { font-family: "Inter NT"; src: url("fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Space Grotesk NT"; src: url("fonts/space-grotesk-latin-wght-normal.woff2") format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Fraunces NT"; src: url("fonts/fraunces-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+
+:root {
+  /* Escala de tipo (8 passos) */
+  --fs-2xs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 18px;
+  --fs-2xl: 22px;
+  --fs-3xl: 28px;
+  /* Espaços (múltiplos de 4) */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+  /* Movimento */
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --dur-1: .12s; --dur-2: .2s; --dur-3: .32s;
+  /* Ícones */
+  --icon: 16px;
+  color-scheme: dark;
+}
+
+/* ---------- Futurista (padrão): noite índigo, acento ciano elétrico, letra geométrica ---------- */
+:root, [data-theme="futurista"] {
+  --font-ui: "Inter NT", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Space Grotesk NT", "Inter NT", system-ui, sans-serif;
+  --display-weight: 400;
+  --display-track: -0.02em;
+
+  --bg: oklch(0.16 0.035 272);
+  --surface: oklch(0.2 0.04 272 / .72);
+  --surface-strong: oklch(0.21 0.04 272 / .92);
+  --surface-solid: oklch(0.22 0.04 272);
+  --field: oklch(0.13 0.03 272 / .7);
+  --tint-1: oklch(0.85 0.05 250 / .05);
+  --tint-2: oklch(0.85 0.05 250 / .09);
+  --tint-3: oklch(0.85 0.05 250 / .15);
+  --border: oklch(0.8 0.06 250 / .14);
+  --border-strong: oklch(0.8 0.08 230 / .3);
+
+  --text: oklch(0.96 0.01 260);
+  --text-2: oklch(0.8 0.03 260);
+  --text-3: oklch(0.72 0.03 260);
+
+  --accent: oklch(0.82 0.13 205);
+  --on-accent: oklch(0.18 0.04 260);
+  --accent-text: oklch(0.86 0.11 205);
+  --accent-soft: oklch(0.82 0.13 205 / .14);
+  --accent-2: oklch(0.7 0.18 295);
+
+  --ok: oklch(0.78 0.15 160);
+  --warn: oklch(0.82 0.14 75);
+  --bad: oklch(0.72 0.17 22);
+  --on-bad: oklch(0.15 0.03 22);
+
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-pill: 999px;
+  --blur: 18px;
+  --shadow-card: 0 10px 30px oklch(0.05 0.03 272 / .35);
+  --shadow-pop: 0 18px 48px oklch(0.05 0.03 272 / .55);
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  /* Brilho só no que está ativo (gravação, foco da voz): é a assinatura do tema. */
+  --active-glow: 0 6px 24px oklch(0.82 0.13 205 / .28);
+}
+
+/* ---------- Sóbria: grafite neutro, azul de produtividade, sem brilho ---------- */
+[data-theme="sobria"] {
+  --font-ui: "Inter NT", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Inter NT", system-ui, sans-serif;
+  --display-weight: 250;
+  --display-track: -0.03em;
+
+  --bg: oklch(0.17 0.006 260);
+  --surface: oklch(0.21 0.007 260 / .78);
+  --surface-strong: oklch(0.22 0.007 260 / .94);
+  --surface-solid: oklch(0.23 0.007 260);
+  --field: oklch(0.14 0.005 260 / .7);
+  --tint-1: oklch(1 0 0 / .05);
+  --tint-2: oklch(1 0 0 / .09);
+  --tint-3: oklch(1 0 0 / .14);
+  --border: oklch(1 0 0 / .12);
+  --border-strong: oklch(1 0 0 / .24);
+
+  --text: oklch(0.96 0.003 260);
+  --text-2: oklch(0.8 0.008 260);
+  --text-3: oklch(0.72 0.008 260);
+
+  --accent: oklch(0.55 0.19 260);
+  --on-accent: oklch(1 0 0);
+  --accent-text: oklch(0.78 0.11 255);
+  --accent-soft: oklch(0.62 0.17 258 / .18);
+  --accent-2: oklch(0.7 0.12 230);
+
+  --ok: oklch(0.76 0.14 155);
+  --warn: oklch(0.82 0.14 75);
+  --bad: oklch(0.72 0.17 25);
+  --on-bad: oklch(0.15 0.03 25);
+
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 12px; --radius-pill: 999px;
+  --blur: 14px;
+  --shadow-card: 0 8px 24px oklch(0 0 0 / .3);
+  --shadow-pop: 0 16px 40px oklch(0 0 0 / .5);
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-text);
+  --active-glow: none;
+}
+
+/* ---------- Calorosa: carvão quente, âmbar, serifa suave e cantos mais redondos ---------- */
+[data-theme="calorosa"] {
+  --font-ui: "Inter NT", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Fraunces NT", Georgia, serif;
+  --display-weight: 350;
+  --display-track: -0.01em;
+
+  --bg: oklch(0.18 0.018 55);
+  --surface: oklch(0.22 0.022 55 / .76);
+  --surface-strong: oklch(0.23 0.022 55 / .94);
+  --surface-solid: oklch(0.24 0.022 55);
+  --field: oklch(0.15 0.015 55 / .7);
+  --tint-1: oklch(0.95 0.03 70 / .05);
+  --tint-2: oklch(0.95 0.03 70 / .09);
+  --tint-3: oklch(0.95 0.03 70 / .15);
+  --border: oklch(0.9 0.04 70 / .14);
+  --border-strong: oklch(0.85 0.07 65 / .3);
+
+  --text: oklch(0.96 0.015 80);
+  --text-2: oklch(0.82 0.025 75);
+  --text-3: oklch(0.74 0.025 75);
+
+  --accent: oklch(0.8 0.13 65);
+  --on-accent: oklch(0.2 0.04 50);
+  --accent-text: oklch(0.84 0.11 70);
+  --accent-soft: oklch(0.8 0.13 65 / .16);
+  --accent-2: oklch(0.72 0.14 35);
+
+  --ok: oklch(0.78 0.13 145);
+  --warn: oklch(0.84 0.13 85);
+  --bad: oklch(0.72 0.16 30);
+  --on-bad: oklch(0.15 0.03 30);
+
+  --radius-sm: 10px; --radius-md: 14px; --radius-lg: 20px; --radius-pill: 999px;
+  --blur: 16px;
+  --shadow-card: 0 12px 32px oklch(0.08 0.02 50 / .35);
+  --shadow-pop: 0 20px 50px oklch(0.08 0.02 50 / .5);
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  --active-glow: 0 6px 22px oklch(0.8 0.13 65 / .22);
+}
+
+/* ---------- Base comum ---------- */
+html { font-family: var(--font-ui); -webkit-font-smoothing: antialiased; }
+::selection { background: color-mix(in oklch, var(--accent) 45%, transparent); color: var(--text); }
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible { outline: none; box-shadow: var(--ring); }
+:where(input, textarea, select)::placeholder { color: var(--text-3); opacity: 1; }
+* { scrollbar-color: var(--tint-3) transparent; scrollbar-width: thin; }
+:where(input, textarea) { caret-color: var(--accent); }
+:where(button, [role="button"], .chip, .btn) { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+/* Ícones desenhados (lib/icons.js): herdam a cor do texto */
+.ico { width: 1.15em; height: 1.15em; flex: none; display: inline-block; vertical-align: -0.18em; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}

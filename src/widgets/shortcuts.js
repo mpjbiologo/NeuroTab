@@ -27,7 +27,7 @@ export default {
         a.addEventListener('contextmenu', (e) => showCtx(e, [['↗ Abrir em nova aba', () => window.open(l.url, '_blank')], ['✎ Editar', () => ctx.openLinkDialog(l)]]));
         return a;
       }));
-      if (!grid.children.length) grid.append(h('p', { class: 'muted' }, 'Grupo vazio.'));
+      if (!grid.children.length) grid.append(h('p', { class: 'empty' }, '🔗 Grupo sem atalhos.'));
     }
     function fit() {
       const cols = Math.max(2, Math.min(ctx.data.settings.columns, Math.floor((grid.clientWidth || 600) / 140)));

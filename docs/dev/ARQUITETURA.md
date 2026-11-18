@@ -44,6 +44,8 @@ newtab.js (inicialização)
 | Biblioteca | O que faz | Testes |
 |---|---|---|
 | `lib/wake-word.js` | Acha a palavra de ativação no que foi ouvido ("neuro tab, anotar café" → "anotar café"), variações aceitas, prazo e regra de quando escutar | `tests/unit/wake-word.test.js` |
+| `lib/theme.js`, `theme.css`, `theme-boot.js` | Temas visuais (#53): tokens e os três temas; aplica a escolha sem piscar (ver `DESIGN.md`) | `tests/unit/theme.test.js` |
+| `lib/icons.js`, `lib/icon-data.js` | Ícones desenhados (Lucide) no lugar dos emojis da interface, com nome acessível | `tests/unit/theme.test.js`, `tests/e2e/design.test.js` |
 | `lib/speech-engine.js` | Motores de voz (#49): no computador (`processLocally`), Whisper local ou serviço do navegador; reconhecedor no formato do `SpeechRecognition` | `tests/unit/speech-engine.test.js` |
 | `lib/layout-geometry.js` | Colunas da grade pela largura, largura de cada widget, sobreposição com folga, primeiro espaço livre, posição livre mais próxima, encaixe nas guias | `tests/unit/layout-geometry.test.js` |
 | `lib/safe-html.js` | Limpa HTML antes de entrar na página (v0.6.3) | `tests/e2e/safe-html.test.js` |

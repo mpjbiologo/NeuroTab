@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="futurista">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,52 +9,54 @@
   <meta property="og:description" content="Atalhos, notas, lembretes e IA na nova aba. Gratuita, sem anúncios, tudo salvo no seu navegador.">
   <meta property="og:image" content="https://mpjbiologo.github.io/NeuroTab/shot-home.jpg">
   <link rel="icon" href="icon.png">
+  <meta name="theme-color" content="#141a2e">
+  <link rel="stylesheet" href="assets/theme.css">
   <style>
-    :root {
-      --bg: #0d0c16; --card: #161526; --line: rgba(255,255,255,.09); --text: #ecebf5; --muted: #a3a1b8;
-      --a1: #7c5cff; --a2: #2fb6d9; --ok: #42c78a;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    }
+    /* Mesmo sistema de design da extensão (assets/theme.css, tema Futurista). */
+    :root { --card: var(--surface-solid); --line: var(--border); --muted: var(--text-2); --a1: var(--accent-2); --a2: var(--accent); }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
-    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.6; }
-    a { color: #9fb9ff; }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.6; font-family: var(--font-ui); }
+    h1, h2, h3, nav .brand { font-family: var(--font-display); }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    a { color: var(--accent-text); text-underline-offset: 3px; }
     .wrap { width: min(1120px, 92vw); margin: 0 auto; }
-    nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); background: rgba(13,12,22,.72); border-bottom: 1px solid var(--line); }
+    nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); background: var(--surface-strong); border-bottom: 1px solid var(--line); }
     nav .wrap { display: flex; align-items: center; gap: 22px; height: 60px; }
     nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 750; font-size: 18px; color: var(--text); text-decoration: none; }
     nav .brand img { width: 30px; height: 30px; }
     nav .links { margin-left: auto; display: flex; gap: 20px; font-size: 14.5px; }
     nav .links a { color: var(--muted); text-decoration: none; }
-    nav .links a:hover { color: #fff; }
+    nav .links a:hover { color: var(--text); }
 
     header.hero { position: relative; overflow: hidden; padding: 84px 0 40px; text-align: center; }
     header.hero::before {
       content: ""; position: absolute; inset: -200px -10% auto; height: 700px; z-index: -1;
-      background: radial-gradient(40% 50% at 25% 40%, rgba(124,92,255,.45), transparent 70%),
-                  radial-gradient(40% 50% at 75% 30%, rgba(47,182,217,.35), transparent 70%),
-                  radial-gradient(35% 45% at 55% 80%, rgba(200,60,140,.28), transparent 70%);
+      background: radial-gradient(40% 50% at 25% 40%, color-mix(in oklch, var(--accent-2) 30%, transparent), transparent 70%),
+                  radial-gradient(40% 50% at 75% 30%, color-mix(in oklch, var(--accent) 22%, transparent), transparent 70%),
+                  radial-gradient(35% 45% at 55% 80%, color-mix(in oklch, var(--accent-2) 14%, transparent), transparent 70%);
       filter: blur(30px);
     }
     .badge { display: inline-block; padding: 5px 13px; border-radius: 20px; background: rgba(255,255,255,.07); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
-    h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.08; margin: 18px 0 16px; letter-spacing: -1.5px; }
-    h1 span { background: linear-gradient(90deg, var(--a1), var(--a2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.08; margin: 18px 0 16px; letter-spacing: -0.02em; font-weight: 600; text-wrap: balance; }
+    h1 span { color: var(--accent-text); }
     .hero-version { margin: 12px auto 18px; max-width: 780px; font-size: .92rem; line-height: 1.6; opacity: .88; }
     .hero-version a { color: inherit; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
     .lead { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 720px; margin: 0 auto 30px; }
     .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 12px; font-weight: 650; font-size: 15.5px; text-decoration: none; border: 1px solid var(--line); color: var(--text); background: rgba(255,255,255,.06); cursor: pointer; }
-    .btn:hover { background: rgba(255,255,255,.12); }
-    .btn.primary { background: linear-gradient(135deg, var(--a1), #5a7bff); border: 0; color: #fff; box-shadow: 0 10px 30px rgba(124,92,255,.35); }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 12px; font-weight: 600; font-size: 15.5px; text-decoration: none; border: 1px solid var(--border-strong); color: var(--text); background: var(--tint-1); cursor: pointer; }
+    .btn:hover { background: var(--tint-3); }
+    .btn:focus-visible, .store:focus-visible, a:focus-visible, button:focus-visible, summary:focus-visible { outline: none; box-shadow: var(--ring); border-radius: var(--radius-md); }
+    .btn.primary { background: var(--accent); border: 0; color: var(--on-accent); box-shadow: var(--shadow-card); }
     .btn.primary:hover { filter: brightness(1.08); }
     .stores { display: flex; gap: 14px; justify-content: center; align-items: flex-start; flex-wrap: wrap; margin-top: 8px; }
     .store-col { display: flex; flex-direction: column; align-items: center; max-width: 270px; }
-    .store { display: inline-flex; align-items: center; gap: 12px; min-width: 230px; padding: 12px 20px 12px 14px; border-radius: 14px; text-decoration: none; color: #fff; text-align: left; background: linear-gradient(135deg, var(--a1), #5a7bff); box-shadow: 0 10px 30px rgba(124,92,255,.35); border: 0; }
+    .store { display: inline-flex; align-items: center; gap: 12px; min-width: 230px; padding: 12px 20px 12px 14px; border-radius: 14px; text-decoration: none; color: var(--on-accent); text-align: left; background: var(--accent); box-shadow: var(--shadow-card); border: 0; }
     .store:hover { filter: brightness(1.08); }
-    .store .ico { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 10px; background: rgba(255,255,255,.16); }
+    .store .ico { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: var(--radius-md); background: color-mix(in oklch, var(--on-accent) 12%, transparent); }
     .store .ico svg { width: 22px; height: 22px; }
     .store .txt { display: flex; flex-direction: column; line-height: 1.2; }
-    .store small { font-size: 12.5px; opacity: .85; font-weight: 500; }
+    .store small { font-size: 12.5px; font-weight: 500; }
     .store b { font-size: 17px; }
     .store.soon { background: rgba(255,255,255,.05); border: 1px dashed var(--line); color: var(--muted); box-shadow: none; cursor: default; }
     .store.soon .ico { background: rgba(255,255,255,.06); }
@@ -62,12 +64,12 @@
     /* Novidades (log de mudanças) */
     .cl { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
     .cl details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-    .cl details[open] { border-color: rgba(124,92,255,.45); }
+    .cl details[open] { border-color: color-mix(in oklch, var(--accent) 45%, transparent); }
     .cl summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 15px 46px 15px 18px; position: relative; }
     .cl summary::-webkit-details-marker { display: none; }
     .cl summary::after { content: '▾'; position: absolute; right: 18px; top: 17px; color: var(--muted); transition: transform .2s; }
     .cl details[open] summary::after { transform: rotate(180deg); }
-    .cl .ver { font-weight: 750; font-size: 15px; padding: 3px 10px; border-radius: 8px; background: linear-gradient(135deg, var(--a1), #5a7bff); color: #fff; }
+    .cl .ver { font-weight: 750; font-size: 15px; padding: 3px 10px; border-radius: 8px; background: var(--accent); color: var(--on-accent); }
     .cl .new { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: rgba(66,199,138,.18); color: var(--ok); text-transform: uppercase; letter-spacing: .04em; }
     .cl time { color: var(--muted); font-size: 13.5px; }
     .cl .head { flex-basis: 100%; color: var(--text); font-weight: 600; font-size: 15px; }
@@ -77,19 +79,20 @@
     .cl .body li { margin: 4px 0; }
     .cl .body p { margin: 10px 0 4px; }
     .cl code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 5px; font-size: .92em; }
-    .cl a { color: var(--a2); }
+    .cl a { color: var(--accent-text); }
     .cl-note { text-align: center; }
     .cl-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
     .small { font-size: 13px; color: var(--muted); margin-top: 12px; }
-    .shot { margin: 46px auto 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.6); max-width: 1100px; }
+    .shot { margin: 46px auto 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow-pop); max-width: 1100px; }
     .shot img { display: block; width: 100%; height: auto; }
 
     section { padding: 70px 0; }
-    h2 { font-size: clamp(28px, 4vw, 38px); letter-spacing: -.5px; margin: 0 0 10px; text-align: center; }
+    h2 { font-size: clamp(28px, 4vw, 38px); letter-spacing: -0.015em; font-weight: 600; margin: 0 0 10px; text-align: center; text-wrap: balance; }
     .sub { text-align: center; color: var(--muted); max-width: 680px; margin: 0 auto 40px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
     .feat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
-    .feat .ic { font-size: 28px; }
+    .feat .ic { font-size: 26px; color: var(--accent-text); line-height: 1; }
+    .ic .ico, .pillar > span .ico, .game-ic .ico { width: 1em; height: 1em; }
     .feat h3 { margin: 10px 0 6px; font-size: 17px; }
     .feat p { margin: 0; color: var(--muted); font-size: 14.5px; }
 
@@ -102,7 +105,7 @@
 
     .steps { counter-reset: s; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
     .step { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px 20px 20px; }
-    .step::before { counter-increment: s; content: counter(s); position: absolute; top: -14px; left: 18px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: linear-gradient(135deg, var(--a1), var(--a2)); }
+    .step::before { counter-increment: s; content: counter(s); position: absolute; top: -14px; left: 18px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-family: var(--font-display); background: var(--accent); color: var(--on-accent); }
     .step h3 { margin: 6px 0 6px; font-size: 16px; }
     .step p { margin: 0; color: var(--muted); font-size: 14.5px; }
     code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 5px; font-size: 13.5px; }
@@ -115,48 +118,49 @@
     th { color: var(--muted); font-weight: 600; }
     tr:last-child td { border-bottom: 0; }
 
-    .donate { display: grid; grid-template-columns: auto 1fr; gap: 34px; align-items: center; background: linear-gradient(135deg, rgba(124,92,255,.16), rgba(47,182,217,.12)); border: 1px solid var(--line); border-radius: 22px; padding: 34px; }
+    .donate { display: grid; grid-template-columns: auto 1fr; gap: 34px; align-items: center; background: var(--surface-solid); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 34px; }
     .qr { background: #fff; padding: 12px; border-radius: 16px; line-height: 0; }
     .qr img { width: 220px; height: 220px; }
     .donate h2 { text-align: left; }
     .givers { margin: 18px 0 6px; padding-top: 16px; border-top: 1px solid var(--line); }
-    .givers-title { margin: 0 0 10px; font-weight: 600; color: var(--text, #fff) !important; }
+    .givers-title { margin: 0 0 10px; font-weight: 600; color: var(--text) !important; }
     .giver-list { display: flex; flex-wrap: wrap; gap: 10px; }
     .giver { display: inline-flex; align-items: center; gap: 9px; padding: 9px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: inherit; text-decoration: none; transition: transform .15s, border-color .15s, background .15s; }
-    .giver:hover { transform: translateY(-2px); border-color: var(--brand, #7c5cff); background: rgba(124,92,255,.12); }
+    .giver:hover { transform: translateY(-2px); border-color: var(--brand, var(--accent)); background: var(--tint-2); }
     .giver .gi { font-size: 20px; line-height: 1; }
     .giver b { display: block; font-size: 14px; }
     .giver small { display: block; font-size: 12px; color: var(--muted); }
     .donate p { color: var(--muted); }
     .pixrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-    .pixkey { font-family: ui-monospace, monospace; font-size: 14px; color: #fff; }
+    .pixkey { font-family: ui-monospace, monospace; font-size: 14px; color: var(--text); }
 
     .story { padding-top: 40px; }
     .story-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 40px; align-items: start; margin-top: 30px; }
-    .story-text p { color: #cfcde0; font-size: 16.5px; margin: 0 0 16px; }
-    .story-text b { color: #fff; }
+    .story-text p { color: var(--text-2); font-size: 16.5px; margin: 0 0 16px; max-width: 68ch; }
+    .story-text b { color: var(--text); }
     .story-text .sign { color: var(--muted); font-style: italic; margin-top: 22px; }
     .pillars { display: grid; gap: 14px; }
     .pillar { display: flex; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
-    .pillar > span { font-size: 26px; }
+    .pillar > span { font-size: 24px; color: var(--accent-text); line-height: 1.2; }
     .pillar b { font-size: 16px; }
     .pillar p { margin: 4px 0 0; color: var(--muted); font-size: 14.5px; }
-    .game { display: flex; gap: 22px; align-items: center; margin-top: 20px; padding: 26px 30px; border-radius: 22px; border: 1px solid rgba(255,90,140,.35); background: linear-gradient(135deg, rgba(220,40,100,.18), rgba(124,92,255,.12)); }
+    .game { display: flex; gap: 22px; align-items: center; margin-top: 20px; padding: 26px 30px; border-radius: 22px; border: 1px solid var(--border-strong); background: var(--surface-solid); }
     .game-ic { font-size: 44px; }
     .game-txt { flex: 1; }
     .game h3 { margin: 0 0 6px; font-size: 22px; }
     .game p { margin: 0 0 6px; color: var(--muted); }
-    .game .btn.primary { background: linear-gradient(135deg, #e0306f, #9b3cff); box-shadow: 0 10px 30px rgba(224,48,111,.35); white-space: nowrap; }
+    .game .btn.primary { background: oklch(0.52 0.2 5); color: #fff; box-shadow: var(--shadow-card); white-space: nowrap; } /* cor do Jogo da Sedução, contraste 6:1 */
+    .game-ic { color: oklch(0.72 0.17 5); }
     @media (max-width: 820px) {
       .story-grid { grid-template-columns: 1fr; }
       .game { flex-direction: column; text-align: center; }
     }
     .lang-switch { display: flex; gap: 2px; margin-left: 14px; background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 9px; padding: 2px; }
     .lang-switch button { border: 0; background: none; color: var(--muted); font: 600 12px inherit; padding: 5px 8px; border-radius: 7px; cursor: pointer; }
-    .lang-switch button.on { background: rgba(255,255,255,.14); color: #fff; }
+    .lang-switch button.on { background: var(--tint-3); color: var(--text); }
     footer { border-top: 1px solid var(--line); padding: 30px 0 50px; color: var(--muted); font-size: 14px; }
     footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
-    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #23223a; border: 1px solid var(--line); padding: 10px 18px; border-radius: 10px; display: none; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--surface-solid); border: 1px solid var(--line); padding: 10px 18px; border-radius: 10px; display: none; }
 
     @media (max-width: 820px) {
       nav .links a:not(.keep) { display: none; }
@@ -190,7 +194,7 @@
     <div class="wrap">
       <span class="badge" data-i="t116">Gratuita · Código aberto · Sem anúncios</span>
       <h1 data-i="t1">A nova aba que <span>pensa com você</span></h1>
-      <p class="hero-version" data-i="t165">Versão atual: 0.7.1 · Em constante evolução. Conto com seu feedback pelo <a href="https://github.com/mpjbiologo/NeuroTab/issues/new" target="_blank" rel="noopener">GitHub (abrir uma issue)</a> ou pelos comentários nas lojas oficiais: <a href="https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl" target="_blank" rel="noopener">Edge</a>, <a href="https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk" target="_blank" rel="noopener">Chrome</a> e <a href="https://addons.mozilla.org/firefox/addon/neurotab-second-brain/" target="_blank" rel="noopener">Firefox</a>.</p>
+      <p class="hero-version" data-i="t165">Versão atual: <span class="cur-ver">0.7.4</span> · Em constante evolução. Conto com seu feedback pelo <a href="https://github.com/mpjbiologo/NeuroTab/issues/new" target="_blank" rel="noopener">GitHub (abrir uma issue)</a> ou pelos comentários nas lojas oficiais: <a href="https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl" target="_blank" rel="noopener">Edge</a>, <a href="https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk" target="_blank" rel="noopener">Chrome</a> e <a href="https://addons.mozilla.org/firefox/addon/neurotab-second-brain/" target="_blank" rel="noopener">Firefox</a>.</p>
       <p class="lead" data-i="t30">Seus atalhos numa barra lateral. No centro, um <b>segundo cérebro</b>: notas, lembretes, páginas salvas, clima, cotações e uma IA que conhece o que você guardou.</p>
       <div class="stores">
         <a class="store" href="https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl" target="_blank" rel="noopener" data-store="edge-hero"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="txt"><small data-i="t152">Baixe aqui para</small><b>Microsoft Edge</b></span></a>
@@ -219,9 +223,9 @@
           <p class="sign" data-i="t36">— Marcos de Paula Júnior, criador da NeuroTab</p>
         </div>
         <div class="pillars">
-          <div class="pillar"><span>🛡️</span><div><b>Moderna e segura</b><p data-i="t37">Construída no padrão atual de extensões (Manifest V3), com código aberto e atualizações frequentes.</p></div></div>
-          <div class="pillar"><span>🔗</span><div><b>Integrada</b><p data-i="t38">IA à sua escolha, comandos de voz, clima, cotações, Google Keep e muito mais, tudo num só lugar.</p></div></div>
-          <div class="pillar"><span>🚀</span><div><b>Produtiva</b><p data-i="t39">Capture ideias, lembretes e tarefas no momento em que surgem, e encontre tudo depois em segundos.</p></div></div>
+          <div class="pillar"><span>🛡️</span><div><b data-i="t166">Moderna e segura</b><p data-i="t37">Construída no padrão atual de extensões (Manifest V3), com código aberto e atualizações frequentes.</p></div></div>
+          <div class="pillar"><span>🔗</span><div><b data-i="t167">Integrada</b><p data-i="t38">IA à sua escolha, comandos de voz, clima, cotações, Google Keep e muito mais, tudo num só lugar.</p></div></div>
+          <div class="pillar"><span>🚀</span><div><b data-i="t168">Produtiva</b><p data-i="t39">Capture ideias, lembretes e tarefas no momento em que surgem, e encontre tudo depois em segundos.</p></div></div>
         </div>
       </div>
     </div>
@@ -429,7 +433,8 @@
     // ---------- Tradução do site (pt-BR / en / es) ----------
     const SITE_I18N = {
       en: {
-        t1: 'The new tab that <span>thinks with you</span>', t165: 'Current version: 0.7.1 · Constantly evolving. I’d love your feedback on <a href="https://github.com/mpjbiologo/NeuroTab/issues/new" target="_blank" rel="noopener">GitHub (open an issue)</a> or through reviews in the official stores: <a href="https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl" target="_blank" rel="noopener">Edge</a>, <a href="https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk" target="_blank" rel="noopener">Chrome</a> and <a href="https://addons.mozilla.org/firefox/addon/neurotab-second-brain/" target="_blank" rel="noopener">Firefox</a>.', t2: 'How NeuroTab came about', t3: 'Everything that matters, every time you open a tab', t4: 'Use the AI you prefer', t5: 'Install in 1 minute', t6: 'Your data is yours', t7: '❤ Support the project',
+        t166: 'Modern and secure', t167: 'Integrated', t168: 'Productive',
+        t1: 'The new tab that <span>thinks with you</span>', t165: 'Current version: <span class="cur-ver">0.7.4</span> · Constantly evolving. I’d love your feedback on <a href="https://github.com/mpjbiologo/NeuroTab/issues/new" target="_blank" rel="noopener">GitHub (open an issue)</a> or through reviews in the official stores: <a href="https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl" target="_blank" rel="noopener">Edge</a>, <a href="https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk" target="_blank" rel="noopener">Chrome</a> and <a href="https://addons.mozilla.org/firefox/addon/neurotab-second-brain/" target="_blank" rel="noopener">Firefox</a>.', t2: 'How NeuroTab came about', t3: 'Everything that matters, every time you open a tab', t4: 'Use the AI you prefer', t5: 'Install in 1 minute', t6: 'Your data is yours', t7: '❤ Support the project',
         t8: 'Quick capture', t9: 'Second brain', t10: 'Ask your notes', t11: 'Real reminders', t12: 'Annotate any page', t13: 'Shortcuts in a side bar', t14: 'Weather and quotes', t15: 'Universal search (Ctrl+K)', t16: 'Voice commands', t17: 'Alarm and pomodoro', t18: 'Smart calculator', t19: 'Your way', t20: '30-day trash', t21: 'Import everything',
         t22: 'Your shortcuts, without taking up the screen', t23: 'Talk to your new tab', t24: 'Find anything with Ctrl+K', t25: 'Open the store', t26: 'Install', t27: 'Open a new tab', t28: 'Done!', t29: 'Support and have fun too',
         t30: 'Your shortcuts in a side bar. In the middle, a <b>second brain</b>: notes, reminders, saved pages, weather, quotes and an AI that knows what you saved.',
@@ -470,7 +475,8 @@
         t131: 'What’s ahead', t132: 'What’s ahead', t133: 'NeuroTab keeps evolving. Explore the features planned for upcoming releases, from the work leading to 1.0 to later development cycles.', t134: 'Up to 1.0 — A reliable foundation', t135: 'Optional encrypted sync, a privacy dashboard, transparent permissions, refreshed settings and consistent tests across browsers.', t136: '1.x — A connected workspace', t137: 'Knowledge maps, visual automations, workspaces, timelines, metrics, notifications and support for third-party widgets.', t138: 'NeuroPilot', t139: 'A proactive assistant that connects notes, tasks and routines, spots opportunities, suggests next steps and helps organize your day — always under your control.', t140: 'Knowledge hub', t141: 'Organize sources, documents and research, with optional Open Notebook integration and the ability to query your collected knowledge.', t142: 'Student Mode', t143: 'Study projects, flashcards, quizzes, mind maps, reference materials and spaced repetition connected to your second brain.', t144: 'Evolved voice assistant', t145: 'Custom assistant name and wake phrase, spoken responses, conversation mode and meeting mode for recording, transcription and summaries, with clear microphone and privacy controls.', t146: 'Media capture and library', t147: 'Screen capture, web images and files, a configurable folder for saved media, and organization with source references.', t148: '1.x — Profiles for shared computers', t149: 'Each person gets separate data, files, history, credentials and settings. The local Ollama installation and models can be shared without mixing conversations or personal data.', t150: 'The roadmap may change based on testing, technical feasibility, priorities and community feedback. Features will be delivered gradually, but if you would like to help, <a href="#apoie">consider making a donation</a>.', t161: 'Post-1.0 — Entertainment hub', t162: 'Music, playlists, films, series, videos and podcasts in one integrated area, with commands such as “Open Spotify and play playlist X”, respecting each service’s APIs and limits.', t163: 'Post-1.0 — More platforms', t164: 'Explore a desktop version and an Android browser, extending NeuroTab beyond its current browser extensions.',
       },
       es: {
-        t1: 'La nueva pestaña que <span>piensa contigo</span>', t165: 'Versión actual: 0.7.1 · En constante evolución. Me encantaría recibir tus comentarios en <a href="https://github.com/mpjbiologo/NeuroTab/issues/new" target="_blank" rel="noopener">GitHub (crear una incidencia)</a> o mediante reseñas en las tiendas oficiales: <a href="https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl" target="_blank" rel="noopener">Edge</a>, <a href="https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk" target="_blank" rel="noopener">Chrome</a> y <a href="https://addons.mozilla.org/firefox/addon/neurotab-second-brain/" target="_blank" rel="noopener">Firefox</a>.', t2: 'Cómo nació NeuroTab', t3: 'Todo lo que importa, cada vez que abres una pestaña', t4: 'Usa la IA que prefieras', t5: 'Instálala en 1 minuto', t6: 'Tus datos son tuyos', t7: '❤ Apoya el proyecto',
+        t166: 'Moderna y segura', t167: 'Integrada', t168: 'Productiva',
+        t1: 'La nueva pestaña que <span>piensa contigo</span>', t165: 'Versión actual: <span class="cur-ver">0.7.4</span> · En constante evolución. Me encantaría recibir tus comentarios en <a href="https://github.com/mpjbiologo/NeuroTab/issues/new" target="_blank" rel="noopener">GitHub (crear una incidencia)</a> o mediante reseñas en las tiendas oficiales: <a href="https://microsoftedge.microsoft.com/addons/detail/mhaainpmhalhhbefceigjmbcdhdeainl" target="_blank" rel="noopener">Edge</a>, <a href="https://chromewebstore.google.com/detail/dbdilojkiedjgjehfjpodbljcnpmljkk" target="_blank" rel="noopener">Chrome</a> y <a href="https://addons.mozilla.org/firefox/addon/neurotab-second-brain/" target="_blank" rel="noopener">Firefox</a>.', t2: 'Cómo nació NeuroTab', t3: 'Todo lo que importa, cada vez que abres una pestaña', t4: 'Usa la IA que prefieras', t5: 'Instálala en 1 minuto', t6: 'Tus datos son tuyos', t7: '❤ Apoya el proyecto',
         t8: 'Captura rápida', t9: 'Segundo cerebro', t10: 'Pregúntale a tus notas', t11: 'Recordatorios de verdad', t12: 'Anota cualquier página', t13: 'Accesos en barra lateral', t14: 'Clima y cotizaciones', t15: 'Búsqueda universal (Ctrl+K)', t16: 'Comandos de voz', t17: 'Alarma y pomodoro', t18: 'Calculadora inteligente', t19: 'A tu manera', t20: 'Papelera de 30 días', t21: 'Importa todo',
         t22: 'Tus accesos, sin ocupar la pantalla', t23: 'Habla con tu nueva pestaña', t24: 'Encuentra cualquier cosa con Ctrl+K', t25: 'Abre la tienda', t26: 'Instala', t27: 'Abre una nueva pestaña', t28: '¡Listo!', t29: 'Apoya y además diviértete',
         t30: 'Tus accesos en una barra lateral. En el centro, un <b>segundo cerebro</b>: notas, recordatorios, páginas guardadas, clima, cotizaciones y una IA que conoce lo que guardaste.',
@@ -537,6 +543,7 @@
       document.querySelectorAll('.lang-switch button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang));
       window.renderGivers?.();
       window.renderChangelog?.();
+      if (window.__curVer) document.querySelectorAll('.cur-ver').forEach((e) => { e.textContent = window.__curVer; });
     }
     document.querySelectorAll('.lang-switch button').forEach((b) => b.addEventListener('click', () => {
       try { localStorage.setItem('neurotab-lang', b.dataset.lang); } catch {}
@@ -640,6 +647,7 @@
       fetch(SRC, { cache: 'no-cache' })
         .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
         .then((md) => { versions = parse(md); render(); })
+        .then(() => { if (versions[0]) window.__curVer = versions[0].v; document.querySelectorAll('.cur-ver').forEach((e) => { e.textContent = versions[0].v; }); })
         .catch(() => {
           const lang = (typeof SITE_LANG !== 'undefined' ? SITE_LANG : 'pt-BR');
           box.innerHTML = `<p class="small" style="text-align:center">${(UI[lang] || UI.en).fail}</p>`;
@@ -691,6 +699,11 @@
     const copy = async (txt, msg) => { try { await navigator.clipboard.writeText(txt); toast(msg); } catch { prompt('Copie:', txt); } };
     document.getElementById('copyCode').onclick = () => copy(PIX_CODE, SITE_MSG[SITE_LANG]?.code || 'Pix copia e cola copiado — obrigado! ❤');
     document.getElementById('copyKey').onclick = () => copy(PIX_KEY, SITE_MSG[SITE_LANG]?.key || 'Chave Pix copiada — obrigado! ❤');
+  </script>
+  <script type="module">
+    // Ícones desenhados no lugar dos emojis (o mesmo conjunto da extensão).
+    import { startIconizer } from './assets/icons.js';
+    startIconizer(document.body);
   </script>
 </body>
 </html>

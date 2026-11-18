@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Nova guia</title>
   <link rel="icon" href="../icons/icon32.png">
+  <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="newtab.css">
+  <script src="theme-boot.js"></script>
 </head>
 <body class="dock-left">
   <div id="bg"><div class="bgl" id="bgA"></div><div class="bgl" id="bgB"></div></div>
@@ -80,7 +82,7 @@
         <label class="grow">Cor do bloco<input name="color" type="color"></label>
         <button type="button" id="autoColor" class="btn">Cor do ícone</button>
       </div>
-      <div class="preview-wrap"><div id="preview" class="tile preview"><span class="pill"><img alt=""><span></span></span></div></div>
+      <div class="preview-wrap"><div id="preview" class="tile preview"><span class="pill"><img alt="" src="../icons/icon16.png" width="16" height="16"><span></span></span></div></div>
       <div class="actions">
         <button value="cancel" formnovalidate class="btn">Cancelar</button>
         <button value="ok" class="btn primary">Salvar</button>
@@ -154,7 +156,7 @@
       <div class="voice-text">
         <span id="voiceWhere" class="voice-where" aria-live="polite"></span>
         <div id="voiceHeard" class="no-tr heard">Pode falar…</div>
-        <div id="voiceReply" class="reply no-tr"></div>
+        <div id="voiceReply" class="reply no-tr" aria-live="polite"></div>
       </div>
       <button id="voiceClose" class="icon-btn" title="Fechar (Esc)">✕</button>
     </div>

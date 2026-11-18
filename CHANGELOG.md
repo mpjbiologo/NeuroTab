@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.7.4 — 2026-11-18
+**Novo visual: três temas, ícones desenhados e mais fácil de usar.**
+
+- 🎨 **Três temas** em Configurações → Geral → Aparência, com prévia (#53):
+  - **Futurista** (padrão): noite índigo, ciano elétrico e letras geométricas.
+  - **Sóbria**: grafite e azul, limpa como um app de trabalho.
+  - **Calorosa**: carvão quente, âmbar, títulos com serifa e cantos mais redondos.
+  O tema vale para a nova aba, as configurações, o botão da extensão e a página de permissão, e já aparece certo ao abrir a aba, sem piscar.
+- ✏️ **Ícones desenhados** no lugar dos emojis dos botões, títulos dos widgets, abas e menus, iguais em qualquer sistema. Os emojis que você escolhe (grupos, atalhos) continuam como estão
+- 🧹 **Menos poluição nos cartões:** os botões de cada widget aparecem ao passar o mouse ou ao navegar pelo teclado. Estados vazios viraram uma linha curta
+- ♿ **Acessibilidade:** contraste mínimo AA em todos os temas (o botão azul antigo ficava abaixo), foco do teclado sempre visível, respeito ao "reduzir movimento" do sistema, avisos lidos por leitores de tela e nome em todo botão que só tem ícone
+- ⚙️ **Configurações e popup** no mesmo visual escuro da nova aba (antes eram claras e genéricas)
+- 🎙 Tela de voz: não mostra mais "Não ouvi nada" junto com o erro do microfone, e o selo 🔒/☁ ficou dentro do cartão
+- 🌐 **Site** no mesmo visual: sem texto em degradê e sem brilhos, versão atual automática e títulos que faltavam traduzidos em inglês e espanhol
+- Fontes (Inter, Space Grotesk, Fraunces) e ícones (Lucide) vão dentro da extensão, sem buscar nada na internet
+- Regras do visual em `docs/dev/DESIGN.md`
+
 ## v0.7.3.1 — 2026-11-17
 **Correção: baixar o reconhecimento de voz no computador.**
 

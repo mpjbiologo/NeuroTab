@@ -3,6 +3,8 @@ import { loadData, saveData, uid, hostOf, inspectFavicon, faviconUrl, ACTIVE_KEY
 import { addItem, loadItems, displayTitle, relTime, parseReminder, TYPES } from './lib/brain.js';
 import { isConfigured } from './lib/ai.js';
 import { configureSpeech } from './lib/speech-engine.js';
+import { applyTheme, themeOf } from './lib/theme.js';
+import { startIconizer } from './lib/icons.js';
 import { micButton, toLocalInput, fromLocalInput, h } from './lib/ui.js';
 import { initI18n } from './lib/i18n.js';
 
@@ -15,6 +17,7 @@ init();
 async function init() {
   [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   data = await loadData();
+  applyTheme(themeOf(data.settings));
   configureSpeech(data.settings, data.settings.voiceLang || navigator.language);
   initI18n(data.settings.lang);
   const url = tab?.url || '';
@@ -23,6 +26,7 @@ async function init() {
   $('#phost').textContent = web ? hostOf(url) : 'Página interna do navegador';
   $('#fav').src = tab?.favIconUrl || (web ? faviconUrl(url) : '../icons/icon32.png');
   $('#micSlot').append(micButton($('#note'), { lang: data.settings.voiceLang }));
+  startIconizer();
 
   // Grupos
   const r = await chrome.storage.local.get(ACTIVE_KEY);

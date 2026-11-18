@@ -35,7 +35,7 @@ export default {
     // ---------- Despertador ----------
     function alarmView() {
       const list = h('div', { class: 'items' });
-      if (!st.alarms.length) list.append(h('p', { class: 'muted' }, 'Nenhum despertador. Crie um abaixo.'));
+      if (!st.alarms.length) list.append(h('p', { class: 'empty' }, '⏰ Nenhum despertador ainda.'));
       for (const al of st.alarms) {
         const next = al.enabled ? (al.snoozeUntil > Date.now() ? al.snoozeUntil : C.nextOccurrence(al)) : null;
         list.append(h('div', { class: 'alarm-row' + (al.enabled ? '' : ' off') },

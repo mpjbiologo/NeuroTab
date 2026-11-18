@@ -1,6 +1,6 @@
 {
   "name": "neurotab",
-  "version": "0.7.3.1",
+  "version": "0.7.4",
   "private": true,
   "description": "Nova aba com segundo cérebro — testes e ferramentas de desenvolvimento",
   "type": "module",
@@ -18,6 +18,7 @@
     "test:firefox": "node --test --test-concurrency=1 --test-timeout=180000 \"tests/firefox/**/*.test.js\""
   },
   "devDependencies": {
+    "lucide-static": "^1.75.0",
     "playwright": "1.63.0",
     "selenium-webdriver": "4.38.0"
   }

@@ -74,15 +74,15 @@ test('"traçar rota para…" desenha o trajeto no widget Trânsito maximizado, s
     assert.ok(map.width > 400 && map.height > 200 && map.x >= card.x && map.x + map.width <= card.x + card.width + 1, JSON.stringify({ card, map }));
 
     // Salvar o destino nos favoritos, ali mesmo.
-    await traffic.getByRole('button', { name: '⭐ Salvar destino' }).click();
+    await traffic.getByRole('button', { name: 'Salvar destino' }).click();
     await traffic.locator('.save-place input').fill('Shopping');
-    await traffic.locator('.save-place .chip', { hasText: '🛒' }).click();
-    await traffic.getByRole('button', { name: '⭐ Salvar nos favoritos' }).click();
+    await traffic.locator('.save-place .chip:has(svg[data-icon="shopping-cart"])').click();
+    await traffic.getByRole('button', { name: 'Salvar nos favoritos' }).click();
     await p.waitForTimeout(300);
     const saved = (await x.storage(p, 'nt_data')).settings.mapPlaces;
     assert.deepEqual(saved.map((s) => [s.name, s.icon, s.lat, s.lon]).at(-1), ['Shopping', '🛒', -20.066, -44.561]);
     // Agora origem e destino são favoritos: dá para salvar a rota.
-    await traffic.getByRole('button', { name: '🧭 Salvar rota' }).click();
+    await traffic.getByRole('button', { name: 'Salvar rota' }).click();
     await p.waitForTimeout(300);
     const rs = (await x.storage(p, 'nt_data')).settings.mapRoutes;
     assert.equal(rs.length, 1);
@@ -113,14 +113,14 @@ test('sem o widget Trânsito na tela, ele é acrescentado e mostra a rota', asyn
 test('formulário 🧭 do widget e botão ⭐ Salvar local sempre à vista', async () => {
   const { x, p, traffic, net } = await setup({ widgets: [{ id: 'traffic', w: 12 }] });
   try {
-    assert.equal(await traffic.getByRole('button', { name: '⭐ Salvar local' }).count(), 1);
+    assert.equal(await traffic.getByRole('button', { name: 'Salvar local' }).count(), 1);
     await traffic.locator('button[title="Traçar rota"]').click();
     await traffic.locator('.route-form input').fill('Trabalho');
-    await traffic.getByRole('button', { name: 'Traçar' }).click();
+    await traffic.getByRole('button', { name: 'Traçar', exact: true }).click();
     await p.waitForSelector('.widget[data-id="traffic"] .rmap-route');
     assert.deepEqual(net.geo, [], 'local salvo não precisa procurar endereço');
     assert.equal(await traffic.evaluate((el) => el.classList.contains('maximized')), false, 'pelo formulário não maximiza sozinho');
-    assert.equal(await traffic.getByRole('button', { name: '⭐ Salvar destino' }).count(), 0, 'destino já é favorito');
+    assert.equal(await traffic.getByRole('button', { name: 'Salvar destino' }).count(), 0, 'destino já é favorito');
   } finally {
     await x.close();
   }
@@ -162,8 +162,8 @@ test('"como está o trânsito no centro de BH" abre o mapa ao vivo ali, maximiza
     assert.match(src, /embed\.waze\.com\/.*zoom=14&lat=-20\.066&lon=-44\.561/);
     assert.equal(x.calls.ai.filter((s) => s.includes('NOTAS DO USUÁRIO')).length, 0, 'a IA não foi chamada');
     // o lugar procurado pode virar favorito ali mesmo
-    await traffic.getByRole('button', { name: '⭐ Salvar centro de BH' }).click();
-    await traffic.getByRole('button', { name: '⭐ Salvar nos favoritos' }).click();
+    await traffic.getByRole('button', { name: 'Salvar centro de BH' }).click();
+    await traffic.getByRole('button', { name: 'Salvar nos favoritos' }).click();
     await p.waitForTimeout(300);
     assert.equal((await x.storage(p, 'nt_data')).settings.mapPlaces.at(-1).name, 'centro de BH');
   } finally {

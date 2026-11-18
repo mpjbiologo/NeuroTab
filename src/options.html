@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Configurações — NeuroTab</title>
   <link rel="icon" href="../icons/icon32.png">
+  <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="options.css">
+  <script src="theme-boot.js"></script>
 </head>
 <body>
   <header>
@@ -28,6 +30,9 @@
   <main>
     <!-- GERAL -->
     <section id="tab-geral" class="card">
+      <h2>🎨 Aparência</h2>
+      <p class="hint">O tema vale para a nova aba, estas configurações e o botão da extensão.</p>
+      <div class="theme-pick" id="themePick" role="radiogroup" aria-label="Tema"></div>
       <h2>Layout</h2>
       <div class="opt">
         <div><b>Posição da barra de atalhos</b><small>Os grupos ficam na barra; os atalhos abrem num painel ao passar o mouse.</small></div>
@@ -476,7 +481,7 @@
     <span>Feito por <span id="author"></span> · <a id="siteLink" target="_blank">site</a> · <a id="repoLink" target="_blank">código aberto</a></span>
   </footer>
 
-  <div id="toast" class="toast" hidden></div>
+  <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
   <script type="module" src="options.js"></script>
 </body>
 </html>

@@ -65,6 +65,7 @@ export const DEFAULT_SETTINGS = {
   showAddButtons: true,
   openInNewTab: false,
   bgEnabled: true,
+  theme: 'futurista', // futurista | sobria | calorosa (src/theme.css)
   bgColor: '#141418',
   bgDim: 0, // 0–80 (%)
   bgMode: 'image', // image | slides

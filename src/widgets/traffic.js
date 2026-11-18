@@ -260,7 +260,7 @@ export default {
         const src = `https://embed.waze.com/pt-BR/iframe?zoom=${zoom}&lat=${c.lat}&lon=${c.lon}&pin=1`;
         out.push(h('iframe', { class: 'map', src, title: 'Mapa de trânsito do Waze', loading: 'lazy', referrerpolicy: 'no-referrer-when-downgrade' }));
       } else {
-        out.push(h('p', { class: 'muted' }, 'Adicione seus locais favoritos (casa, trabalho…) para ver o trânsito.'));
+        out.push(h('p', { class: 'empty' }, '📍 Salve sua casa ou trabalho para ver o trânsito ao vivo.'));
       }
       return out;
     }

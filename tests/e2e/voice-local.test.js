@@ -24,7 +24,7 @@ test('Whisper local: grava, separa a fala pelo silêncio, transcreve no localhos
     await x.settings(p, { voiceEngine: 'whisper', whisperUrl: 'http://127.0.0.1:8080/inference', voiceLocalOnly: true });
     assert.equal(await p.isVisible('#voiceFab'), true, 'o botão de voz aparece mesmo sem reconhecimento do navegador');
     await p.click('#voiceFab');
-    assert.equal(await p.textContent('#voiceWhere'), '🔒');
+    assert.equal(await p.getAttribute('#voiceWhere svg', 'data-icon'), 'lock', 'selo 🔒 (ícone de cadeado)');
     await p.waitForFunction(() => /comprar café/.test(document.querySelector('#voiceHeard')?.textContent || ''), null, { timeout: 15000 });
     assert.equal(sent.length >= 1, true);
     assert.match(sent[0].type, /multipart\/form-data/);
@@ -68,7 +68,7 @@ test('reconhecimento do navegador no computador: usa processLocally quando o idi
     await p.evaluate(async () => { const m = await import('/src/lib/speech-engine.js'); await m.deviceStatus('pt-BR', { fresh: true }); });
     await p.click('#voiceFab');
     assert.equal(await p.evaluate(() => window.__lastSR.processLocally), true);
-    assert.equal(await p.textContent('#voiceWhere'), '🔒');
+    assert.equal(await p.getAttribute('#voiceWhere svg', 'data-icon'), 'lock', 'selo 🔒 (ícone de cadeado)');
     await p.keyboard.press('Escape');
     // 2) não baixado + somente local: não abre o reconhecimento da nuvem, avisa
     await x.settings(p, { voiceLocalOnly: true });
@@ -81,7 +81,7 @@ test('reconhecimento do navegador no computador: usa processLocally quando o idi
     await x.settings(p, { voiceLocalOnly: false });
     await p.click('#voiceFab');
     assert.equal(await p.evaluate(() => window.__lastSR.processLocally), false);
-    assert.equal(await p.textContent('#voiceWhere'), '☁');
+    assert.equal(await p.getAttribute('#voiceWhere svg', 'data-icon'), 'cloud', 'selo ☁ (ícone de nuvem)');
   } finally {
     await x.close();
   }
