@@ -15,7 +15,8 @@
     "build": "./scripts/build.sh",
     "lint:firefox": "npx --yes web-ext@8 lint --source-dir build/firefox",
     "check": "npm run test:unit && npm run build && npm run lint:firefox && npm run test:e2e",
-    "test:firefox": "node --test --test-concurrency=1 --test-timeout=180000 \"tests/firefox/**/*.test.js\""
+    "test:firefox": "node --test --test-concurrency=1 --test-timeout=180000 \"tests/firefox/**/*.test.js\"",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
     "lucide-static": "^1.75.0",
