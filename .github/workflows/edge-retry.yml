@@ -1,0 +1,86 @@
+name: Edge — reenviar quando a revisão terminar
+
+# A loja do Edge recusa um envio novo enquanto outra versão está em revisão ("InProgressSubmission").
+# Este fluxo tenta de novo a cada 6 horas, sozinho, até a última release chegar ao Edge:
+#   • se a revisão anterior ainda não terminou, só avisa e espera a próxima rodada (sem falhar);
+#   • quando o Edge aceitar, marca a versão com a tag edge-enviado-vX.Y.Z e para de tentar.
+# Também dá para rodar na mão: Actions → "Edge — reenviar…" → Run workflow.
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write # baixar o zip da release e criar a tag de controle
+  actions: read
+
+concurrency:
+  group: edge-retry
+  cancel-in-progress: false
+
+jobs:
+  reenviar:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+      EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+      EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+    steps:
+      - name: Ver se a última release já chegou ao Edge
+        id: estado
+        run: |
+          set -euo pipefail
+          tag=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/edge-enviado-$tag" >/dev/null 2>&1; then
+            echo "::notice::$tag já foi enviada ao Edge. Nada a fazer."; echo "fazer=nao" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/release.yml/runs?event=release&per_page=10" \
+            --jq "[.workflow_runs[] | select(.head_branch == \"$tag\")][0].id // empty")
+          edge=""
+          if [ -n "$run" ]; then
+            edge=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/jobs?filter=latest" --jq '.jobs[] | select(.name == "loja-edge") | .conclusion // "rodando"')
+          fi
+          echo "Release $tag · job loja-edge: ${edge:-não encontrado}"
+          if [ "$edge" = "success" ]; then
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/edge-enviado-$tag" -f sha="$GITHUB_SHA" >/dev/null
+            echo "::notice::$tag foi enviada pela própria release."; echo "fazer=nao" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [ "$edge" = "rodando" ]; then echo "::notice::A release ainda está rodando."; echo "fazer=nao" >> "$GITHUB_OUTPUT"; exit 0; fi
+          echo "fazer=sim" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v5
+        if: steps.estado.outputs.fazer == 'sim' && env.EDGE_API_KEY != ''
+
+      - uses: actions/setup-node@v5
+        if: steps.estado.outputs.fazer == 'sim' && env.EDGE_API_KEY != ''
+        with:
+          node-version: 22
+
+      - name: Enviar ao Edge
+        if: steps.estado.outputs.fazer == 'sim' && env.EDGE_API_KEY != ''
+        env:
+          TAG: ${{ steps.estado.outputs.tag }}
+        run: |
+          set -uo pipefail
+          gh release download "$TAG" --pattern neurotab.zip --dir dist --clobber
+          node scripts/publish-edge.mjs dist/neurotab.zip "NeuroTab ${TAG}. Release notes: https://github.com/mpjbiologo/NeuroTab/releases/tag/${TAG}
+          No account or login is required; all data stays local. Test steps are the same as the previous submission:
+          open a new tab, add a note in Quick capture, press Ctrl+K to search, add widgets with the puzzle icon.
+          AI features are optional and need the user's own API key. Source: https://github.com/mpjbiologo/NeuroTab" > edge.log 2>&1
+          code=$?
+          sed 's/^::error::/Erro: /' edge.log # o erro só vira alerta se não for a revisão em andamento
+          if [ "$code" = 0 ]; then
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/edge-enviado-$TAG" -f sha="$GITHUB_SHA" >/dev/null
+            echo "::notice::$TAG enviada ao Edge. A Microsoft revisa e publica."
+          elif grep -q "InProgressSubmission" edge.log; then
+            echo "::notice::Outra versão ainda está em revisão no Edge. Tento de novo em 6 horas."
+          else
+            grep '^::error::' edge.log || echo "::error::Falha no envio ao Edge (código $code)."
+            exit "$code"
+          fi
+
+      - name: Sem credenciais do Edge
+        if: steps.estado.outputs.fazer == 'sim' && env.EDGE_API_KEY == ''
+        run: echo "::notice::Faltam os segredos EDGE_*. Veja docs/store/EDGE.md."

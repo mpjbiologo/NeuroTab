@@ -151,3 +151,13 @@ O log explica a causa em português. As mais comuns:
 - **NoModulesUpdated**: o zip é igual ao que já está na loja; falta subir a versão no `manifest.json`.
 
 Também dá para enviar à mão, do seu computador: `EDGE_PRODUCT_ID=... EDGE_CLIENT_ID=... EDGE_API_KEY=... node scripts/publish-edge.mjs dist/neurotab.zip "notas"`.
+
+## Versão em revisão: reenvio automático
+
+A loja do Edge não aceita um envio novo enquanto outra versão está em revisão (`InProgressSubmission`). Quando isso acontece numa release, o job `loja-edge` falha, mas não é preciso fazer nada:
+
+- O fluxo **Edge — reenviar quando a revisão terminar** (`.github/workflows/edge-retry.yml`) roda a cada 6 horas e envia o zip da última release.
+- Se a revisão anterior ainda não terminou, ele só registra um aviso e tenta na próxima rodada, sem falhar e sem mandar e-mail de erro.
+- Quando o Edge aceita, ele cria a tag `edge-enviado-vX.Y.Z` e para de tentar aquela versão.
+- Para tentar na hora: Actions → *Edge — reenviar quando a revisão terminar* → **Run workflow**.
+
