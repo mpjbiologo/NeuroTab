@@ -68,8 +68,7 @@ jobs:
           node scripts/publish-edge.mjs dist/neurotab.zip "NeuroTab ${TAG}. Release notes: https://github.com/mpjbiologo/NeuroTab/releases/tag/${TAG}
           No account or login is required; all data stays local. Test steps are the same as the previous submission:
           open a new tab, add a note in Quick capture, press Ctrl+K to search, add widgets with the puzzle icon.
-          AI features are optional and need the user's own API key. Source: https://github.com/mpjbiologo/NeuroTab" > edge.log 2>&1
-          code=$?
+          AI features are optional and need the user's own API key. Source: https://github.com/mpjbiologo/NeuroTab" > edge.log 2>&1 && code=0 || code=$?
           sed 's/^::error::/Erro: /' edge.log # o erro só vira alerta se não for a revisão em andamento
           if [ "$code" = 0 ]; then
             gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/edge-enviado-$TAG" -f sha="$GITHUB_SHA" >/dev/null
