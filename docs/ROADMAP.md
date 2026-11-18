@@ -21,7 +21,7 @@ Primeiro a base, depois os recursos.
   - ✅ 0.7.2.1 a 0.7.2.3: rotas e trânsito ao vivo dentro do widget Trânsito, favoritos salvos ali (#43).
 - ✅ **0.7.3 — Voz local:** voz transcrita no próprio computador (reconhecimento local do navegador ou Whisper local, com o Ollama respondendo) e modo "somente local" (#49); janelas lembram o estado, maximizado incluído (#50).
 - ✅ **0.7.4 — Novo visual:** sistema de design com três temas (Futurista, Sóbria, Calorosa), ícones desenhados, acessibilidade e o site no mesmo visual (#53).
-- **0.7.5 — O cérebro lê as imagens:** leitura das imagens da biblioteca pela IA da pessoa (com consentimento) e por leitura de texto local, sem enviar nada (#17); no botão direito, "Analisar imagem" e "Traçar rota" até um endereço selecionado, que abre no widget Trânsito (#54).
+- **0.7.5 — O cérebro lê as imagens:** leitura das imagens da biblioteca pela IA da pessoa (com consentimento) e por leitura de texto local, sem enviar nada (#17); no botão direito, "Analisar imagem" e "Traçar rota" até um endereço selecionado, que abre no widget Trânsito (#54). Na barra de pesquisa universal, a pessoa escolhe o que o Enter faz; por padrão, pesquisa na internet no serviço escolhido (#57).
 - **0.7.6 — Agenda:** agenda própria (dia, semana, mês, recorrência), importação de `.ics` e o cérebro respondendo sobre compromissos; contas Google/Microsoft numa etapa seguinte (#26).
 
 ### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 2 atualizações
