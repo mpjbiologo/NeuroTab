@@ -144,3 +144,12 @@ Privacidad: sin cuenta, sin servidor, sin analítica. Tus datos se quedan en el 
 **Remote code:** No. All code is included in the package.
 
 **Data usage:** The extension does not collect or transmit user data to the developer. User content is sent only to third-party services the user explicitly configures (e.g., their own AI provider key).
+
+## Acompanhar a revisão nas lojas
+
+As lojas não avisam quando aprovam. O fluxo **Situação nas lojas** (`.github/workflows/lojas-situacao.yml`) consulta as três a cada 3 horas, e também 15 minutos depois de cada release. Ele mantém a issue **📦 Situação nas lojas** com a versão publicada e a versão em revisão de cada loja.
+
+Quando algo muda (uma loja publicou, recusou ou começou a revisar), entra um comentário na issue mencionando o dono do repositório, e o GitHub avisa por e-mail e no app. Para tirar a dúvida na hora: Actions → *Situação nas lojas* → **Run workflow**.
+
+No Edge, só dá para ver a versão publicada: a API da Microsoft não informa a revisão.
+

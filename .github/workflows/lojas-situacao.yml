@@ -1,0 +1,47 @@
+name: Situação nas lojas
+
+# Consulta as três lojas (só leitura) e mantém a issue "📦 Situação nas lojas" em dia.
+# Quando uma loja publica, recusa ou começa a revisar uma versão, comenta na issue mencionando o dono:
+# o GitHub avisa por e-mail e no app (as lojas não avisam).
+on:
+  schedule:
+    - cron: '41 */3 * * *'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: lojas-situacao
+  cancel-in-progress: false
+
+jobs:
+  situacao:
+    runs-on: ubuntu-24.04
+    env:
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+      CWS_PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+      CWS_EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+      CWS_SERVICE_ACCOUNT: ${{ secrets.CWS_SERVICE_ACCOUNT }}
+      CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+      CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+      CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OWNER: ${{ github.repository_owner }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Consultar as lojas e atualizar a issue
+        run: |
+          # Na release, espera os envios terminarem antes de olhar.
+          if [ "${{ github.event_name }}" = release ]; then sleep 900; fi
+          export LATEST=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name | sed 's/^v//')
+          gh label create lojas --color 0e8a16 --description "Situação nas lojas" 2>/dev/null || true
+          node scripts/store-status.mjs --issue
