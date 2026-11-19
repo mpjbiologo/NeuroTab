@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.7.5 — em preparação
+**O cérebro lê as imagens, e a barra de pesquisa faz o que você escolher no Enter.**
+
+- 🖼️ **O cérebro lê as imagens da biblioteca (#17):** o texto de cada imagem salva é lido no próprio computador, sem enviar a imagem a lugar nenhum. A imagem lida vira um item do cérebro (filtro 🖼️ Imagens): a busca, a busca por significado e as perguntas ao cérebro passam a encontrá-la, e o item tem um botão para abrir a imagem original. Excluir a imagem tira o item do cérebro. Cada imagem da biblioteca mostra se já foi lida, se não tem texto ou se deu erro
+  - Na primeira vez, a NeuroTab baixa o pacote do idioma do leitor de texto (de 1,4 a 3 MB), que fica guardado. Dá para desligar em Configurações → IA e voz → Imagens
+- 🔍 **Analisar imagem (#54):** no botão direito sobre uma imagem, ou no botão Analisar da biblioteca. Mostra o texto lido (com botão de copiar), o endereço encontrado e, pela IA configurada, uma descrição e a resposta a uma pergunta sobre a imagem
+  - Com o Ollama (ou outra IA no computador), a descrição sai sem perguntar e nada sai do computador
+  - Com IA na internet (Gemini, OpenAI, Claude…), a imagem só é enviada depois de você clicar em "Enviar e descrever". Dá para marcar "Não perguntar de novo"
+- 🧭 **Traçar rota pelo botão direito (#54):** selecione um endereço numa página → NeuroTab → Traçar rota. A nova aba abre com o trajeto no widget Trânsito, com o destino no campo para corrigir se precisar. Na análise de imagem, o endereço encontrado também tem o botão Traçar rota
+- ⏎ **Enter da barra de pesquisa (#57):** em Configurações → Geral → Pesquisa, escolha o que o Enter faz: pesquisar na internet (padrão), abrir o primeiro resultado, perguntar ao cérebro, salvar como nota ou salvar como tarefa. As setas ↑↓ continuam escolhendo outro item, Shift+Enter continua salvando nota, e a lista mostra "Enter" ao lado da ação que vai acontecer
+  - Nova ação na lista: **Salvar como tarefa**, que já entende datas ("pagar a luz amanhã às 9h" vira tarefa com lembrete)
+- O leitor de texto (Tesseract.js, Apache-2.0) vai dentro da extensão; o pacote ficou com 1,6 MB
+
 ## v0.7.4 — 2026-11-18
 **Novo visual: três temas, ícones desenhados e mais fácil de usar.**
 

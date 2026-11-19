@@ -119,8 +119,11 @@ test('extensão: salva imagem com login e imagem de outro site (recorte da tela)
       const [tab] = await chrome.tabs.query({ url: pageUrl + '*' });
       return chrome.runtime.sendMessage({ type: 'grabImage', src: s, meta: { pageUrl }, tabId: tab.id, frameId: 0, windowId: tab.windowId });
     }, [src, site + '/']);
-    assert.deepEqual(await send(site + '/private.png'), { ok: true });
-    assert.deepEqual(await send(cdn + '/photo.png'), { ok: true });
+    const r1 = await send(site + '/private.png');
+    const r2 = await send(cdn + '/photo.png');
+    assert.equal(r1.ok, true);
+    assert.equal(r2.ok, true);
+    assert.ok(r1.id && r2.id && r1.id !== r2.id, 'devolve o id da imagem salva (para abrir a análise)');
 
     const saved = await extPage.evaluate(async () => {
       const db = await new Promise((res, rej) => { const r = indexedDB.open('neurotab'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });

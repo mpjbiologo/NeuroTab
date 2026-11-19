@@ -103,3 +103,26 @@ test('Firefox: popup e janela de permissão abrem', async () => {
   assert.equal(await driver.findElement(By.id('host')).getText(), 'example.com');
   assert.deepEqual(await errors(), []);
 });
+
+test('Firefox: lê o texto de uma imagem no computador (WebAssembly do Tesseract) e acha o endereço', async () => {
+  await driver.manage().setTimeouts({ script: 120000 }); // primeira vez baixa o pacote do idioma
+  await open('src/newtab.html');
+  const r = await driver.executeAsyncScript((done) => {
+    (async () => {
+      const c = document.createElement('canvas');
+      c.width = 900; c.height = 260;
+      const g = c.getContext('2d');
+      g.fillStyle = '#fff'; g.fillRect(0, 0, 900, 260); g.fillStyle = '#111';
+      g.font = 'bold 44px sans-serif'; g.fillText('Padaria Pão Quente', 30, 80);
+      g.font = '34px sans-serif'; g.fillText('Rua da Bahia, 1148 - Centro', 30, 150);
+      const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
+      const v = await import('/src/lib/vision.js');
+      const out = await v.readText(blob);
+      return { text: out.text, addr: v.findAddress(out.text) };
+    })().then(done, (e) => done({ error: String(e?.message || e) }));
+  });
+  assert.equal(r.error, undefined, r.error);
+  assert.match(r.text, /Rua da Bahia/);
+  assert.equal(r.addr, 'Rua da Bahia, 1148 - Centro');
+  assert.deepEqual(await errors(), []);
+});

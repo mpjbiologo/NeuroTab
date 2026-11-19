@@ -7,7 +7,7 @@ import {
 import { hostOf } from '../lib/store.js';
 
 const FILTERS = [
-  ['all', 'Tudo'], ['note', '📝 Notas'], ['task', '☑️ Tarefas'], ['clip', '✂️ Trechos'], ['page', '🔖 Páginas'], ['idea', '💡 Ideias'], ['pinned', '📌'], ['trash', '🗑'],
+  ['all', 'Tudo'], ['note', '📝 Notas'], ['task', '☑️ Tarefas'], ['clip', '✂️ Trechos'], ['page', '🔖 Páginas'], ['idea', '💡 Ideias'], ['image', '🖼️ Imagens'], ['pinned', '📌'], ['trash', '🗑'],
 ];
 
 export function itemRow(it, ctx, { checkbox = false, select = null, semantic = false } = {}) {

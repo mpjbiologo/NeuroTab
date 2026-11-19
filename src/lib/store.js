@@ -44,6 +44,7 @@ export const DEFAULT_AI = {
   autoEnrich: true,
   semantic: false, // busca por significado (embeddings)
   embedModels: {}, // modelo de embeddings por provedor (vazio = padrão)
+  imagesAllowed: false, // enviar imagens à IA na internet sem perguntar a cada vez (IA local nunca pergunta)
 };
 
 export const DEFAULT_SETTINGS = {
@@ -58,6 +59,8 @@ export const DEFAULT_SETTINGS = {
   columns: 6,
   showSearch: true,
   searchEngine: 'google',
+  imageOcr: true, // ler o texto das imagens da biblioteca, no próprio computador
+  searchEnter: 'web', // o que o Enter faz na barra de pesquisa: web | first | ask | note | task
   showGroups: true,
   groupStyle: 'icon_text', // icon_text | icon | text
   barPosition: 'top', // top | bottom

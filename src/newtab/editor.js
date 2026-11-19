@@ -29,6 +29,10 @@ export function openItemDialog(item, preset = {}) {
   };
   fill(it);
   $('#itemDelete').hidden = !item;
+  // Item lido de uma imagem da biblioteca: botão para abrir a imagem (e analisar de novo).
+  const img = $('#itemImage');
+  img.parentElement.hidden = !it.captureId;
+  img.onclick = () => chrome.windows.create({ url: chrome.runtime.getURL('src/analyze.html?id=' + encodeURIComponent(it.captureId)), type: 'popup', width: 560, height: 760 });
   const read = () => ({
     type: f.type.value,
     title: f.title.value.trim(),

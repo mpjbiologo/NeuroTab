@@ -1,7 +1,7 @@
 // Ajudantes dos testes de ponta a ponta: abre um Chromium com a extensão carregada da pasta do projeto,
 // simula a rede (nenhum teste depende de internet) e, se pedido, simula microfone e voz.
 import { chromium } from 'playwright';
-import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -67,10 +67,17 @@ async function mockNetwork(ctx, { ai } = {}) {
     const text = ai?.(sys, body) ?? (sys.includes('Formato:') ? JSON.stringify({ titulo: '', tags: [], tipo: 'nota', lembrete: null }) : 'OK');
     return r.fulfill({ json: { candidates: [{ content: { parts: [{ text }] } }] }, headers: CORS });
   });
+  // Pacotes de idioma do leitor de texto: servidos da cópia em node_modules (devDependencies).
+  await ctx.route(/cdn\.jsdelivr\.net\/npm\/@tesseract\.js-data\//, (r) => {
+    const m = r.request().url().match(/@tesseract\.js-data\/(\w+)@[\d.]+\/(.+)$/);
+    const file = m && join(EXT, 'node_modules/@tesseract.js-data', m[1], m[2]);
+    if (!file || !existsSync(file)) return r.fulfill({ status: 404, headers: CORS, body: '' });
+    return r.fulfill({ status: 200, headers: { ...CORS, 'content-type': 'application/octet-stream' }, body: readFileSync(file) });
+  });
   // Qualquer outro endereço externo responde vazio (sem internet nos testes).
   await ctx.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, (r) => {
     const u = r.request().url();
-    if (/generativelanguage|open-meteo/.test(u)) return r.fallback();
+    if (/generativelanguage|open-meteo|@tesseract\.js-data/.test(u)) return r.fallback();
     return r.fulfill({ json: {}, headers: CORS });
   });
   return calls;

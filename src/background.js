@@ -8,6 +8,7 @@ import { setLang, t } from './lib/i18n.js';
 import { createPlayer } from './lib/sounds.js';
 import { saveCapture, downloadAndSave } from './lib/captures.js';
 import { grabAndSave } from './lib/page-image.js';
+import { findAddress } from './lib/address.js';
 
 const NEWTAB = chrome.runtime.getURL('src/newtab.html');
 loadData().then((d) => setLang(d.settings.lang)).catch(() => {});
@@ -24,6 +25,8 @@ async function rebuildMenus() {
   chrome.contextMenus.create({ id: 'nt-page', parentId: 'nt-root', title: t('🔖 Salvar página no cérebro (ler depois)'), contexts: ['page'] });
   chrome.contextMenus.create({ id: 'nt-link', parentId: 'nt-root', title: t('🔗 Salvar link no cérebro'), contexts: ['link'] });
   chrome.contextMenus.create({ id: 'nt-image', parentId: 'nt-root', title: t('🖼️ Salvar imagem na biblioteca'), contexts: ['image'] });
+  chrome.contextMenus.create({ id: 'nt-analyze', parentId: 'nt-root', title: t('🔍 Analisar imagem'), contexts: ['image'] });
+  chrome.contextMenus.create({ id: 'nt-route', parentId: 'nt-root', title: t('🧭 Traçar rota até "%s"'), contexts: ['selection'] });
   chrome.contextMenus.create({ id: 'nt-add', parentId: 'nt-root', title: t('➕ Adicionar aos atalhos'), contexts: ['page', 'link'] });
   for (const g of data.groups) {
     chrome.contextMenus.create({ id: 'nt-g-' + g.id, parentId: 'nt-add', title: `${g.icon} ${g.name}`, contexts: ['page', 'link'] });
@@ -60,7 +63,20 @@ async function captureAndEnrich(p) {
 //    abre uma janelinha onde a pessoa autoriza com um clique.
 // 2) Se não der (login, blob:, http:, bloqueio do site, permissão negada), pega a imagem de dentro da
 //    própria página (lib/page-image.js), usando a permissão que o clique no menu já dá (activeTab).
-async function captureImage(info, tab) {
+/** Janela de análise de uma imagem da biblioteca (src/analyze.html). */
+async function openAnalyzer(id) {
+  await chrome.windows.create({ url: chrome.runtime.getURL('src/analyze.html?id=' + encodeURIComponent(id)), type: 'popup', width: 560, height: 760 });
+}
+
+/** Abre uma nova aba com a rota até o endereço no widget Trânsito (o destino pode ser corrigido lá). */
+async function openRouteTo(text) {
+  const clean = String(text).replace(/\s+/g, ' ').trim();
+  const dest = (findAddress(text) || clean).slice(0, 160);
+  if (!dest) throw new Error('Selecione um endereço.');
+  await chrome.tabs.create({ url: NEWTAB + '?route=' + encodeURIComponent(dest) });
+}
+
+async function captureImage(info, tab, { then = '' } = {}) {
   const sourceUrl = info.srcUrl || '';
   const pageUrl = info.pageUrl || tab?.url || '';
   const meta = { url: sourceUrl, pageUrl, pageTitle: tab?.title || '', source: 'context' };
@@ -82,7 +98,7 @@ async function captureImage(info, tab) {
     granted = null; // o navegador não deixou pedir aqui
   }
   if (granted === null) {
-    const q = new URLSearchParams({ src: sourceUrl, page: pageUrl, title: meta.pageTitle.slice(0, 300), tab: String(where.tabId ?? ''), frame: String(where.frameId), win: String(where.windowId ?? '') });
+    const q = new URLSearchParams({ src: sourceUrl, page: pageUrl, title: meta.pageTitle.slice(0, 300), tab: String(where.tabId ?? ''), frame: String(where.frameId), win: String(where.windowId ?? ''), then });
     await chrome.windows.create({ url: chrome.runtime.getURL('src/grant.html?' + q), type: 'popup', width: 460, height: 300 });
     return null;
   }
@@ -127,6 +143,12 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       await captureAndEnrich({ type: 'page', title: info.selectionText || '', url: info.linkUrl, source: 'context' });
     } else if (id === 'nt-image') {
       await captureImage(info, tab);
+    } else if (id === 'nt-analyze') {
+      // Salva na biblioteca e abre a janela de análise (texto lido no computador; IA só com autorização).
+      const rec = await captureImage(info, tab, { then: 'analyze' });
+      if (rec) await openAnalyzer(rec.id);
+    } else if (id === 'nt-route') {
+      await openRouteTo(info.selectionText || '');
     }
   } catch (e) {
     console.error('NeuroTab: falha na captura', e);
@@ -408,7 +430,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   if (msg?.type === 'grabImage') {
     // Pedido da janelinha de permissão (grant.html) quando o download direto falhou.
     grabAndSave(msg.src, msg.meta || {}, { tabId: msg.tabId, frameId: msg.frameId || 0, windowId: msg.windowId })
-      .then(() => { flashBadge(msg.tabId, true); reply({ ok: true }); })
+      .then((rec) => { flashBadge(msg.tabId, true); reply({ ok: true, id: rec?.id }); })
       .catch((e) => { flashBadge(msg.tabId, false, e?.message); reply({ ok: false, error: e?.message || String(e) }); });
     return true;
   }

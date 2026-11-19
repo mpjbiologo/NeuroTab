@@ -126,6 +126,7 @@ function fillSettings() {
     else el.value = v == null ? '' : String(v);
   }
   $('#autoEnrich').checked = !!data.settings.ai.autoEnrich;
+  $('#imagesAllowed').checked = !!data.settings.ai.imagesAllowed;
   $('#sharePlaces').checked = data.settings.ai.sharePlaces !== false;
   $('#semantic').checked = !!data.settings.ai.semantic;
 }
@@ -280,6 +281,11 @@ function setupAi() {
 
   $('#sharePlaces').addEventListener('change', async (e) => {
     data.settings.ai.sharePlaces = e.target.checked;
+    await saveData(data);
+    toast('Salvo ✓');
+  });
+  $('#imagesAllowed').addEventListener('change', async (e) => {
+    data.settings.ai.imagesAllowed = e.target.checked;
     await saveData(data);
     toast('Salvo ✓');
   });

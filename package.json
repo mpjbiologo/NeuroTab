@@ -19,8 +19,13 @@
     "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
+    "@tesseract.js-data/eng": "1.0.0",
+    "@tesseract.js-data/por": "1.0.0",
+    "@tesseract.js-data/spa": "1.0.0",
     "lucide-static": "^1.75.0",
     "playwright": "1.63.0",
-    "selenium-webdriver": "4.38.0"
+    "selenium-webdriver": "4.38.0",
+    "tesseract.js": "7.0.0",
+    "tesseract.js-core": "7.0.0"
   }
 }

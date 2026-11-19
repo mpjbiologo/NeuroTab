@@ -9,6 +9,7 @@ export const TYPES = {
   clip: { label: 'Trecho', icon: '✂️' },
   page: { label: 'Página', icon: '🔖' },
   idea: { label: 'Ideia', icon: '💡' },
+  image: { label: 'Imagem', icon: '🖼️' }, // texto lido de uma imagem da biblioteca (captureId)
 };
 
 export async function loadItems() {
@@ -40,6 +41,7 @@ export function makeItem(p = {}) {
     createdAt: p.createdAt || now,
     updatedAt: now,
     enriched: !!p.enriched,
+    ...(p.captureId ? { captureId: p.captureId } : {}),
   };
 }
 
