@@ -20,6 +20,11 @@ Nenhuma chave é registrada no console nem enviada a outro lugar. A NeuroTab nã
 - Use chaves com limite de gasto (Gemini e OpenAI permitem) e apague as que não usa mais.
 - Um backup **sem senha** com chaves é tão sensível quanto as chaves.
 
+## Imagens e WebAssembly (0.7.5)
+
+- O texto das imagens é lido no computador. A imagem só vai para a IA na internet depois de a pessoa autorizar na janela de análise (`docs/dev/IMAGENS.md`).
+- O manifest libera só `'wasm-unsafe-eval'` (para o WebAssembly do leitor de texto). `eval` e `new Function` continuam bloqueados pela política padrão da extensão.
+
 ## Testes
 
 `tests/unit/crypto-secrets.test.js` (ida e volta, senha errada, dados adulterados, sal/IV novos, ocultação) e `tests/unit/store.test.js` (backup comum nunca leva chaves). Fluxo completo em `tests/e2e/backup.test.js`.

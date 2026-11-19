@@ -20,7 +20,7 @@ A loja é gratuita. A revisão costuma levar de algumas horas a poucos dias.
 3. **Plataforma:** só **Firefox for desktop**.
 4. Envie o arquivo **`neurotab-firefox.zip`** da release mais recente no GitHub. Não use o `neurotab.zip`, que é o do Edge/Chrome.
 5. A validação automática deve passar sem erros (pode mostrar alguns avisos; é normal).
-6. **Código-fonte:** a pergunta "Do you need to submit source code?" → **No**. A NeuroTab não é minificada nem compilada; o código enviado é o próprio código-fonte.
+6. **Código-fonte:** a pergunta "Do you need to submit source code?" → **No**. O código da NeuroTab não é minificado nem compilado. A única biblioteca minificada (Tesseract.js, em `src/vendor/tesseract`) é a versão oficial do npm, sem alteração, e está citada nas notas ao revisor.
 
 ### 3. Página da extensão
 Preencha com os textos abaixo. O idioma padrão da página é **Português (do Brasil)**; depois de salvar, use **Manage localizations** para adicionar English e Español.
@@ -43,7 +43,12 @@ Preencha com os textos abaixo. O idioma padrão da página é **Português (do B
 ```
 NeuroTab replaces the new tab page with a personal dashboard (shortcuts, notes, reminders, widgets).
 No account or server; all data is stored locally (storage.local and IndexedDB).
-The code is not minified or transpiled; the package is the source. Repository: https://github.com/mpjbiologo/NeuroTab
+Our own code is not minified or transpiled; the package is the source. Repository: https://github.com/mpjbiologo/NeuroTab
+Third-party library (unmodified, from npm): src/vendor/tesseract/ = tesseract.js 7.0.0 (dist/tesseract.esm.min.js,
+dist/worker.min.js) and tesseract.js-core 7.0.0 (tesseract-core-simd-lstm.js/.wasm), Apache-2.0. It reads text in
+images locally; 'wasm-unsafe-eval' in the CSP is for its WebAssembly. The Function() calls flagged by the linter are
+unused fallbacks inside these libraries (eval is blocked by the extension CSP). The OCR language data
+(@tesseract.js-data, jsDelivr) is downloaded once on first use; no image is sent anywhere for OCR.
 
 Data collection (data_collection_permissions): required "none"; optional "locationInfo" (city coordinates sent to
 Open-Meteo for weather, addresses sent to OpenStreetMap Nominatim for the Traffic widget) and "websiteContent"
