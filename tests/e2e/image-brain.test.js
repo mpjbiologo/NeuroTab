@@ -208,7 +208,7 @@ test('fechar a análise sem guardar descarta a imagem; "Não guardar" esconde a 
     await a.click('#noKeep');
     assert.equal(await a.isVisible('#keepBox'), false);
     await a.close({ runBeforeUnload: true });
-    for (let i = 0; i < 20 && await capture(p, id); i++) await p.waitForTimeout(150);
+    for (let i = 0; i < 50 && await capture(p, id); i++) await p.waitForTimeout(200);
     assert.equal(await capture(p, id), null, 'imagem temporária apagada ao fechar');
 
     const old = await saveSample(p, true);

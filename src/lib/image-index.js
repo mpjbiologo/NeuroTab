@@ -3,6 +3,7 @@
 // que foi lido. Assim a busca, a busca por significado e as perguntas ao cérebro já encontram as imagens.
 // Excluir a imagem exclui o item; o item guarda só o texto, a imagem continua na biblioteca.
 import { openDB } from './idb.js';
+import { discardTempCapture } from './captures.js';
 import { loadItems, saveItems, makeItem } from './brain.js';
 import { readText, describeImage, findAddress, visionNeedsConsent } from './vision.js';
 
@@ -45,10 +46,7 @@ export async function keepCapture(id) {
 }
 
 /** Descarta uma imagem temporária (a janela de análise foi fechada sem guardar). */
-export async function discardTemp(id) {
-  const rec = await getCapture(id);
-  if (rec?.temp) await tx('readwrite', (s) => { s.delete(id); });
-}
+export const discardTemp = (id) => discardTempCapture(id);
 
 /** Limpa temporárias esquecidas (ex.: o navegador fechou com a janela de análise aberta). */
 export async function purgeTemp(maxAgeMs = 6 * 3600e3) {

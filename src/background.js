@@ -9,6 +9,14 @@ import { createPlayer } from './lib/sounds.js';
 import { saveCapture, downloadAndSave } from './lib/captures.js';
 import { grabAndSave } from './lib/page-image.js';
 import { findAddress } from './lib/address.js';
+import { discardTempCapture } from './lib/captures.js';
+
+// Janela de análise aberta com uma imagem temporária: quando ela fecha (a conexão cai), o fundo apaga a
+// imagem se ninguém a guardou. Mais confiável que apagar de dentro da janela, que pode fechar antes de terminar.
+chrome.runtime.onConnect.addListener((port) => {
+  const m = /^analyze-temp:(.+)$/.exec(port.name);
+  if (m) port.onDisconnect.addListener(() => { discardTempCapture(m[1]).catch(() => {}); });
+});
 
 const NEWTAB = chrome.runtime.getURL('src/newtab.html');
 loadData().then((d) => setLang(d.settings.lang)).catch(() => {});

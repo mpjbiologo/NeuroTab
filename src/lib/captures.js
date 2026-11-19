@@ -80,3 +80,19 @@ export async function downloadAndSave(sourceUrl, meta = {}) {
   try { fileName = decodeURIComponent(new URL(sourceUrl).pathname.split('/').pop() || 'imagem'); } catch { /* mantém o padrão */ }
   return saveCapture({ ...meta, blob, type: response.headers.get('content-type') || '', url: sourceUrl, fileName });
 }
+
+/** Apaga uma imagem só se ainda for temporária (aberta só para análise e não guardada). */
+export async function discardTempCapture(id) {
+  const db = await openDB();
+  if (!db.objectStoreNames.contains(STORE)) return false;
+  return new Promise((resolve, reject) => {
+    const t = db.transaction(STORE, 'readwrite');
+    const s = t.objectStore(STORE);
+    let gone = false;
+    const r = s.get(id);
+    r.onsuccess = () => { if (r.result?.temp) { s.delete(id); gone = true; } };
+    t.oncomplete = () => resolve(gone);
+    t.onerror = () => reject(t.error);
+  });
+}
+

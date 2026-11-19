@@ -5,7 +5,7 @@ import { initI18n, t } from './lib/i18n.js';
 import { startIconizer } from './lib/icons.js';
 import { aiConfig, isConfigured, isLocalAI, requestPermission } from './lib/ai.js';
 import { visionNeedsConsent, visionTarget, visionSettings } from './lib/vision.js';
-import { getCapture, analyzeCapture, captureStatus, keepCapture, discardTemp } from './lib/image-index.js';
+import { getCapture, analyzeCapture, captureStatus, keepCapture } from './lib/image-index.js';
 
 const $ = (s) => document.querySelector(s);
 const id = new URLSearchParams(location.search).get('id') || '';
@@ -101,14 +101,14 @@ async function describe({ auto = false } = {}) {
   $('#close').onclick = () => window.close();
   $('#keep').onclick = keep;
   $('#noKeep').onclick = () => { declined = true; showKeep(); say('Ok, a imagem não será guardada.'); };
-  // Fechou sem guardar: a imagem temporária some (o que sobrar, a nova aba limpa depois).
-  window.addEventListener('pagehide', () => { if (rec?.temp) discardTemp(id).catch(() => {}); });
   rec = id ? await getCapture(id).catch(() => null) : null;
   if (!rec) {
     say('Imagem não encontrada na biblioteca.', 'err');
     $('#aiBox').hidden = true;
     return;
   }
+  // Fechou sem guardar: o fundo da extensão apaga a imagem temporária (o que sobrar, a nova aba limpa depois).
+  if (rec?.temp) chrome.runtime.connect({ name: 'analyze-temp:' + id });
   const url = URL.createObjectURL(rec.blob);
   $('#img').src = url;
   if (rec.pageUrl || rec.url) {
