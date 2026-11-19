@@ -1,6 +1,13 @@
 // NeuroTab — English. Keys are the original Portuguese strings.
 export default {
   exact: {
+    'Salvar como tarefa': 'Save as task',
+    'Tarefa salva ☑️': 'Task saved ☑️',
+    'Ao apertar Enter na barra': 'When you press Enter in the bar',
+    'Com as setas ↑↓ você ainda escolhe outro item da lista.': 'You can still pick another item with the ↑↓ arrows.',
+    'Pesquisar na internet': 'Search the web',
+    'Abrir o primeiro resultado': 'Open the first result',
+    'Perguntar ao cérebro': 'Ask your brain',
     'processando…': 'processing…',
     'ouvindo o comando…': 'listening for the command…',
     'pode falar…': 'go ahead…',
@@ -379,6 +386,7 @@ export default {
   },
   // Textos com partes variáveis: {0}, {1}… (a ordem pode mudar na tradução)
   patterns: [
+    ['Tarefa salva · ⏰ {0}', 'Task saved · ⏰ {0}'], 
     ['"{0}" excluído', '"{0}" deleted'], ['{0} item(ns) restaurado(s)', '{0} item(s) restored'],
     ['{0} grupos · {1} atalhos · {2} notas · {3} MB usados', '{0} groups · {1} shortcuts · {2} notes · {3} MB used'],
     ['{0} foto(s) adicionada(s)', '{0} photo(s) added'], ['{0} dias desde {1}', '{0} days since {1}'], ['{0} de {1} hábitos cumpridos hoje', '{0} of {1} habits done today'],

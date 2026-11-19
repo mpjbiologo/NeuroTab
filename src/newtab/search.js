@@ -1,6 +1,7 @@
 // NeuroTab — Busca universal (Ctrl+K): atalhos, notas, web, calculadora e perguntas ao cérebro.
 import { SEARCH_ENGINES, saveData, hostOf, normalizeUrl } from '../lib/store.js';
 import * as Brain from '../lib/brain.js';
+import { parseReminder, fmtDateTime } from '../lib/brain.js';
 import { $, $$, h, toast, micButton } from '../lib/ui.js';
 import { looksLikeMath, smartCalc } from '../lib/calc.js';
 import { S, bus } from './state.js';
@@ -17,6 +18,15 @@ export function setupOmni() {
   $('#omniMicSlot').append(micButton(input, { lang: S.data.settings.voiceLang, title: 'Falar' }));
   let results = [];
   let sel = 0;
+  let moved = false; // a pessoa escolheu um item com as setas: o Enter abre esse item
+
+  const saveAs = async (type, q) => {
+    const remindAt = type === 'task' ? parseReminder(q) : null;
+    await ctx.capture({ type, text: q, remindAt, source: 'manual' });
+    input.value = '';
+    box.hidden = true;
+    toast(type === 'task' ? (remindAt ? `Tarefa salva · ⏰ ${fmtDateTime(remindAt)}` : 'Tarefa salva ☑️') : 'Salvo no cérebro 🧠');
+  };
 
   const run = (r) => {
     box.hidden = true;
@@ -47,9 +57,11 @@ export function setupOmni() {
       }).catch(() => { calcItem.label = `${q} = ?`; });
     }
     if (/^(https?:\/\/|www\.)|^[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(q) && !/\s/.test(q)) acts.push({ icon: '↗', label: `Abrir ${q}`, action: () => { location.href = normalizeUrl(q); } });
-    acts.push({ icon: '🔎', label: `Pesquisar "${q}" no ${eng.name}`, action: () => { location.href = eng.url + encodeURIComponent(q); } });
-    acts.push({ icon: '🤖', label: `Perguntar ao cérebro: "${q}"`, action: () => askBrain(q) });
-    acts.push({ icon: '📝', label: `Salvar como nota`, sub: 'Shift+Enter', action: async () => { await ctx.capture({ text: q, source: 'manual' }); input.value = ''; toast('Salvo no cérebro 🧠'); } });
+    const web = { kind: 'web', icon: '🔎', label: `Pesquisar "${q}" no ${eng.name}`, action: () => { location.href = eng.url + encodeURIComponent(q); } };
+    const ask = { kind: 'ask', icon: '🤖', label: `Perguntar ao cérebro: "${q}"`, action: () => askBrain(q) };
+    const note = { kind: 'note', icon: '📝', label: 'Salvar como nota', sub: 'Shift+Enter', action: () => saveAs('note', q) };
+    const task = { kind: 'task', icon: '☑️', label: 'Salvar como tarefa', action: () => saveAs('task', q) };
+    acts.push(web, ask, note, task);
     sections.push(['Ações', acts]);
     box.replaceChildren();
     for (const [title, list] of sections) {
@@ -63,9 +75,24 @@ export function setupOmni() {
           r.sub && h('span', { class: 'sub' }, r.sub)));
       }
     }
-    // Sem atalhos/notas, a ação padrão é pesquisar na web.
-    sel = links.length || notes.length ? 0 : results.findIndex((r) => ['🧮', '↗', '🔎'].includes(r.icon));
-    if (results.some((r) => r.icon === '🧮') && !links.length) sel = results.findIndex((r) => r.icon === '🧮');
+    // O Enter faz o que a pessoa escolheu nas configurações (padrão: pesquisar na internet).
+    // Um endereço digitado abre direto; uma conta mostra o resultado e o Enter copia.
+    const mode = ENTER_MODES.includes(S.data.settings.searchEnter) ? S.data.settings.searchEnter : 'web';
+    const special = results.findIndex((r) => r.icon === '↗' || r.icon === '🧮');
+    const first = links.length || notes.length ? 0 : -1;
+    const target = mode === 'web' ? (special >= 0 ? special : results.indexOf(web))
+      : mode === 'first' ? (first >= 0 ? first : special >= 0 ? special : results.indexOf(web))
+      : results.findIndex((r) => r.kind === mode);
+    if (!moved || sel >= results.length) { sel = Math.max(0, target); moved = false; }
+    const def = results[Math.max(0, target)];
+    for (const [i, r] of results.entries()) {
+      const el = box.querySelector(`[data-i="${i}"]`);
+      if (!el) continue;
+      if (r !== def || r.sub?.startsWith('Enter')) continue;
+      const sub = el.querySelector('.sub');
+      if (sub) sub.textContent = r.sub === 'Shift+Enter' ? 'Enter' : `${r.sub} · Enter`;
+      else el.append(h('span', { class: 'sub' }, 'Enter'));
+    }
     highlight();
     box.hidden = false;
   };
@@ -86,16 +113,16 @@ export function setupOmni() {
       } catch (e) { console.warn(e); }
     }, 450);
   };
-  input.addEventListener('input', () => { render(); askSemantic(); });
+  input.addEventListener('input', () => { moved = false; render(); askSemantic(); });
   input.addEventListener('focus', render);
   input.addEventListener('blur', () => setTimeout(() => { box.hidden = true; }, 120));
   input.addEventListener('keydown', async (e) => {
-    if (e.key === 'ArrowDown') { sel = Math.min(sel + 1, results.length - 1); highlight(); e.preventDefault(); }
-    else if (e.key === 'ArrowUp') { sel = Math.max(sel - 1, 0); highlight(); e.preventDefault(); }
+    if (e.key === 'ArrowDown') { sel = Math.min(sel + 1, results.length - 1); moved = true; highlight(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { sel = Math.max(sel - 1, 0); moved = true; highlight(); e.preventDefault(); }
     else if (e.key === 'Enter' && e.shiftKey) {
       e.preventDefault();
       const q = input.value.trim();
-      if (q) { await ctx.capture({ text: q }); input.value = ''; box.hidden = true; toast('Salvo no cérebro 🧠'); }
+      if (q) { box.hidden = true; await saveAs('note', q); }
     } else if (e.key === 'Enter' && results[sel]) { e.preventDefault(); run(results[sel]); }
     else if (e.key === 'Escape') { e.preventDefault(); input.value = ''; box.hidden = true; input.blur(); }
   });
@@ -104,6 +131,9 @@ export function setupOmni() {
     else if (e.key === '/' && !e.target.closest('input, textarea, select, [contenteditable]') && !document.querySelector('dialog[open]')) { e.preventDefault(); input.focus(); }
   });
 }
+
+/** O que o Enter faz na barra de pesquisa (configuração searchEnter). */
+export const ENTER_MODES = ['web', 'first', 'ask', 'note', 'task'];
 
 function askBrain(q) {
   if (!S.data.settings.widgets.some((w) => w.id === 'ask')) {

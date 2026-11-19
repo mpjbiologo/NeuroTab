@@ -1,6 +1,13 @@
 // NeuroTab — Español. Las claves son los textos originales en portugués.
 export default {
   exact: {
+    'Salvar como tarefa': 'Guardar como tarea',
+    'Tarefa salva ☑️': 'Tarea guardada ☑️',
+    'Ao apertar Enter na barra': 'Al pulsar Enter en la barra',
+    'Com as setas ↑↓ você ainda escolhe outro item da lista.': 'Con las flechas ↑↓ aún puedes elegir otro elemento.',
+    'Pesquisar na internet': 'Buscar en internet',
+    'Abrir o primeiro resultado': 'Abrir el primer resultado',
+    'Perguntar ao cérebro': 'Preguntar a tu cerebro',
     'processando…': 'procesando…',
     'ouvindo o comando…': 'escuchando la orden…',
     'pode falar…': 'puedes hablar…',
@@ -377,6 +384,7 @@ export default {
     "Para baixar esta imagem, a NeuroTab precisa de permissão para acessar <b id=\"host\"></b>. A permissão vale só para esse site e pode ser removida nas configurações da extensão.": "Para descargar esta imagen, NeuroTab necesita permiso para acceder a <b id=\"host\"></b>. El permiso vale solo para ese sitio y se puede quitar en la configuración de la extensión.",
   },
   patterns: [
+    ['Tarefa salva · ⏰ {0}', 'Tarea guardada · ⏰ {0}'], 
     ['"{0}" excluído', '"{0}" eliminado'], ['{0} item(ns) restaurado(s)', '{0} elemento(s) restaurado(s)'],
     ['{0} grupos · {1} atalhos · {2} notas · {3} MB usados', '{0} grupos · {1} accesos · {2} notas · {3} MB usados'],
     ['{0} foto(s) adicionada(s)', '{0} foto(s) agregada(s)'], ['{0} dias desde {1}', '{0} días desde {1}'], ['{0} de {1} hábitos cumpridos hoje', '{0} de {1} hábitos cumplidos hoy'],

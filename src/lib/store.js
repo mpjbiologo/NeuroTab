@@ -58,6 +58,7 @@ export const DEFAULT_SETTINGS = {
   columns: 6,
   showSearch: true,
   searchEngine: 'google',
+  searchEnter: 'web', // o que o Enter faz na barra de pesquisa: web | first | ask | note | task
   showGroups: true,
   groupStyle: 'icon_text', // icon_text | icon | text
   barPosition: 'top', // top | bottom
