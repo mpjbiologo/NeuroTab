@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { launch } from './helpers.js';
 
 // Imagem com texto e endereço, desenhada na própria página e salva na biblioteca.
-const saveSample = (p) => p.evaluate(async () => {
+const saveSample = (p, temp = false) => p.evaluate(async (temp) => {
   const c = new OffscreenCanvas(900, 260);
   const g = c.getContext('2d');
   g.fillStyle = '#fff'; g.fillRect(0, 0, 900, 260); g.fillStyle = '#111';
@@ -13,8 +13,8 @@ const saveSample = (p) => p.evaluate(async () => {
   g.font = '34px sans-serif'; g.fillText('Rua da Bahia, 1148 - Centro', 30, 150); g.fillText('Aberto das 6h às 20h', 30, 210);
   const blob = await c.convertToBlob({ type: 'image/png' });
   const { saveCapture } = await import('/src/lib/captures.js');
-  return (await saveCapture({ blob, pageUrl: 'https://exemplo.com/padaria', pageTitle: 'Padaria', fileName: 'padaria.png' })).id;
-});
+  return (await saveCapture({ blob, pageUrl: 'https://exemplo.com/padaria', pageTitle: 'Padaria', fileName: 'padaria.png', temp })).id;
+}, temp);
 
 // Espera até a condição sobre o cérebro valer (waitForFunction não espera promessas).
 async function until(x, p, fn, ms = 60000) {
@@ -167,6 +167,103 @@ test('Ollama com modelo só de texto: usa outro instalado que enxerga; sem nenhu
     await a.waitForSelector('#status.err');
     assert.match(await a.textContent('#status'), /llama3\.2 só entende texto.*ollama pull gemma3/);
     assert.equal(chats.length, 0, 'nada enviado ao modelo que não enxerga');
+  } finally {
+    await x.close();
+  }
+});
+
+const capture = (p, id) => p.evaluate(async (id) => (await import('/src/lib/image-index.js')).getCapture(id).then((r) => (r ? { temp: !!r.temp } : null)), id);
+const library = (p) => p.evaluate(async () => (await (await import('/src/lib/image-index.js')).listCaptures()).length);
+
+test('Mídia → "Perguntar": imagem só para análise não entra na biblioteca nem no cérebro até guardar', async () => {
+  const x = await launch();
+  try {
+    const p = await x.open('src/newtab.html');
+    const id = await saveSample(p, true);
+    assert.equal(await library(p), 0, 'temporária não aparece na biblioteca');
+    const a = await x.open('src/analyze.html?id=' + id);
+    await a.waitForSelector('#read:has-text("Rua da Bahia")', { timeout: 60000 });
+    assert.equal(await a.isVisible('#keepBox'), true);
+    assert.match(await a.textContent('#keepText'), /Guardar esta imagem na biblioteca\?/);
+    assert.equal(((await x.storage(a, 'nt_brain')) || []).filter((i) => i.type === 'image').length, 0, 'nada no cérebro antes de guardar');
+    await a.click('#keep');
+    await a.waitForSelector('#keepBox', { state: 'hidden' });
+    assert.deepEqual(await capture(a, id), { temp: false });
+    assert.equal(await library(a), 1);
+    const item = ((await x.storage(a, 'nt_brain')) || []).find((i) => i.captureId === id);
+    assert.match(item.text, /Rua da Bahia/);
+    assert.deepEqual(x.errors, []);
+  } finally {
+    await x.close();
+  }
+});
+
+test('fechar a análise sem guardar descarta a imagem; "Não guardar" esconde a pergunta; temporárias antigas são limpas', async () => {
+  const x = await launch();
+  try {
+    const p = await x.open('src/newtab.html');
+    const id = await saveSample(p, true);
+    const a = await x.open('src/analyze.html?id=' + id);
+    await a.waitForSelector('#read:has-text("Rua da Bahia")', { timeout: 60000 });
+    await a.click('#noKeep');
+    assert.equal(await a.isVisible('#keepBox'), false);
+    await a.close({ runBeforeUnload: true });
+    for (let i = 0; i < 20 && await capture(p, id); i++) await p.waitForTimeout(150);
+    assert.equal(await capture(p, id), null, 'imagem temporária apagada ao fechar');
+
+    const old = await saveSample(p, true);
+    const n = await p.evaluate(async (old) => {
+      const m = await import('/src/lib/image-index.js');
+      await m.updateCapture(old, { capturedAt: Date.now() - 7 * 3600e3 });
+      return m.purgeTemp();
+    }, old);
+    assert.equal(n, 1);
+    assert.equal(await capture(p, old), null);
+  } finally {
+    await x.close();
+  }
+});
+
+test('Mídia → "Não guardar": a janela oferece guardar sem perguntar; IA para imagens própria (Ollama) sem trocar a da conversa', async () => {
+  const x = await launch();
+  try {
+    const chats = await fakeOllama(x, { installed: ['gemma3:4b'], vision: ['gemma3:4b'] });
+    await x.ctx.addInitScript(() => { if (globalThis.chrome?.permissions) { chrome.permissions.contains = async () => true; chrome.permissions.request = async () => true; } });
+    const p = await x.open('src/newtab.html');
+    const data = await x.storage(p, 'nt_data');
+    data.settings.ai = { ...data.settings.ai, provider: 'gemini', keys: { gemini: 'K' }, models: { ollama: 'gemma3:4b' }, autoEnrich: false };
+    data.settings.media = { save: 'never', provider: 'ollama' };
+    data.settings.imageOcr = false;
+    await x.seed(p, { nt_data: data });
+    const id = await saveSample(p, true);
+    const a = await x.open('src/analyze.html?id=' + id);
+    await a.waitForSelector('#desc:has-text("Placa de uma padaria")', { timeout: 30000 });
+    assert.equal(await a.isVisible('#consent'), false, 'Ollama é local: não pergunta');
+    assert.equal(chats[0].model, 'gemma3:4b');
+    assert.match(await a.textContent('#keepText'), /não foi guardada/);
+    assert.equal(await a.isVisible('#noKeep'), false);
+    assert.equal((await x.storage(a, 'nt_data')).settings.ai.provider, 'gemini', 'a IA da conversa não mudou');
+  } finally {
+    await x.close();
+  }
+});
+
+test('Configurações: aba Mídia com as opções de imagens', async () => {
+  const x = await launch();
+  try {
+    const o = await x.open('src/options.html#midia');
+    await o.waitForSelector('#tab-midia:not([hidden])');
+    assert.equal(await o.inputValue('select[data-k="media.save"]'), 'ask');
+    await o.selectOption('select[data-k="media.save"]', 'auto');
+    await o.selectOption('#mediaProvider', 'openai');
+    await o.waitForTimeout(300);
+    const s = (await x.storage(o, 'nt_data')).settings;
+    assert.equal(s.media.save, 'auto');
+    assert.equal(s.media.provider, 'openai');
+    assert.match(await o.textContent('#mediaProviderNote'), /Falta a chave de OpenAI/);
+    assert.equal(await o.isVisible('#tab-midia #visionModel'), true);
+    assert.equal(await o.locator('#tab-ia >> text=Ler o texto das imagens salvas').count(), 0, 'saiu da aba IA');
+    assert.deepEqual(x.errors, []);
   } finally {
     await x.close();
   }

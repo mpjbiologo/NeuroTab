@@ -4,8 +4,8 @@ import { loadData, saveData } from './lib/store.js';
 import { initI18n, t } from './lib/i18n.js';
 import { startIconizer } from './lib/icons.js';
 import { aiConfig, isConfigured, isLocalAI, requestPermission } from './lib/ai.js';
-import { visionNeedsConsent, visionTarget } from './lib/vision.js';
-import { getCapture, analyzeCapture, captureStatus } from './lib/image-index.js';
+import { visionNeedsConsent, visionTarget, visionSettings } from './lib/vision.js';
+import { getCapture, analyzeCapture, captureStatus, keepCapture, discardTemp } from './lib/image-index.js';
 
 const $ = (s) => document.querySelector(s);
 const id = new URLSearchParams(location.search).get('id') || '';
@@ -28,13 +28,36 @@ function show() {
   $('#answer').textContent = ai.answer ? `💬 ${ai.answer}` : '';
   $('#model').textContent = ai.model ? t('Descrito por') + ' ' + ai.model : '';
   const st = captureStatus(rec);
-  $('#saved').textContent = t(st === 'done' ? '🧠 Guardado no cérebro: a busca e as perguntas já encontram esta imagem.'
+  showKeep();
+  $('#saved').textContent = rec.temp ? '' : t(st === 'done' ? '🧠 Guardado no cérebro: a busca e as perguntas já encontram esta imagem.'
     : st === 'empty' ? 'Nenhum texto encontrado na imagem. Peça uma descrição à IA para o cérebro encontrá-la.'
     : st === 'error' ? 'A imagem continua na biblioteca, mas não deu para ler agora.' : '');
 }
 
+// Imagem aberta só para análise (Configurações → Mídia): guardar ou não na biblioteca.
+let declined = false;
+function showKeep() {
+  const mode = data.settings.media?.save || 'ask';
+  $('#keepBox').hidden = !rec.temp || (mode === 'ask' && declined);
+  $('#keepText').textContent = t(mode === 'never' ? 'Esta imagem não foi guardada. Quer guardar na biblioteca?' : 'Guardar esta imagem na biblioteca? Assim o cérebro também a encontra depois.');
+  $('#noKeep').hidden = mode === 'never';
+}
+
+async function keep() {
+  $('#keep').disabled = true;
+  try {
+    rec = await keepCapture(id);
+    show();
+    say('💾 Guardada na biblioteca.', 'ok');
+  } catch (e) {
+    say(e.message, 'err');
+  } finally {
+    $('#keep').disabled = false;
+  }
+}
+
 function setupAi() {
-  const ready = isConfigured(data.settings);
+  const ready = isConfigured(visionSettings(data.settings));
   $('#noAi').hidden = ready;
   $('#askRow').hidden = !ready;
   const ask = ready && visionNeedsConsent(data.settings);
@@ -46,7 +69,8 @@ function setupAi() {
 async function describe({ auto = false } = {}) {
   const s = data.settings;
   // Pedido de acesso ao provedor: direto no clique, sem await antes (Firefox).
-  const perm = auto ? Promise.resolve(true) : requestPermission(aiConfig(s)).catch(() => false);
+  const vs = visionSettings(s);
+  const perm = auto ? Promise.resolve(true) : requestPermission(aiConfig(vs)).catch(() => false);
   const always = $('#always').checked;
   $('#describe').disabled = true;
   try {
@@ -56,7 +80,7 @@ async function describe({ auto = false } = {}) {
       await saveData(data);
       setupAi();
     }
-    say(isLocalAI(s) ? 'Descrevendo aqui no computador…' : `Enviando a imagem a ${visionTarget(s)}…`);
+    say(isLocalAI(vs) ? 'Descrevendo aqui no computador…' : `Enviando a imagem a ${visionTarget(s)}…`);
     const r = await analyzeCapture(s, id, { ocr: !rec.analyzedAt || !!rec.analyzeError, ai: true, allowed: true, question: $('#question').value.trim() });
     rec = r.rec;
     show();
@@ -75,6 +99,10 @@ async function describe({ auto = false } = {}) {
   initI18n(data.settings.lang);
   startIconizer();
   $('#close').onclick = () => window.close();
+  $('#keep').onclick = keep;
+  $('#noKeep').onclick = () => { declined = true; showKeep(); say('Ok, a imagem não será guardada.'); };
+  // Fechou sem guardar: a imagem temporária some (o que sobrar, a nova aba limpa depois).
+  window.addEventListener('pagehide', () => { if (rec?.temp) discardTemp(id).catch(() => {}); });
   rec = id ? await getCapture(id).catch(() => null) : null;
   if (!rec) {
     say('Imagem não encontrada na biblioteca.', 'err');
@@ -114,5 +142,6 @@ async function describe({ auto = false } = {}) {
     say('A leitura do texto está desligada nas configurações.');
   }
   // IA no próprio computador: descreve sem perguntar.
-  if (isConfigured(data.settings) && isLocalAI(data.settings) && !rec.ai?.description) describe({ auto: true });
+  const vs = visionSettings(data.settings);
+  if (isConfigured(vs) && isLocalAI(vs) && !rec.ai?.description) describe({ auto: true });
 })();

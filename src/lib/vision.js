@@ -131,18 +131,25 @@ export async function readText(blob, { lang = ocrLangFor(), onProgress } = {}) {
 }
 
 // ---------- Descrição e perguntas, pela IA configurada ----------
+/** Configurações com a IA preferencial para imagens (Configurações → Mídia), se escolhida. */
+export function visionSettings(settings) {
+  const p = settings?.media?.provider;
+  if (!p || p === settings?.ai?.provider) return settings;
+  return { ...settings, ai: { ...settings.ai, provider: p } };
+}
+
 /** A IA configurada aceita imagem? (Para modelos locais, depende do modelo: llava, gemma3, qwen2.5vl…) */
 export function visionAvailable(settings) {
-  return isConfigured(settings);
+  return isConfigured(visionSettings(settings));
 }
 
 /** Enviar a imagem precisa de autorização? (IA na internet e a pessoa ainda não liberou.) */
 export function visionNeedsConsent(settings) {
-  return !isLocalAI(settings) && !settings?.ai?.imagesAllowed;
+  return !isLocalAI(visionSettings(settings)) && !settings?.ai?.imagesAllowed;
 }
 
 /** Nome do serviço que vai receber a imagem (para a confirmação). */
-export const visionTarget = (settings) => aiConfig(settings).p.name;
+export const visionTarget = (settings) => aiConfig(visionSettings(settings)).p.name;
 
 // ---------- Ollama: só modelos com visão enxergam a imagem ----------
 // Um modelo só de texto (ex.: llama3.2, o padrão) recebe a imagem e a ignora sem avisar: a "descrição"
@@ -187,7 +194,8 @@ export async function ollamaVisionModel(settings) {
  * Descreve a imagem e, se houver, responde a uma pergunta sobre ela.
  * Devolve { title, description, text, tags, address, answer }.
  */
-export async function describeImage(settings, blob, { question = '', ocrText = '', pageTitle = '' } = {}) {
+export async function describeImage(settings0, blob, { question = '', ocrText = '', pageTitle = '' } = {}) {
+  const settings = visionSettings(settings0);
   if (!visionAvailable(settings)) throw new Error('Configure a IA em Configurações → IA para descrever imagens.');
   const c = aiConfig(settings);
   const model = c.id === 'ollama' ? await ollamaVisionModel(settings) : (settings.ai?.visionModel || '').trim() || '';

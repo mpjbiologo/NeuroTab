@@ -22,9 +22,39 @@ async function tx(mode, fn) {
 }
 const req = (r) => new Promise((resolve, reject) => { r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
 
-export async function listCaptures() {
+/** Imagens da biblioteca (sem as temporárias, abertas só para análise, a menos que peça). */
+export async function listCaptures({ withTemp = false } = {}) {
   const all = await tx('readonly', (s) => req(s.getAll()));
-  return (all || []).sort((a, b) => b.capturedAt - a.capturedAt);
+  return (all || []).filter((r) => withTemp || !r.temp).sort((a, b) => b.capturedAt - a.capturedAt);
+}
+
+/** Guarda na biblioteca uma imagem aberta só para análise (e já leva o que foi lido para o cérebro). */
+export async function keepCapture(id) {
+  const rec = await tx('readwrite', async (s) => {
+    const r = await req(s.get(id));
+    if (!r) return null;
+    delete r.temp;
+    r.capturedAt = Date.now();
+    s.put(r);
+    return r;
+  });
+  if (!rec) throw new Error('Imagem não encontrada.');
+  await syncBrainItem(rec);
+  try { chrome.runtime.sendMessage({ type: 'imageCaptured', id }).catch(() => {}); } catch { /* sem fundo (testes) */ }
+  return rec;
+}
+
+/** Descarta uma imagem temporária (a janela de análise foi fechada sem guardar). */
+export async function discardTemp(id) {
+  const rec = await getCapture(id);
+  if (rec?.temp) await tx('readwrite', (s) => { s.delete(id); });
+}
+
+/** Limpa temporárias esquecidas (ex.: o navegador fechou com a janela de análise aberta). */
+export async function purgeTemp(maxAgeMs = 6 * 3600e3) {
+  const old = (await listCaptures({ withTemp: true })).filter((r) => r.temp && Date.now() - r.capturedAt > maxAgeMs);
+  if (old.length) await tx('readwrite', (s) => { for (const r of old) s.delete(r.id); });
+  return old.length;
 }
 
 export const getCapture = (id) => tx('readonly', (s) => req(s.get(id)));
@@ -79,6 +109,7 @@ function captureTitle(rec) {
 
 /** Cria ou atualiza o item do cérebro ligado à imagem. Sem nenhum texto, não cria nada. */
 export async function syncBrainItem(rec) {
+  if (rec.temp) return null; // só entra no cérebro depois de guardada
   const items = await loadItems();
   const text = captureText(rec);
   const i = items.findIndex((it) => it.captureId === rec.id);
@@ -137,7 +168,7 @@ export async function analyzeCapture(settings, id, { ocr = true, ai = false, all
 
 /** Remove do cérebro itens de imagens que não existem mais (ex.: biblioteca limpa por fora). */
 export async function pruneOrphans() {
-  const ids = new Set((await listCaptures()).map((r) => r.id));
+  const ids = new Set((await listCaptures({ withTemp: true })).map((r) => r.id));
   const items = await loadItems();
   const left = items.filter((it) => it.type !== 'image' || !it.captureId || ids.has(it.captureId));
   if (left.length !== items.length) await saveItems(left);

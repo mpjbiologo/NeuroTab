@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.5.2 — 2026-11-19
+- 🎞️ **Nova aba Mídia nas configurações:** reúne tudo de análise de imagens, e vai receber as opções de vídeos e áudios
+  - **Guardar a imagem analisada na biblioteca:** "Perguntar a cada vez" (padrão), "Guardar sempre" ou "Não guardar". Antes, toda imagem analisada pelo botão direito ia para a biblioteca. Agora, sem guardar, ela não aparece na biblioteca nem no cérebro e some quando a janela de análise fecha; a janela tem o botão **💾 Guardar** para mudar de ideia
+  - **IA para imagens:** escolha uma IA só para descrever imagens (por exemplo, o Ollama no computador), sem trocar a IA da conversa. Usa a chave daquele provedor, configurada na aba IA e voz
+  - "Modelo para imagens", "Enviar imagens à IA sem perguntar" e "Ler o texto das imagens salvas" saíram da aba IA e voz e vieram para cá
+
 ## v0.7.5.1 — 2026-11-19
 - 🧩 **Barra de organizar sempre à vista (#60):** no modo Livre, a barra com "＋ Widget", "Salvar layout" e "Concluir" ficava atrás dos widgets. Agora ela fica fixa no rodapé, por cima de tudo, nos modos Grade e Livre. A página ganha uma folga embaixo enquanto você organiza, para nenhum widget ficar escondido atrás da barra. No celular, ela se ajusta à largura da tela
 - 🔧 **Descrição de imagens pela IA:** no Ollama, o modelo padrão (llama3.2) só entende texto. Ele recebia a imagem, ignorava e "descrevia" só pelo texto lido. Agora a NeuroTab confere se o modelo enxerga imagens. Se não enxergar, usa outro modelo com visão já instalado (gemma3, llava, qwen2.5vl…) ou explica o que instalar (`ollama pull gemma3`), sem enviar nada ao modelo errado. A janela de análise mostra qual modelo descreveu a imagem

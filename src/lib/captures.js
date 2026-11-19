@@ -33,7 +33,7 @@ export function validateImage(blob, declaredType = '') {
 }
 
 /** Salva uma imagem na biblioteca e avisa as abas abertas. */
-export async function saveCapture({ blob, type = '', url = '', pageUrl = '', pageTitle = '', fileName = 'imagem', source = 'context' }) {
+export async function saveCapture({ blob, type = '', url = '', pageUrl = '', pageTitle = '', fileName = 'imagem', source = 'context', temp = false }) {
   // Servidor sem tipo ou com tipo genérico (application/octet-stream)? Descobre pelos primeiros bytes.
   const declared = (blob?.type || type || '').split(';')[0].trim().toLowerCase();
   if (blob?.size && !declared.startsWith('image/')) {
@@ -54,6 +54,8 @@ export async function saveCapture({ blob, type = '', url = '', pageUrl = '', pag
     fileName: String(fileName || 'imagem').slice(0, 160),
     source,
     capturedAt: Date.now(),
+    // temp: aberta só para análise; não aparece na biblioteca nem no cérebro até a pessoa guardar.
+    ...(temp ? { temp: true } : {}),
   };
   await new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
@@ -63,7 +65,7 @@ export async function saveCapture({ blob, type = '', url = '', pageUrl = '', pag
     tx.onabort = () => reject(tx.error || new Error('Falha ao salvar a imagem.'));
   });
   // Outras abas recebem a mensagem; a própria página recebe o evento local.
-  chrome.runtime.sendMessage({ type: 'imageCaptured', id: record.id }).catch(() => {});
+  if (!record.temp) chrome.runtime.sendMessage({ type: 'imageCaptured', id: record.id }).catch(() => {});
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('nt-image-captured', { detail: record.id }));
   return record;
 }

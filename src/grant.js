@@ -22,7 +22,7 @@ const say = (text, cls = '') => { msg.className = 'msg ' + cls; msg.textContent 
   }
   document.querySelector('#host').textContent = new URL(origin).hostname;
   document.querySelector('#cancel').onclick = () => window.close();
-  const meta = { url: src, pageUrl: q.get('page') || '', pageTitle: q.get('title') || '', source: 'context' };
+  const meta = { url: src, pageUrl: q.get('page') || '', pageTitle: q.get('title') || '', source: 'context', temp: q.get('temp') === '1' };
   const tabId = q.get('tab') ? Number(q.get('tab')) : null;
   const done = (rec) => {
     // Veio de "Analisar imagem": esta mesma janelinha vira a janela de análise.

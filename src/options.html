@@ -22,6 +22,7 @@
     <button role="tab" data-tab="geral" class="active">🏠 Geral</button>
     <button role="tab" data-tab="fundo">🖼 Plano de fundo</button>
     <button role="tab" data-tab="ia">🤖 IA e voz</button>
+    <button role="tab" data-tab="midia">🎞️ Mídia</button>
     <button role="tab" data-tab="notas">📝 Notas e integrações</button>
     <button role="tab" data-tab="backup">💾 Backup</button>
     <button role="tab" data-tab="apoie" class="heart">❤ Apoie</button>
@@ -262,20 +263,6 @@
       </div>
       <p class="hint">🔒 A chave fica guardada só neste navegador. Ela só vai para o backup se você marcar "Incluir chaves de API" na aba Backup.</p>
       <hr>
-      <h2>Imagens</h2>
-      <div class="opt">
-        <div><b>Ler o texto das imagens salvas</b><small>Feito aqui no computador: as imagens da biblioteca não saem dele. Na primeira vez, baixa o pacote do idioma (de 1,4 a 3 MB).</small></div>
-        <label class="sw"><input type="checkbox" data-k="imageOcr"><span></span></label>
-      </div>
-      <div class="opt">
-        <div><b>Enviar imagens à IA sem perguntar</b><small>Para descrever uma imagem, ela vai ao provedor de IA. Desligado, a NeuroTab pergunta a cada vez. Com o Ollama, nada sai do computador e não há pergunta.</small></div>
-        <label class="sw"><input type="checkbox" id="imagesAllowed"><span></span></label>
-      </div>
-      <div class="opt">
-        <div><b>Modelo para imagens</b><small>Vazio: o mesmo modelo da IA. No Ollama, se ele só entender texto, a NeuroTab usa um modelo com visão que já esteja instalado (ex.: gemma3, llava, qwen2.5vl).</small></div>
-        <input type="text" id="visionModel" placeholder="automático" spellcheck="false" style="max-width:200px">
-      </div>
-      <hr>
       <h2>Voz</h2>
       <div class="opt">
         <div><b>Idioma do ditado e da leitura</b></div>
@@ -397,6 +384,38 @@
     </section>
 
     <!-- NOTAS -->
+    <section id="tab-midia" class="card" hidden>
+      <h2>Análise de imagens</h2>
+      <p>O que acontece quando você usa <b>Analisar imagem</b> (botão direito sobre uma imagem) e qual IA descreve as imagens. O texto das imagens é lido aqui no computador; a descrição vai para a IA escolhida.</p>
+      <div class="opt">
+        <div><b>Guardar a imagem analisada na biblioteca</b><small>Guardada, ela fica na biblioteca e o cérebro a encontra na busca e nas perguntas. Sem guardar, a imagem some quando você fecha a janela de análise.</small></div>
+        <select data-k="media.save">
+          <option value="ask">Perguntar a cada vez</option>
+          <option value="auto">Guardar sempre</option>
+          <option value="never">Não guardar (dá para guardar na janela)</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>IA para imagens</b><small id="mediaProviderNote"></small></div>
+        <select data-k="media.provider" id="mediaProvider"><option value="">A mesma da aba IA e voz</option></select>
+      </div>
+      <div class="opt">
+        <div><b>Modelo para imagens</b><small>Vazio: o modelo padrão da IA para imagens. No Ollama, se ele só entender texto, a NeuroTab usa um modelo com visão que já esteja instalado (ex.: gemma3, llava, qwen2.5vl).</small></div>
+        <input type="text" class="txt" id="visionModel" placeholder="automático" spellcheck="false" style="max-width:220px">
+      </div>
+      <div class="opt">
+        <div><b>Enviar imagens à IA sem perguntar</b><small>Para descrever uma imagem, ela vai ao provedor de IA. Desligado, a NeuroTab pergunta a cada vez. Com o Ollama, nada sai do computador e não há pergunta.</small></div>
+        <label class="sw"><input type="checkbox" id="imagesAllowed"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Ler o texto das imagens salvas</b><small>Feito aqui no computador: as imagens da biblioteca não saem dele. Na primeira vez, baixa o pacote do idioma (de 1,4 a 3 MB).</small></div>
+        <label class="sw"><input type="checkbox" data-k="imageOcr"><span></span></label>
+      </div>
+      <hr>
+      <h2>Vídeos e áudios</h2>
+      <p class="hint">🎬 Em breve: transcrever e resumir áudios e vídeos, com a mesma escolha de IA e de onde processar (no computador ou na internet). As configurações vão ficar aqui.</p>
+    </section>
+
     <section id="tab-notas" class="card" hidden>
       <h2>Importar do Google Keep</h2>
       <p>O Google só libera a API do Keep para contas empresariais (Workspace). Para contas pessoais, a importação é feita pelo <b>Google Takeout</b>:</p>

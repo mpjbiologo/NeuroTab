@@ -34,6 +34,8 @@
   .status { font-size: var(--fs-sm); color: var(--text-2); }
   .ok { color: var(--ok); } .err { color: var(--bad); }
   label.check { display: flex; gap: 6px; align-items: center; font-size: var(--fs-sm); color: var(--text-2); }
+  .keep { border-color: color-mix(in oklch, var(--accent) 50%, var(--border)); }
+  .grow { flex: 1; min-width: 200px; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -42,6 +44,13 @@
   <h1>🔍 Analisar imagem</h1>
   <div class="preview"><img id="img" alt="Imagem analisada"></div>
   <div class="src" id="src"></div>
+  <section id="keepBox" class="keep" hidden>
+    <div class="row">
+      <span class="grow" id="keepText">Guardar esta imagem na biblioteca? Assim o cérebro também a encontra depois.</span>
+      <button id="keep" type="button" class="primary">💾 Guardar</button>
+      <button id="noKeep" type="button">Não guardar</button>
+    </div>
+  </section>
   <p class="status" id="status" role="status" aria-live="polite"></p>
 
   <section id="readBox" hidden>

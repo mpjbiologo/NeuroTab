@@ -15,6 +15,9 @@ Como a NeuroTab lê as imagens da biblioteca (#17) e a janela **Analisar imagem*
 
 ## Regras
 
+- **Guardar ou não (Configurações → Mídia, `settings.media.save`).** "Analisar imagem" pelo botão direito salva a imagem como temporária (`temp: true`) quando a opção não é "Guardar sempre". Temporária não aparece na biblioteca, não é lida pela nova aba e não vira item do cérebro. `keepCapture` guarda; `discardTemp` apaga ao fechar a janela; `purgeTemp` limpa as esquecidas (mais de 6 h) quando a nova aba abre.
+- **IA para imagens (`settings.media.provider`).** `visionSettings()` troca só o provedor das chamadas de imagem; a chave vem de `settings.ai.keys` daquele provedor.
+
 - **A imagem não sai do computador para ler o texto.** Só o pacote do idioma é baixado, uma vez, do jsDelivr (`@tesseract.js-data/<idioma>@1.0.0`, formato `best_int`), e fica guardado pelo próprio Tesseract no IndexedDB da extensão.
 - **IA na internet só recebe a imagem com autorização.** A janela de análise mostra para onde vai a imagem e só envia no clique ("Enviar e descrever"). "Não perguntar de novo" grava `settings.ai.imagesAllowed`. IA local (Ollama ou URL em localhost) não pergunta.
 - **Leitura automática é só a local.** A descrição pela IA é sempre pedida pela pessoa.

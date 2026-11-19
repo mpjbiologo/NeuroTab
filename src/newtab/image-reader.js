@@ -1,7 +1,7 @@
 // NeuroTab — lê, sem pressa, o texto das imagens novas da biblioteca (#17), só no computador.
 // Uma por vez, quando a página está à toa. A descrição pela IA é sempre pedida pela pessoa (analyze.html).
 import { S } from './state.js';
-import { pendingCaptures, analyzeCapture, pruneOrphans } from '../lib/image-index.js';
+import { pendingCaptures, analyzeCapture, pruneOrphans, purgeTemp } from '../lib/image-index.js';
 import { closeReader } from '../lib/vision.js';
 
 let busy = false;
@@ -46,6 +46,7 @@ export function scheduleImageRead(ms = 4000) {
 export function setupImageReader() {
   scheduleImageRead(6000);
   pruneOrphans().catch(() => {});
+  purgeTemp().catch(() => {}); // temporárias de análises esquecidas
   window.addEventListener('nt-image-captured', () => scheduleImageRead(800));
   chrome.runtime.onMessage.addListener((msg) => { if (msg?.type === 'imageCaptured') scheduleImageRead(1500); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleImageRead(3000); });

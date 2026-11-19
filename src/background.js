@@ -81,13 +81,16 @@ async function captureImage(info, tab, { then = '' } = {}) {
   const pageUrl = info.pageUrl || tab?.url || '';
   const meta = { url: sourceUrl, pageUrl, pageTitle: tab?.title || '', source: 'context' };
   const where = { tabId: tab?.id, frameId: info.frameId ?? 0, windowId: tab?.windowId };
+  // Só para analisar: guarda na biblioteca conforme Configurações → Mídia (sem await aqui, por causa do pedido de permissão).
+  const tempP = then === 'analyze' ? loadData().then((d) => d.settings.media?.save !== 'auto').catch(() => true) : Promise.resolve(false);
   if (sourceUrl.startsWith('data:image/')) {
+    meta.temp = await tempP;
     const blob = await (await fetch(sourceUrl)).blob();
     return saveCapture({ ...meta, blob, url: '', fileName: 'imagem' });
   }
   let parsed = null;
   try { parsed = new URL(sourceUrl); } catch { /* endereço estranho: tenta pela página */ }
-  if (!parsed || parsed.protocol !== 'https:') return grabAndSave(sourceUrl, meta, where);
+  if (!parsed || parsed.protocol !== 'https:') { meta.temp = await tempP; return grabAndSave(sourceUrl, meta, where); }
 
   const permission = { origins: [parsed.origin + '/*'] };
   // IMPORTANTE: nenhum await antes deste pedido, para não perder o gesto do usuário.
@@ -97,8 +100,9 @@ async function captureImage(info, tab, { then = '' } = {}) {
   } catch {
     granted = null; // o navegador não deixou pedir aqui
   }
+  meta.temp = await tempP;
   if (granted === null) {
-    const q = new URLSearchParams({ src: sourceUrl, page: pageUrl, title: meta.pageTitle.slice(0, 300), tab: String(where.tabId ?? ''), frame: String(where.frameId), win: String(where.windowId ?? ''), then });
+    const q = new URLSearchParams({ temp: meta.temp ? '1' : '', src: sourceUrl, page: pageUrl, title: meta.pageTitle.slice(0, 300), tab: String(where.tabId ?? ''), frame: String(where.frameId), win: String(where.windowId ?? ''), then });
     await chrome.windows.create({ url: chrome.runtime.getURL('src/grant.html?' + q), type: 'popup', width: 460, height: 300 });
     return null;
   }

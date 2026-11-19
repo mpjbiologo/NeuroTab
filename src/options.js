@@ -119,9 +119,23 @@ async function chooseTheme(id) {
   toast(`Tema ${THEMES[id].label} aplicado`);
 }
 
+// data-k aceita caminho com ponto (ex.: "media.save").
+const getK = (k) => k.split('.').reduce((o, p) => o?.[p], data.settings);
+const setK = (k, v) => { const ps = k.split('.'); const last = ps.pop(); ps.reduce((o, p) => (o[p] ??= {}), data.settings)[last] = v; };
+
+/** Aviso na aba Mídia quando a IA escolhida para imagens ainda não tem chave. */
+function mediaProviderNote() {
+  const id = data.settings.media?.provider || '';
+  const p = PROVIDERS[id];
+  const needsKey = p && !p.noKey && !data.settings.ai.keys?.[id];
+  $('#mediaProviderNote').textContent = !id ? t('Usa a mesma IA da aba IA e voz.')
+    : needsKey ? t('Falta a chave de') + ' ' + p.name + t(': configure na aba IA e voz (escolha o provedor, cole a chave e volte ao provedor de conversa, se quiser).')
+    : t('Só as imagens vão para') + ' ' + p.name + t('; a conversa continua com a IA da aba IA e voz.');
+}
+
 function fillSettings() {
   for (const el of $$('[data-k]')) {
-    const v = data.settings[el.dataset.k];
+    const v = getK(el.dataset.k);
     if (el.type === 'checkbox') el.checked = !!v;
     else el.value = v == null ? '' : String(v);
   }
@@ -137,8 +151,9 @@ function bindSettings() {
     const evt = el.type === 'range' || el.type === 'color' || el.type === 'text' ? 'input' : 'change';
     el.addEventListener(evt, debounce(async () => {
       const k = el.dataset.k;
-      data.settings[k] = el.type === 'checkbox' ? el.checked : 'num' in el.dataset ? Number(el.value) : el.value;
+      setK(k, el.type === 'checkbox' ? el.checked : 'num' in el.dataset ? Number(el.value) : el.value);
       await saveData(data);
+      if (k === 'media.provider') mediaProviderNote();
       if (k === 'lang') { location.reload(); return; }
       toast('Salvo ✓');
     }, el.type === 'text' ? 500 : 0));
@@ -208,6 +223,11 @@ async function optimizeImage(dataUrl, max = 2560, quality = 0.86) {
 function setupAi() {
   const sel = $('#provider');
   for (const [k, p] of Object.entries(PROVIDERS)) sel.add(new Option(p.name, k));
+  // Aba Mídia: IA preferencial para imagens (vazio = a mesma da aba IA).
+  const mp = $('#mediaProvider');
+  for (const [k, p] of Object.entries(PROVIDERS)) mp.add(new Option(p.name, k));
+  mp.value = data.settings.media?.provider || '';
+  mediaProviderNote();
 
   const paint = () => {
     const ai = data.settings.ai;

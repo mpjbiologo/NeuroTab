@@ -115,6 +115,12 @@ export const DEFAULT_SETTINGS = {
   checkUpdates: true,
 };
 
+// Aba "Mídia" das configurações: análise de imagens (e, no futuro, vídeos e áudios).
+export const DEFAULT_MEDIA = {
+  save: 'ask', // ao analisar uma imagem do botão direito: 'auto' guarda na biblioteca, 'ask' pergunta, 'never' só guarda se pedir
+  provider: '', // IA para imagens ('' = a mesma da aba IA); usa a chave daquele provedor
+};
+
 export function mergeSettings(s = {}) {
   if (!Array.isArray(s.places) || (!s.places.length && s.weather)) {
     s = { ...s, places: s.weather ? [{ id: 'home', name: s.weather.name, region: s.weather.region || '', lat: s.weather.lat, lon: s.weather.lon, tz: null }] : [] };
@@ -124,6 +130,7 @@ export function mergeSettings(s = {}) {
     ...s,
     widgets: normalizeWidgets(s.widgets),
     layouts: Array.isArray(s.layouts) ? s.layouts.map((l) => ({ ...l, widgets: normalizeWidgets(l.widgets) })) : [],
+    media: { ...DEFAULT_MEDIA, ...(s.media || {}) },
     ai: { ...DEFAULT_AI, ...(s.ai || {}), keys: { ...(s.ai?.keys || {}) }, models: { ...(s.ai?.models || {}) }, embedModels: { ...(s.ai?.embedModels || {}) }, baseUrls: { ...(s.ai?.baseUrls || {}) } },
   };
 }
