@@ -1,6 +1,6 @@
 # Caminho até a 1.0
 
-Cada versão grande é um marco no GitHub, com as issues que entram nela. As versões grandes saem em atualizações menores (0.7.0, 0.7.1…) para as revisões das lojas serem rápidas. Estimativa: **12 a 14 atualizações** até a 1.0 (a contar da 0.7.0).
+Cada versão grande é um marco no GitHub, com as issues que entram nela. As versões grandes saem em atualizações menores (0.7.0, 0.7.1…) para as revisões das lojas serem rápidas. Estimativa: **15 a 17 atualizações** até a 1.0 (a contar da 0.7.0); 7 já saíram.
 
 ## O que a 1.0 promete
 
@@ -13,7 +13,7 @@ A 1.0 não é "ter todos os recursos". É poder dizer: **pode confiar seus dados
 
 ## Marcos
 
-### [v0.7 — Base modular e painel](https://github.com/mpjbiologo/NeuroTab/milestone/3) · 7 atualizações
+### [v0.7 — Base modular e painel](https://github.com/mpjbiologo/NeuroTab/milestone/3) · 9 atualizações
 Primeiro a base, depois os recursos.
 - ✅ **0.7.0 — Arquitetura modular:** `newtab.js` dividido em módulos (#14); botões flutuantes sem cobrir widgets (#38).
 - ✅ **0.7.1:** barramento de eventos (#5) e contrato dos widgets (#6); o cérebro lê o widget de mapas (#43); maximizar, minimizar e restaurar widgets (#18).
@@ -21,10 +21,13 @@ Primeiro a base, depois os recursos.
   - ✅ 0.7.2.1 a 0.7.2.3: rotas e trânsito ao vivo dentro do widget Trânsito, favoritos salvos ali (#43).
 - ✅ **0.7.3 — Voz local:** voz transcrita no próprio computador (reconhecimento local do navegador ou Whisper local, com o Ollama respondendo) e modo "somente local" (#49); janelas lembram o estado, maximizado incluído (#50).
 - ✅ **0.7.4 — Novo visual:** sistema de design com três temas (Futurista, Sóbria, Calorosa), ícones desenhados, acessibilidade e o site no mesmo visual (#53).
-- **0.7.5 — O cérebro lê as imagens**: leitura das imagens da biblioteca pela IA da pessoa (com consentimento) e por leitura de texto local, sem enviar nada (#17); no botão direito, "Analisar imagem" e "Traçar rota" até um endereço selecionado, que abre no widget Trânsito (#54). Na barra de pesquisa universal, a pessoa escolhe o que o Enter faz; por padrão, pesquisa na internet no serviço escolhido (#57).
+- ✅ **0.7.5 — O cérebro lê as imagens:** texto das imagens lido no computador e imagens no cérebro (#17); "Analisar imagem" e "Traçar rota" no botão direito (#54); o Enter da barra de pesquisa faz o que a pessoa escolher (#57).
+- **0.7.5.1 — Correção:** a barra de adicionar widgets fica atrás dos widgets (#60).
 - **0.7.6 — Agenda:** agenda própria (dia, semana, mês, recorrência), importação de `.ics` e o cérebro respondendo sobre compromissos; contas Google/Microsoft numa etapa seguinte (#26).
+- **0.7.7 — Do seu jeito:** atalhos com formato (redondo, quadrado, arredondado), cor e ícone próprios, favicon automático com recarga e envio de ícone (#59); editor visual da aparência em Configurações → Aparência, construído sobre os três temas: cores, transparência, cantos, estilo dos widgets, prévia, restaurar padrão e exportar/importar tema (#58).
 
-### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 2 atualizações
+### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 3 atualizações
+- **Primeiro, a IA certa para o computador:** "Qual é a melhor IA para o meu computador?" nas Configurações de IA, com o que o navegador detecta, o que a pessoa completa à mão, modelos do Ollama recomendados e o passo a passo para instalar e ligar (#61). É a base da voz local da v0.8.
 - Responder falando ao ser chamado e conversar até 1 minuto de silêncio (#40).
 - Modo reunião: gravar, transcrever, resumo, pontos importantes e tarefas, com botão 📋 perto do microfone (#41).
 - Modo conversa: microfone sempre ligado e o cérebro responde a tudo, com botão 💬 perto do microfone (#44).
