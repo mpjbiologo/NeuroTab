@@ -18,6 +18,7 @@
   --z-in-active: 5;        /* widget sendo redimensionado */
   --z-in-handle: 3;        /* alça dentro do widget livre */
   --z-in-guides: 9000;     /* guias de encaixe, acima dos widgets livres (100–8000) */
+  --z-in-toolbar: 9500;    /* aviso de atualização no modo livre, acima dos widgets livres */
   --z-in-backdrop: 9998;   /* fundo escurecido do widget maximizado */
   --z-in-maximized: 9999;  /* widget maximizado */
   /* Cores, fontes e raios: src/theme.css (temas). Apelidos antigos abaixo. */
@@ -154,10 +155,21 @@ body.dock-top #pinDock, body.dock-bottom #pinDock { display: none; }
 .omni-item .sub { color: var(--muted); font-size: var(--fs-xs); margin-left: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
 .omni-item.sel, .omni-item:hover { background: var(--tint-2); }
 
+/* Barra de organizar (#60): fica fora de #center, fixa no rodapé, acima dos widgets (grade ou livre).
+   O conteúdo ganha folga embaixo para nenhum widget ficar escondido atrás dela. */
 .edit-bar {
+  position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: var(--z-toolbar);
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  width: min(1240px, 100%); margin: 0 auto 14px; padding: 10px 14px;
-  border-radius: var(--radius-md); background: color-mix(in oklch, var(--accent) 18%, transparent); border: 1px solid color-mix(in oklch, var(--accent) 45%, transparent);
+  width: min(1100px, calc(100vw - 32px)); margin: 0; padding: 10px 14px; box-sizing: border-box;
+  max-height: 40vh; overflow-y: auto;
+  border-radius: var(--radius-md); background: var(--surface-strong); backdrop-filter: blur(16px); box-shadow: var(--shadow-pop);
+  border: 1px solid color-mix(in oklch, var(--accent) 45%, transparent);
+}
+body.editing #center { padding-bottom: calc(var(--edit-bar-h, 64px) + 28px); }
+body.free.editing .widgets { min-height: calc(100vh - var(--edit-bar-h, 64px) - 40px); }
+@media (max-width: 700px) {
+  .edit-bar { bottom: 8px; width: calc(100vw - 16px); gap: 6px; padding: 8px 10px; }
+  .edit-bar .grow { display: none; }
 }
 .grow { flex: 1; }
 
@@ -499,8 +511,7 @@ body.editing .free-fixed .grip { opacity: 1; }
 .guide-v { top: 0; bottom: 0; width: 1px; }
 .guide-h { left: 0; right: 0; height: 1px; }
 .free-empty { position: absolute; top: 320px; left: 0; right: 0; text-align: center; }
-body.free .edit-bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: var(--z-toolbar); width: min(1100px, 94vw); margin: 0; backdrop-filter: blur(16px); background: var(--surface-strong); box-shadow: var(--shadow-pop); }
-body.free .update-bar { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: var(--z-toolbar); width: min(900px, 94vw); margin: 0; backdrop-filter: blur(16px); }
+body.free .update-bar { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: var(--z-in-toolbar); width: min(900px, 94vw); margin: 0; backdrop-filter: blur(16px); }
 body.free.dock-top .update-bar { top: 64px; }
 .seg { display: inline-flex; }
 .seg .btn { border-radius: 0; }
@@ -704,7 +715,7 @@ select, .layout-sel { background-color: var(--surface-solid); color: var(--text)
 select option, .layout-sel option { background: var(--surface-solid); color: var(--text); }
 .tag { background: var(--accent-soft); color: var(--accent-text); }
 .wbody .muted, .muted { color: var(--text-2); }
-.edit-bar { background: var(--accent-soft); border-color: color-mix(in oklch, var(--accent) 45%, transparent); }
+.edit-bar { background: color-mix(in oklch, var(--accent) 14%, var(--surface-strong)); border-color: color-mix(in oklch, var(--accent) 45%, transparent); }
 .update-bar { background: var(--surface-strong); border-color: var(--border-strong); }
 a { color: var(--accent-text); text-underline-offset: 3px; }
 .toast { background: var(--surface-solid); color: var(--text); border-color: var(--border-strong); }

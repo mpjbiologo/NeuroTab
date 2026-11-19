@@ -53,23 +53,24 @@
 
     <div id="updateBar" class="update-bar" hidden></div>
 
-    <div id="editBar" class="edit-bar" hidden>
-      <span>🧩 <b>Organizando</b></span>
-      <span class="seg" role="group" aria-label="Modo">
-        <button id="modeGrid" class="btn" title="Widgets em colunas, organizados automaticamente">▦ Grade</button>
-        <button id="modeFree" class="btn" title="Coloque os widgets em qualquer lugar da tela">✥ Livre</button>
-      </span>
-      <button id="rearrange" class="btn" title="Reorganizar tudo em grade" hidden>🧲 Reorganizar</button>
-      <span class="grow"></span>
-      <select id="layoutSel" class="layout-sel" title="Layouts salvos"></select>
-      <button id="layoutSave" class="btn" title="Salvar estes widgets como um layout">💾 Salvar layout</button>
-      <button id="layoutDel" class="btn danger" title="Excluir layout" hidden>🗑</button>
-      <button id="addWidget" class="btn">＋ Widget</button>
-      <button id="doneEdit" class="btn primary">Concluir</button>
-    </div>
-
     <section id="widgets" class="widgets" aria-label="Widgets"></section>
   </main>
+
+  <!-- Barra de organizar: fora do conteúdo, para nunca ficar atrás dos widgets (#60). -->
+  <div id="editBar" class="edit-bar" hidden>
+    <span>🧩 <b>Organizando</b></span>
+    <span class="seg" role="group" aria-label="Modo">
+      <button id="modeGrid" class="btn" title="Widgets em colunas, organizados automaticamente">▦ Grade</button>
+      <button id="modeFree" class="btn" title="Coloque os widgets em qualquer lugar da tela">✥ Livre</button>
+    </span>
+    <button id="rearrange" class="btn" title="Reorganizar tudo em grade" hidden>🧲 Reorganizar</button>
+    <span class="grow"></span>
+    <select id="layoutSel" class="layout-sel" title="Layouts salvos"></select>
+    <button id="layoutSave" class="btn" title="Salvar estes widgets como um layout">💾 Salvar layout</button>
+    <button id="layoutDel" class="btn danger" title="Excluir layout" hidden>🗑</button>
+    <button id="addWidget" class="btn">＋ Widget</button>
+    <button id="doneEdit" class="btn primary">Concluir</button>
+  </div>
 
   <!-- Atalho -->
   <dialog id="linkDlg" class="dlg">

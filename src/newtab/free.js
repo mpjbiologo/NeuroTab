@@ -430,6 +430,8 @@ export function setEditing(on) {
   S.editing = on;
   document.body.classList.toggle('editing', on);
   $('#editBar').hidden = !on;
+  // Folga embaixo do conteúdo do tamanho real da barra (ela quebra em duas linhas em telas estreitas).
+  if (on) requestAnimationFrame(() => document.body.style.setProperty('--edit-bar-h', $('#editBar').offsetHeight + 'px'));
   $('#editLayout').classList.toggle('on', on);
   $$('.widget:not(.free-item)').forEach((w) => { w.draggable = on; });
   if (on) { renderLayoutPicker(); paintModeButtons(); }

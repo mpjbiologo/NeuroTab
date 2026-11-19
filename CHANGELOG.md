@@ -1,6 +1,7 @@
 # Changelog
 
-## v0.7.5.1 — em preparação
+## v0.7.5.1 — 2026-11-19
+- 🧩 **Barra de organizar sempre à vista (#60):** no modo Livre, a barra com "＋ Widget", "Salvar layout" e "Concluir" ficava atrás dos widgets. Agora ela fica fixa no rodapé, por cima de tudo, nos modos Grade e Livre. A página ganha uma folga embaixo enquanto você organiza, para nenhum widget ficar escondido atrás da barra. No celular, ela se ajusta à largura da tela
 - 🔧 **Descrição de imagens pela IA:** no Ollama, o modelo padrão (llama3.2) só entende texto. Ele recebia a imagem, ignorava e "descrevia" só pelo texto lido. Agora a NeuroTab confere se o modelo enxerga imagens. Se não enxergar, usa outro modelo com visão já instalado (gemma3, llava, qwen2.5vl…) ou explica o que instalar (`ollama pull gemma3`), sem enviar nada ao modelo errado. A janela de análise mostra qual modelo descreveu a imagem
   - Nova opção em Configurações → IA e voz → Imagens: **Modelo para imagens**, para escolher o modelo das imagens sem trocar o da conversa
   - Mais folga de resposta para modelos que "pensam" antes de responder (Gemini, GPT-5), que podiam devolver a descrição cortada
