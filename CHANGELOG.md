@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.5 — em preparação
+## v0.7.5 — 2026-11-19
 **O cérebro lê as imagens, e a barra de pesquisa faz o que você escolher no Enter.**
 
 - 🖼️ **O cérebro lê as imagens da biblioteca (#17):** o texto de cada imagem salva é lido no próprio computador, sem enviar a imagem a lugar nenhum. A imagem lida vira um item do cérebro (filtro 🖼️ Imagens): a busca, a busca por significado e as perguntas ao cérebro passam a encontrá-la, e o item tem um botão para abrir a imagem original. Excluir a imagem tira o item do cérebro. Cada imagem da biblioteca mostra se já foi lida, se não tem texto ou se deu erro
