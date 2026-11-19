@@ -1,0 +1,132 @@
+// Cérebro lê as imagens (#17) e "Analisar imagem" (#54): texto lido no computador, item no cérebro,
+// busca, exclusão, descrição pela IA só com autorização, endereço → rota no widget Trânsito.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { launch } from './helpers.js';
+
+// Imagem com texto e endereço, desenhada na própria página e salva na biblioteca.
+const saveSample = (p) => p.evaluate(async () => {
+  const c = new OffscreenCanvas(900, 260);
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, 900, 260); g.fillStyle = '#111';
+  g.font = 'bold 44px sans-serif'; g.fillText('Padaria Pão Quente', 30, 80);
+  g.font = '34px sans-serif'; g.fillText('Rua da Bahia, 1148 - Centro', 30, 150); g.fillText('Aberto das 6h às 20h', 30, 210);
+  const blob = await c.convertToBlob({ type: 'image/png' });
+  const { saveCapture } = await import('/src/lib/captures.js');
+  return (await saveCapture({ blob, pageUrl: 'https://exemplo.com/padaria', pageTitle: 'Padaria', fileName: 'padaria.png' })).id;
+});
+
+// Espera até a condição sobre o cérebro valer (waitForFunction não espera promessas).
+async function until(x, p, fn, ms = 60000) {
+  const t0 = Date.now();
+  for (;;) {
+    const items = (await x.storage(p, 'nt_brain')) || [];
+    if (fn(items)) return items;
+    if (Date.now() - t0 > ms) throw new Error('tempo esgotado esperando o cérebro');
+    await p.waitForTimeout(300);
+  }
+}
+
+const AI_JSON = { titulo: 'Placa da padaria', descricao: 'Placa de uma padaria com endereço e horário.', texto: 'Padaria Pão Quente\nRua da Bahia, 1148 - Centro', tags: ['padaria'], endereco: 'Rua da Bahia, 1148 - Centro, Belo Horizonte', resposta: 'Abre às 6h.' };
+
+test('imagem salva é lida no computador e vira item do cérebro; busca encontra; excluir tira do cérebro', async () => {
+  const x = await launch();
+  try {
+    const p = await x.open('src/newtab.html');
+    const data = await x.storage(p, 'nt_data');
+    data.settings.widgets = [{ id: 'image-library', w: 12 }];
+    await x.seed(p, { nt_data: data });
+    const id = await saveSample(p);
+    const item = (await until(x, p, (l) => l.some((i) => i.type === 'image'))).find((i) => i.type === 'image');
+    assert.equal(item.captureId, id);
+    assert.match(item.text, /Rua da Bahia, 1148/);
+    assert.match(item.text, /Endereço: Rua da Bahia, 1148 - Centro/);
+    assert.equal(item.title, 'Padaria Pão Quente');
+    assert.equal(item.url, 'https://exemplo.com/padaria');
+    // a biblioteca mostra que já está no cérebro
+    await p.waitForSelector('.nt-image-status.done');
+
+    // busca universal encontra pelo texto da imagem
+    await p.click('#omni');
+    await p.keyboard.type('bahia');
+    await p.waitForSelector('.omni-item:has-text("Padaria Pão Quente")');
+    await p.keyboard.press('Escape');
+
+    // excluir na biblioteca tira o item do cérebro
+    await p.click('.nt-image-card button:has-text("Excluir")');
+    await until(x, p, (l) => !l.some((i) => i.type === 'image'), 10000);
+    assert.deepEqual(x.errors, []);
+  } finally {
+    await x.close();
+  }
+});
+
+test('Analisar imagem: texto e endereço na hora; IA na internet só depois de autorizar; rota abre no Trânsito', async () => {
+  const x = await launch({ ai: (sys) => (sys.includes('analisa imagens') ? JSON.stringify(AI_JSON) : undefined) });
+  try {
+    await x.ctx.addInitScript(() => { if (globalThis.chrome?.permissions) { chrome.permissions.contains = async () => true; chrome.permissions.request = async () => true; } });
+    const p = await x.open('src/newtab.html');
+    const data = await x.storage(p, 'nt_data');
+    data.settings.ai = { ...data.settings.ai, keys: { gemini: 'K' }, autoEnrich: false };
+    data.settings.imageOcr = false; // a nova aba não lê sozinha: quem lê é a janela de análise
+    await x.seed(p, { nt_data: data });
+    const id = await saveSample(p);
+    data.settings.imageOcr = true;
+    await x.seed(p, { nt_data: data }, { reload: false });
+
+    const a = await x.open('src/analyze.html?id=' + id);
+    await a.waitForSelector('#read:has-text("Rua da Bahia")', { timeout: 60000 });
+    assert.equal(await a.inputValue('#addr'), 'Rua da Bahia, 1148 - Centro');
+    // Gemini é serviço na internet: pede autorização e nada foi enviado ainda
+    assert.equal(await a.isVisible('#consent'), true);
+    assert.match(await a.textContent('#target'), /Gemini/);
+    assert.equal(x.calls.ai.filter((s) => s.includes('analisa imagens')).length, 0);
+
+    await a.fill('#question', 'Que horas abre?');
+    await a.check('#always');
+    await a.click('#describe');
+    await a.waitForSelector('#desc:has-text("Placa de uma padaria")');
+    assert.match(await a.textContent('#answer'), /Abre às 6h/);
+    assert.equal(await a.inputValue('#addr'), 'Rua da Bahia, 1148 - Centro, Belo Horizonte');
+    assert.equal((await x.storage(a, 'nt_data')).settings.ai.imagesAllowed, true, '"não perguntar de novo" ficou salvo');
+    const item = (await x.storage(a, 'nt_brain')).find((i) => i.captureId === id);
+    assert.equal(item.title, 'Placa da padaria');
+    assert.match(item.text, /Descrição: Placa de uma padaria/);
+    assert.deepEqual(item.tags, ['padaria']);
+
+    // rota: abre a nova aba com o widget Trânsito e o destino preenchido
+    const [tab] = await Promise.all([x.ctx.waitForEvent('page'), a.click('#route')]);
+    await tab.waitForLoadState();
+    await tab.waitForSelector('[data-id="traffic"], .w-traffic, #widgets :text("Trânsito")', { timeout: 15000 });
+    assert.ok(!tab.url().includes('route='), 'o pedido some do endereço');
+    assert.ok((await x.storage(tab, 'nt_data')).settings.widgets.some((w) => w.id === 'traffic'));
+    assert.deepEqual(x.errors, []);
+  } finally {
+    await x.close();
+  }
+});
+
+test('Ollama (IA no computador) descreve sem pedir autorização', async () => {
+  const x = await launch();
+  try {
+    await x.ctx.addInitScript(() => { if (globalThis.chrome?.permissions) { chrome.permissions.contains = async () => true; chrome.permissions.request = async () => true; } });
+    const bodies = [];
+    await x.ctx.route('http://localhost:11434/**', (r) => {
+      bodies.push(JSON.parse(r.request().postData() || '{}'));
+      r.fulfill({ json: { choices: [{ message: { content: JSON.stringify({ ...AI_JSON, resposta: '' }) } }] }, headers: { 'access-control-allow-origin': '*' } });
+    });
+    const p = await x.open('src/newtab.html');
+    const data = await x.storage(p, 'nt_data');
+    data.settings.ai = { ...data.settings.ai, provider: 'ollama', models: { ollama: 'gemma3' }, autoEnrich: false };
+    data.settings.imageOcr = false;
+    await x.seed(p, { nt_data: data });
+    const id = await saveSample(p);
+    const a = await x.open('src/analyze.html?id=' + id);
+    await a.waitForSelector('#desc:has-text("Placa de uma padaria")', { timeout: 30000 });
+    assert.equal(await a.isVisible('#consent'), false);
+    assert.equal(bodies[0].messages.at(-1).content[0].type, 'image_url');
+    assert.match(bodies[0].messages.at(-1).content[0].image_url.url, /^data:image\/jpeg;base64,/);
+  } finally {
+    await x.close();
+  }
+});

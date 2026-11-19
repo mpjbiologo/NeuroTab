@@ -20,6 +20,8 @@ import { setupUpdates } from './newtab/updates.js';
 import { setupVoice } from './newtab/voice.js';
 import { setupWake, updateWake } from './newtab/wake.js';
 import { setupWindowControls } from './newtab/wincontrols.js';
+import { setupImageReader } from './newtab/image-reader.js';
+import { showRoute } from './newtab/route-request.js';
 import { isFree, layoutCols, layoutSig, renderWidgets } from './newtab/widgets.js';
 
 init();
@@ -32,6 +34,15 @@ function scheduleIndex(delay = 6000) {
   indexTimer = setTimeout(() => {
     indexItems(S.data.settings, S.items).catch((e) => console.warn('NeuroTab: indexação por significado falhou', e.message));
   }, delay);
+}
+
+/** "Traçar rota até…" do botão direito abre a nova aba com ?route=destino. */
+function routeFromUrl() {
+  const q = new URLSearchParams(location.search);
+  const to = (q.get('route') || '').trim().slice(0, 160);
+  if (!to) return;
+  history.replaceState(null, '', location.pathname);
+  showRoute({ from: null, to: { name: to, query: to }, mode: 'driving' });
 }
 
 async function init() {
@@ -49,7 +60,9 @@ async function init() {
   setupOmni();
   setupClock();
   setupWindowControls();
+  setupImageReader();
   scheduleIndex(3000);
+  routeFromUrl();
 
   chrome.storage.onChanged.addListener(async (changes, area) => {
     if (area !== 'local') return;

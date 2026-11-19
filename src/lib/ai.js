@@ -112,8 +112,27 @@ async function http(url, opts) {
   return json;
 }
 
+// Conteúdo com imagem: content = [{ type: 'text', text }, { type: 'image', mime, data (base64) }].
+// Cada provedor tem o seu formato; convertemos aqui.
+const parts = (content) => (Array.isArray(content) ? content : [{ type: 'text', text: String(content ?? '') }]);
+const asText = (content) => (Array.isArray(content) ? content.filter((x) => x.type === 'text').map((x) => x.text).join('\n') : content);
+const toGemini = (content) => parts(content).map((x) => (x.type === 'image' ? { inline_data: { mime_type: x.mime, data: x.data } } : { text: x.text }));
+const toAnthropic = (content) => (Array.isArray(content)
+  ? content.map((x) => (x.type === 'image' ? { type: 'image', source: { type: 'base64', media_type: x.mime, data: x.data } } : { type: 'text', text: x.text }))
+  : content);
+const toOpenAI = (content) => (Array.isArray(content)
+  ? content.map((x) => (x.type === 'image' ? { type: 'image_url', image_url: { url: `data:${x.mime};base64,${x.data}` } } : { type: 'text', text: x.text }))
+  : content);
+
+/** A IA configurada roda no próprio computador (Ollama ou outro servidor em localhost)? */
+export function isLocalAI(settings) {
+  const c = aiConfig(settings);
+  if (c.id === 'ollama') return true;
+  try { return /^(localhost|127\.\d+\.\d+\.\d+|\[::1\])$/.test(new URL(c.base).hostname); } catch { return false; }
+}
+
 /**
- * messages: [{ role: 'user' | 'assistant', content: string }]
+ * messages: [{ role: 'user' | 'assistant', content: string | partes (texto e imagem) }]
  * Retorna o texto da resposta.
  */
 export async function complete(settings, { system = '', messages, json = false, maxTokens = 1200 }) {
@@ -123,7 +142,7 @@ export async function complete(settings, { system = '', messages, json = false, 
 
   if (c.id === 'gemini') {
     const body = {
-      contents: messages.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
+      contents: messages.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: toGemini(m.content) })),
       generationConfig: { maxOutputTokens: maxTokens, ...(json ? { responseMimeType: 'application/json' } : {}) },
     };
     if (system) body.systemInstruction = { parts: [{ text: system }] };
@@ -148,7 +167,7 @@ export async function complete(settings, { system = '', messages, json = false, 
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true',
       },
-      body: JSON.stringify({ model: c.model, max_tokens: maxTokens, system: system || undefined, messages }),
+      body: JSON.stringify({ model: c.model, max_tokens: maxTokens, system: system || undefined, messages: messages.map((m) => ({ ...m, content: toAnthropic(m.content) })) }),
     });
     return (r.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
   }
@@ -160,7 +179,8 @@ export async function complete(settings, { system = '', messages, json = false, 
     headers['HTTP-Referer'] = 'https://github.com/mpjbiologo/NeuroTab';
     headers['X-Title'] = 'NeuroTab';
   }
-  const msgs = system ? [{ role: 'system', content: system }, ...messages] : messages;
+  const conv = messages.map((m) => ({ ...m, content: m.role === 'user' ? toOpenAI(m.content) : asText(m.content) }));
+  const msgs = system ? [{ role: 'system', content: system }, ...conv] : conv;
   const body = { model: c.model, messages: msgs };
   if (json && c.id !== 'ollama') body.response_format = { type: 'json_object' };
   if (c.id === 'openai') body.max_completion_tokens = maxTokens * 4; // inclui raciocínio
@@ -246,7 +266,7 @@ export async function buildContext(settings, items, question, limit = 14) {
     found = [...found, ...recent];
   }
   const text = found.map((it, i) => {
-    const meta = [TYPES[it.type]?.label, new Date(it.createdAt).toLocaleDateString('pt-BR'), it.tags?.length && '#' + it.tags.join(' #'), it.url && hostOf(it.url), it.remindAt && 'lembrete ' + new Date(it.remindAt).toLocaleString('pt-BR'), it.type === 'task' && (it.done ? 'concluída' : 'pendente')].filter(Boolean).join(' · ');
+    const meta = [TYPES[it.type]?.label, new Date(it.createdAt).toLocaleDateString('pt-BR'), it.tags?.length && '#' + it.tags.join(' #'), it.url && hostOf(it.url), it.remindAt && 'lembrete ' + new Date(it.remindAt).toLocaleString('pt-BR'), it.type === 'task' && (it.done ? 'concluída' : 'pendente'), it.type === 'image' && 'texto lido de uma imagem salva, pode ter erros'].filter(Boolean).join(' · ');
     return `[${i + 1}] ${displayTitle(it)} (${meta})\n${(it.text || it.summary || it.url).slice(0, 1500)}`;
   }).join('\n\n');
   return { found, text };

@@ -24,21 +24,29 @@ const say = (text, cls = '') => { msg.className = 'msg ' + cls; msg.textContent 
   document.querySelector('#cancel').onclick = () => window.close();
   const meta = { url: src, pageUrl: q.get('page') || '', pageTitle: q.get('title') || '', source: 'context' };
   const tabId = q.get('tab') ? Number(q.get('tab')) : null;
-  const done = () => { say('✓ Imagem salva na biblioteca.', 'ok'); setTimeout(() => window.close(), 1200); };
+  const done = (rec) => {
+    // Veio de "Analisar imagem": esta mesma janelinha vira a janela de análise.
+    if (q.get('then') === 'analyze' && rec?.id) {
+      chrome.windows.getCurrent().then((w) => chrome.windows.update(w.id, { width: 560, height: 760 })).catch(() => {});
+      location.href = chrome.runtime.getURL('src/analyze.html?id=' + encodeURIComponent(rec.id));
+      return;
+    }
+    say('✓ Imagem salva na biblioteca.', 'ok');
+    setTimeout(() => window.close(), 1200);
+  };
   // Plano B: pegar a imagem de dentro da aba onde a pessoa clicou (login, bloqueio do site, permissão negada).
   const fromPage = async (firstError) => {
     if (tabId == null) return say(firstError, 'err');
     say('Tentando pela página…');
     const r = await chrome.runtime.sendMessage({ type: 'grabImage', src, meta, tabId, frameId: Number(q.get('frame') || 0), windowId: q.get('win') ? Number(q.get('win')) : undefined }).catch((e) => ({ ok: false, error: e.message }));
-    return r?.ok ? done() : say(r?.error || firstError, 'err');
+    return r?.ok ? done({ id: r.id }) : say(r?.error || firstError, 'err');
   };
   document.querySelector('#go').onclick = async () => {
     const granted = await chrome.permissions.request({ origins: [origin + '/*'] }).catch(() => false);
     if (!granted) return fromPage('Permissão não concedida.');
     say('Salvando…');
     try {
-      await downloadAndSave(src, meta);
-      done();
+      done(await downloadAndSave(src, meta));
     } catch (e) {
       if (/12 MB/.test(e.message)) return say(e.message, 'err');
       return fromPage(e.message);
