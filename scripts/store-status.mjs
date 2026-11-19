@@ -73,12 +73,19 @@ export async function storeStatus(env = process.env, fetchFn = fetch) {
 
 const NAMES = { chrome: 'Chrome', firefox: 'Firefox', edge: 'Edge' };
 
+// Como terminou o envio da última release para cada loja (jobs loja-* do fluxo Release).
+const SENT = { success: 'enviada', failure: 'o envio falhou', skipped: 'não enviada: a release falhou antes do envio', cancelled: 'envio cancelado' };
+
 /** Linha da tabela para cada loja. */
 export function describe(s, latest = '') {
   return Object.keys(NAMES).map((k) => {
     const x = s[k] || {};
     if (x.error) return `| ${NAMES[k]} | ? | não consegui consultar (${x.error}) |`;
-    const review = x.review ? `${x.review.version}: ${x.review.state}` : latest && x.published !== latest && k === 'edge' ? `${latest}: aguardando a loja aceitar o envio` : '—';
+    const sub = s.submit?.[k];
+    const missing = latest && x.published !== latest && !x.review;
+    const review = x.review ? `${x.review.version}: ${x.review.state}`
+      : missing && k === 'edge' && sub !== 'skipped' ? `${latest}: aguardando a loja aceitar o envio`
+      : missing && sub && sub !== 'success' ? `⚠️ ${latest}: ${SENT[sub] || sub}` : '—';
     return `| ${NAMES[k]} | ${x.published || '?'} | ${review} |`;
   });
 }
@@ -97,6 +104,11 @@ export function changes(prev = {}, now = {}) {
       const bad = /recusada|cancelado|desativada/.test(b.review.state);
       out.push(`${bad ? '❌' : '⏳'} **${NAMES[k]}**: ${b.review.version} ${b.review.state}.`);
     }
+  }
+  // Release que não chegou às lojas (ex.: um teste falhou e o envio foi pulado): avisa uma vez por versão.
+  const bad = Object.keys(NAMES).filter((k) => ['skipped', 'cancelled'].includes(now.submit?.[k]) || (k !== 'edge' && now.submit?.[k] === 'failure'));
+  if (bad.length && now.latest && (prev.latest !== now.latest || JSON.stringify(prev.submit) !== JSON.stringify(now.submit))) {
+    out.push(`⚠️ A **${now.latest}** não chegou a ${bad.map((k) => NAMES[k]).join(', ')}: ${SENT[now.submit[bad[0]]] || 'o envio falhou'}. Veja o fluxo Release no Actions.`);
   }
   return out;
 }
@@ -145,6 +157,8 @@ export async function syncIssue({ status, latest, repo, token, owner, fetchFn = 
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   const env = process.env;
   const s = await storeStatus();
+  s.latest = env.LATEST || '';
+  try { s.submit = env.SUBMIT ? JSON.parse(env.SUBMIT) : undefined; } catch { /* sem dados do envio */ }
   const table = ['| Loja | Publicada | Em revisão |', '|---|---|---|', ...describe(s, env.LATEST || '')].join('\n');
   console.log(table);
   if (env.GITHUB_STEP_SUMMARY) writeFileSync(env.GITHUB_STEP_SUMMARY, `### Situação nas lojas\n\n${table}\n`, { flag: 'a' });

@@ -54,3 +54,19 @@ test('issue: cria na primeira vez, depois só comenta quando muda, mencionando o
   await syncIssue({ status: s2, latest: '0.7.5', repo: 'o/r', token: 't', owner: 'dono', fetchFn, log: () => {} });
   assert.ok(!calls.slice(n).some((c) => c.includes('comments')), 'sem mudança, sem comentário');
 });
+
+test('release que não chegou às lojas aparece na tabela e é avisada uma vez', () => {
+  const base = { chrome: { published: '0.7.5.1', review: null }, firefox: { published: '0.7.5.1', review: null }, edge: { published: '0.7.3', review: null } };
+  const prev = { ...base, latest: '0.7.5.1', submit: { chrome: 'success', firefox: 'success', edge: 'failure' } };
+  const now = { ...base, latest: '0.7.5.2', submit: { chrome: 'skipped', firefox: 'skipped', edge: 'skipped' } };
+  const rows = describe(now, '0.7.5.2');
+  assert.match(rows[0], /⚠️ 0\.7\.5\.2: não enviada: a release falhou antes do envio/);
+  assert.match(rows[2], /⚠️ 0\.7\.5\.2: não enviada/);
+  const c = changes(prev, now);
+  assert.equal(c.length, 1);
+  assert.match(c[0], /0\.7\.5\.2\*\* não chegou a Chrome, Firefox, Edge/);
+  assert.deepEqual(changes(now, now), [], 'não repete o aviso');
+  // Edge recusando por revisão em andamento não é alarme
+  const edgeOnly = { ...base, latest: '0.7.5.3', submit: { chrome: 'success', firefox: 'success', edge: 'failure' } };
+  assert.deepEqual(changes(now, edgeOnly), []);
+});

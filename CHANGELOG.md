@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.5.3 — 2026-11-19
+Leva às lojas tudo da 0.7.5.2, que não chegou a ser enviada: um teste falhou na hora da release e o envio foi pulado.
+- 🔧 **Análise de imagem:** a imagem não guardada é apagada pelo fundo da extensão quando a janela de análise fecha. Antes, a própria janela tentava apagar e às vezes fechava antes de terminar (a imagem sobrava até a limpeza da nova aba)
+- 📦 **Situação nas lojas:** a issue de acompanhamento agora avisa quando uma release nem chega às lojas
+
 ## v0.7.5.2 — 2026-11-19
 - 🎞️ **Nova aba Mídia nas configurações:** reúne tudo de análise de imagens, e vai receber as opções de vídeos e áudios
   - **Guardar a imagem analisada na biblioteca:** "Perguntar a cada vez" (padrão), "Guardar sempre" ou "Não guardar". Antes, toda imagem analisada pelo botão direito ia para a biblioteca. Agora, sem guardar, ela não aparece na biblioteca nem no cérebro e some quando a janela de análise fecha; a janela tem o botão **💾 Guardar** para mudar de ideia
