@@ -127,6 +127,7 @@ function fillSettings() {
   }
   $('#autoEnrich').checked = !!data.settings.ai.autoEnrich;
   $('#imagesAllowed').checked = !!data.settings.ai.imagesAllowed;
+  $('#visionModel').value = data.settings.ai.visionModel || '';
   $('#sharePlaces').checked = data.settings.ai.sharePlaces !== false;
   $('#semantic').checked = !!data.settings.ai.semantic;
 }
@@ -281,6 +282,11 @@ function setupAi() {
 
   $('#sharePlaces').addEventListener('change', async (e) => {
     data.settings.ai.sharePlaces = e.target.checked;
+    await saveData(data);
+    toast('Salvo ✓');
+  });
+  $('#visionModel').addEventListener('change', async (e) => {
+    data.settings.ai.visionModel = e.target.value.trim();
     await saveData(data);
     toast('Salvo ✓');
   });

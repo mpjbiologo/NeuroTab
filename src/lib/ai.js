@@ -135,9 +135,9 @@ export function isLocalAI(settings) {
  * messages: [{ role: 'user' | 'assistant', content: string | partes (texto e imagem) }]
  * Retorna o texto da resposta.
  */
-export async function complete(settings, { system = '', messages, json = false, maxTokens = 1200 }) {
+export async function complete(settings, { system = '', messages, json = false, maxTokens = 1200, model = '' }) {
   await ensureDataConsent();
-  const c = aiConfig(settings);
+  const c = { ...aiConfig(settings), ...(model ? { model } : {}) }; // model: outro modelo só nesta chamada (ex.: um com visão)
   if (!isConfigured(settings)) throw new Error('Configure a IA em Configurações → IA.');
 
   if (c.id === 'gemini') {

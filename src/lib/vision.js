@@ -144,12 +144,53 @@ export function visionNeedsConsent(settings) {
 /** Nome do serviço que vai receber a imagem (para a confirmação). */
 export const visionTarget = (settings) => aiConfig(settings).p.name;
 
+// ---------- Ollama: só modelos com visão enxergam a imagem ----------
+// Um modelo só de texto (ex.: llama3.2, o padrão) recebe a imagem e a ignora sem avisar: a "descrição"
+// sairia só do texto lido. Por isso conferimos antes e, se precisar, usamos outro modelo instalado que enxergue.
+const VISION_NAME = /llava|bakllava|vision|gemma3|qwen2(\.5)?-?vl|qwen3-?vl|minicpm-v|moondream|granite3\.2-vision|mistral-small3\.[12]|llama4|pixtral/i;
+export const VISION_SUGGEST = 'gemma3';
+
+async function ollamaJson(root, path, body) {
+  const res = await fetch(root + path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+/** O modelo do Ollama enxerga imagens? (Ollama novo informa "capabilities"; nos antigos, olha a família e o nome.) */
+export async function ollamaSees(root, model) {
+  try {
+    const info = await ollamaJson(root, '/api/show', { model, name: model });
+    if (Array.isArray(info?.capabilities)) return info.capabilities.includes('vision');
+    const fam = [...(info?.details?.families || []), info?.details?.family].join(' ');
+    if (/clip|mllama|vision/i.test(fam) || Object.keys(info?.model_info || {}).some((k) => /vision/.test(k)) || info?.projector_info) return true;
+  } catch { /* sem /api/show: decide pelo nome */ }
+  return VISION_NAME.test(model);
+}
+
+/** Qual modelo usar para imagens no Ollama: o escolhido para imagens, o de texto (se enxergar) ou outro instalado com visão. */
+export async function ollamaVisionModel(settings) {
+  const c = aiConfig(settings);
+  const root = c.base.replace(/\/v1$/, '');
+  const chosen = (settings.ai?.visionModel || '').trim();
+  if (chosen) return chosen;
+  if (await ollamaSees(root, c.model)) return c.model;
+  let names = [];
+  try { names = ((await ollamaJson(root, '/api/tags'))?.models || []).map((m) => m.name || m.model).filter(Boolean); } catch { /* lista indisponível */ }
+  const ranked = [...names.filter((n) => VISION_NAME.test(n)), ...names.filter((n) => !VISION_NAME.test(n))].slice(0, 12);
+  for (const n of ranked) if (n !== c.model && await ollamaSees(root, n)) return n;
+  const err = new Error(`O modelo ${c.model} só entende texto e não enxerga imagens. Instale um modelo com visão no Ollama (por exemplo: ollama pull ${VISION_SUGGEST}) e tente de novo.`);
+  err.code = 'no-vision-model';
+  throw err;
+}
+
 /**
  * Descreve a imagem e, se houver, responde a uma pergunta sobre ela.
  * Devolve { title, description, text, tags, address, answer }.
  */
 export async function describeImage(settings, blob, { question = '', ocrText = '', pageTitle = '' } = {}) {
   if (!visionAvailable(settings)) throw new Error('Configure a IA em Configurações → IA para descrever imagens.');
+  const c = aiConfig(settings);
+  const model = c.id === 'ollama' ? await ollamaVisionModel(settings) : (settings.ai?.visionModel || '').trim() || '';
   const { blob: img } = await normalizeImage(blob, { max: 1600 });
   const data = await toBase64(img);
   const system = `Você analisa imagens salvas no "segundo cérebro" de uma pessoa. Responda SOMENTE com JSON válido, com os textos em ${aiLanguageName()}.
@@ -160,14 +201,19 @@ Formato: {"titulo": "até 8 palavras", "descricao": "2 a 4 frases sobre o que ap
   ];
   let raw;
   try {
-    raw = await complete(settings, { system, messages: [{ role: 'user', content }], json: true, maxTokens: 900 });
+    // Folga de tokens: modelos que "pensam" (Gemini, GPT-5) gastam parte do limite antes de responder.
+    raw = await complete(settings, { system, messages: [{ role: 'user', content }], json: true, maxTokens: 4000, model });
   } catch (e) {
     if (/image|vision|multimodal|modalit|does not support/i.test(e?.message || '')) throw new Error('O modelo de IA escolhido não aceita imagens. Escolha um modelo com visão (ex.: gemma3, llava ou qwen2.5vl no Ollama).');
     throw e;
   }
-  const out = parseJson(raw);
+  let out;
+  try { out = parseJson(raw); } catch { out = null; }
+  if (!out || typeof out !== 'object') throw new Error('A IA não devolveu a descrição no formato esperado. Tente de novo ou escolha outro modelo.');
+  if (!out.descricao && !out.texto && !out.resposta) throw new Error('A IA respondeu sem descrever a imagem. Confira se o modelo escolhido aceita imagens.');
   const str = (v, n) => String(v || '').trim().slice(0, n);
   return {
+    model: model || c.model,
     title: str(out.titulo, 90),
     description: str(out.descricao, 1500),
     text: str(out.texto, 6000),

@@ -44,6 +44,7 @@ export const DEFAULT_AI = {
   autoEnrich: true,
   semantic: false, // busca por significado (embeddings)
   embedModels: {}, // modelo de embeddings por provedor (vazio = padrão)
+  visionModel: '', // modelo para imagens (vazio: o da IA; no Ollama, um com visão já instalado)
   imagesAllowed: false, // enviar imagens à IA na internet sem perguntar a cada vez (IA local nunca pergunta)
 };
 

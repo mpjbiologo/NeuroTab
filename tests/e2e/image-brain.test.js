@@ -106,26 +106,67 @@ test('Analisar imagem: texto e endereço na hora; IA na internet só depois de a
   }
 });
 
-test('Ollama (IA no computador) descreve sem pedir autorização', async () => {
+// Ollama falso: /api/tags lista os modelos, /api/show diz quais enxergam, /v1/chat responde.
+async function fakeOllama(x, { installed, vision }) {
+  const chats = [];
+  await x.ctx.route('http://localhost:11434/**', async (r) => {
+    const u = new URL(r.request().url());
+    const body = JSON.parse(r.request().postData() || '{}');
+    const cors = { 'access-control-allow-origin': '*' };
+    if (u.pathname === '/api/tags') return r.fulfill({ json: { models: installed.map((name) => ({ name })) }, headers: cors });
+    if (u.pathname === '/api/show') return r.fulfill({ json: { capabilities: vision.includes(body.model) ? ['completion', 'vision'] : ['completion'] }, headers: cors });
+    chats.push(body);
+    return r.fulfill({ json: { choices: [{ message: { content: JSON.stringify({ ...AI_JSON, resposta: '' }) } }] }, headers: cors });
+  });
+  return chats;
+}
+
+async function ollamaPage(x, model) {
+  await x.ctx.addInitScript(() => { if (globalThis.chrome?.permissions) { chrome.permissions.contains = async () => true; chrome.permissions.request = async () => true; } });
+  const p = await x.open('src/newtab.html');
+  const data = await x.storage(p, 'nt_data');
+  data.settings.ai = { ...data.settings.ai, provider: 'ollama', models: { ollama: model }, autoEnrich: false };
+  data.settings.imageOcr = false;
+  await x.seed(p, { nt_data: data });
+  return x.open('src/analyze.html?id=' + await saveSample(p));
+}
+
+test('Ollama (IA no computador) descreve sem pedir autorização, com o modelo que enxerga', async () => {
   const x = await launch();
   try {
-    await x.ctx.addInitScript(() => { if (globalThis.chrome?.permissions) { chrome.permissions.contains = async () => true; chrome.permissions.request = async () => true; } });
-    const bodies = [];
-    await x.ctx.route('http://localhost:11434/**', (r) => {
-      bodies.push(JSON.parse(r.request().postData() || '{}'));
-      r.fulfill({ json: { choices: [{ message: { content: JSON.stringify({ ...AI_JSON, resposta: '' }) } }] }, headers: { 'access-control-allow-origin': '*' } });
-    });
-    const p = await x.open('src/newtab.html');
-    const data = await x.storage(p, 'nt_data');
-    data.settings.ai = { ...data.settings.ai, provider: 'ollama', models: { ollama: 'gemma3' }, autoEnrich: false };
-    data.settings.imageOcr = false;
-    await x.seed(p, { nt_data: data });
-    const id = await saveSample(p);
-    const a = await x.open('src/analyze.html?id=' + id);
+    const chats = await fakeOllama(x, { installed: ['gemma3:4b'], vision: ['gemma3:4b'] });
+    const a = await ollamaPage(x, 'gemma3:4b');
     await a.waitForSelector('#desc:has-text("Placa de uma padaria")', { timeout: 30000 });
     assert.equal(await a.isVisible('#consent'), false);
-    assert.equal(bodies[0].messages.at(-1).content[0].type, 'image_url');
-    assert.match(bodies[0].messages.at(-1).content[0].image_url.url, /^data:image\/jpeg;base64,/);
+    assert.equal(chats[0].model, 'gemma3:4b');
+    assert.equal(chats[0].messages.at(-1).content[0].type, 'image_url');
+    assert.match(chats[0].messages.at(-1).content[0].image_url.url, /^data:image\/jpeg;base64,/);
+    assert.match(await a.textContent('#model'), /gemma3:4b/);
+  } finally {
+    await x.close();
+  }
+});
+
+test('Ollama com modelo só de texto: usa outro instalado que enxerga; sem nenhum, explica o que instalar', async () => {
+  let x = await launch();
+  try {
+    const chats = await fakeOllama(x, { installed: ['llama3.2:latest', 'llava:7b'], vision: ['llava:7b'] });
+    const a = await ollamaPage(x, 'llama3.2');
+    await a.waitForSelector('#desc:has-text("Placa de uma padaria")', { timeout: 30000 });
+    assert.equal(chats.length, 1);
+    assert.equal(chats[0].model, 'llava:7b', 'a imagem não vai para o modelo que não enxerga');
+    assert.match(await a.textContent('#model'), /llava:7b/);
+  } finally {
+    await x.close();
+  }
+  x = await launch();
+  try {
+    const chats = await fakeOllama(x, { installed: ['llama3.2:latest'], vision: [] });
+    const a = await ollamaPage(x, 'llama3.2');
+    await a.click('#describe');
+    await a.waitForSelector('#status.err');
+    assert.match(await a.textContent('#status'), /llama3\.2 só entende texto.*ollama pull gemma3/);
+    assert.equal(chats.length, 0, 'nada enviado ao modelo que não enxerga');
   } finally {
     await x.close();
   }

@@ -271,6 +271,10 @@
         <div><b>Enviar imagens à IA sem perguntar</b><small>Para descrever uma imagem, ela vai ao provedor de IA. Desligado, a NeuroTab pergunta a cada vez. Com o Ollama, nada sai do computador e não há pergunta.</small></div>
         <label class="sw"><input type="checkbox" id="imagesAllowed"><span></span></label>
       </div>
+      <div class="opt">
+        <div><b>Modelo para imagens</b><small>Vazio: o mesmo modelo da IA. No Ollama, se ele só entender texto, a NeuroTab usa um modelo com visão que já esteja instalado (ex.: gemma3, llava, qwen2.5vl).</small></div>
+        <input type="text" id="visionModel" placeholder="automático" spellcheck="false" style="max-width:200px">
+      </div>
       <hr>
       <h2>Voz</h2>
       <div class="opt">

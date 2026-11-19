@@ -1,6 +1,12 @@
 // NeuroTab — Español. Las claves son los textos originales en portugués.
 export default {
   exact: {
+    'Descrito por': 'Descrito por',
+    'Modelo para imagens': 'Modelo para imágenes',
+    'Vazio: o mesmo modelo da IA. No Ollama, se ele só entender texto, a NeuroTab usa um modelo com visão que já esteja instalado (ex.: gemma3, llava, qwen2.5vl).': 'Vacío: el mismo modelo de la IA. En Ollama, si solo entiende texto, NeuroTab usa un modelo con visión ya instalado (p. ej., gemma3, llava, qwen2.5vl).',
+    'automático': 'automático',
+    'A IA não devolveu a descrição no formato esperado. Tente de novo ou escolha outro modelo.': 'La IA no devolvió la descripción en el formato esperado. Inténtalo de nuevo o elige otro modelo.',
+    'A IA respondeu sem descrever a imagem. Confira se o modelo escolhido aceita imagens.': 'La IA respondió sin describir la imagen. Revisa si el modelo elegido acepta imágenes.',
     '🔍 Analisar imagem': '🔍 Analizar imagen',
     '🧭 Traçar rota até "%s"': '🧭 Trazar ruta a "%s"',
     'Selecione um endereço.': 'Selecciona una dirección.',
@@ -441,6 +447,7 @@ export default {
     "Para baixar esta imagem, a NeuroTab precisa de permissão para acessar <b id=\"host\"></b>. A permissão vale só para esse site e pode ser removida nas configurações da extensão.": "Para descargar esta imagen, NeuroTab necesita permiso para acceder a <b id=\"host\"></b>. El permiso vale solo para ese sitio y se puede quitar en la configuración de la extensión.",
   },
   patterns: [
+    ['O modelo {0} só entende texto e não enxerga imagens. Instale um modelo com visão no Ollama (por exemplo: ollama pull {1}) e tente de novo.', 'El modelo {0} solo entiende texto y no ve imágenes. Instala un modelo con visión en Ollama (por ejemplo: ollama pull {1}) e inténtalo de nuevo.'],
     ['Enviando a imagem a {0}…', 'Enviando la imagen a {0}…'],
     ['Tarefa salva · ⏰ {0}', 'Tarea guardada · ⏰ {0}'], 
     ['"{0}" excluído', '"{0}" eliminado'], ['{0} item(ns) restaurado(s)', '{0} elemento(s) restaurado(s)'],

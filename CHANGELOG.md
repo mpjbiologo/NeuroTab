@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.5.1 — em preparação
+- 🔧 **Descrição de imagens pela IA:** no Ollama, o modelo padrão (llama3.2) só entende texto. Ele recebia a imagem, ignorava e "descrevia" só pelo texto lido. Agora a NeuroTab confere se o modelo enxerga imagens. Se não enxergar, usa outro modelo com visão já instalado (gemma3, llava, qwen2.5vl…) ou explica o que instalar (`ollama pull gemma3`), sem enviar nada ao modelo errado. A janela de análise mostra qual modelo descreveu a imagem
+  - Nova opção em Configurações → IA e voz → Imagens: **Modelo para imagens**, para escolher o modelo das imagens sem trocar o da conversa
+  - Mais folga de resposta para modelos que "pensam" antes de responder (Gemini, GPT-5), que podiam devolver a descrição cortada
+
 ## v0.7.5 — 2026-11-19
 **O cérebro lê as imagens, e a barra de pesquisa faz o que você escolher no Enter.**
 

@@ -26,6 +26,7 @@ function show() {
   $('#tags').replaceChildren(...(ai.tags || []).map((x) => Object.assign(document.createElement('span'), { className: 'tag', textContent: '#' + x })));
   $('#answer').hidden = !ai.answer;
   $('#answer').textContent = ai.answer ? `💬 ${ai.answer}` : '';
+  $('#model').textContent = ai.model ? t('Descrito por') + ' ' + ai.model : '';
   const st = captureStatus(rec);
   $('#saved').textContent = t(st === 'done' ? '🧠 Guardado no cérebro: a busca e as perguntas já encontram esta imagem.'
     : st === 'empty' ? 'Nenhum texto encontrado na imagem. Peça uma descrição à IA para o cérebro encontrá-la.'

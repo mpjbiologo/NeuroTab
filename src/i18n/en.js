@@ -1,6 +1,12 @@
 // NeuroTab — English. Keys are the original Portuguese strings.
 export default {
   exact: {
+    'Descrito por': 'Described by',
+    'Modelo para imagens': 'Model for images',
+    'Vazio: o mesmo modelo da IA. No Ollama, se ele só entender texto, a NeuroTab usa um modelo com visão que já esteja instalado (ex.: gemma3, llava, qwen2.5vl).': 'Empty: the same AI model. In Ollama, if it only understands text, NeuroTab uses an installed vision model (e.g. gemma3, llava, qwen2.5vl).',
+    'automático': 'automatic',
+    'A IA não devolveu a descrição no formato esperado. Tente de novo ou escolha outro modelo.': 'The AI didn\'t return the description in the expected format. Try again or pick another model.',
+    'A IA respondeu sem descrever a imagem. Confira se o modelo escolhido aceita imagens.': 'The AI answered without describing the image. Check that the chosen model accepts images.',
     '🔍 Analisar imagem': '🔍 Analyze image',
     '🧭 Traçar rota até "%s"': '🧭 Route to "%s"',
     'Selecione um endereço.': 'Select an address.',
@@ -443,6 +449,7 @@ export default {
   },
   // Textos com partes variáveis: {0}, {1}… (a ordem pode mudar na tradução)
   patterns: [
+    ['O modelo {0} só entende texto e não enxerga imagens. Instale um modelo com visão no Ollama (por exemplo: ollama pull {1}) e tente de novo.', 'The model {0} only understands text and can\'t see images. Install a vision model in Ollama (for example: ollama pull {1}) and try again.'],
     ['Enviando a imagem a {0}…', 'Sending the image to {0}…'],
     ['Tarefa salva · ⏰ {0}', 'Task saved · ⏰ {0}'], 
     ['"{0}" excluído', '"{0}" deleted'], ['{0} item(ns) restaurado(s)', '{0} item(s) restored'],
