@@ -5,7 +5,7 @@
 
 export const OAUTH = {
   google: {
-    clientId: '', // ← cole aqui o ID do cliente OAuth (tipo "Aplicativo da Web") do Google Cloud
+    clientId: '913281965961-kon02e6bh3tnfugcci53c65oiqvdpo12.apps.googleusercontent.com', // projeto neurotab-publicacao
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     revokeUrl: 'https://oauth2.googleapis.com/revoke',
     userInfoUrl: 'https://www.googleapis.com/oauth2/v3/userinfo',

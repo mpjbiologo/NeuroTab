@@ -66,20 +66,17 @@ test('conectar conta Google, ligar sincronização com senha, sincronizar, apaga
 
     const o = await x.open('src/options.html#contas');
     await o.waitForSelector('#tab-contas:not([hidden])');
-    // sem client ID: botão desligado e aviso
-    assert.equal(await o.isDisabled('button:has-text("Conectar conta Google")'), true);
-    assert.match(await o.textContent('#tab-contas'), /ainda está sendo liberado/);
+    // client ID já no código: botão ligado, sem aviso
+    assert.equal(await o.isDisabled('button:has-text("Conectar conta Google")'), false);
+    assert.doesNotMatch(await o.textContent('#tab-contas'), /ainda está sendo liberado/);
     assert.match(await o.textContent('#redirectUrl'), /teste\.chromiumapp\.org/);
-    // para testar: cola o client ID neste navegador
-    await o.locator('#tab-contas summary').click();
-    await o.fill('#clientOverride', '123-abc.apps.googleusercontent.com');
-    await o.click('#tab-contas button:has-text("Salvar")');
-    await o.waitForSelector('button:has-text("Conectar conta Google"):not([disabled])');
+    // com o ID no código, o campo de teste some
+    assert.equal(await o.locator('#clientOverride').count(), 0);
 
     await o.click('button:has-text("Conectar conta Google")');
     await o.waitForSelector('.acc:has-text("ana@gmail.com")');
     const first = new URL((await o.evaluate(() => window.__authUrls))[0]);
-    assert.equal(first.searchParams.get('client_id'), '123-abc.apps.googleusercontent.com');
+    assert.equal(first.searchParams.get('client_id'), '913281965961-kon02e6bh3tnfugcci53c65oiqvdpo12.apps.googleusercontent.com');
     assert.equal(first.searchParams.get('prompt'), 'select_account');
     assert.ok(!first.searchParams.get('scope').includes('drive'), 'no login, só a identidade; o Drive é pedido ao ligar a sincronização');
 

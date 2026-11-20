@@ -76,7 +76,7 @@ Copie o **ID do cliente** (termina em `.apps.googleusercontent.com`). Não há s
 
 ### 5. Testar e gravar
 - Para testar já: cole o ID em Contas → "Para quem configura o login" → Salvar, e conecte a conta.
-- Para todos: o ID vai em `src/lib/oauth-config.js` (`OAUTH.google.clientId`) na próxima versão.
+- Para todos: o ID fica em `src/lib/oauth-config.js` (`OAUTH.google.clientId`). Projeto `neurotab-publicacao`, ID `913281965961-kon02e6bh3tnfugcci53c65oiqvdpo12.apps.googleusercontent.com`. Com ele no código, o campo de teste some da aba.
 
 ## Limites conhecidos
 
