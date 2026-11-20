@@ -37,6 +37,7 @@ function explain(where, status, body) {
   let hint = HINTS[status] || '';
   if (/version/i.test(msg) && /(greater|higher|larger|increase)/i.test(msg)) hint = 'A versão do manifest.json precisa ser maior que a publicada. Suba a versão.';
   if (/pending|in review|under review/i.test(msg)) hint = 'Já existe uma versão em revisão na Chrome Web Store. Espere a revisão terminar (ou cancele o envio no Developer Dashboard) e rode de novo.';
+  if (/does not meet the requirements/i.test(msg)) hint = 'O pacote foi enviado, mas falta algo na ficha. No Developer Dashboard, veja a aba "Práticas de privacidade": permissão nova sem justificativa ou dados coletados sem declarar. Corrija e clique em "Enviar para revisão" lá mesmo (não precisa rodar de novo).';
   return `${where}: HTTP ${status}${e.status ? ` (${e.status})` : ''}${msg ? ` — ${msg}` : ''}${hint ? `\n→ ${hint}` : ''}`;
 }
 
