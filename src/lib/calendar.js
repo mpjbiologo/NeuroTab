@@ -4,12 +4,16 @@
 // recorrências seguem o horário certo mesmo com horário de verão.
 import { zonedToUtc, wallParts, normTz, LOCAL_TZ, pad, ymd, parseYmd, addDays, weekday, daysInMonth, todayYmd, dayStart } from './tz.js';
 import { parseICS } from './ics.js';
+import { listCalendars, fetchEvents, insertEvent, patchEvent, removeEvent } from './gcal.js';
 
 export const CAL_KEY = 'nt_calendar'; // { calendars: [...], events: [...] }  (eventos da agenda local)
 export const CAL_CACHE_KEY = 'nt_calendar_cache'; // { [calId]: { events, fetchedAt } }  (agendas por link)
 export const LOCAL_CAL = 'local';
 export const COLORS = ['#7c6cf0', '#2f9e8f', '#e07a3f', '#d04a6a', '#3f8fe0', '#8a9a2b', '#b05cd6', '#6b7280'];
 export const REFRESH_MIN = 30; // atualização das agendas por link
+export const GOOGLE_REFRESH_MIN = 10; // atualização das agendas das contas Google
+export const GOOGLE_WINDOW = { past: 45, future: 365 }; // dias trazidos do Google
+const STATUS = ['lastSync', 'error', 'count']; // situação das agendas do Google: fica no cache (não sincroniza)
 
 const store = () => globalThis.chrome?.storage?.local;
 
@@ -22,11 +26,15 @@ export async function loadCalendar() {
   const data = r[CAL_KEY] || {};
   const calendars = Array.isArray(data.calendars) && data.calendars.length ? data.calendars : defaultCalendars();
   if (!calendars.some((c) => c.id === LOCAL_CAL)) calendars.unshift(defaultCalendars()[0]);
-  return { calendars, events: Array.isArray(data.events) ? data.events : [], cache: r[CAL_CACHE_KEY] || {} };
+  const cache = r[CAL_CACHE_KEY] || {};
+  for (const c of calendars) if (c.type === 'google') Object.assign(c, cache[c.id]?.status || {});
+  return { calendars, events: Array.isArray(data.events) ? data.events : [], cache };
 }
 
+const stripStatus = (c) => (c.type === 'google' ? Object.fromEntries(Object.entries(c).filter(([k]) => !STATUS.includes(k))) : c);
+
 export async function saveCalendar({ calendars, events }) {
-  await store().set({ [CAL_KEY]: { calendars, events } });
+  await store().set({ [CAL_KEY]: { calendars: calendars.map(stripStatus), events } });
 }
 
 const uid = () => `nt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@neurotab`;
@@ -239,14 +247,30 @@ export async function fetchFeed(url, { fetchFn = fetch } = {}) {
   return parseICS(text);
 }
 
-/** Atualiza as agendas por link (todas ou uma), guardando o resultado e o erro de cada uma. */
+/** Atualiza as agendas por link e as das contas Google (todas ou uma), guardando o resultado e o erro de cada uma. */
 export async function refreshFeeds({ only = null, force = false, fetchFn } = {}) {
   const cal = await loadCalendar();
   const now = Date.now();
   let changed = false;
+  let cacheChanged = false;
   for (const c of cal.calendars) {
-    if (c.type !== 'ics' || (only && c.id !== only)) continue;
-    if (!force && c.lastSync && now - c.lastSync < REFRESH_MIN * 60e3) continue;
+    if ((c.type !== 'ics' && c.type !== 'google') || (only && c.id !== only)) continue;
+    const every = c.type === 'google' ? GOOGLE_REFRESH_MIN : REFRESH_MIN;
+    if (!force && c.lastSync && now - c.lastSync < every * 60e3) continue;
+    if (c.type === 'google') {
+      let status;
+      try {
+        const events = await fetchEvents(c.account, c.gid, now - GOOGLE_WINDOW.past * 864e5, now + GOOGLE_WINDOW.future * 864e5, { fetchFn, calTz: c.tz });
+        status = { lastSync: now, error: '', count: events.length };
+        cal.cache[c.id] = { events, fetchedAt: now, status };
+      } catch (e) {
+        status = { lastSync: now, error: e.message, count: c.count };
+        cal.cache[c.id] = { ...(cal.cache[c.id] || { events: [] }), status };
+      }
+      Object.assign(c, status);
+      cacheChanged = true;
+      continue;
+    }
     try {
       const r = await fetchFeed(c.url, { fetchFn });
       cal.cache[c.id] = { events: r.events, fetchedAt: now };
@@ -257,8 +281,74 @@ export async function refreshFeeds({ only = null, force = false, fetchFn } = {})
     }
     changed = true;
   }
-  if (changed) await store().set({ [CAL_KEY]: { calendars: cal.calendars, events: cal.events }, [CAL_CACHE_KEY]: cal.cache });
+  if (changed) await store().set({ [CAL_KEY]: { calendars: cal.calendars.map(stripStatus), events: cal.events }, [CAL_CACHE_KEY]: cal.cache });
+  else if (cacheChanged) await store().set({ [CAL_CACHE_KEY]: cal.cache });
   return cal;
+}
+
+// ---------- Agendas das contas Google ----------
+export const googleCalId = (accountId, gid) => `g-${accountId.replace(/^google:/, '')}-${gid}`;
+
+/** Agendas da conta, marcando as que já estão na NeuroTab. Pede a permissão da agenda se precisar (interactive). */
+export async function googleCalendarChoices(accountId, { fetchFn, interactive = true } = {}) {
+  const cal = await loadCalendar();
+  const have = new Set(cal.calendars.filter((c) => c.type === 'google' && c.account === accountId).map((c) => c.gid));
+  return (await listCalendars(accountId, { fetchFn, interactive })).map((g) => ({ ...g, added: have.has(g.gid) }));
+}
+
+/** Deixa na NeuroTab exatamente as agendas escolhidas desta conta e já baixa as novas. */
+export async function setGoogleCalendars(accountId, chosen, { fetchFn } = {}) {
+  const cal = await loadCalendar();
+  const want = new Map(chosen.map((g) => [g.gid, g]));
+  const gone = cal.calendars.filter((c) => c.type === 'google' && c.account === accountId && !want.has(c.gid));
+  cal.calendars = cal.calendars.filter((c) => !gone.includes(c));
+  for (const c of gone) delete cal.cache[c.id];
+  const added = [];
+  for (const g of chosen) {
+    const id = googleCalId(accountId, g.gid);
+    const cur = cal.calendars.find((c) => c.id === id);
+    if (cur) { Object.assign(cur, { writable: g.writable, tz: g.tz || cur.tz }); continue; }
+    const c = { id, type: 'google', account: accountId, gid: g.gid, name: g.name, color: g.color || COLORS[cal.calendars.length % COLORS.length], visible: true, writable: !!g.writable, primary: !!g.primary, tz: g.tz || '' };
+    cal.calendars.push(c);
+    added.push(id);
+  }
+  await store().set({ [CAL_KEY]: { calendars: cal.calendars.map(stripStatus), events: cal.events }, [CAL_CACHE_KEY]: cal.cache });
+  for (const id of added) await refreshFeeds({ only: id, force: true, fetchFn });
+  return loadCalendar();
+}
+
+/** Agendas onde dá para criar eventos: a local e as do Google com permissão de escrita. */
+export const writableCalendars = (cal) => cal.calendars.filter((c) => c.id === LOCAL_CAL || (c.type === 'google' && c.writable));
+
+async function putInCache(calId, mutate) {
+  const cal = await loadCalendar();
+  const entry = cal.cache[calId] || { events: [] };
+  entry.events = mutate(entry.events || []);
+  entry.status = { ...(entry.status || {}), count: entry.events.length };
+  cal.cache[calId] = entry;
+  await store().set({ [CAL_CACHE_KEY]: cal.cache });
+}
+
+/** Cria ou edita um evento numa agenda do Google. Uma repetição (seriesId) é editada só naquela data. */
+export async function saveGoogleEvent(calId, ev, { fetchFn } = {}) {
+  const cal = await loadCalendar();
+  const c = cal.calendars.find((x) => x.id === calId);
+  if (!c || c.type !== 'google') throw new Error('Agenda não encontrada.');
+  const clean = { ...normalizeEvent(ev), remind: ev.remind ?? null, seriesId: ev.seriesId || null };
+  const saved = ev.gid ? await patchEvent(c.account, c.gid, ev.gid, clean, { fetchFn }) : await insertEvent(c.account, c.gid, clean, { fetchFn });
+  if (clean.rrule && !ev.gid) await refreshFeeds({ only: calId, force: true, fetchFn }); // nova série: o Google abre as datas
+  else if (saved) await putInCache(calId, (list) => [...list.filter((e) => e.gid !== saved.gid), saved]);
+  return saved;
+}
+
+/** Exclui um evento do Google: só esta data, ou a série inteira (series: true). */
+export async function deleteGoogleEvent(calId, ev, { series = false, fetchFn } = {}) {
+  const cal = await loadCalendar();
+  const c = cal.calendars.find((x) => x.id === calId);
+  if (!c || c.type !== 'google') return;
+  const target = series && ev.seriesId ? ev.seriesId : ev.gid;
+  await removeEvent(c.account, c.gid, target, { fetchFn });
+  await putInCache(calId, (list) => list.filter((e) => (series && ev.seriesId ? e.seriesId !== ev.seriesId : e.gid !== ev.gid)));
 }
 
 /** Adiciona uma agenda por link e já baixa. */
@@ -283,13 +373,13 @@ export async function updateCalendarMeta(id, patch) {
   await saveCalendar(cal);
 }
 
-/** Remove uma agenda por link (a local não pode ser removida). */
+/** Remove uma agenda por link ou do Google (a local não pode ser removida). */
 export async function removeCalendar(id) {
   if (id === LOCAL_CAL) return;
   const cal = await loadCalendar();
   cal.calendars = cal.calendars.filter((c) => c.id !== id);
   delete cal.cache[id];
-  await store().set({ [CAL_KEY]: { calendars: cal.calendars, events: cal.events }, [CAL_CACHE_KEY]: cal.cache });
+  await store().set({ [CAL_KEY]: { calendars: cal.calendars.map(stripStatus), events: cal.events }, [CAL_CACHE_KEY]: cal.cache });
 }
 
 /** Importa um arquivo .ics para a agenda local, sem duplicar (mesmo UID substitui). Devolve quantos entraram. */

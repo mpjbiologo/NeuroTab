@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.6.2 — em preparação
+**Agenda pela conta Google: todas as suas agendas na nova aba, com criar e editar compromissos lá.**
+
+- 📅 **Agendas da conta Google (#26):** no widget Agenda (⚙️), conecte a conta e escolha quais agendas aparecem (a sua, as compartilhadas, feriados…). Várias contas ao mesmo tempo
+- ✏️ **Criar, editar e excluir** compromissos nas suas agendas do Google direto da NeuroTab, com aviso (lembrete do Google), dia inteiro e repetição. Na repetição, dá para mudar ou excluir só uma data
+- 🎥 Link da reunião (Google Meet) e "Abrir no Google Agenda" em cada compromisso
+- Atualiza a cada 10 minutos. As agendas escolhidas entram também no "o que tenho amanhã" e no contexto da IA
+- Os avisos continuam sendo os do próprio Google (a NeuroTab não duplica)
+- A agenda por link (.ics) continua para Outlook, iCloud e quem não quiser conectar a conta
+
 ## v0.7.6.1 — 20 de novembro de 2026
 **Contas e sincronização: suas notas iguais em todos os navegadores, criptografadas no seu Google Drive.**
 

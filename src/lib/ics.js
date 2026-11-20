@@ -188,7 +188,7 @@ function addMinutesKey(k, n) {
 const icsDate = (k, tz) => (k.length === 10 ? `;VALUE=DATE:${k.replace(/-/g, '')}` : `;TZID=${tz}:${k.replace(/[-:]/g, '')}00`);
 const fold = (line) => { const out = []; let s = line; while (s.length > 74) { out.push(s.slice(0, 74)); s = ' ' + s.slice(74); } out.push(s); return out.join('\r\n'); };
 
-function rruleText(r) {
+export function rruleText(r) {
   const parts = [`FREQ=${r.freq}`];
   if (r.interval > 1) parts.push(`INTERVAL=${r.interval}`);
   if (r.count) parts.push(`COUNT=${r.count}`);

@@ -89,12 +89,15 @@ export const ADAPTERS = {
     async read() {
       const c = (await get('nt_calendar')) || {};
       const out = {};
-      for (const cal of c.calendars || []) out[`c:${cal.id}`] = cal;
+      // a situação de cada agenda (última atualização, erro, quantos) é deste aparelho: não sincroniza
+      for (const cal of c.calendars || []) { const { lastSync, error, count, ...rest } = cal; out[`c:${cal.id}`] = rest; }
       for (const e of c.events || []) out[`e:${e.id}`] = e;
       return out;
     },
     async write(map) {
-      const calendars = Object.entries(map).filter(([k]) => k.startsWith('c:')).map(([, v]) => v);
+      const here = new Map((((await get('nt_calendar')) || {}).calendars || []).map((c) => [c.id, c]));
+      const keep = (c) => { const h = here.get(c.id); return h ? { ...c, ...Object.fromEntries(['lastSync', 'error', 'count'].filter((k) => k in h).map((k) => [k, h[k]])) } : c; };
+      const calendars = Object.entries(map).filter(([k]) => k.startsWith('c:')).map(([, v]) => keep(v));
       const events = Object.entries(map).filter(([k]) => k.startsWith('e:')).map(([, v]) => v);
       await store().set({ nt_calendar: { calendars, events } });
     },

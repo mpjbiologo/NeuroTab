@@ -61,7 +61,7 @@ test('compromisso: criar, aparecer em Próximos e no Mês, editar e excluir', as
 test('Google Agenda por link: pede acesso ao site, baixa, mostra só leitura com "abrir no serviço"; erro claro com link errado', async () => {
   const x = await launch();
   try {
-    await x.ctx.route('https://calendar.google.com/calendar/ical/**', (r) => r.fulfill({ status: 200, contentType: 'text/calendar', body: FEED(dayKey(0)) }));
+    await x.ctx.route('https://calendar.google.com/calendar/ical/**', (r) => r.fulfill({ status: 200, contentType: 'text/calendar', body: FEED(dayKey(1)) }));
     await x.ctx.route('https://example.com/nao-e-agenda', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<html>oi</html>' }));
     const p = await setup(x);
     await card(p).locator('button[title^="Agendas"]').click();
