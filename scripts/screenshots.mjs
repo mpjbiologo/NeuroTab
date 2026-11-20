@@ -3,7 +3,7 @@
 // Tudo é simulado: relógio fixo, clima, cotações, fundo e conteúdo de exemplo. Nada sai para a internet.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { launch } from '../tests/e2e/helpers.js';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
@@ -96,9 +96,9 @@ const BACKGROUND = () => {
   return c.toDataURL('image/jpeg', 0.92);
 };
 
-async function scene(lang) {
+export async function scene(lang, { widgets = null, viewport = { width: 1280, height: 800 }, args = [] } = {}) {
   const L = T[lang];
-  const x = await launch({ locale: L.locale, viewport: { width: 1280, height: 800 }, voice: true });
+  const x = await launch({ locale: L.locale, viewport, voice: true, args });
   await x.ctx.addInitScript(() => {
     if (globalThis.chrome?.permissions) chrome.permissions.contains = async () => true;
   });
@@ -120,7 +120,7 @@ async function scene(lang) {
   data.links = LINKS.map(([title, url, color], i) => ({ id: 'l' + i, groupId: gid, title, url, color, favicon: '' }));
   Object.assign(data.settings, {
     lang: L.locale, userName: L.name, places: PLACES.map((c) => ({ ...c, name: CITY[lang][c.id] || c.name })), heroWeather: true, heroPlaces: true, theme: 'futurista', bgDim: 10, checkUpdates: false,
-    widgets: [{ id: 'capture', w: 6 }, { id: 'reminders', w: 6 }, { id: 'focus', w: 4 }, { id: 'habits', w: 4 }, { id: 'quotes', w: 4 }],
+    widgets: widgets || [{ id: 'capture', w: 6 }, { id: 'reminders', w: 6 }, { id: 'focus', w: 4 }, { id: 'habits', w: 4 }, { id: 'quotes', w: 4 }],
   });
   const ids = ['agua', 'leitura', 'exercicio'];
   await x.seed(p, {
@@ -138,7 +138,7 @@ async function scene(lang) {
 }
 
 // A página recarrega sozinha quando o idioma muda; abrir de novo evita a corrida.
-async function reopen(p) {
+export async function reopen(p) {
   await p.waitForTimeout(600);
   await p.goto(p.url());
   await p.waitForTimeout(1800);
@@ -217,6 +217,9 @@ async function run(lang) {
   await x.close();
 }
 
-const langs = process.argv.slice(2).length ? process.argv.slice(2) : ['pt', 'en', 'es'];
-for (const l of langs) await run(l);
-writeFileSync(TMP + '.ok', new Date().toISOString());
+export { NOW, HOUR };
+if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+  const langs = process.argv.slice(2).length ? process.argv.slice(2) : ['pt', 'en', 'es'];
+  for (const l of langs) await run(l);
+  writeFileSync(TMP + '.ok', new Date().toISOString());
+}
