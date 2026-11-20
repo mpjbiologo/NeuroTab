@@ -14,6 +14,12 @@ m.permissions = m.permissions.filter((p) => !['favicon', 'offscreen'].includes(p
 // Ícones dos sites vêm do DuckDuckGo no Firefox.
 m.host_permissions = [...new Set([...(m.host_permissions || []), 'https://icons.duckduckgo.com/*'])];
 
+// "identity" não pode ser opcional no Firefox (e lá não mostra aviso): vai nas permissões normais.
+if ((m.optional_permissions || []).includes('identity')) {
+  m.optional_permissions = m.optional_permissions.filter((p) => p !== 'identity');
+  m.permissions = [...new Set([...(m.permissions || []), 'identity'])];
+}
+
 m.browser_specific_settings = {
   gecko: {
     id: 'neurotab@mpjbiologo.github.io',
@@ -22,7 +28,8 @@ m.browser_specific_settings = {
     // Nada é exigido na instalação. Opcionais, pedidos na hora de usar (src/lib/permissions.js):
     //   locationInfo   → coordenadas das cidades (clima) e endereços (Trânsito)
     //   websiteContent → texto das notas, trechos e páginas enviados ao provedor de IA que a pessoa configurar
-    data_collection_permissions: { required: ['none'], optional: ['locationInfo', 'websiteContent'] },
+    //   bookmarksInfo  → atalhos e grupos enviados à pasta da NeuroTab no Google Drive (sincronização)
+    data_collection_permissions: { required: ['none'], optional: ['locationInfo', 'websiteContent', 'bookmarksInfo'] },
   },
 };
 

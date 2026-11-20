@@ -10,15 +10,22 @@ export const ACCOUNTS_KEY = 'nt_accounts'; // { accounts: [{ id, provider, email
 export const TOKENS_KEY = 'nt_account_tokens'; // { [id]: { accessToken, expiresAt, scopes } } — nunca vai para backup nem sincronização
 
 const store = () => globalThis.chrome?.storage?.local;
-const ident = () => globalThis.browser?.identity || globalThis.chrome?.identity;
+const ident = () => globalThis.browser?.identity || (globalThis.chrome && chrome.identity);
 const perms = () => globalThis.browser?.permissions || globalThis.chrome?.permissions;
 
 export class AuthError extends Error {
   constructor(message, code = 'auth') { super(message); this.code = code; }
 }
 
-/** O provedor está configurado neste build (há client ID)? */
-export const providerReady = (provider) => !!OAUTH[provider]?.clientId;
+export const OAUTH_OVERRIDE_KEY = 'nt_oauth_override'; // { google: 'client id' } — só para testar antes de gravar no código
+
+/** Client ID em uso: o gravado no código ou, para testes, o colado em Contas → "Para quem configura o login". */
+export async function clientId(provider) {
+  if (OAUTH[provider]?.clientId) return OAUTH[provider].clientId;
+  try { return ((await store().get(OAUTH_OVERRIDE_KEY))[OAUTH_OVERRIDE_KEY] || {})[provider] || ''; } catch { return ''; }
+}
+/** O provedor está configurado (há client ID)? */
+export const providerReady = async (provider) => !!(await clientId(provider));
 
 /** Endereço de retorno do login neste navegador (para cadastrar no Google Cloud). */
 export function redirectUrl() {
@@ -43,10 +50,10 @@ export async function hasIdentity() {
 const randomState = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
 
 /** Monta o endereço de login do Google. */
-export function googleAuthUrl({ scopes, loginHint = '', prompt = '', state }) {
+export function googleAuthUrl({ scopes, loginHint = '', prompt = '', state, client = OAUTH.google.clientId }) {
   const g = OAUTH.google;
   const q = new URLSearchParams({
-    client_id: g.clientId,
+    client_id: client,
     response_type: 'token',
     redirect_uri: redirectUrl(),
     scope: [...new Set([...g.baseScopes, ...scopes])].join(' '),
@@ -72,12 +79,13 @@ export function parseAuthResponse(url, state) {
 }
 
 async function runFlow({ scopes, loginHint, prompt, interactive }) {
-  if (!providerReady('google')) throw new AuthError('O login com Google ainda não foi configurado nesta versão da NeuroTab.', 'not_configured');
+  const client = await clientId('google');
+  if (!client) throw new AuthError('O login com Google ainda não foi configurado nesta versão da NeuroTab.', 'not_configured');
   if (!ident()?.launchWebAuthFlow) throw new AuthError('Este navegador não permitiu o login (falta a permissão de identidade).', 'no_identity');
   const state = randomState();
   let url;
   try {
-    url = await ident().launchWebAuthFlow({ url: googleAuthUrl({ scopes, loginHint, prompt, state }), interactive });
+    url = await ident().launchWebAuthFlow({ url: googleAuthUrl({ scopes, loginHint, prompt, state, client }), interactive });
   } catch (e) {
     const m = String(e?.message || e);
     if (/did not approve|canceled|cancelled|closed/i.test(m)) throw new AuthError('Login cancelado.', 'cancelled');

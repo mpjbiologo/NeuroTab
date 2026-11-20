@@ -166,3 +166,19 @@ footer {
 .theme-card .tn .ico { color: var(--accent-text); visibility: hidden; }
 .theme-card[aria-checked="true"] .tn .ico { visibility: visible; }
 .theme-card small { color: var(--text-2); font-size: var(--fs-xs); line-height: 1.4; }
+
+/* Contas e sincronização */
+.acc-list { display: grid; gap: 8px; margin: 10px 0; }
+.acc { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.acc img, .acc-avatar { width: 32px; height: 32px; border-radius: 50%; flex: none; }
+.acc-avatar { display: grid; place-items: center; background: var(--accent-soft, var(--tint-2)); font-weight: 700; }
+.acc .grow { display: grid; flex: 1; min-width: 0; }
+.acc small, .sync-box small { color: var(--text-3); display: block; }
+.sync-box .cats { display: grid; gap: 6px; }
+.sync-box label.check { display: flex; gap: 6px; align-items: flex-start; }
+.sync-box .pass { display: grid; gap: 8px; max-width: 420px; margin: 6px 0 12px; }
+.sync-box .warn { color: var(--warn, var(--text-2)); }
+#tab-contas .err, .sync-box .err { color: var(--bad); }
+#tab-contas code { display: block; margin: 6px 0; user-select: all; word-break: break-all; }
+#tab-contas .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.btn.danger { color: var(--bad); }

@@ -1,4 +1,5 @@
 // NeuroTab — página de configurações.
+import { setupAccounts } from './options-accounts.js';
 import {
   DATA_KEY, SEARCH_ENGINES, DEFAULT_SETTINGS, mergeSettings,
   loadData, saveData, loadBg, saveBg, parseBackup, toBackup, collectSecrets, applySecrets, uid,
@@ -52,6 +53,7 @@ async function init() {
   setupAi();
   setupNotes();
   setupBackup();
+  setupAccounts(toast);
   setupDonation();
   setupVoiceOptions();
   setupPhotos();

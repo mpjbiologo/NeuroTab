@@ -67,7 +67,7 @@ const api = () => globalThis.chrome?.permissions;
 // O Firefox pergunta à pessoa antes de a extensão enviar dados pessoais a serviços externos.
 // Os tipos usados aqui estão em "optional" no manifest do Firefox (scripts/firefox-manifest.mjs).
 // Nos navegadores Chromium não existe esse consentimento: as funções abaixo devolvem true.
-export const DATA_TYPES = ['locationInfo', 'websiteContent'];
+export const DATA_TYPES = ['locationInfo', 'websiteContent', 'bookmarksInfo'];
 export function usesDataConsent() {
   return typeof globalThis.browser !== 'undefined' && typeof globalThis.browser?.runtime?.getBrowserInfo === 'function';
 }
