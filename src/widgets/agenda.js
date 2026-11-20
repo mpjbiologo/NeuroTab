@@ -224,7 +224,7 @@ export default {
       const list = h('div', { class: 'ag-cals' });
       const msg = h('p', { class: 'muted', role: 'status' });
       const say = (text, bad) => { msg.textContent = t(text); msg.classList.toggle('err', !!bad); };
-      const url = h('input', { type: 'url', placeholder: 'https://calendar.google.com/calendar/ical/…/basic.ics', spellcheck: false });
+      const url = h('input', { type: 'url', placeholder: 'https://calendar.google.com/calendar/ical/…/basic.ics', spellcheck: false, style: 'flex: 1; min-width: 0' });
       const file = h('input', { type: 'file', accept: '.ics,text/calendar', hidden: true });
 
       const draw = () => {
@@ -278,7 +278,7 @@ export default {
           h('p', {}, h('b', {}, 'Google Agenda: '), 'no computador, Configurações → clique na agenda → "Integrar agenda" → copie o "Endereço secreto no formato iCal".'),
           h('p', {}, h('b', {}, 'Outlook: '), 'Configurações → Agenda → Agendas compartilhadas → "Publicar uma agenda" → copie o link ICS.'),
           h('p', {}, h('b', {}, 'iCloud: '), 'no app Calendário, compartilhe a agenda como "Agenda pública" e copie o link (webcal://).'),
-          h('p', { class: 'muted' }, `O link é só leitura e fica guardado só neste navegador. A NeuroTab atualiza a cada ${REFRESH_MIN} minutos. Quem tiver o link consegue ver a agenda: não compartilhe.`)),
+          h('p', { class: 'muted' }, h('span', {}, 'O link é só leitura e fica guardado só neste navegador.'), ' ', h('span', {}, `A NeuroTab atualiza a cada ${REFRESH_MIN} minutos.`), ' ', h('span', {}, 'Quem tiver o link consegue ver a agenda: não compartilhe.'))),
         msg,
         h('div', { class: 'actions' },
           h('button', { class: 'btn', type: 'button', onclick: () => file.click() }, '📂 Importar arquivo .ics'), file,

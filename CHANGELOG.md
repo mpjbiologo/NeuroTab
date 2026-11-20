@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.7.6 — 2026-11-20
+**Agenda: seus compromissos na nova aba, com o Google Agenda, o Outlook e o iCloud.**
+
+- 📅 **Widget Agenda (#26):** visualizações Próximos (14 dias), Dia, Semana e Mês. Crie, edite e exclua compromissos com local, notas, aviso e repetição (todo dia, dias úteis, toda semana, todo mês, todo ano). Numa repetição, dá para excluir só uma ocorrência ou todas
+- 🔗 **Google Agenda, Outlook e iCloud por link:** cole o "endereço secreto no formato iCal" (Google), o link ICS publicado (Outlook) ou o link de agenda pública (iCloud). A agenda aparece com a cor que você escolher, só leitura, e se atualiza sozinha a cada 30 minutos, mesmo com a nova aba fechada. Cada evento tem "Abrir no serviço" e "Copiar para minha agenda". Se o link parar de funcionar, o widget diz o motivo
+  - Entende repetições, exceções, eventos movidos ou cancelados, dia inteiro, eventos de vários dias e fusos horários, inclusive horário de verão e os nomes de fuso do Outlook
+- 📂 **Importar e exportar .ics:** importe um arquivo para "Minha agenda" (sem duplicar ao importar de novo) e exporte a sua agenda para levar a outro serviço
+- 🔔 **Avisos:** notificação antes do compromisso (padrão: 10 minutos), também para os eventos das agendas por link que têm aviso
+- 🧠 **O cérebro conhece sua agenda:** "o que tenho amanhã?" e "minha agenda de hoje", por voz ou na pergunta rápida, respondem com os compromissos e as tarefas do dia, mesmo sem IA. Nas perguntas à IA, a agenda dos próximos 14 dias vai junto ("tenho algo livre na quinta?")
+- Criar e editar eventos direto na conta do Google ou da Microsoft (com login) fica para uma próxima versão
+
 ## v0.7.5.3 — 2026-11-19
 Leva às lojas tudo da 0.7.5.2, que não chegou a ser enviada: um teste falhou na hora da release e o envio foi pulado.
 - 🔧 **Análise de imagem:** a imagem não guardada é apagada pelo fundo da extensão quando a janela de análise fecha. Antes, a própria janela tentava apagar e às vezes fechava antes de terminar (a imagem sobrava até a limpeza da nova aba)
