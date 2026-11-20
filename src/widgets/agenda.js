@@ -4,7 +4,9 @@ import { requestAccess } from '../lib/permissions.js';
 import {
   loadCalendar, eventsBetween, saveEvent, deleteEvent, refreshFeeds, addFeed, removeCalendar, updateCalendarMeta,
   importICS, normalizeFeedUrl, CAL_KEY, CAL_CACHE_KEY, LOCAL_CAL, COLORS, REFRESH_MIN, keyPlus, tsToKey,
+  googleCalendarChoices, setGoogleCalendars, saveGoogleEvent, deleteGoogleEvent, writableCalendars,
 } from '../lib/calendar.js';
+import { listAccounts, connectGoogle, requestIdentity, providerReady } from '../lib/accounts.js';
 import { toICS } from '../lib/ics.js';
 import { LOCAL_TZ, todayYmd, addDays, parseYmd, dayStart, weekday, daysInMonth, ymd, pad } from '../lib/tz.js';
 import { t, LANG } from '../lib/i18n.js';
@@ -36,7 +38,7 @@ export default {
   id: 'agenda',
   title: 'Agenda',
   icon: '📅',
-  description: 'Seus compromissos: agenda própria e agendas do Google, Outlook e iCloud por link.',
+  description: 'Seus compromissos: agenda própria, agendas da sua conta Google e agendas do Outlook e iCloud por link.',
   defaultW: 6,
   mount(el, ctx) {
     let view = ctx.widget.view || 'list';
@@ -54,7 +56,7 @@ export default {
     const body = h('div', { class: 'ag-body' });
     const status = h('p', { class: 'ag-status muted', role: 'status' });
     ctx.actions.append(
-      h('button', { title: 'Agendas, links do Google/Outlook/iCloud e importar .ics', onclick: () => manage() }, '⚙️'),
+      h('button', { title: 'Agendas, conta Google, links do Outlook/iCloud e importar .ics', onclick: () => manage() }, '⚙️'),
       h('button', { title: 'Novo compromisso', onclick: () => edit(null, { date: anchor }) }, '＋'),
     );
     el.append(h('div', { class: 'ag-bar' }, nav, seg), body, status);
@@ -146,21 +148,27 @@ export default {
 
     function open(o) {
       if (o.calendar.id === LOCAL_CAL) return edit(o.ev, { occurrence: o.ev.rrule ? o.key : null });
+      if (o.calendar.type === 'google' && o.calendar.writable) return edit(o.ev, { calId: o.calendar.id });
       const when = o.allDay ? `${fmtDay(occDay(o))} · ${t('dia todo')}` : `${fmtDay(occDay(o))} · ${fmtTime(o.start)}–${fmtTime(o.end)}`;
       const dlg = dialog(h('form', { method: 'dialog' },
         h('h2', {}, o.ev.title),
         h('p', { class: 'ag-when' }, when),
         o.ev.location ? h('p', {}, '📍 ', o.ev.location) : null,
         o.ev.notes ? h('p', { class: 'ag-notes' }, o.ev.notes) : null,
-        h('p', { class: 'muted' }, `${t('Agenda')}: ${o.calendar.name} · ${t('só leitura (vem de um link)')}`),
+        h('p', { class: 'muted' }, `${t('Agenda')}: ${o.calendar.name} · ${t(o.calendar.type === 'google' ? 'só leitura (sem permissão para editar)' : 'só leitura (vem de um link)')}`),
         h('div', { class: 'actions' },
-          o.ev.url ? h('a', { class: 'btn', href: o.ev.url, target: '_blank', rel: 'noopener noreferrer' }, '↗ Abrir no serviço') : null,
+          o.ev.url ? h('a', { class: 'btn', href: o.ev.url, target: '_blank', rel: 'noopener noreferrer' }, o.calendar.type === 'google' ? '🎥 Entrar na reunião' : '↗ Abrir no serviço') : null,
+          o.ev.link ? h('a', { class: 'btn', href: o.ev.link, target: '_blank', rel: 'noopener noreferrer' }, '↗ Abrir no Google Agenda') : null,
           h('button', { class: 'btn', type: 'button', onclick: () => { dlg.close(); edit({ ...o.ev, id: null, uid: null, rrule: null, exdates: [], overrides: undefined, start: tsToKey(o.start), end: tsToKey(o.end), allDay: o.allDay, ...(o.allDay ? { start: occDay(o), end: todayYmd(o.end - 1) === occDay(o) ? addDays(occDay(o), 1) : todayYmd(o.end) } : {}) }); } }, '📋 Copiar para minha agenda'),
           h('button', { class: 'btn primary', value: 'ok' }, 'Fechar'))));
     }
 
-    function edit(ev, { date, occurrence } = {}) {
+    function edit(ev, { date, occurrence, calId } = {}) {
       const isNew = !ev?.id;
+      const targets = writableCalendars(cal);
+      let target = calId || (isNew ? (ctx.widget.target && targets.some((c) => c.id === ctx.widget.target) ? ctx.widget.target : LOCAL_CAL) : LOCAL_CAL);
+      const isG = () => cal.calendars.find((c) => c.id === target)?.type === 'google';
+      const instance = !!ev?.seriesId; // uma data de uma série do Google
       const start0 = ev?.start || `${date || todayYmd()}T${pad(Math.min(23, new Date().getHours() + 1))}:00`;
       const f = {
         title: h('input', { name: 'title', required: true, placeholder: 'Ex.: Dentista', value: ev?.title || '' }),
@@ -174,13 +182,24 @@ export default {
         location: h('input', { placeholder: 'Opcional', value: ev?.location || '' }),
         notes: h('textarea', { rows: 3, placeholder: 'Opcional' }, ev?.notes || ''),
       };
+      f.calSel = isNew && targets.length > 1 ? h('select', { onchange: () => { target = f.calSel.value; } }, ...targets.map((c) => h('option', { value: c.id, selected: c.id === target }, c.name))) : null;
       f.rep.value = ev ? repeatOf(ev) : '';
-      f.alarm.value = ev ? (ev.alarm == null ? '' : String(ev.alarm)) : '10';
+      f.rep.disabled = instance;
+      const rem = ev ? (calId ? ev.remind : ev.alarm) : '10';
+      f.alarm.value = rem == null ? '' : String(rem);
       const sync = () => { f.st.hidden = f.et.hidden = f.allDay.checked; };
       f.allDay.addEventListener('change', sync);
       f.sd.addEventListener('change', () => { if (!f.ed.value || f.ed.value < f.sd.value) f.ed.value = f.sd.value; });
       sync();
       const del = !isNew && h('button', { class: 'btn danger', type: 'button', onclick: async () => {
+        if (calId) {
+          const series = instance && confirm(t('Excluir todas as repetições? (Cancelar = só esta)'));
+          if (!instance && !confirm(t('Excluir este compromisso?'))) return;
+          try { await deleteGoogleEvent(calId, ev, { series }); } catch (e) { ctx.toast(e.message); return; }
+          dlg.close();
+          ctx.toast('Compromisso excluído');
+          return;
+        }
         if (occurrence && ev.rrule) {
           const all = confirm(t('Excluir todas as repetições? (Cancelar = só esta)'));
           await deleteEvent(ev.id, all ? {} : { occurrence });
@@ -194,6 +213,7 @@ export default {
       const form = h('form', { method: 'dialog' },
         h('h2', {}, isNew ? 'Novo compromisso' : 'Editar compromisso'),
         h('label', {}, 'Título', f.title),
+        f.calSel ? h('label', {}, 'Agenda', f.calSel) : calId ? h('p', { class: 'muted' }, `${t('Agenda')}: ${cal.calendars.find((c) => c.id === calId)?.name || ''} (Google)`) : null,
         h('label', { class: 'check' }, f.allDay, ' ', 'Dia inteiro'),
         h('div', { class: 'row' }, h('label', { class: 'grow' }, 'Início', h('div', { class: 'row' }, f.sd, f.st))),
         h('div', { class: 'row' }, h('label', { class: 'grow' }, 'Fim', h('div', { class: 'row' }, f.ed, f.et))),
@@ -201,6 +221,8 @@ export default {
         h('label', {}, 'Local', f.location),
         h('label', {}, 'Notas', f.notes),
         ev?.rrule && occurrence ? h('p', { class: 'muted' }, 'Mudanças aqui valem para todas as repetições.') : null,
+        instance ? h('p', { class: 'muted' }, 'Esta é uma data de um evento que se repete: as mudanças valem só para ela. Para mudar todas, use o Google Agenda.') : null,
+        calId && ev?.link ? h('p', {}, h('a', { href: ev.link, target: '_blank', rel: 'noopener noreferrer' }, '↗ Abrir no Google Agenda')) : null,
         h('div', { class: 'actions' }, del || null, h('button', { class: 'btn', value: 'cancel', formnovalidate: true }, 'Cancelar'), h('button', { class: 'btn primary', value: 'ok' }, 'Salvar')));
       form.addEventListener('submit', async (e) => {
         if (e.submitter?.value !== 'ok') return;
@@ -209,11 +231,20 @@ export default {
         const endDate = f.ed.value || f.sd.value;
         const end = allDay ? addDays(endDate < f.sd.value ? f.sd.value : endDate, 1) : `${endDate}T${f.et.value || f.st.value || '10:00'}`;
         const keepRule = ev?.rrule && repeatOf(ev) === f.rep.value;
-        await saveEvent({
+        const data = {
           ...(ev || {}), title: f.title.value, allDay, start, end, tz: ev?.tz || LOCAL_TZ,
-          rrule: keepRule ? ev.rrule : ruleFor(f.rep.value, f.sd.value), exdates: keepRule ? ev.exdates : [],
-          alarm: f.alarm.value, location: f.location.value, notes: f.notes.value,
-        });
+          rrule: instance ? null : keepRule ? ev.rrule : ruleFor(f.rep.value, f.sd.value), exdates: keepRule ? ev.exdates : [],
+          location: f.location.value, notes: f.notes.value,
+        };
+        if (isNew && f.calSel) ctx.saveWidget({ target });
+        if (isG()) {
+          try {
+            await saveGoogleEvent(target, { ...data, remind: f.alarm.value === '' ? null : +f.alarm.value });
+          } catch (err) { ctx.toast(err.message); return; }
+          ctx.toast(isNew ? 'Compromisso criado no Google Agenda 📅' : 'Compromisso salvo no Google Agenda');
+          return;
+        }
+        await saveEvent({ ...data, alarm: f.alarm.value });
         ctx.toast(isNew ? 'Compromisso criado 📅' : 'Compromisso salvo');
       });
       const dlg = dialog(form);
@@ -232,10 +263,10 @@ export default {
           h('input', { type: 'checkbox', checked: c.visible !== false, title: 'Mostrar', onchange: (e) => updateCalendarMeta(c.id, { visible: e.target.checked }) }),
           h('input', { type: 'color', value: c.color || COLORS[0], title: 'Cor', onchange: (e) => updateCalendarMeta(c.id, { color: e.target.value }) }),
           h('div', { class: 'grow' },
-            h('b', {}, c.name),
+            h('b', {}, c.name, c.type === 'google' ? h('small', { class: 'muted' }, ' · Google') : null),
             h('small', { class: c.error ? 'err' : 'muted' }, c.type === 'local' ? `${cal.events.length} ${t('compromisso(s) · criados aqui')}` : c.error ? t(c.error) : `${c.count ?? 0} ${t('evento(s) · atualizado')} ${c.lastSync ? new Date(c.lastSync).toLocaleString(loc(), { dateStyle: 'short', timeStyle: 'short' }) : '—'}`)),
-          c.type === 'ics' ? h('button', { class: 'btn', type: 'button', title: 'Atualizar agora', onclick: async () => { say('Atualizando…'); cal = await refreshFeeds({ only: c.id, force: true }); draw(); say(cal.calendars.find((x) => x.id === c.id)?.error || '✓ Atualizada.', !!cal.calendars.find((x) => x.id === c.id)?.error); } }, '↻') : null,
-          c.type === 'ics' ? h('button', { class: 'btn', type: 'button', title: 'Remover esta agenda', onclick: async () => { if (!confirm(t('Remover esta agenda da NeuroTab? (Nada muda no serviço.)'))) return; await removeCalendar(c.id); cal = await loadCalendar(); draw(); } }, '✕') : null)));
+          c.type === 'ics' || c.type === 'google' ? h('button', { class: 'btn', type: 'button', title: 'Atualizar agora', onclick: async () => { say('Atualizando…'); cal = await refreshFeeds({ only: c.id, force: true }); draw(); say(cal.calendars.find((x) => x.id === c.id)?.error || '✓ Atualizada.', !!cal.calendars.find((x) => x.id === c.id)?.error); } }, '↻') : null,
+          c.type === 'ics' || c.type === 'google' ? h('button', { class: 'btn', type: 'button', title: 'Remover esta agenda', onclick: async () => { if (!confirm(t('Remover esta agenda da NeuroTab? (Nada muda no serviço.)'))) return; await removeCalendar(c.id); cal = await loadCalendar(); draw(); } }, '✕') : null)));
       };
 
       const add = h('button', { class: 'btn primary', type: 'button', onclick: async () => {
@@ -268,14 +299,63 @@ export default {
         setTimeout(() => URL.revokeObjectURL(a.href), 5000);
       } }, '⬇️ Exportar minha agenda (.ics)');
 
+      // ---------- Contas Google ----------
+      const gBox = h('div', { class: 'ag-google' });
+      const drawGoogle = async () => {
+        const accounts = (await listAccounts()).filter((a) => a.provider === 'google');
+        const ready = await providerReady('google');
+        const connect = h('button', { class: 'btn', type: 'button', disabled: !ready, onclick: async () => {
+          const perm = requestIdentity(); // no clique, sem await antes
+          try {
+            if (!(await perm)) return say('Sem a permissão de identidade do navegador, não dá para entrar com a conta.', true);
+            const acc = await connectGoogle({ feature: 'calendar' });
+            await choose(acc);
+          } catch (e) { say(e.message, e.code !== 'cancelled'); }
+        } }, accounts.length ? '＋ Outra conta Google' : '＋ Conectar conta Google');
+        gBox.replaceChildren(
+          ...accounts.map((a) => h('button', { class: 'btn', type: 'button', onclick: () => choose(a) }, `📅 ${t('Escolher agendas de')} ${a.email}`)),
+          connect);
+      };
+      async function choose(acc) {
+        say('Buscando as agendas da conta…');
+        let items;
+        try { items = await googleCalendarChoices(acc.id); } catch (e) { return say(e.message, e.code !== 'cancelled'); }
+        say('');
+        const boxes = items.map((g) => ({ g, box: h('input', { type: 'checkbox', checked: g.added || (!cal.calendars.some((c) => c.account === acc.id) && g.primary) }) }));
+        const d = dialog(h('form', { method: 'dialog' },
+          h('h2', {}, acc.email),
+          h('p', { class: 'muted' }, 'Escolha as agendas que aparecem na NeuroTab. Nas suas agendas, dá para criar e editar compromissos daqui.'),
+          h('div', { class: 'ag-cals' }, ...boxes.map(({ g, box }) => h('label', { class: 'ag-cal' }, box,
+            h('span', { class: 'ag-dot', style: `background:${g.color || COLORS[0]}` }),
+            h('span', { class: 'grow' }, g.name, g.primary ? h('small', { class: 'muted' }, ' · principal') : null),
+            h('small', { class: 'muted' }, t(g.writable ? 'pode editar' : 'só leitura'))))),
+          h('div', { class: 'actions' },
+            h('button', { class: 'btn', value: 'cancel' }, 'Cancelar'),
+            h('button', { class: 'btn primary', value: 'ok', onclick: async (e) => {
+              e.preventDefault();
+              e.target.disabled = true;
+              say('Trazendo os compromissos…');
+              try {
+                cal = await setGoogleCalendars(acc.id, boxes.filter((x) => x.box.checked).map((x) => x.g));
+                draw();
+                say(`✓ ${boxes.filter((x) => x.box.checked).length} ${t('agenda(s) do Google na NeuroTab.')}`);
+                d.close();
+              } catch (err) { say(err.message, true); e.target.disabled = false; }
+            } }, 'Salvar'))));
+      }
+
       draw();
+      drawGoogle();
       dialog(h('form', { method: 'dialog' },
         h('h2', {}, 'Agendas'),
         list,
+        h('h3', {}, 'Agendas da conta Google'),
+        h('p', { class: 'muted' }, 'Todas as agendas da conta, com criar e editar compromissos. Atualiza a cada 10 minutos.'),
+        gBox,
         h('h3', {}, 'Trazer uma agenda por link'),
         h('div', { class: 'row' }, url, add),
         h('details', { class: 'ag-help' }, h('summary', {}, 'Onde encontro o link?'),
-          h('p', {}, h('b', {}, 'Google Agenda: '), 'no computador, Configurações → clique na agenda → "Integrar agenda" → copie o "Endereço secreto no formato iCal".'),
+          h('p', {}, h('b', {}, 'Google Agenda: '), 'prefira "Agendas da conta Google", acima. Por link: no computador, Configurações → clique na agenda → "Integrar agenda" → copie o "Endereço secreto no formato iCal".'),
           h('p', {}, h('b', {}, 'Outlook: '), 'Configurações → Agenda → Agendas compartilhadas → "Publicar uma agenda" → copie o link ICS.'),
           h('p', {}, h('b', {}, 'iCloud: '), 'no app Calendário, compartilhe a agenda como "Agenda pública" e copie o link (webcal://).'),
           h('p', { class: 'muted' }, h('span', {}, 'O link é só leitura e fica guardado só neste navegador.'), ' ', h('span', {}, `A NeuroTab atualiza a cada ${REFRESH_MIN} minutos.`), ' ', h('span', {}, 'Quem tiver o link consegue ver a agenda: não compartilhe.'))),

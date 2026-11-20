@@ -10,7 +10,7 @@ import { saveCapture, downloadAndSave } from './lib/captures.js';
 import { grabAndSave } from './lib/page-image.js';
 import { findAddress } from './lib/address.js';
 import { discardTempCapture } from './lib/captures.js';
-import { loadCalendar, eventsBetween, refreshFeeds, CAL_KEY, CAL_CACHE_KEY, REFRESH_MIN } from './lib/calendar.js';
+import { loadCalendar, eventsBetween, refreshFeeds, CAL_KEY, CAL_CACHE_KEY, GOOGLE_REFRESH_MIN } from './lib/calendar.js';
 import { syncNow, syncConfig, WATCHED_KEYS } from './lib/sync.js';
 
 // Janela de análise aberta com uma imagem temporária: quando ela fecha (a conexão cai), o fundo apaga a
@@ -466,7 +466,7 @@ async function runUpdateCheck() {
 function setupPeriodic() {
   chrome.alarms.create('update-check', { delayInMinutes: 1, periodInMinutes: 12 * 60 });
   chrome.alarms.create('daily', { delayInMinutes: 2, periodInMinutes: 24 * 60 });
-  chrome.alarms.create('calfeeds', { delayInMinutes: 3, periodInMinutes: REFRESH_MIN }); // agendas por link
+  chrome.alarms.create('calfeeds', { delayInMinutes: 3, periodInMinutes: GOOGLE_REFRESH_MIN }); // agendas por link (30 min) e do Google (10 min)
   chrome.alarms.create('calsync', { delayInMinutes: 5, periodInMinutes: 6 * 60 }); // avisos das próximas 48 h
   chrome.alarms.create('ntsync', { delayInMinutes: 1, periodInMinutes: 5 }); // sincronização entre aparelhos
 }
