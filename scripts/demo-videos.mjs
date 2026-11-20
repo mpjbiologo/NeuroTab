@@ -47,9 +47,9 @@ async function glide(p, target, { steps = 22 } = {}) {
 async function click(p, target, opts) { await glide(p, target, opts); await wait(p, 180); await p.mouse.down(); await wait(p, 90); await p.mouse.up(); }
 
 /** Abre uma página nova, grava a tela dela (screencast do Chrome) durante a demonstração e salva o MP4. */
-async function record(name, x, demo) {
+async function record(name, x, demo, { path = 'src/newtab.html' } = {}) {
   await x.ctx.addInitScript(CURSOR);
-  const p = await x.open('src/newtab.html', { wait: 1500 });
+  const p = await x.open(path, { wait: 1500 });
   await p.mouse.move(SIZE.width * 0.62, SIZE.height * 0.55);
   await wait(p, 300);
   mkdirSync(RAW, { recursive: true });
@@ -65,7 +65,10 @@ async function record(name, x, demo) {
   });
   await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 90, everyNthFrame: 1 });
   await wait(p, 400);
-  await demo(p);
+  // legendas: cue('texto') marca o começo de cada uma; cada uma vai até a próxima (ou o fim)
+  const cues = [];
+  const cue = (text) => cues.push({ t: Date.now() / 1000, text });
+  await demo(p, cue);
   await wait(p, 900);
   const tEnd = Date.now() / 1000;
   await cdp.send('Page.stopScreencast');
@@ -76,11 +79,65 @@ async function record(name, x, demo) {
   const mp4 = OUT + `demo-${name}.mp4`;
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', RAW + 'list.txt',
     '-vf', 'setsar=1,fps=30', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', mp4]);
+  if (cues.length) await burnCaptions(x, mp4, cues.map((c, i) => ({ text: c.text, from: c.t - frames[0].t, to: (cues[i + 1]?.t ?? tEnd) - frames[0].t - 0.15 })));
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-sseof', '-0.5', '-i', mp4, '-frames:v', '1', '-q:v', '4', OUT + `demo-${name}.jpg`]);
   console.log(`  ✓ demo-${name}.mp4 (${(statSync(mp4).size / 1024).toFixed(0)} KB, ${frames.length} quadros, ${(tEnd - frames[0].t).toFixed(1)} s)`);
 }
 
+/** Legendas gravadas no vídeo: cada texto vira uma imagem (fonte Inter, fundo escuro arredondado) sobreposta no tempo certo. */
+async function burnCaptions(x, mp4, subs) {
+  const page = await x.ctx.newPage();
+  await page.setViewportSize({ width: SIZE.width, height: 140 });
+  const files = [];
+  for (const [i, s] of subs.entries()) {
+    await page.setContent(`<html><body style="margin:0;background:transparent;display:flex;align-items:flex-end;justify-content:center;height:140px;font-family:Inter,system-ui,sans-serif">
+      <div style="margin-bottom:26px;max-width:1040px;padding:14px 28px;border-radius:16px;background:rgba(10,8,24,.82);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:30px;font-weight:600;line-height:1.25;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.45)">${s.text}</div></body></html>`);
+    const f = `${RAW}cap${i}.png`;
+    await page.screenshot({ path: f, omitBackground: true });
+    files.push(f);
+  }
+  await page.close();
+  const tmp = mp4.replace(/\.mp4$/, '.tmp.mp4');
+  const inputs = files.flatMap((f) => ['-i', f]);
+  let chain = '[0:v]';
+  const filters = subs.map((s, i) => {
+    const out = i === subs.length - 1 ? '[v]' : `[v${i}]`;
+    const f = `${chain}[${i + 1}:v]overlay=0:H-h:enable='between(t,${s.from.toFixed(2)},${s.to.toFixed(2)})'${out}`;
+    chain = out;
+    return f;
+  });
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', mp4, ...inputs, '-filter_complex', filters.join(';'), '-map', '[v]',
+    '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', tmp]);
+  execFileSync('mv', [tmp, mp4]);
+  // as mesmas legendas em .vtt, para leitores de tela e para quem quiser ativar no player
+  const ts = (v) => { const ms = Math.max(0, Math.round(v * 1000)); return `${String(Math.floor(ms / 3600000)).padStart(2, '0')}:${String(Math.floor(ms / 60000) % 60).padStart(2, '0')}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}.${String(ms % 1000).padStart(3, '0')}`; };
+  writeFileSync(mp4.replace(/\.mp4$/, '.vtt'), 'WEBVTT\n\n' + subs.map((s) => `${ts(s.from)} --> ${ts(s.to)}\n${s.text}\n`).join('\n'));
+}
+
 const DEMOS = {
+  // Configurações: um passeio pelas abas, com legendas.
+  async configuracoes() {
+    const { x } = await scene('pt', WINDOW);
+    await record('configuracoes', x, async (p, cue) => {
+      const tab = (t) => p.locator(`[data-tab="${t}"]`);
+      const top = async () => { await p.evaluate(() => scrollTo({ top: 0, behavior: 'smooth' })); await wait(p, 600); };
+      cue('Todas as configurações num lugar só');
+      await wait(p, 1600);
+      await p.mouse.move(700, 500, { steps: 20 }); await p.mouse.wheel(0, 380); await wait(p, 1500); await p.mouse.wheel(0, -380); await wait(p, 600);
+      cue('Plano de fundo: suas fotos, a foto do dia do Bing ou da NASA');
+      await top(); await click(p, tab('fundo')); await wait(p, 2600);
+      cue('IA e voz: Gemini, ChatGPT, Claude ou IA local, com a sua chave');
+      await top(); await click(p, tab('ia')); await wait(p, 1200); await p.mouse.move(700, 500, { steps: 15 }); await p.mouse.wheel(0, 300); await wait(p, 2000);
+      cue('Contas: sincronize entre navegadores, com criptografia');
+      await top(); await click(p, tab('contas')); await wait(p, 1200); await p.mouse.move(700, 500, { steps: 15 }); await p.mouse.wheel(0, 420); await wait(p, 2200);
+      cue('Backup: exporte e importe tudo quando quiser');
+      await top(); await click(p, tab('backup')); await wait(p, 2600);
+      cue('Grátis, sem anúncios e com código aberto');
+      await top(); await click(p, tab('geral')); await wait(p, 2200);
+    }, { path: 'src/options.html' });
+    await x.close();
+  },
+
   // Painel de atalhos: passar o mouse nos grupos da barra lateral.
   async atalhos() {
     const { x, data } = await scene('pt', WINDOW);
