@@ -72,13 +72,27 @@ export async function getAccessToken({ serviceAccount, clientId, clientSecret, r
   return body.access_token;
 }
 
-export async function publishChrome({ publisherId, extensionId, zip, fetchFn = fetch, interval = 5000, timeout = 10 * 60_000, log = console.log, ...auth }) {
+export async function publishChrome({ publisherId, extensionId, zip, version, fetchFn = fetch, interval = 5000, timeout = 10 * 60_000, log = console.log, ...auth }) {
   for (const [k, v] of Object.entries({ CWS_PUBLISHER_ID: publisherId, CWS_EXTENSION_ID: extensionId })) if (!v) throw new Error(`Falta ${k}.`);
   const name = `publishers/${encodeURIComponent(publisherId)}/items/${encodeURIComponent(extensionId)}`;
 
   log('1/4 Obtendo o token de acesso…');
   const token = await getAccessToken({ ...auth, fetchFn });
   const headers = { Authorization: `Bearer ${token}` };
+
+  if (version) {
+    // Rodar de novo uma versão que já está na loja (publicada ou em revisão) não é erro: só não há o que enviar.
+    try {
+      const r = await fetchFn(`${API}/v2/${name}:fetchStatus`, { headers });
+      const st = r.ok ? await readBody(r) : null;
+      const vers = (x) => (x?.distributionChannels || []).map((d) => d.crxVersion);
+      const pub = vers(st?.publishedItemRevisionStatus), sub = vers(st?.submittedItemRevisionStatus);
+      if (pub.includes(version) || sub.includes(version)) {
+        log(`A versão ${version} já está na Chrome Web Store (${pub.includes(version) ? 'publicada' : 'em revisão'}). Nada a enviar.`);
+        return { skipped: true, version };
+      }
+    } catch { /* sem status: segue e tenta enviar */ }
+  }
 
   log('2/4 Enviando o pacote…');
   let res = await fetchFn(`${API}/upload/v2/${name}:upload`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/zip' }, body: zip });
@@ -144,6 +158,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
       serviceAccount: env.CWS_SERVICE_ACCOUNT || undefined,
       clientId: env.CWS_CLIENT_ID, clientSecret: env.CWS_CLIENT_SECRET, refreshToken: env.CWS_REFRESH_TOKEN,
       zip: await readFile(file),
+      version: JSON.parse(await readFile(new URL('../manifest.json', import.meta.url), 'utf8')).version,
     });
   } catch (e) {
     console.error(`::error::${e.message.replace(/\n/g, '%0A')}`);

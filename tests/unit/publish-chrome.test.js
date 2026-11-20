@@ -91,3 +91,17 @@ test('Chrome: conferência de credenciais só lê o status', async () => {
   assert.match(lines[0], /0\.6\.1 \(PUBLISHED\)/);
   assert.ok(!calls.some((c) => /:upload|:publish/.test(c.url)));
 });
+
+test('não reenvia uma versão que já está na loja', async () => {
+  const { publishChrome } = await import('../../scripts/publish-chrome.mjs');
+  const calls = [];
+  const fetchFn = async (url) => {
+    calls.push(String(url));
+    if (String(url).includes('oauth2')) return new Response(JSON.stringify({ access_token: 't' }), { status: 200 });
+    if (String(url).endsWith(':fetchStatus')) return new Response(JSON.stringify({ publishedItemRevisionStatus: { state: 'PUBLISHED', distributionChannels: [{ crxVersion: '1.2.3' }] } }), { status: 200 });
+    throw new Error('não devia enviar: ' + url);
+  };
+  const r = await publishChrome({ publisherId: 'p', extensionId: 'e', zip: Buffer.from('x'), version: '1.2.3', clientId: 'c', clientSecret: 's', refreshToken: 'r', fetchFn, log: () => {} });
+  assert.deepEqual(r, { skipped: true, version: '1.2.3' });
+  assert.ok(!calls.some((u) => u.includes(':upload')));
+});
