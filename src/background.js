@@ -10,6 +10,7 @@ import { saveCapture, downloadAndSave } from './lib/captures.js';
 import { grabAndSave } from './lib/page-image.js';
 import { findAddress } from './lib/address.js';
 import { discardTempCapture } from './lib/captures.js';
+import { loadCalendar, eventsBetween, refreshFeeds, CAL_KEY, CAL_CACHE_KEY, REFRESH_MIN } from './lib/calendar.js';
 
 // Janela de análise aberta com uma imagem temporária: quando ela fecha (a conexão cai), o fundo apaga a
 // imagem se ninguém a guardou. Mais confiável que apagar de dentro da janela, que pode fechar antes de terminar.
@@ -187,7 +188,60 @@ async function syncAlarms() {
   for (const [name, when] of want) chrome.alarms.create(name, { when });
 }
 
+// ---------- Agenda: avisos antes dos compromissos (#26) ----------
+const CAL_SENT = 'nt_calendar_sent'; // { "agenda|evento|ocorrência": quando avisou }
+const calName = (o) => `cal-${o.calendar.id}|${o.ev.id}|${o.key}`;
+
+async function syncCalAlarms() {
+  try {
+    const cal = await loadCalendar();
+    const now = Date.now();
+    const sent = (await chrome.storage.local.get(CAL_SENT))[CAL_SENT] || {};
+    const want = new Map();
+    for (const o of eventsBetween(cal, now - 864e5, now + 2 * 864e5)) {
+      if (o.ev.alarm == null) continue;
+      const when = o.start - o.ev.alarm * 60e3;
+      const name = calName(o);
+      if (sent[name] || when < now - 60e3 || o.start < now) continue;
+      want.set(name, Math.max(when, now + 1000));
+    }
+    for (const a of await chrome.alarms.getAll()) {
+      if (!a.name.startsWith('cal-')) continue;
+      if (!want.has(a.name) || Math.abs(a.scheduledTime - want.get(a.name)) > 1500) await chrome.alarms.clear(a.name);
+      else want.delete(a.name);
+    }
+    for (const [name, when] of want) chrome.alarms.create(name, { when });
+  } catch (e) {
+    console.warn('NeuroTab: avisos da agenda', e);
+  }
+}
+
+async function fireCalAlarm(name) {
+  const cal = await loadCalendar();
+  const now = Date.now();
+  const o = eventsBetween(cal, now - 864e5, now + 2 * 864e5).find((x) => calName(x) === name);
+  if (!o) return;
+  const store = (await chrome.storage.local.get(CAL_SENT))[CAL_SENT] || {};
+  if (store[name]) return;
+  for (const [k, v] of Object.entries(store)) if (now - v > 4 * 864e5) delete store[k];
+  store[name] = now;
+  await chrome.storage.local.set({ [CAL_SENT]: store });
+  const fmt = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const mins = Math.round((o.start - now) / 60e3);
+  chrome.notifications.create(name, {
+    type: 'basic',
+    iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+    title: '📅 ' + o.ev.title,
+    message: [o.allDay ? t('Dia todo') : `${fmt(o.start)}–${fmt(o.end)}${mins > 0 ? ` · ${t('em')} ${mins} min` : ''}`, o.ev.location].filter(Boolean).join(' · '),
+    contextMessage: o.calendar.name,
+    priority: 2,
+  });
+}
+
 chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name.startsWith('cal-')) return fireCalAlarm(alarm.name);
+  if (alarm.name === 'calfeeds') return refreshFeeds().then(syncCalAlarms).catch(() => {});
+  if (alarm.name === 'calsync') return syncCalAlarms();
   if (alarm.name.startsWith('clock-')) return fireClockAlarm(alarm.name.slice(6));
   if (alarm.name === 'timer') return fireTimer();
   if (alarm.name === 'pomo') return firePomo();
@@ -252,7 +306,7 @@ chrome.notifications.onClosed.addListener((nid) => {
 chrome.notifications.onClicked.addListener(async (nid) => {
   chrome.notifications.clear(nid);
   if (nid.startsWith('clock-') || nid === 'timer' || nid === 'pomo') { stopSound(); return; }
-  await chrome.tabs.create({ url: NEWTAB + (nid.startsWith('rem-') ? '#item=' + nid.slice(4) : '') });
+  await chrome.tabs.create({ url: NEWTAB + (nid.startsWith('rem-') ? '#item=' + nid.slice(4) : '') }); // aviso da agenda: abre a nova aba
 });
 
 // ---------- Som (documento offscreen) ----------
@@ -393,11 +447,14 @@ async function runUpdateCheck() {
 function setupPeriodic() {
   chrome.alarms.create('update-check', { delayInMinutes: 1, periodInMinutes: 12 * 60 });
   chrome.alarms.create('daily', { delayInMinutes: 2, periodInMinutes: 24 * 60 });
+  chrome.alarms.create('calfeeds', { delayInMinutes: 3, periodInMinutes: REFRESH_MIN }); // agendas por link
+  chrome.alarms.create('calsync', { delayInMinutes: 5, periodInMinutes: 6 * 60 }); // avisos das próximas 48 h
 }
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   rebuildMenus();
   syncAlarms();
+  syncCalAlarms();
   syncClock();
   setupPeriodic();
   if (details.reason === 'update') {
@@ -405,7 +462,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await chrome.action.setBadgeText({ text: '' });
   }
 });
-chrome.runtime.onStartup.addListener(() => { rebuildMenus(); syncAlarms(); syncClock(); setupPeriodic(); });
+chrome.runtime.onStartup.addListener(() => { rebuildMenus(); syncAlarms(); syncCalAlarms(); syncClock(); setupPeriodic(); });
 
 // Comando de teclado global: abrir a NeuroTab ouvindo um comando de voz.
 chrome.commands.onCommand.addListener(async (cmd) => {
@@ -421,6 +478,7 @@ chrome.commands.onCommand.addListener(async (cmd) => {
 
 let menuTimer;
 let alarmTimer;
+let calTimer;
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'local') return;
   if (changes[DATA_KEY]) {
@@ -432,6 +490,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
     alarmTimer = setTimeout(syncAlarms, 300);
   }
   if (changes[CK.alarms] || changes[CK.timer] || changes[CK.pomo]) syncClock();
+  if (changes[CAL_KEY] || changes[CAL_CACHE_KEY]) {
+    clearTimeout(calTimer);
+    calTimer = setTimeout(syncCalAlarms, 500);
+  }
 });
 
 // Mensagens da página/popup (ex.: organizar com IA em segundo plano).

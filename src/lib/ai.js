@@ -278,6 +278,9 @@ export async function buildContext(settings, items, question, limit = 14) {
  */
 export async function ask(settings, items, question, history = [], extras = []) {
   const { found, text } = await buildContext(settings, items, question);
+  // A agenda dos próximos dias vai junto: "tenho algo livre na quinta?", "quando é o dentista?"
+  const agenda = await import('./calendar.js').then((m) => m.calendarContext()).catch(() => '');
+  if (agenda) extras = [...(extras || []), { title: 'AGENDA DO USUÁRIO (próximos 14 dias; horários no fuso dele)', text: agenda }];
   const extra = (extras || []).filter((x) => x?.text).map((x) => `\n\n${x.title}:${x.note ? `\n(${x.note})` : ''}\n${x.text}`).join('');
   const system = `Você é o assistente do "segundo cérebro" do usuário, dentro da extensão NeuroTab. Responda em ${aiLanguageName()}, de forma direta e curta (use listas quando ajudar).
 ${nowContext()}

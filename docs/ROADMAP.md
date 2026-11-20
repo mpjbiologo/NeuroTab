@@ -24,8 +24,10 @@ Primeiro a base, depois os recursos.
 - ✅ **0.7.5 — O cérebro lê as imagens:** texto das imagens lido no computador e imagens no cérebro (#17); "Analisar imagem" e "Traçar rota" no botão direito (#54); o Enter da barra de pesquisa faz o que a pessoa escolher (#57).
 - ✅ **0.7.5.2 / 0.7.5.3 — Aba Mídia:** guardar ou não a imagem analisada e IA própria para imagens (a 0.7.5.3 leva às lojas a 0.7.5.2, que não chegou a ser enviada).
 - ✅ **0.7.5.1 — Correções:** a barra de organizar não fica mais atrás dos widgets (#60); a descrição de imagens só usa modelos que enxergam.
-- **0.7.6 — Agenda:** agenda própria (dia, semana, mês, recorrência), importação de `.ics` e o cérebro respondendo sobre compromissos; contas Google/Microsoft numa etapa seguinte (#26).
-- **0.7.7 — Do seu jeito:** atalhos com formato (redondo, quadrado, arredondado), cor e ícone próprios, favicon automático com recarga e envio de ícone (#59); editor visual da aparência em Configurações → Aparência, construído sobre os três temas: cores, transparência, cantos, estilo dos widgets, prévia, restaurar padrão e exportar/importar tema (#58).
+- ✅ **0.7.6 — Agenda:** agenda própria (próximos, dia, semana, mês, repetição, avisos), Google Agenda, Outlook e iCloud por link, importar/exportar `.ics` e o cérebro respondendo sobre compromissos (#26).
+- **0.7.6.1 — Agenda com login:** Google Agenda e Outlook pela conta, para criar e editar eventos lá (#26).
+- **0.7.7 — Área de transferência:** widget com histórico do que você copia, só neste computador, com pausa, expiração e proteção de senhas e códigos (#51). Compartilhar com o celular fica para depois.
+- **0.7.8 — Do seu jeito:** atalhos com formato (redondo, quadrado, arredondado), cor e ícone próprios, favicon automático com recarga e envio de ícone (#59); editor visual da aparência em Configurações → Aparência, construído sobre os três temas: cores, transparência, cantos, estilo dos widgets, prévia, restaurar padrão e exportar/importar tema (#58).
 
 ### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 4 atualizações
 - **Primeiro, uma central de IA:** vários provedores, servidores e modelos ao mesmo tempo, com um modelo para cada tarefa (conversa, cérebro, busca por significado, imagens, transcrição, reuniões…), regras claras de prioridade e nenhuma troca silenciosa do computador para a internet (#63, que absorve a #7). A voz da v0.8 precisa disso: um modelo para transcrever e outro para responder.
