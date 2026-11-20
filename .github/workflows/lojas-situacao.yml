@@ -43,6 +43,12 @@ jobs:
         run: |
           # Na release, espera os envios terminarem antes de olhar.
           if [ "${{ github.event_name }}" = release ]; then sleep 900; fi
-          export LATEST=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name | sed 's/^v//')
+          TAG=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
+          export LATEST=${TAG#v}
+          # Como terminou o envio dessa release a cada loja (para avisar se ela nem chegou às lojas).
+          RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/release.yml/runs?per_page=20" --jq "[.workflow_runs[] | select(.head_branch==\"$TAG\")][0].id // empty")
+          if [ -n "$RUN" ]; then
+            export SUBMIT=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN/jobs" --jq '[.jobs[] | select(.name|startswith("loja-")) | {key: (.name|sub("loja-";"")), value: (.conclusion // "em andamento")}] | from_entries')
+          fi
           gh label create lojas --color 0e8a16 --description "Situação nas lojas" 2>/dev/null || true
           node scripts/store-status.mjs --issue
