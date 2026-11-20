@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.7.6.1 — 20 de novembro de 2026
+**Contas e sincronização: suas notas iguais em todos os navegadores, criptografadas no seu Google Drive.**
+
+- ☁️ **Nova aba "Contas e sincronização" (#27):** conecte uma ou mais contas Google. O acesso fica só no navegador; nada passa por servidores da NeuroTab. "Desconectar" revoga o acesso no Google
+- 🔄 **Sincronização:** cérebro (notas, tarefas, trechos e lixeira), atalhos e grupos, configurações, agenda e hábitos, pela pasta oculta da NeuroTab no seu Google Drive (não aparece nos seus arquivos; a NeuroTab não vê os outros arquivos do Drive). Você escolhe o que sincroniza
+  - **Com senha (recomendado):** tudo é criptografado no computador antes de sair; nem o Google consegue ler. **Sem senha:** mais simples, mas o conteúdo fica legível na sua conta
+  - Acontece sozinha depois de cada mudança, a cada 5 minutos e ao abrir o navegador. Dá para pausar, sincronizar agora, desligar num aparelho ou apagar tudo da nuvem
+  - Nada some sem querer: o que foi editado num aparelho e excluído no outro fica; se a mesma nota mudou nos dois, as duas versões ficam no cérebro
+  - Chaves de API e imagens da biblioteca não sincronizam
+- A agenda pela conta Google (criar e editar eventos lá) e a Microsoft (Outlook e OneDrive) vêm nas próximas versões
+
 ## v0.7.6 — 2026-11-20
 **Agenda: seus compromissos na nova aba, com o Google Agenda, o Outlook e o iCloud.**
 

@@ -29,7 +29,7 @@ test('sem acesso amplo obrigatório e sem http://*/*', () => {
 });
 
 test('permissões de API usadas no código', () => {
-  const used = execFileSync('grep', ['-rhoE', 'chrome\\.(contextMenus|alarms|notifications|offscreen|scripting|topSites|sessions|tabs|storage)\\b', 'src'], { cwd: root.pathname }).toString();
+  const used = execFileSync('grep', ['-rhoE', 'chrome\\.(contextMenus|alarms|notifications|offscreen|scripting|topSites|sessions|tabs|storage|identity)\\b', 'src'], { cwd: root.pathname }).toString();
   for (const p of ['contextMenus', 'alarms', 'notifications', 'offscreen', 'scripting', 'storage']) {
     assert.ok(manifest.permissions.includes(p), `falta ${p}`);
     assert.ok(used.includes('chrome.' + p), `${p} declarada mas não usada`);

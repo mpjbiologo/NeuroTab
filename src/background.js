@@ -11,6 +11,7 @@ import { grabAndSave } from './lib/page-image.js';
 import { findAddress } from './lib/address.js';
 import { discardTempCapture } from './lib/captures.js';
 import { loadCalendar, eventsBetween, refreshFeeds, CAL_KEY, CAL_CACHE_KEY, REFRESH_MIN } from './lib/calendar.js';
+import { syncNow, syncConfig, WATCHED_KEYS } from './lib/sync.js';
 
 // Janela de análise aberta com uma imagem temporária: quando ela fecha (a conexão cai), o fundo apaga a
 // imagem se ninguém a guardou. Mais confiável que apagar de dentro da janela, que pode fechar antes de terminar.
@@ -238,7 +239,25 @@ async function fireCalAlarm(name) {
   });
 }
 
+// ---------- Sincronização entre aparelhos (#27) ----------
+// Alguns segundos depois de cada mudança, a cada 5 minutos e ao abrir o navegador. Nunca abre janela de login
+// sozinha: se a sessão do Google saiu, a situação fica na aba Contas, esperando a pessoa entrar de novo.
+let syncTimer;
+let syncQuietUntil = 0; // as gravações da própria sincronização não disparam outra
+async function backgroundSync() {
+  const c = await syncConfig();
+  if (!c.enabled || c.paused) return;
+  syncQuietUntil = Date.now() + 10 * 60e3; // durante a sincronização
+  try { await syncNow(); } catch (e) { console.info('NeuroTab: sincronização adiada', e?.message); }
+  syncQuietUntil = Date.now() + 4000;
+}
+function scheduleSync(ms = 15000) {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(backgroundSync, ms);
+}
+
 chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'ntsync') return backgroundSync();
   if (alarm.name.startsWith('cal-')) return fireCalAlarm(alarm.name);
   if (alarm.name === 'calfeeds') return refreshFeeds().then(syncCalAlarms).catch(() => {});
   if (alarm.name === 'calsync') return syncCalAlarms();
@@ -449,6 +468,7 @@ function setupPeriodic() {
   chrome.alarms.create('daily', { delayInMinutes: 2, periodInMinutes: 24 * 60 });
   chrome.alarms.create('calfeeds', { delayInMinutes: 3, periodInMinutes: REFRESH_MIN }); // agendas por link
   chrome.alarms.create('calsync', { delayInMinutes: 5, periodInMinutes: 6 * 60 }); // avisos das próximas 48 h
+  chrome.alarms.create('ntsync', { delayInMinutes: 1, periodInMinutes: 5 }); // sincronização entre aparelhos
 }
 
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -462,7 +482,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await chrome.action.setBadgeText({ text: '' });
   }
 });
-chrome.runtime.onStartup.addListener(() => { rebuildMenus(); syncAlarms(); syncCalAlarms(); syncClock(); setupPeriodic(); });
+chrome.runtime.onStartup.addListener(() => { rebuildMenus(); syncAlarms(); syncCalAlarms(); syncClock(); setupPeriodic(); scheduleSync(5000); });
 
 // Comando de teclado global: abrir a NeuroTab ouvindo um comando de voz.
 chrome.commands.onCommand.addListener(async (cmd) => {
@@ -490,6 +510,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
     alarmTimer = setTimeout(syncAlarms, 300);
   }
   if (changes[CK.alarms] || changes[CK.timer] || changes[CK.pomo]) syncClock();
+  if (Date.now() > syncQuietUntil && WATCHED_KEYS.some((k) => changes[k])) scheduleSync();
   if (changes[CAL_KEY] || changes[CAL_CACHE_KEY]) {
     clearTimeout(calTimer);
     calTimer = setTimeout(syncCalAlarms, 500);

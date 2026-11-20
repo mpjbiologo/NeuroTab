@@ -25,7 +25,9 @@ Primeiro a base, depois os recursos.
 - ✅ **0.7.5.2 / 0.7.5.3 — Aba Mídia:** guardar ou não a imagem analisada e IA própria para imagens (a 0.7.5.3 leva às lojas a 0.7.5.2, que não chegou a ser enviada).
 - ✅ **0.7.5.1 — Correções:** a barra de organizar não fica mais atrás dos widgets (#60); a descrição de imagens só usa modelos que enxergam.
 - ✅ **0.7.6 — Agenda:** agenda própria (próximos, dia, semana, mês, repetição, avisos), Google Agenda, Outlook e iCloud por link, importar/exportar `.ics` e o cérebro respondendo sobre compromissos (#26).
-- **0.7.6.1 — Agenda com login:** Google Agenda e Outlook pela conta, para criar e editar eventos lá (#26).
+- **0.7.6.1 — Contas e sincronização:** várias contas Google e sincronização criptografada das notas, atalhos, configurações, agenda e hábitos pelo Google Drive (#27, adiantada da v1.0).
+- **0.7.6.2 — Agenda pela conta Google:** todos os calendários, criar e editar eventos lá (#26; depende da verificação do Google).
+- **0.7.6.3 — Microsoft:** Outlook (agenda) e OneDrive (sincronização), com as mesmas contas.
 - **0.7.7 — Área de transferência:** widget com histórico do que você copia, só neste computador, com pausa, expiração e proteção de senhas e códigos (#51). Compartilhar com o celular fica para depois.
 - **0.7.8 — Do seu jeito:** atalhos com formato (redondo, quadrado, arredondado), cor e ícone próprios, favicon automático com recarga e envio de ícone (#59); editor visual da aparência em Configurações → Aparência, construído sobre os três temas: cores, transparência, cantos, estilo dos widgets, prévia, restaurar padrão e exportar/importar tema (#58).
 
