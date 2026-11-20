@@ -191,3 +191,24 @@ test('agendas por link: webcal, nomes, erros claros, atualização e visibilidad
   saved.visible = false;
   assert.equal(eventsBetween(cal, Date.parse('2026-11-01Z'), Date.parse('2026-12-31Z')).filter((o) => o.calendar.id === c.id).length, 0);
 });
+
+test('cérebro: "o que tenho amanhã?" responde com a agenda e as tarefas do dia', async () => {
+  fakeStorage();
+  const { runCommand } = await import('../../src/lib/assistant.js');
+  const { agendaText, calendarContext } = await import('../../src/lib/calendar.js');
+  const { todayYmd, addDays } = await import('../../src/lib/tz.js');
+  const tomorrow = addDays(todayYmd(), 1);
+  assert.equal(await agendaText(1), '', 'sem nenhuma agenda, não fala de agenda');
+  await saveEvent({ title: 'Dentista', start: `${tomorrow}T16:30`, end: `${tomorrow}T17:15`, location: 'Centro' });
+  await saveEvent({ title: 'Viagem', start: tomorrow, allDay: true });
+  assert.equal(await agendaText(1), 'Agenda de amanhã: dia todo Viagem; 16:30 Dentista (Centro).');
+  assert.equal(await agendaText(2), 'Nada na agenda depois de amanhã.');
+  const at9 = new Date(`${tomorrow}T09:00`).getTime();
+  const api = { items: () => [{ id: 't', type: 'task', title: 'Pagar a luz', text: 'Pagar a luz', remindAt: at9, done: false, createdAt: 1 }] };
+  const r = await runCommand('O que eu tenho amanhã?', api, 'pt');
+  assert.match(r.reply, /Agenda de amanhã: dia todo Viagem; 16:30 Dentista \(Centro\)\. Tarefas de amanhã: Pagar a luz às 09:00\./);
+  const hoje = await runCommand('minha agenda de hoje', { items: () => [] }, 'pt');
+  assert.match(hoje.reply, /Nada na agenda hoje\./);
+  const ctx = await calendarContext();
+  assert.match(ctx, new RegExp(`${tomorrow} \\([^)]+\\):\\n- dia todo Viagem \\[Minha agenda\\]\\n- 16:30–17:15 Dentista · Centro`));
+});

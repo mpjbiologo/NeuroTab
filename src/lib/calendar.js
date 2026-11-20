@@ -317,3 +317,39 @@ export async function upcoming(days = 7, from = Date.now()) {
   const start = dayStart(todayYmd(from));
   return eventsBetween(cal, start, start + days * 864e5).filter((o) => o.end > from);
 }
+
+const hm = (ts) => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const occLine = (o, tr = (x) => x) => `${o.allDay ? tr('dia todo') : hm(o.start)} ${o.ev.title}${o.ev.location ? ` (${o.ev.location})` : ''}`;
+
+/**
+ * Resumo falado/escrito da agenda de um dia (0 = hoje, 1 = amanhã…). Hoje só mostra o que ainda não acabou.
+ * tr: tradução (padrões "Agenda de hoje: {0}." etc.). Devolve '' se não houver nenhuma agenda com eventos.
+ */
+export async function agendaText(offset = 0, tr = (x) => x, now = Date.now()) {
+  const cal = await loadCalendar();
+  const hasAny = cal.events.length || Object.values(cal.cache).some((c) => c.events?.length);
+  if (!hasAny) return '';
+  const day = addDays(todayYmd(now), offset);
+  const occ = eventsBetween(cal, dayStart(day), dayStart(addDays(day, 1))).filter((o) => offset > 0 || o.end > now);
+  const label = offset === 0 ? 'hoje' : offset === 1 ? 'amanhã' : 'depois de amanhã';
+  if (!occ.length) return tr(`Nada na agenda ${label}.`);
+  const list = occ.slice(0, 6).map((o) => occLine(o, tr)).join('; ') + (occ.length > 6 ? `; +${occ.length - 6}` : '');
+  return tr(`Agenda de ${label}: ${list}.`);
+}
+
+/** Agenda dos próximos dias em texto, para a IA responder perguntas ("tenho algo livre na quinta?"). */
+export async function calendarContext(days = 14, now = Date.now()) {
+  const cal = await loadCalendar();
+  const from = dayStart(todayYmd(now));
+  const occ = eventsBetween(cal, from - 864e5, from + days * 864e5).slice(0, 80);
+  if (!occ.length) return '';
+  const lines = [];
+  let last = '';
+  for (const o of occ) {
+    const d = todayYmd(o.start);
+    if (d !== last) { lines.push(`${d} (${['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'][weekday(d)]}):`); last = d; }
+    lines.push(`- ${o.allDay ? 'dia todo' : `${hm(o.start)}–${hm(o.end)}`} ${o.ev.title}${o.ev.location ? ` · ${o.ev.location}` : ''} [${o.calendar.name}]`);
+  }
+  return lines.join('\n');
+}
+

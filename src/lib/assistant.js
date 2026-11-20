@@ -2,6 +2,7 @@
 // Cada idioma tem um "léxico" (expressões de cada comando); o motor abaixo é o mesmo para todos.
 // Se nada bater e houver IA configurada, a própria IA interpreta a frase.
 // As respostas são escritas em português e traduzidas para o idioma da interface (i18n).
+import { agendaText } from './calendar.js';
 import { fold, parseReminder, fmtDateTime, displayTitle } from './brain.js';
 import { parseDuration, fmtDur, startTimer, startPomo, addAlarm, pausePomo, stopPomo, resetTimer, stopSound } from './clock.js';
 import { smartCalc } from './calc.js';
@@ -69,6 +70,9 @@ const LEX = {
     quotes: /(dolar|euro|bitcoin|cotac|bolsa|acoes)/,
     tasks: /^(ler |leia |quais |o que )?(sao )?(minhas |as )?(tarefas|lembretes|pendencias|tenho (pra|para) hoje|agenda)( de hoje| pra hoje| para hoje)?$/,
     // Frases livres: "me diga aí, o que que eu tenho que fazer?", "o que tenho pra hoje", "quais são minhas pendências"
+    agendaAsk: /\b(o que|oque)( que)? (eu )?(tenho|tem)( marcado| na agenda)? (pra |para )?(hoje|amanha|depois de amanha)\b|\b(minha )?agenda (de |pra |para )?(hoje|amanha|depois de amanha)\b|\b(meus )?compromissos( de| pra| para)? (hoje|amanha|depois de amanha)\b|\bminha agenda\b/,
+    tomorrow: /\bamanha\b/,
+    dayAfter: /\bdepois de amanha\b/,
     tasksAsk: /\b(o que|oque)( que)? (eu )?(tenho|preciso|devo) (que |de |pra |para )?(fazer|resolver)\b|\b(o que|oque)( que)? (eu )?tenho (pra|para) hoje\b|\b(minhas|quais (sao )?(as |minhas )?)(tarefas|pendencias|lembretes)\b|\bminha agenda\b|\bo que tem (pra|para) hoje\b/,
     route: /^(rota|ir|como chegar|navegar|transito)\s+(para|pro|pra|ate|ao|a|na|no|em)\s+(o |a )?(.+)$/,
     open: /^(abrir|abra|abre|ir para|vai para|acessar|entrar no|entrar na)\s+(o |a )?(.+)$/,
@@ -106,6 +110,9 @@ const LEX = {
     weather: /(weather|forecast|temperature|rain|raining|sunny)/,
     quotes: /(dollar|euro|bitcoin|exchange rate|stock|quotes?)/,
     tasks: /^(read |what are )?(my )?(tasks|reminders|to ?dos|agenda)( for today| today)?$|^what do i have (to do )?today$/,
+    agendaAsk: /\bwhat('?s| is| do i have)( on my (calendar|schedule|agenda))?( for)? (today|tomorrow|the day after tomorrow)\b|\bmy (calendar|schedule|meetings|appointments)( for)?( today| tomorrow)?\b/,
+    tomorrow: /\btomorrow\b/,
+    dayAfter: /\bday after tomorrow\b/,
     tasksAsk: /\bwhat (do|should|must|will) i (have|need|got)? ?to do\b|\bwhat do i have (to do )?today\b|\bwhat('?s| is) on my (list|agenda|plate|schedule)\b|\b(my|read my|list my) (tasks|to ?dos|reminders)\b/,
     route: /^(route|directions|navigate|go|take me|drive|how do i get)\s+(to|home)\s*(the )?(.*)$/,
     open: /^(open|go to|launch|visit|show me)\s+(the )?(.+)$/,
@@ -143,6 +150,9 @@ const LEX = {
     weather: /(tiempo|clima|pronostico|temperatura|llover|lluvia)/,
     quotes: /(dolar|euro|bitcoin|cotizacion|bolsa|acciones)/,
     tasks: /^(leer |lee |cuales son |que )?(son )?(mis )?(tareas|recordatorios|pendientes|agenda|tengo (para )?hoy)( de hoy| para hoy)?$/,
+    agendaAsk: /\bque tengo( agendado| en la agenda)? (para |pa )?(hoy|manana|pasado manana)\b|\bmi (agenda|calendario)( de| para)?( hoy| manana)?\b|\bmis (citas|compromisos)( de| para)?( hoy| manana)?\b/,
+    tomorrow: /\bmanana\b/,
+    dayAfter: /\bpasado manana\b/,
     tasksAsk: /\bque (tengo|debo|necesito) (que |de )?hacer\b|\bque tengo (para |pa )?hoy\b|\b(mis|cuales son (mis )?)(tareas|pendientes|recordatorios)\b|\bmi agenda\b/,
     route: /^(ruta|ir|como llegar|navegar|trafico)\s+(a|al|hacia|hasta|para)\s+(el |la |mi )?(.+)$/,
     open: /^(abrir|abre|ir a|entrar en|acceder a)\s+(el |la )?(.+)$/,
@@ -242,7 +252,12 @@ export async function runCommand(raw, api, lang = 'pt') {
   }
   if (L.weather.test(t) && t.split(' ').length <= 7) return { reply: await api.weatherText() };
   if (L.quotes.test(t) && t.split(' ').length <= 6) return { reply: await api.quotesText(t) };
-  if (L.tasks.test(t) || (L.tasksAsk.test(t) && t.split(' ').length <= 14)) return api.items ? { reply: tasksSummary(api.items(), (x) => tIn(lang, x)), translated: true } : { reply: api.tasksText() };
+  // "o que tenho amanhã?", "minha agenda de hoje": compromissos da agenda + tarefas
+  const dayAsk = L.agendaAsk?.test(t) && t.split(' ').length <= 14;
+  if (dayAsk || L.tasks.test(t) || (L.tasksAsk.test(t) && t.split(' ').length <= 14)) {
+    const off = L.dayAfter.test(t) ? 2 : L.tomorrow.test(t) ? 1 : 0;
+    return dayReply(api, off, lang);
+  }
 
   // Rotas (só se o lugar existir nos favoritos do widget Trânsito)
   if ((m = t.match(L.route))) {
@@ -365,7 +380,7 @@ async function runIntent(it, api, text, L) {
     }
     case 'weather': return { reply: await api.weatherText() };
     case 'quotes': return { reply: await api.quotesText(fold(s(it.query) || text)) };
-    case 'tasks': return api.items ? { reply: tasksSummary(api.items(), (x) => tIn(L.code, x)), translated: true } : { reply: api.tasksText() };
+    case 'tasks': return dayReply(api, L.dayAfter.test(fold(text)) ? 2 : L.tomorrow.test(fold(text)) ? 1 : 0, L.code);
     case 'time': return { reply: `São ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.` };
     case 'ask': {
       const { answer } = await api.ask(s(it.query) || text);
@@ -373,6 +388,24 @@ async function runIntent(it, api, text, L) {
     }
     default: return null;
   }
+}
+
+/** Resposta para "o que tenho hoje/amanhã": agenda do dia e tarefas. */
+async function dayReply(api, off, lang) {
+  const tr = (x) => tIn(lang, x);
+  const agenda = await agendaText(off, tr).catch(() => '');
+  if (off === 0) {
+    const tasks = api.items ? tasksSummary(api.items(), tr) : api.tasksText();
+    return { reply: [agenda, tasks].filter(Boolean).join(' '), translated: !!api.items };
+  }
+  const items = api.items ? api.items() : [];
+  const start = new Date(); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() + off);
+  const end = new Date(start); end.setDate(end.getDate() + 1);
+  const due = items.filter((i) => !i.done && !i.deletedAt && i.remindAt >= +start && i.remindAt < +end).sort((a, b) => a.remindAt - b.remindAt);
+  const time = (ts) => new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const label = off === 1 ? 'amanhã' : 'depois de amanhã';
+  const tasks = due.length ? tr(`Tarefas de ${label}: ${due.slice(0, 5).map((i) => tr(`${displayTitle(i)} às ${time(i.remindAt)}`)).join('; ')}.`) : '';
+  return { reply: [agenda, tasks].filter(Boolean).join(' ') || tr(`Nada marcado para ${label}.`), translated: true };
 }
 
 export function tasksSummary(items, tr = (x) => x) {

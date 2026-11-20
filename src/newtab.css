@@ -734,3 +734,52 @@ a { color: var(--accent-text); text-underline-offset: 3px; }
 body.narrow #center { padding-bottom: 140px; }
 body.narrow .voice-fab { width: 48px; height: 48px; }
 input[type=checkbox], input[type=radio], input[type=range], progress { accent-color: var(--accent); }
+
+/* ---------- Widget Agenda (#26) ---------- */
+.ag-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ag-nav { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.ag-nav .btn { padding: 4px 10px; }
+.ag-title { margin-left: 6px; font-size: var(--fs-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ag-views .btn { padding: 4px 10px; font-size: var(--fs-sm); }
+.ag-body { display: grid; gap: 10px; }
+.ag-dayhead { font-size: var(--fs-sm); color: var(--text-3); margin: 2px 0 4px; }
+.ag-day.today .ag-dayhead { color: var(--accent); font-weight: 600; }
+.ag-day { display: grid; gap: 4px; }
+.ag-ev { display: flex; align-items: baseline; gap: 8px; width: 100%; min-width: 0; text-align: left; font: inherit; color: var(--text); cursor: pointer;
+  padding: 6px 10px; border-radius: var(--radius-sm); border: 0; border-left: 3px solid var(--c); background: color-mix(in oklch, var(--c) 14%, transparent); }
+.ag-ev:hover, .ag-ev:focus-visible { background: color-mix(in oklch, var(--c) 26%, transparent); }
+.ag-ev.ext { border-left-style: dashed; }
+.ag-time { font-variant-numeric: tabular-nums; font-size: var(--fs-sm); color: var(--text-2); flex: none; }
+.ag-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ag-loc { margin-left: auto; font-size: var(--fs-xs, 12px); color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40%; }
+.ag-free { margin: 0; font-size: var(--fs-sm); }
+.ag-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.ag-col { display: grid; align-content: start; gap: 3px; min-height: 80px; padding: 4px; border-radius: var(--radius-sm); background: var(--tint-1); }
+.ag-col.today { outline: 1px solid var(--accent); }
+.ag-colhead { font: inherit; font-size: var(--fs-xs, 12px); color: var(--text-2); background: none; border: 0; cursor: pointer; padding: 2px; }
+.ag-col .ag-ev, .ag-cell .ag-ev { flex-direction: column; gap: 0; padding: 3px 5px; font-size: var(--fs-xs, 12px); }
+.ag-col .ag-loc { display: none; }
+.ag-col .ag-name, .ag-cell .ag-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.ag-month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.ag-wd { text-align: center; font-size: var(--fs-xs, 12px); color: var(--text-3); text-transform: uppercase; }
+.ag-cell { min-height: 58px; padding: 2px; border-radius: var(--radius-sm); background: var(--tint-1); display: grid; align-content: start; gap: 2px; min-width: 0; }
+.ag-cell.out { opacity: .45; }
+.ag-cell.today { outline: 1px solid var(--accent); }
+.ag-num { font: inherit; font-size: var(--fs-xs, 12px); background: none; border: 0; color: var(--text-2); cursor: pointer; text-align: left; padding: 1px 3px; }
+.ag-cell.today .ag-num { color: var(--accent); font-weight: 700; }
+.ag-more { font: inherit; font-size: 11px; background: none; border: 0; color: var(--text-3); cursor: pointer; text-align: left; }
+.ag-status:empty { display: none; }
+.ag-status { margin: 8px 0 0; font-size: var(--fs-sm); }
+.ag-dlg label.check { display: flex; align-items: center; gap: 6px; }
+.ag-dlg .row input[type=date], .ag-dlg .row input[type=time] { flex: 1; min-width: 0; }
+.ag-dlg .ag-notes { white-space: pre-wrap; max-height: 240px; overflow: auto; }
+.ag-dlg .ag-when { margin: 0; color: var(--text-2); }
+.ag-cals { display: grid; gap: 8px; }
+.ag-cal { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.ag-cal .grow { display: grid; min-width: 0; }
+.ag-cal small { overflow: hidden; text-overflow: ellipsis; }
+.ag-cal input[type=color] { width: 28px; height: 28px; padding: 0; border: 0; background: none; }
+.ag-dlg .err { color: var(--bad); }
+.ag-dlg h3 { margin: 6px 0 0; font-size: var(--fs-md); }
+.ag-help p { margin: 6px 0; font-size: var(--fs-sm); }
+.btn.danger { color: var(--bad); }
