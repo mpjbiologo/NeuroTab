@@ -14,6 +14,7 @@ import { loadCalendar, eventsBetween, refreshFeeds, CAL_KEY, CAL_CACHE_KEY, GOOG
 import { syncNow, syncConfig, WATCHED_KEYS } from './lib/sync.js';
 import { addClip, clipConfig, pruneClips, CLIP_CFG_KEY, CLIP_KEY } from './lib/clipboard.js';
 import { shareConfig, canReceive, cleanPayload, NATIVE_HOST } from './lib/clipboard-share.js';
+import { checkMail, mailConfig, notificationsFor, MAIL_CFG_KEY, GMAIL_ORIGIN } from './lib/mail.js';
 import { dispatchShares, pollShares, receivePayload, patchState, me as shareMe } from './lib/clipboard-sync.js';
 
 // Janela de análise aberta com uma imagem temporária: quando ela fecha (a conexão cai), o fundo apaga a
@@ -263,6 +264,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'ntsync') return backgroundSync();
   if (alarm.name === 'clipwatch') return syncClipboard().catch(() => {});
   if (alarm.name === 'clipprune') return pruneClips().catch(() => {});
+  if (alarm.name === 'mail') return runMailCheck().catch((e) => console.warn('NeuroTab: e-mail', e));
   if (alarm.name === 'clipshare') return Promise.all([pollShares(), syncPonte()]).catch(() => {});
   if (alarm.name.startsWith('cal-')) return fireCalAlarm(alarm.name);
   if (alarm.name === 'calfeeds') return refreshFeeds().then(syncCalAlarms).catch(() => {});
@@ -330,6 +332,12 @@ chrome.notifications.onClosed.addListener((nid) => {
 
 chrome.notifications.onClicked.addListener(async (nid) => {
   chrome.notifications.clear(nid);
+  if (nid.startsWith('mail:')) {
+    // e-mail: abre a mensagem no Gmail (ou a nova aba, no aviso resumido)
+    const links = (await chrome.storage.session.get('nt_mail_links')).nt_mail_links || {};
+    await chrome.tabs.create({ url: links[nid] || NEWTAB });
+    return;
+  }
   if (nid.startsWith('clock-') || nid === 'timer' || nid === 'pomo') { stopSound(); return; }
   await chrome.tabs.create({ url: NEWTAB + (nid.startsWith('rem-') ? '#item=' + nid.slice(4) : '') }); // aviso da agenda: abre a nova aba
 });
@@ -622,8 +630,39 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
   if (changes[CLIP_KEY]) scheduleDispatch();
 });
-chrome.permissions.onAdded?.addListener(() => syncClipboard().catch(() => {}));
-chrome.permissions.onRemoved?.addListener(() => syncClipboard().catch(() => {}));
+chrome.permissions.onAdded?.addListener(() => { syncClipboard().catch(() => {}); syncMailAlarm().catch(() => {}); });
+chrome.permissions.onRemoved?.addListener(() => { syncClipboard().catch(() => {}); syncMailAlarm().catch(() => {}); });
+
+// ---------- E-mail (#20) ----------
+async function syncMailAlarm() {
+  const cfg = await mailConfig();
+  const ok = cfg.enabled && (await chrome.permissions.contains({ origins: [GMAIL_ORIGIN] }).catch(() => false));
+  if (ok) chrome.alarms.create('mail', { delayInMinutes: 0.5, periodInMinutes: Math.max(1, +cfg.interval || 5) });
+  else chrome.alarms.clear('mail');
+}
+async function runMailCheck(opts = {}) {
+  const { fresh, cfg } = await checkMail(opts);
+  const notes = notificationsFor(fresh, cfg);
+  if (!notes.length) return fresh.length;
+  const links = (await chrome.storage.session.get('nt_mail_links')).nt_mail_links || {};
+  for (const n of notes) {
+    links[n.id] = n.url;
+    chrome.notifications.create(n.id, { type: 'basic', iconUrl: chrome.runtime.getURL('icons/icon128.png'), title: t(n.title), message: n.message, contextMessage: n.context || '', priority: 0 });
+  }
+  await chrome.storage.session.set({ nt_mail_links: Object.fromEntries(Object.entries(links).slice(-50)) });
+  return fresh.length;
+}
+chrome.runtime.onMessage.addListener((msg, sender, reply) => {
+  if (msg?.type !== 'mail:check' || sender.id !== chrome.runtime.id || sender.tab?.url?.startsWith('http')) return;
+  runMailCheck({ rediscover: !!msg.rediscover }).then((n) => reply({ fresh: n }), (e) => reply({ error: e.message }));
+  return true;
+});
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== 'local' || !changes[MAIL_CFG_KEY]) return;
+  const a = changes[MAIL_CFG_KEY].oldValue || {};
+  const b = changes[MAIL_CFG_KEY].newValue || {};
+  if (a.enabled !== b.enabled || a.interval !== b.interval) syncMailAlarm().catch(() => {});
+});
 
 // ---------- Eventos ----------
 function setupPeriodic() {
@@ -644,6 +683,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   syncClipboard().catch(() => {});
   syncPonte().catch(() => {});
   syncShareAlarm().catch(() => {});
+  syncMailAlarm().catch(() => {});
   if (details.reason === 'update') {
     await chrome.storage.local.set({ [WHATSNEW_KEY]: chrome.runtime.getManifest().version });
     await chrome.action.setBadgeText({ text: '' });
@@ -656,6 +696,7 @@ chrome.runtime.onStartup.addListener(async () => {
   syncClipboard().catch(() => {});
   syncPonte().catch(() => {});
   syncShareAlarm().catch(() => {});
+  syncMailAlarm().catch(() => {});
 });
 
 // Comando de teclado global: abrir a NeuroTab ouvindo um comando de voz.
