@@ -4,6 +4,8 @@ import { $, $$, h, toast, showCtx } from '../lib/ui.js';
 import { S, EMOJIS } from './state.js';
 import { ctx } from './context.js';
 import { onEscape } from '../lib/window-manager.js';
+import { linkIconEl, tileEl, cleanIcon, iconOf, iconFromFile, letterOf, SHAPES } from '../lib/tiles.js';
+import { readableOn } from '../lib/look.js';
 
 // =====================================================================
 // BARRA DE ATALHOS
@@ -78,7 +80,7 @@ export function renderDock() {
 
 // Em janelas estreitas a barra vai para o rodapé.
 export const dockPos = () => (innerWidth < 700 ? 'bottom' : S.data.settings.dockPosition);
-const isPinned = () => S.data.settings.dockPinned && ['left', 'right'].includes(dockPos());
+const isPinned = () => S.data.settings.dockPinned && (S.data.settings.dockMode || 'always') === 'always' && ['left', 'right'].includes(dockPos());
 
 export function openPanel(groupId, quiet) {
   clearTimeout(closeTimer);
@@ -93,7 +95,7 @@ export function openPanel(groupId, quiet) {
   renderPanel();
 }
 
-function closePanel(force) {
+export function closePanel(force) {
   if (isPinned()) return;
   if (sticky && !force) return;
   sticky = false;
@@ -125,10 +127,8 @@ function renderPanel() {
   const links = S.data.links.filter((l) => l.groupId === g.id);
   const target = S.data.settings.openInNewTab ? '_blank' : '_self';
   for (const l of links) {
-    const img = h('img', { alt: '', src: ctx.faviconFor(l) });
-    img.onerror = () => { img.style.visibility = 'hidden'; };
-    const a = h('a', { class: 'plink', href: l.url, target, title: l.url, draggable: true, style: { '--c': l.color } },
-      img,
+    const a = h('a', { class: 'plink', href: l.url, target, title: l.url, draggable: true, style: { '--c': l.color, '--ct': readableOn(cssColorToHex(l.color)) } },
+      linkIconEl(l, ctx.faviconFor),
       h('span', { class: 't' }, l.title),
       h('span', { class: 'tools' },
         h('button', { title: 'Editar', onclick: (e) => { e.preventDefault(); e.stopPropagation(); editLink(l); } }, '✎'),
@@ -227,6 +227,8 @@ async function deleteGroup(g) {
 }
 
 export function editLink(link, preset = {}) {
+  // O bloco pode ter sido desenhado com dados de antes de uma recarga: edita sempre o atalho atual.
+  if (link) link = S.data.links.find((x) => x.id === link.id) || link;
   const dlg = $('#linkDlg');
   const f = $('#linkForm');
   $('#linkDlgTitle').textContent = link ? 'Editar atalho' : 'Novo atalho';
@@ -237,14 +239,34 @@ export function editLink(link, preset = {}) {
   f.color.value = cssColorToHex(link?.color || '#3fa0a8');
   let favicon = link?.favicon || '';
   let colorTouched = !!link;
+  // Aparência própria do atalho (#59): ícone e formato.
+  const cur = iconOf(link);
+  let image = cur.kind === 'image' ? cur.src : '';
+  f.iconKind.value = cur.kind;
+  f.iconText.value = cur.kind === 'emoji' || cur.kind === 'letter' ? cur.value : '';
+  f.iconFile.value = '';
+  f.shape.value = link?.shape && SHAPES[link.shape] ? link.shape : '';
+  $('#iconErr').textContent = '';
+  $('#linkLook').open = cur.kind !== 'auto' || !!f.shape.value;
+  const iconNow = () => {
+    const k = f.iconKind.value;
+    if (k === 'image') return image ? { kind: 'image', src: image } : undefined;
+    if (k === 'emoji' || k === 'letter') return cleanIcon({ kind: k, value: f.iconText.value });
+    return undefined;
+  };
+  const paintKind = () => {
+    const k = f.iconKind.value;
+    $('#iconImageRow').hidden = k !== 'image';
+    $('#iconTextRow').hidden = k !== 'emoji' && k !== 'letter';
+    $('#iconTextLabel').firstChild.textContent = k === 'letter' ? 'Letra (1 ou 2)' : 'Emoji';
+    f.iconText.maxLength = k === 'letter' ? 2 : 4;
+    f.iconText.placeholder = k === 'letter' ? letterOf({ title: f.title.value, url: normalizeUrl(f.url.value) }) : '⭐';
+  };
   const preview = () => {
-    const p = $('#preview');
-    p.style.setProperty('--c', f.color.value);
     const url = normalizeUrl(f.url.value);
-    p.querySelector('.pill span').textContent = f.title.value || hostOf(url) || 'Título';
-    const img = p.querySelector('img');
-    img.style.display = '';
-    img.src = favicon || (url ? faviconUrl(url) : '../icons/icon32.png');
+    const fake = { url: url || 'https://exemplo.com', title: f.title.value || hostOf(url) || 'Título', color: f.color.value, favicon, icon: iconNow(), shape: f.shape.value || undefined };
+    const tile = tileEl(fake, S.data.settings, { href: false, faviconFor: (l) => l.favicon || (url ? faviconUrl(url) : '../icons/icon32.png') });
+    $('#preview').replaceChildren(tile);
   };
   const autoColor = async () => {
     const url = normalizeUrl(f.url.value);
@@ -257,22 +279,40 @@ export function editLink(link, preset = {}) {
   f.oninput = (e) => {
     if (e.target === f.color) colorTouched = true;
     if (e.target === f.url) favicon = '';
+    if (e.target === f.iconText && f.iconKind.value === 'letter') f.iconText.value = f.iconText.value.toUpperCase();
     preview();
   };
+  f.iconKind.onchange = () => { paintKind(); $('#iconErr').textContent = ''; if (f.iconKind.value === 'image' && !image) f.iconFile.click(); preview(); };
+  f.shape.onchange = preview;
+  f.iconFile.onchange = async () => {
+    const file = f.iconFile.files[0];
+    if (!file) return;
+    $('#iconErr').textContent = '';
+    try { image = await iconFromFile(file); f.iconKind.value = 'image'; paintKind(); } catch (e) { $('#iconErr').textContent = e.message; f.iconFile.value = ''; }
+    preview();
+  };
+  $('#iconRefresh').onclick = async () => { favicon = ''; f.iconKind.value = 'auto'; paintKind(); colorTouched = true; await autoColor(); };
+  $('#lookReset').onclick = () => { f.iconKind.value = 'auto'; f.shape.value = ''; image = ''; f.iconText.value = ''; f.iconFile.value = ''; $('#iconErr').textContent = ''; paintKind(); autoColor(); };
   f.url.onchange = () => { if (!colorTouched) autoColor(); };
   $('#autoColor').onclick = () => { colorTouched = true; autoColor(); };
+  paintKind();
   preview();
   dlg.onclose = async () => {
     if (dlg.returnValue !== 'ok') return;
     const url = normalizeUrl(f.url.value);
     if (!url) return;
-    if (!favicon || (link && url !== link.url)) favicon = (await inspectFavicon(url)).favicon;
+    const icon = iconNow();
+    // Com ícone próprio não precisa buscar o do site (é lento quando o site demora a responder).
+    if ((!favicon && !icon) || (link && url !== link.url)) favicon = (await inspectFavicon(url)).favicon;
     const values = { url, title: f.title.value.trim() || hostOf(url), groupId: f.groupId.value, color: f.color.value, favicon };
+    const shape = SHAPES[f.shape.value] ? f.shape.value : undefined;
     if (link) {
       const moved = link.groupId !== values.groupId;
       Object.assign(link, values);
+      if (icon) link.icon = icon; else delete link.icon;
+      if (shape) link.shape = shape; else delete link.shape;
       if (moved) { S.data.links.splice(S.data.links.indexOf(link), 1); S.data.links.push(link); }
-    } else S.data.links.push({ id: uid(), ...values });
+    } else S.data.links.push({ id: uid(), ...values, ...(icon ? { icon } : {}), ...(shape ? { shape } : {}) });
     await commit();
   };
   dlg.returnValue = '';

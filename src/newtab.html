@@ -6,6 +6,7 @@
   <title>Nova guia</title>
   <link rel="icon" href="../icons/icon32.png">
   <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="tiles.css">
   <link rel="stylesheet" href="newtab.css">
   <script src="theme-boot.js"></script>
 </head>
@@ -32,6 +33,9 @@
       <p id="panelEmpty" class="panel-empty" hidden>Nenhum atalho aqui ainda. Arraste um link para cá ou clique em ＋.</p>
     </div>
   </aside>
+
+  <!-- Alça da barra nos modos que escondem (#64): clique/toque abre; no modo automático é só um traço discreto. -->
+  <button id="dockHandle" class="dock-handle" type="button" aria-controls="dock" aria-expanded="false" title="Mostrar atalhos (Ctrl+.)" hidden><span aria-hidden="true">☰</span><span class="sr-only">Mostrar a barra de atalhos</span></button>
 
   <main id="center">
     <header id="hero" class="hero">
@@ -83,7 +87,36 @@
         <label class="grow">Cor do bloco<input name="color" type="color"></label>
         <button type="button" id="autoColor" class="btn">Cor do ícone</button>
       </div>
-      <div class="preview-wrap"><div id="preview" class="tile preview"><span class="pill"><img alt="" src="../icons/icon16.png" width="16" height="16"><span></span></span></div></div>
+      <details class="link-look" id="linkLook">
+        <summary>Ícone e formato deste atalho</summary>
+        <div class="row">
+          <label class="grow">Ícone<select name="iconKind">
+            <option value="auto">Ícone do site</option>
+            <option value="image">Imagem enviada</option>
+            <option value="emoji">Emoji</option>
+            <option value="letter">Letra</option>
+          </select></label>
+          <label class="grow">Formato<select name="shape">
+            <option value="">Igual aos outros</option>
+            <option value="classic">Bloco</option>
+            <option value="square">Quadrado</option>
+            <option value="circle">Círculo</option>
+            <option value="pill">Pílula</option>
+          </select></label>
+        </div>
+        <div class="row" id="iconImageRow" hidden>
+          <label class="grow">Imagem (PNG, JPG, WebP, GIF, SVG ou ICO; até 2 MB)<input name="iconFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/x-icon,.ico"></label>
+        </div>
+        <div class="row" id="iconTextRow" hidden>
+          <label class="grow" id="iconTextLabel">Emoji<input name="iconText" maxlength="4" autocomplete="off"></label>
+        </div>
+        <p class="meta" id="iconErr" role="alert"></p>
+        <div class="row">
+          <button type="button" id="iconRefresh" class="btn">↻ Buscar o ícone do site de novo</button>
+          <button type="button" id="lookReset" class="btn">Restaurar aparência</button>
+        </div>
+      </details>
+      <div class="preview-wrap" id="preview"></div>
       <div class="actions">
         <button value="cancel" formnovalidate class="btn">Cancelar</button>
         <button value="ok" class="btn primary">Salvar</button>

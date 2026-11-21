@@ -1,6 +1,9 @@
 // NeuroTab — camada de dados compartilhada (nova aba, configurações e service worker).
 // Tudo fica em chrome.storage.local (permissão unlimitedStorage).
 import { migrateIfNeeded, normalizeItems, CURRENT_SCHEMA } from './migrations.js';
+import { DEFAULT_LOOK, sanitizeLook, sanitizeTheme, MAX_THEMES } from './look.js';
+import { DEFAULT_TILES, sanitizeTiles, cleanIcon, SHAPES } from './tiles.js';
+import { THEMES as THEME_IDS } from './theme.js';
 
 export const DATA_KEY = 'nt_data';
 export const BG_KEY = 'nt_bg';
@@ -52,6 +55,8 @@ export const DEFAULT_SETTINGS = {
   // Layout
   dockPosition: 'left', // left | right | top | bottom
   dockPinned: false,
+  dockMode: 'always', // always | auto (esconde e volta ao chegar perto da borda) | collapsed (alça para abrir) (#64)
+  dockHideDelay: 0.6, // segundos até esconder de novo
   widgets: DEFAULT_WIDGETS,
   showClock: true,
   userName: '',
@@ -76,6 +81,9 @@ export const DEFAULT_SETTINGS = {
   slideSource: 'local', // local | bing | nasa | all
   slideInterval: 5, // minutos
   tileRadius: 4,
+  tiles: DEFAULT_TILES, // formato, tamanho e cores dos blocos de atalho (#59)
+  look: DEFAULT_LOOK, // ajustes do editor visual por cima do tema (#58)
+  customThemes: [], // [{ id, name, base, look }] temas salvos pela pessoa
   // Widgets
   weather: null, // (antigo) { name, lat, lon } — migrado para places
   places: [], // [{ id, name, region, lat, lon, tz }] — o primeiro é a cidade principal
@@ -131,6 +139,10 @@ export function mergeSettings(s = {}) {
     widgets: normalizeWidgets(s.widgets),
     layouts: Array.isArray(s.layouts) ? s.layouts.map((l) => ({ ...l, widgets: normalizeWidgets(l.widgets) })) : [],
     media: { ...DEFAULT_MEDIA, ...(s.media || {}) },
+    tiles: sanitizeTiles(s.tiles),
+    look: sanitizeLook(s.look),
+    customThemes: Array.isArray(s.customThemes) ? s.customThemes.map((t) => sanitizeTheme(t, THEME_IDS)).filter(Boolean).slice(0, MAX_THEMES) : [],
+    dockMode: ['always', 'auto', 'collapsed'].includes(s.dockMode) ? s.dockMode : 'always',
     ai: { ...DEFAULT_AI, ...(s.ai || {}), keys: { ...(s.ai?.keys || {}) }, models: { ...(s.ai?.models || {}) }, embedModels: { ...(s.ai?.embedModels || {}) }, baseUrls: { ...(s.ai?.baseUrls || {}) } },
   };
 }
@@ -177,6 +189,8 @@ export function normalize(d) {
       url: l.url,
       color: l.color || PALETTE[0],
       favicon: l.favicon || '',
+      ...(cleanIcon(l.icon) ? { icon: cleanIcon(l.icon) } : {}),
+      ...(SHAPES[l.shape] ? { shape: l.shape } : {}),
     })),
     settings: mergeSettings(d.settings),
   };

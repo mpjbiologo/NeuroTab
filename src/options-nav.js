@@ -7,7 +7,7 @@ import { h } from './lib/ui.js';
 import { t } from './lib/i18n.js';
 
 export const NAV = [
-  { id: 'aparencia', icon: '🎨', label: 'Aparência', pages: ['tema', 'layout', 'fundo', 'slides'] },
+  { id: 'aparencia', icon: '🎨', label: 'Aparência', pages: ['tema', 'editor', 'layout', 'estilo-atalhos', 'fundo', 'slides'] },
   { id: 'novaaba', icon: '🏠', label: 'Nova aba', pages: ['pesquisa', 'atalhos', 'relogio', 'timer'] },
   { id: 'ia', icon: '🤖', label: 'Inteligência artificial', pages: ['ia', 'ia-organizar'] },
   { id: 'voz', icon: '🎙️', label: 'Voz', pages: ['voz', 'voz-leitura', 'voz-ativacao', 'voz-comandos'] },
@@ -21,7 +21,7 @@ export const NAV = [
 ];
 
 // Endereços das abas antigas (#ia, #contas…) continuam funcionando.
-export const LEGACY = { geral: 'tema', fundo: 'fundo', ia: 'ia', midia: 'imagens', notas: 'keep', contas: 'contas', backup: 'importar', apoie: 'apoie' };
+export const LEGACY = { geral: 'tema', fundo: 'fundo', ia: 'ia', midia: 'imagens', notas: 'keep', contas: 'contas', backup: 'importar', apoie: 'apoie', 'reset-tema': 'editor', aparencia: 'editor' };
 const FIRST = 'tema';
 
 const $ = (s) => document.querySelector(s);

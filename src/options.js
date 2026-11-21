@@ -20,7 +20,8 @@ import { PROJECT, DONATION } from './config.js';
 import { setHTML } from './lib/safe-html.js';
 import { assistantName, wakePhraseOf, phraseSuggestions } from './lib/wake-word.js';
 import { commandLang } from './lib/assistant.js';
-import { applyTheme, themeOf, THEMES } from './lib/theme.js';
+import { applyLook, themeOf, THEMES } from './lib/theme.js';
+import { setupLook, refreshLook } from './options-look.js';
 import { icon, startIconizer } from './lib/icons.js';
 import { configureSpeech, deviceLangFor, deviceStatus, deviceSupported, installDevice, currentEngine, speechAvailable, ENGINE_ERRORS, WHISPER_PRESETS, encodeWav, transcribeRequest } from './lib/speech-engine.js';
 
@@ -45,7 +46,7 @@ async function init() {
 
   data = await loadData();
   initI18n(data.settings.lang);
-  applyTheme(themeOf(data.settings));
+  applyLook(data.settings);
   setupThemePicker();
   fillSettings();
   bindSettings();
@@ -55,6 +56,7 @@ async function init() {
   setupBackup();
   setupAccounts(toast);
   setupNav(); // depois de tudo montado: as seções viram páginas da lateral
+  setupLook({ data: () => data, toast, afterTheme: () => paintThemePicker() });
   setupDonation();
   setupVoiceOptions();
   setupPhotos();
@@ -64,7 +66,7 @@ async function init() {
   startIconizer();
 
   chrome.storage.onChanged.addListener(async (c, area) => {
-    if (area === 'local' && c[DATA_KEY]) { data = await loadData(); applyTheme(themeOf(data.settings)); paintThemePicker(); fillSettings(); showStats(); renderPlaces(); }
+    if (area === 'local' && c[DATA_KEY]) { data = await loadData(); applyLook(data.settings); paintThemePicker(); fillSettings(); showStats(); renderPlaces(); refreshLook(); }
   });
 }
 
@@ -102,7 +104,7 @@ function paintThemePicker() {
 }
 async function chooseTheme(id) {
   data.settings.theme = id;
-  applyTheme(id);
+  applyLook(data.settings);
   paintThemePicker();
   await saveData(data);
   toast(`Tema ${THEMES[id].label} aplicado`);
@@ -698,12 +700,13 @@ function setupDonation() {
 }
 
 let toastTimer;
-function toast(msg) {
+function toast(msg, action, fn) {
   const t = $('#toast');
   t.textContent = msg;
+  if (action && fn) t.append(h('button', { type: 'button', class: 'toast-act', onclick: () => { t.hidden = true; fn(); } }, action));
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+  toastTimer = setTimeout(() => { t.hidden = true; }, action ? 6000 : 2200);
 }
 
 // ---------- Voz ----------
