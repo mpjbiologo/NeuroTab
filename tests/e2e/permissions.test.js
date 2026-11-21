@@ -6,7 +6,7 @@ import { launch } from './helpers.js';
 test('painel de permissões lista cada recurso com o motivo', async () => {
   const x = await launch();
   try {
-    const o = await x.open('src/options.html');
+    const o = await x.open('src/options.html#permissoes');
     await o.waitForSelector('#permList .opt');
     const text = await o.textContent('#permList');
     for (const label of ['Clima e fusos horários', 'Cotações e conversão de moedas', 'Endereços do widget Trânsito', 'Fotos do dia nos slides', 'Provedores de IA']) assert.ok(text.includes(label), label);

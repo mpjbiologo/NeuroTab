@@ -65,10 +65,10 @@ test('conectar conta Google, ligar sincronização com senha, sincronizar, apaga
     await x.seed(p, { nt_brain: [{ id: 'n1', type: 'note', title: 'Receita de pão', text: 'Farinha, água e sal', tags: [], createdAt: 1, updatedAt: 1 }] });
 
     const o = await x.open('src/options.html#contas');
-    await o.waitForSelector('#tab-contas:not([hidden])');
+    await o.waitForSelector('#page-contas:not([hidden])');
     // client ID já no código: botão ligado, sem aviso
     assert.equal(await o.isDisabled('button:has-text("Conectar conta Google")'), false);
-    assert.doesNotMatch(await o.textContent('#tab-contas'), /ainda está sendo liberado/);
+    assert.doesNotMatch(await o.textContent('#page-contas'), /ainda está sendo liberado/);
     assert.match(await o.textContent('#redirectUrl'), /teste\.chromiumapp\.org/);
     // com o ID no código, o campo de teste some
     assert.equal(await o.locator('#clientOverride').count(), 0);
@@ -80,13 +80,14 @@ test('conectar conta Google, ligar sincronização com senha, sincronizar, apaga
     assert.equal(first.searchParams.get('prompt'), 'select_account');
     assert.ok(!first.searchParams.get('scope').includes('drive'), 'no login, só a identidade; o Drive é pedido ao ligar a sincronização');
 
-    // ligar a sincronização com senha
+    // ligar a sincronização com senha (sub-aba Sincronização)
+    await o.click('a.side-link[data-page="sync"]');
     await o.waitForSelector('input[name="syncMode"][value="key"]');
     await o.fill('.sync-box input[type="password"] >> nth=0', 'senha bem longa 123');
     await o.fill('.sync-box input[type="password"] >> nth=1', 'senha bem longa 123');
     await o.click('button:has-text("Ligar sincronização")');
     // a mensagem final só aparece quando todos os envios terminaram
-    await o.waitForSelector('#tab-contas p[role="status"]:has-text("Sincronização ligada:")', { timeout: 30000 });
+    await o.waitForSelector('#page-sync p[role="status"]:has-text("Sincronização ligada:")', { timeout: 30000 });
     const names = [...g.files.values()].map((f) => f.name).sort();
     assert.deepEqual(names, ['nt-agenda.json', 'nt-brain.json', 'nt-habits.json', 'nt-settings.json', 'nt-shortcuts.json', 'nt-sync-meta.json']);
     const brain = [...g.files.values()].find((f) => f.name === 'nt-brain.json').body;
@@ -100,16 +101,17 @@ test('conectar conta Google, ligar sincronização com senha, sincronizar, apaga
     await x.seed(o, { nt_brain: [{ id: 'n1', type: 'note', title: 'Receita de pão', text: 'Farinha, água e sal', tags: [], createdAt: 1, updatedAt: 1 }, { id: 'n2', type: 'note', title: 'Nova', text: 'Nova nota', tags: [], createdAt: 2, updatedAt: 2 }] }, { reload: false });
     const v0 = [...g.files.values()].find((f) => f.name === 'nt-brain.json').version;
     await o.click('button:has-text("Sincronizar agora")');
-    await o.waitForSelector('#tab-contas p[role="status"]:has-text("enviado")');
+    await o.waitForSelector('#page-sync p[role="status"]:has-text("enviado")');
     assert.notEqual([...g.files.values()].find((f) => f.name === 'nt-brain.json').version, v0);
 
     // apagar da nuvem e desconectar (revoga)
     await o.click('button:has-text("Apagar dados da nuvem")');
-    await o.waitForSelector('#tab-contas :text("apagado(s) da nuvem")');
+    await o.waitForSelector('#page-sync :text("apagado(s) da nuvem")');
     assert.equal(g.files.size, 0);
     assert.equal((await x.storage(o, 'nt_sync')).enabled, false);
+    await o.click('a.side-link[data-page="contas"]');
     await o.click('.acc button:has-text("Desconectar")');
-    await o.waitForSelector('#tab-contas .empty:has-text("Nenhuma conta")');
+    await o.waitForSelector('#page-contas .empty:has-text("Nenhuma conta")');
     assert.ok(g.calls.includes('revoke'));
     assert.equal(Object.keys((await x.storage(o, 'nt_account_tokens')) || {}).length, 0, 'acesso apagado deste navegador');
     assert.deepEqual(x.errors, []);

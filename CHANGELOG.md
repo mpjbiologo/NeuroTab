@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.7.3 — em preparação
+**Configurações de cara nova: tudo na lateral, com sub-abas, e a tela inteira para as opções.**
+
+- 🧭 **Menu na lateral esquerda (#46):** 11 categorias (Aparência, Nova aba, Inteligência artificial, Voz, Mídia, Notas, Contas e sincronização, Privacidade, Backup, Sistema e Apoie), cada uma com suas sub-abas: 27 páginas no lugar das 8 abas no topo. Só a categoria atual fica aberta
+- 🖥️ **Mais espaço:** o conteúdo ocupa a largura da tela, com as opções simples lado a lado em duas colunas; uma página por vez, sem rolar por tudo
+- 🔎 **Busca nas configurações:** filtra a lateral enquanto você digita, Enter abre o primeiro resultado. Atalho: tecla **/** ou **Ctrl+K**
+- 📱 **No celular ou janela estreita:** a lateral vira uma gaveta (botão ☰)
+- O caminho aparece no topo (ex.: Voz › Leitura em voz alta), o botão voltar do navegador funciona e os links antigos (como "Configurações → IA") continuam levando ao lugar certo
+- IA e Voz foram divididas em partes menores: Provedor e modelo, Organização e busca; Fala e reconhecimento, Leitura em voz alta, Palavra de ativação, Atalhos e comandos
+
 ## v0.7.7.2 — em preparação
 **Área de transferência entre computador e celular, do jeito que você escolher.**
 

@@ -31,7 +31,7 @@ export function setupAccounts(toast) {
   } }, '＋ Conectar conta Google');
 
   root.append(
-    h('h2', {}, 'Contas conectadas'),
+    h('h2', { 'data-page': 'contas' }, 'Contas conectadas'),
     h('p', {}, 'Conecte uma ou mais contas para sincronizar suas notas entre aparelhos e, em breve, ver a agenda e os e-mails dessas contas. O acesso fica guardado só neste navegador: nada passa por servidores da NeuroTab.'),
     accBox,
     h('div', { class: 'row' }, connectBtn, h('button', { class: 'btn', type: 'button', disabled: true, title: 'Na próxima versão' }, 'Microsoft (em breve)')),
@@ -48,8 +48,7 @@ export function setupAccounts(toast) {
             say(accMsg, v ? '✓ ID salvo neste navegador. Já dá para conectar a conta.' : 'ID removido.');
             draw();
           } }, 'Salvar')))),
-    h('hr'),
-    h('h2', {}, 'Sincronização'),
+    h('h2', { 'data-page': 'sync' }, 'Sincronização'),
     h('p', {}, 'Mantém o cérebro, os atalhos, as configurações, a agenda e os hábitos iguais em todos os seus navegadores, por uma pasta oculta da NeuroTab no seu Google Drive (ela não aparece nos seus arquivos e não ocupa espaço visível).'),
     syncBox,
     syncMsg,

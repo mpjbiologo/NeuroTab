@@ -10,32 +10,40 @@
   <script src="theme-boot.js"></script>
 </head>
 <body>
-  <header>
-    <img src="../icons/icon128.png" alt="" width="44" height="44">
-    <div>
-      <h1>Configurações</h1>
-      <p class="sub">NeuroTab <span id="ver"></span> · <a href="newtab.html">voltar para a nova aba</a></p>
-    </div>
-  </header>
-
-  <nav class="tabs" role="tablist">
-    <button role="tab" data-tab="geral" class="active">🏠 Geral</button>
-    <button role="tab" data-tab="fundo">🖼 Plano de fundo</button>
-    <button role="tab" data-tab="ia">🤖 IA e voz</button>
-    <button role="tab" data-tab="midia">🎞️ Mídia</button>
-    <button role="tab" data-tab="notas">📝 Notas e integrações</button>
-    <button role="tab" data-tab="contas">☁️ Contas e sincronização</button>
-    <button role="tab" data-tab="backup">💾 Backup</button>
-    <button role="tab" data-tab="apoie" class="heart">❤ Apoie</button>
-  </nav>
-
+  <div class="shell">
+    <aside class="side" id="side" aria-label="Configurações">
+      <div class="side-head">
+        <img src="../icons/icon128.png" alt="" width="36" height="36">
+        <div>
+          <h1>Configurações</h1>
+          <p class="sub">NeuroTab <span id="ver"></span></p>
+        </div>
+      </div>
+      <a class="side-back" href="newtab.html">← Voltar para a nova aba</a>
+      <label class="side-search">
+        <span aria-hidden="true">🔎</span>
+        <input type="search" id="setSearch" placeholder="Buscar nas configurações" aria-label="Buscar nas configurações" autocomplete="off">
+      </label>
+      <nav class="side-nav" id="sideNav" aria-label="Seções"></nav>
+      <div class="side-foot">
+        <button class="btn heart-btn" id="donateBtn">❤ Doar</button>
+        <span class="hint">Feito por <span id="author"></span> · <a id="siteLink" target="_blank">site</a> · <a id="repoLink" target="_blank">código aberto</a></span>
+        <span class="hint saved">✓ As alterações são salvas automaticamente.</span>
+      </div>
+    </aside>
+    <div class="side-scrim" id="sideScrim" hidden></div>
+    <div class="content">
+      <div class="topbar">
+        <button class="btn menu-btn" id="menuBtn" type="button" aria-controls="side" aria-expanded="false" aria-label="Abrir o menu">☰</button>
+        <p class="crumb" id="crumb" aria-live="polite"></p>
+      </div>
   <main>
     <!-- GERAL -->
     <section id="tab-geral" class="card">
-      <h2>🎨 Aparência</h2>
+      <h2 data-page="tema">Tema</h2>
       <p class="hint">O tema vale para a nova aba, estas configurações e o botão da extensão.</p>
       <div class="theme-pick" id="themePick" role="radiogroup" aria-label="Tema"></div>
-      <h2>Layout</h2>
+      <h2 data-page="layout">Layout</h2>
       <div class="opt">
         <div><b>Posição da barra de atalhos</b><small>Os grupos ficam na barra; os atalhos abrem num painel ao passar o mouse.</small></div>
         <select data-k="dockPosition">
@@ -67,8 +75,7 @@
         </select>
       </div>
       <p class="hint">Os widgets do centro (notas, clima, cotações…) são organizados direto na nova aba, pelo botão 🧩.</p>
-      <hr>
-      <h2>Relógio e clima</h2>
+      <h2 data-page="relogio">Relógio e clima</h2>
       <div class="opt">
         <div><b>Mostrar o clima ao lado do relógio</b><small>Clique nele para ver a previsão dos próximos dias.</small></div>
         <label class="sw"><input type="checkbox" data-k="heroWeather"><span></span></label>
@@ -78,8 +85,7 @@
         <label class="sw"><input type="checkbox" data-k="heroPlaces"><span></span></label>
       </div>
       <div id="placesList" class="items-list"></div>
-      <hr>
-      <h2>Pesquisa</h2>
+      <h2 data-page="pesquisa">Pesquisa</h2>
       <div class="opt">
         <div><b>Mostrar barra de pesquisa universal</b><small>Busca em atalhos, notas e na web. Atalho: Ctrl+K.</small></div>
         <label class="sw"><input type="checkbox" data-k="showSearch"><span></span></label>
@@ -98,8 +104,7 @@
           <option value="task">Salvar como tarefa</option>
         </select>
       </div>
-      <hr>
-      <h2>Atalhos</h2>
+      <h2 data-page="atalhos">Atalhos</h2>
       <div class="opt">
         <div><b>Abrir atalhos em nova aba</b></div>
         <label class="sw"><input type="checkbox" data-k="openInNewTab"><span></span></label>
@@ -120,19 +125,16 @@
         <div><b>Cantos arredondados dos blocos</b></div>
         <input type="range" min="0" max="20" data-k="tileRadius" data-num>
       </div>
-      <hr>
-      <h2>Relógio</h2>
+      <h2 data-page="timer">Timer e despertador</h2>
       <div class="opt">
         <div><b>Som do timer</b><small>Os despertadores têm som próprio, escolhido em cada um.</small></div>
         <div class="keybox"><select data-k="timerSound" id="timerSound"></select><button class="btn" id="testTimerSound" title="Ouvir">🔊</button></div>
       </div>
-      <hr>
-      <h2>Permissões</h2>
+      <h2 data-page="permissoes">Permissões e sites</h2>
       <p class="hint">Cada acesso a um site existe por causa de um recurso. Os opcionais são pedidos só quando você usa o recurso e podem ser removidos aqui.</p>
       <div id="permList" class="perm-list"></div>
       <div id="permSites" class="perm-sites"></div>
-      <hr>
-      <h2>Atualizações</h2>
+      <h2 data-page="atualizacoes">Atualizações</h2>
       <p class="hint" id="storeUpd" hidden>✓ Instalada pela loja: as atualizações chegam automaticamente.</p>
       <div class="opt" id="updRow">
         <div><b>Avisar quando houver versão nova</b><small>Consulta o GitHub duas vezes por dia. Nenhum dado seu é enviado.</small></div>
@@ -150,6 +152,7 @@
 
     <!-- FUNDO -->
     <section id="tab-fundo" class="card" hidden>
+      <h2 data-page="fundo">Imagem de fundo</h2>
       <div class="opt">
         <div><b>Usar imagem de fundo</b></div>
         <label class="sw"><input type="checkbox" data-k="bgEnabled"><span></span></label>
@@ -162,8 +165,7 @@
           <small>A imagem é otimizada (até 2560 px) e fica salva só no seu navegador.</small>
         </div>
       </div>
-      <hr>
-      <h2>Slides de fotos</h2>
+      <h2 data-page="slides">Slides de fotos</h2>
       <div class="opt">
         <div><b>Tipo de fundo</b></div>
         <select data-k="bgMode">
@@ -194,7 +196,6 @@
           <button class="btn" id="photoClear">Apagar todas</button>
         </div>
       </div>
-      <hr>
       <div class="opt">
         <div><b>Cor de fundo</b><small>Usada sem imagem ou enquanto ela carrega.</small></div>
         <input type="color" data-k="bgColor">
@@ -207,7 +208,7 @@
 
     <!-- IA -->
     <section id="tab-ia" class="card" hidden>
-      <h2>Provedor de IA</h2>
+      <h2 data-page="ia">Provedor e modelo</h2>
       <p>A IA organiza suas notas (título, resumo, tags, lembretes) e responde perguntas sobre elas. As chamadas vão <b>direto do seu navegador</b> para o provedor, com a <b>sua</b> chave — a NeuroTab não tem servidor.</p>
       <div class="opt">
         <div><b>Provedor</b><small id="provNote"></small></div>
@@ -237,6 +238,7 @@
         <button class="btn primary" id="saveAi">Salvar e testar</button>
         <span id="aiMsg" class="msg"></span>
       </div>
+      <h2 data-page="ia-organizar">Organização e busca</h2>
       <div class="opt">
         <div><b>Organizar automaticamente com IA</b><small>Ao salvar algo, a IA cria título, tags, resumo e detecta lembretes.</small></div>
         <label class="sw"><input type="checkbox" id="autoEnrich"><span></span></label>
@@ -263,8 +265,7 @@
         <progress id="semProg" max="1" value="0" hidden></progress>
       </div>
       <p class="hint">🔒 A chave fica guardada só neste navegador. Ela só vai para o backup se você marcar "Incluir chaves de API" na aba Backup.</p>
-      <hr>
-      <h2>Voz</h2>
+      <h2 data-page="voz">Fala e reconhecimento</h2>
       <div class="opt">
         <div><b>Idioma do ditado e da leitura</b></div>
         <select data-k="voiceLang">
@@ -308,6 +309,7 @@
         <label class="sw"><input type="checkbox" data-k="voiceLocalOnly" id="voiceLocalOnly"><span></span></label>
       </div>
       <p class="hint" id="localAiNote" hidden></p>
+      <h2 data-page="voz-leitura">Leitura em voz alta</h2>
       <div class="opt">
         <div><b>Voz de leitura</b><small>As vozes "Natural/Online" do Edge são as mais realistas, mas vão para a nuvem (☁). As sem ☁ ficam no computador.</small></div>
         <div class="keybox"><select id="ttsVoice" class="wide-sel"></select><button class="btn" id="testVoice">▶ Testar</button></div>
@@ -328,6 +330,7 @@
         <div><b>Ler as respostas da IA em voz alta</b></div>
         <label class="sw"><input type="checkbox" data-k="speakAnswers"><span></span></label>
       </div>
+      <h2 data-page="voz-ativacao">Palavra de ativação</h2>
       <div class="opt" id="wakeRow">
         <div><b>Palavra de ativação <span class="beta">experimental</span></b><small>Diga "NeuroTab, timer de 5 minutos" sem apertar nada. Só escuta com a nova aba aberta e em foco, e desliga sozinha depois de um tempo sem uso.</small></div>
         <label class="sw"><input type="checkbox" id="wakeWord"><span></span></label>
@@ -362,6 +365,7 @@
         </div>
       </div>
       <p class="hint" id="wakeNo" hidden>A palavra de ativação precisa de reconhecimento de voz: este navegador não oferece. Configure um Whisper local acima para usar.</p>
+      <h2 data-page="voz-comandos">Atalhos e comandos</h2>
       <div class="opt">
         <div><b>Atalho para comandos de voz</b><small>Padrão: <b>Alt+Shift+V</b> em qualquer aba (abre a NeuroTab ouvindo) e <b>Alt+M</b> na nova aba.</small></div>
         <button class="btn" id="shortcutsBtn">Mudar atalhos</button>
@@ -386,7 +390,7 @@
 
     <!-- NOTAS -->
     <section id="tab-midia" class="card" hidden>
-      <h2>Análise de imagens</h2>
+      <h2 data-page="imagens">Análise de imagens</h2>
       <p>O que acontece quando você usa <b>Analisar imagem</b> (botão direito sobre uma imagem) e qual IA descreve as imagens. O texto das imagens é lido aqui no computador; a descrição vai para a IA escolhida.</p>
       <div class="opt">
         <div><b>Guardar a imagem analisada na biblioteca</b><small>Guardada, ela fica na biblioteca e o cérebro a encontra na busca e nas perguntas. Sem guardar, a imagem some quando você fecha a janela de análise.</small></div>
@@ -412,13 +416,12 @@
         <div><b>Ler o texto das imagens salvas</b><small>Feito aqui no computador: as imagens da biblioteca não saem dele. Na primeira vez, baixa o pacote do idioma (de 1,4 a 3 MB).</small></div>
         <label class="sw"><input type="checkbox" data-k="imageOcr"><span></span></label>
       </div>
-      <hr>
-      <h2>Vídeos e áudios</h2>
+      <h2 data-page="videos">Vídeos e áudios</h2>
       <p class="hint">🎬 Em breve: transcrever e resumir áudios e vídeos, com a mesma escolha de IA e de onde processar (no computador ou na internet). As configurações vão ficar aqui.</p>
     </section>
 
     <section id="tab-notas" class="card" hidden>
-      <h2>Importar do Google Keep</h2>
+      <h2 data-page="keep">Importar do Google Keep</h2>
       <p>O Google só libera a API do Keep para contas empresariais (Workspace). Para contas pessoais, a importação é feita pelo <b>Google Takeout</b>:</p>
       <ol>
         <li>Abra <a href="https://takeout.google.com/" target="_blank">takeout.google.com</a>, clique em <i>Desmarcar tudo</i> e marque só <b>Keep</b>.</li>
@@ -430,13 +433,11 @@
         <label class="btn">Selecionar arquivos .json<input type="file" id="keepFiles" accept=".json" multiple hidden></label>
       </div>
       <p id="keepMsg" class="msg"></p>
-      <hr>
-      <h2>Exportar notas</h2>
+      <h2 data-page="exportar-notas">Exportar notas</h2>
       <p>Um arquivo Markdown com todas as notas — abre no Obsidian, Notion, Logseq, Google Docs ou qualquer editor.</p>
       <button class="btn" id="exportMd">Baixar notas (.md)</button>
       <p id="brainStats" class="hint"></p>
-      <hr>
-      <h2>Limpeza</h2>
+      <h2 data-page="limpeza">Limpeza</h2>
       <p>Itens excluídos ficam <b>30 dias na lixeira</b> (filtro 🗑 no widget "Meu cérebro") e depois são apagados de vez.</p>
       <div class="row">
         <button class="btn" id="cleanDone">🧹 Mover tarefas concluídas para a lixeira</button>
@@ -444,8 +445,7 @@
         <button class="btn danger-btn" id="wipeAll">⚠ Apagar todas as notas…</button>
       </div>
       <p id="cleanMsg" class="msg"></p>
-      <hr>
-      <h2>Próximas integrações</h2>
+      <h2 data-page="integracoes">Próximas integrações</h2>
       <ul class="soon">
         <li>☑️ <b>Google Tarefas</b> — sincronizar lembretes (funciona com contas pessoais)</li>
         <li>📓 <b>Notion</b> — enviar notas para uma página ou banco de dados</li>
@@ -459,7 +459,7 @@
     <section id="tab-contas" class="card" hidden></section>
 
     <section id="tab-backup" class="card" hidden>
-      <h2>Importar</h2>
+      <h2 data-page="importar">Importar</h2>
       <p>Aceita backups da <b>NeuroTab</b> (<code>.json</code>) e da extensão antiga <b>Speed Dial</b> (<code>.spd</code>).</p>
       <div class="row">
         <label class="btn primary">Escolher arquivo…<input type="file" id="importFile" accept=".spd,.json,application/json" hidden></label>
@@ -467,8 +467,7 @@
         <label class="inline"><input type="radio" name="mode" value="merge"> Juntar com o que já existe</label>
       </div>
       <p id="importMsg" class="msg"></p>
-      <hr>
-      <h2>Exportar</h2>
+      <h2 data-page="exportar">Exportar e backup</h2>
       <p>Salva atalhos, grupos, notas, configurações e plano de fundo em um arquivo <code>.json</code>.</p>
       <label class="inline"><input type="checkbox" id="inclKeys"> Incluir chaves de API da IA</label>
       <div id="keysBox" class="keys-box" hidden>
@@ -498,7 +497,7 @@
 
     <!-- APOIE -->
     <section id="tab-apoie" class="card" hidden>
-      <h2>❤ Apoie a NeuroTab</h2>
+      <h2 data-page="apoie">❤ Apoie a NeuroTab</h2>
       <p>A NeuroTab é gratuita, de código aberto e sem anúncios. Se ela é útil para você, considere apoiar o desenvolvimento — qualquer valor ajuda.</p>
       <div id="pixBox" class="pix" hidden>
         <div id="pixQr" class="qr"></div>
@@ -521,11 +520,9 @@
       </ul>
     </section>
   </main>
+    </div>
+  </div>
 
-  <footer>
-    <button class="btn heart-btn" id="donateBtn">❤ Doar</button>
-    <span>Feito por <span id="author"></span> · <a id="siteLink" target="_blank">site</a> · <a id="repoLink" target="_blank">código aberto</a></span>
-  </footer>
 
   <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
   <script type="module" src="options.js"></script>

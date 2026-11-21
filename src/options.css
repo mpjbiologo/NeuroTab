@@ -1,13 +1,7 @@
 :root { --line: var(--border); color: var(--text); }
 /* Cores e fontes: src/theme.css (o mesmo tema da nova aba). */
 * { box-sizing: border-box; }
-body {
-  margin: 0; min-height: 100vh;
-  background: var(--bg); font-family: var(--font-ui);
-  display: flex; flex-direction: column; align-items: center;
-  padding: 32px 16px;
-}
-header, nav, main, footer { width: min(760px, 100%); }
+body { margin: 0; min-height: 100vh; background: var(--bg); font-family: var(--font-ui); }
 header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
 header h1 { margin: 0; font-family: var(--font-display); font-size: var(--fs-3xl); font-weight: 600; letter-spacing: var(--display-track); }
 .sub { margin: 2px 0 0; color: var(--text-2); font-size: var(--fs-sm); }
@@ -28,9 +22,9 @@ a { color: var(--accent-text); text-underline-offset: 3px; }
   background: var(--surface-solid); border: 1px solid var(--line); border-radius: 0 var(--radius-lg) var(--radius-lg) var(--radius-lg);
   padding: 10px 24px 20px; box-shadow: var(--shadow-card);
 }
-.card h2 { font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; margin: 28px 0 6px; display: flex; align-items: center; gap: 8px; }
-.card h2 .ico { color: var(--accent-text); }
-.card p, .card li { font-size: var(--fs-md); line-height: 1.55; color: var(--text-2); max-width: 70ch; }
+:is(.card, .pane) h2 { font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; margin: 28px 0 6px; display: flex; align-items: center; gap: 8px; }
+:is(.card, .pane) h2 .ico { color: var(--accent-text); }
+:is(.card, .pane) p, :is(.card, .pane) li { font-size: var(--fs-md); line-height: 1.55; color: var(--text-2); max-width: 70ch; }
 hr { border: 0; border-top: 1px solid var(--line); margin: 6px 0; }
 
 .opt { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 0; }
@@ -182,3 +176,78 @@ footer {
 #tab-contas code { display: block; margin: 6px 0; user-select: all; word-break: break-all; }
 #tab-contas .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
 .btn.danger { color: var(--bad); }
+
+/* ---------- Layout (#46): lateral com categorias e sub-abas, conteúdo ocupando a tela ---------- */
+.shell { display: grid; grid-template-columns: 296px minmax(0, 1fr); min-height: 100vh; }
+.side {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 12px; padding: 20px 14px 16px;
+  background: var(--surface-solid); border-right: 1px solid var(--line);
+}
+.side-head { display: flex; gap: 12px; align-items: center; padding: 0 6px; }
+.side-head h1 { margin: 0; font-family: var(--font-display); font-size: var(--fs-2xl); font-weight: 600; letter-spacing: var(--display-track); }
+.side-back { font-size: var(--fs-sm); padding: 0 6px; }
+.side-search {
+  display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: var(--field); color: var(--text-2);
+}
+.side-search:focus-within { box-shadow: var(--ring); }
+.side-search input { flex: 1; min-width: 0; border: 0; background: none; color: var(--text); font: inherit; font-size: var(--fs-md); outline: none; }
+.side-nav { display: grid; gap: 2px; align-content: start; flex: 1; }
+.side-cat {
+  appearance: none; border: 0; background: none; font: inherit; text-align: left;
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--text-2); font-size: var(--fs-md); font-weight: 500;
+}
+.side-cat:hover { background: var(--tint-1); color: var(--text); }
+.side-cat:focus-visible, .side-link:focus-visible { outline: none; box-shadow: var(--ring); }
+.side-cat .ico { width: 22px; text-align: center; }
+.side-cat .lbl { flex: 1; }
+.side-cat .chev { transition: transform var(--dur-1) var(--ease-out); opacity: .7; }
+.side-group.open > .side-cat .chev { transform: rotate(90deg); }
+.side-group.active > .side-cat { color: var(--text); background: var(--tint-2); }
+.side-cat.heart { color: var(--bad); }
+.side-sub { list-style: none; margin: 2px 0 6px 21px; padding: 0 0 0 10px; border-left: 1px solid var(--line); display: none; gap: 1px; }
+.side-group.open > .side-sub { display: grid; }
+.side-link { display: block; padding: 6px 10px; border-radius: var(--radius-sm); color: var(--text-2); text-decoration: none; font-size: var(--fs-sm); }
+.side-link:hover { color: var(--text); background: var(--tint-1); }
+.side-link[aria-current] { color: var(--accent-text); background: var(--accent-soft); font-weight: 600; }
+.side-empty { padding: 6px 10px; }
+.side-foot { display: grid; gap: 6px; padding: 10px 6px 0; border-top: 1px solid var(--line); }
+.side-foot .heart-btn { justify-self: start; }
+.side-scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, .5); z-index: 40; }
+
+.content { min-width: 0; padding: 18px clamp(16px, 3vw, 44px) 56px; }
+.topbar { display: flex; align-items: center; gap: 12px; min-height: 40px; margin-bottom: 12px; }
+.menu-btn { display: none; }
+.crumb { margin: 0; color: var(--text-2); font-size: var(--fs-sm); }
+.crumb b { color: var(--text); font-weight: 600; }
+.crumb .sep { opacity: .6; }
+main { width: 100%; max-width: 1480px; }
+
+.pane {
+  background: var(--surface-solid); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  padding: 6px 28px 26px; box-shadow: var(--shadow-card);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); column-gap: 44px; align-content: start;
+}
+.pane[hidden] { display: none; }
+.pane:focus { outline: none; }
+.pane > * { grid-column: 1 / -1; }
+.pane > .opt { grid-column: auto; border-bottom: 1px solid var(--line); }
+.pane > .opt.wide { grid-column: 1 / -1; }
+.pane > button, .pane > .btn, .pane > label.inline { justify-self: start; }
+.pane > .opt[hidden], .pane > [hidden] { display: none; }
+.pane > .pane-title { margin: 20px 0 6px; font-size: var(--fs-2xl); }
+.pane p, .pane li { max-width: 90ch; }
+
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side {
+    position: fixed; inset: 0 auto 0 0; width: min(320px, 86vw); z-index: 50;
+    transform: translateX(-105%); transition: transform var(--dur-2, .2s) var(--ease-out); box-shadow: var(--shadow-card);
+  }
+  .side.open { transform: none; }
+  .menu-btn { display: inline-flex; width: 40px; padding: 0; font-size: 18px; }
+  .pane { padding: 4px 16px 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .side { transition: none; } }
