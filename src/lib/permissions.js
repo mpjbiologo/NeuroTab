@@ -52,6 +52,12 @@ export const FEATURES = {
     origins: ['http://localhost/*', 'http://127.0.0.1/*'],
     managed: true,
   },
+  gmail: {
+    label: 'E-mail (Gmail)',
+    why: 'O widget E-mail lê, no próprio Gmail e com a sessão já aberta neste navegador, a lista de e-mails não lidos (remetente, assunto, trecho e hora) para mostrar e avisar. Nada é enviado a outro lugar e nenhuma senha é guardada.',
+    origins: ['https://mail.google.com/*'],
+    managed: true, // pedido no widget
+  },
   clipboardSites: {
     label: 'Área de transferência nos sites',
     why: 'Quando você liga "Ao copiar em sites" no widget Área de transferência, guarda neste computador o texto que você copia e o site de origem. Nada é enviado. Não funciona em janelas anônimas nem em campos de senha.',

@@ -17,5 +17,6 @@ import news from './news.js';
 import focus from './focus.js';
 import agenda from './agenda.js';
 import clipboard from './clipboard.js';
+import email from './email.js';
 
-export const WIDGETS = Object.fromEntries([capture, focus, reminders, agenda, clipboard, brain, ask, weather, quotes, clock, calc, browsing, traffic, photos, imageLibrary, habits, news, shortcuts].map((w) => [w.id, w]));
+export const WIDGETS = Object.fromEntries([capture, focus, reminders, agenda, email, clipboard, brain, ask, weather, quotes, clock, calc, browsing, traffic, photos, imageLibrary, habits, news, shortcuts].map((w) => [w.id, w]));

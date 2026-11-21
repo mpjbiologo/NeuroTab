@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.7.4 — em preparação
+**E-mail: os não lidos de todas as suas contas do Gmail na nova aba, com aviso quando chega um novo.**
+
+- ✉️ **Novo widget E-mail (#20):** remetente, assunto, um trecho e a hora de cada e-mail não lido, de todas as contas do Gmail abertas no navegador, com a contagem de cada uma. Um clique abre a mensagem no Gmail; ✏️ escreve um e-mail; ☑️ cria a tarefa "Responder"
+- 🔔 **Avisos de e-mail novo**, sem repetir: por conta, só os importantes ou só a aba Principal, verificação de 2 a 60 minutos e silenciar por 1 hora, 4 horas ou até amanhã
+- 🔒 **Sem senha e sem dar acesso aos seus e-mails:** usa a sessão do Gmail que já está aberta no navegador e guarda só a lista, neste computador. "Desconectar e apagar" tira tudo
+- Outlook / Microsoft 365 chega com a conta Microsoft (0.7.7.5)
+
 ## v0.7.7.3 — em preparação
 **Configurações de cara nova: tudo na lateral, com sub-abas, e a tela inteira para as opções.**
 
