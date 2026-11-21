@@ -72,3 +72,15 @@ O contraste de cada tema é conferido por `node scripts/theme-contrast.mjs` e pe
 ## Site
 
 O site (`docs/index.html`) usa o tema Futurista com as mesmas cópias do tema, das fontes e dos ícones em `docs/assets`. Depois de mexer no tema ou nos ícones, rode `node scripts/sync-site.mjs`; o teste avisa se a cópia ficar desatualizada.
+
+## Editor visual e estilo dos atalhos (0.7.8)
+
+O editor (Configurações → Aparência → Editor visual, #58) **não cria outro sistema de cores**: ele só sobrepõe tokens do tema.
+
+- `settings.look` (validado por `src/lib/look.js` → `sanitizeLook`) guarda só o que a pessoa mudou: cores em hex, `opacity` (20–100), `radius` (0–28), `shadow`, `density` e `widgetStyle`. Vazio/`null` = o valor do tema.
+- `lookVars(look)` traduz em tokens (`--accent`, `--surface`, `--radius-md`, `--shadow-card`, `--dens`…). `lib/theme.js → applyLook(settings)` aplica no `<html>` da nova aba, das configurações e do popup, e guarda em `localStorage.nt_look` para o `theme-boot.js` aplicar antes de desenhar (sem piscar).
+- O estilo dos widgets vai em `html[data-wstyle]` (`glass` | `solid` | `outline` | `minimal`); a densidade multiplica espaços por `var(--dens, 1)`.
+- Antes de aplicar, a página resolve as cores finais (inclusive oklch e `color-mix`) num canvas de 1 px e roda `lookWarnings` (contraste WCAG). `options.html#reset-tema` ignora o `nt_look` guardado e volta ao padrão.
+- Temas salvos: `settings.customThemes = [{ id, name, base, look }]`; arquivo `{ format: 'neurotab-theme', v: 1, name, base, look }`.
+
+Os blocos de atalho (#59) ficam em `src/tiles.css`, usado pela nova aba e pelas prévias. `lib/tiles.js → paintTiles(raiz, settings)` põe `--tile-gap`, `--tile-op`, `--tile-scale` e `data-tfill/tborder/tshadow` na raiz; cada bloco tem `data-shape`, `--c` (cor) e `--ct` (texto legível sobre ela). Ícone próprio por atalho: `link.icon = { kind: 'image' | 'emoji' | 'letter', … }` (imagem só como PNG/JPEG/WebP/GIF em data URL, reduzida para 64 px); `link.shape` sobrepõe o formato geral.

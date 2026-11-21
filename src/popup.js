@@ -3,7 +3,7 @@ import { loadData, saveData, uid, hostOf, inspectFavicon, faviconUrl, ACTIVE_KEY
 import { addItem, loadItems, displayTitle, relTime, parseReminder, TYPES } from './lib/brain.js';
 import { isConfigured } from './lib/ai.js';
 import { configureSpeech } from './lib/speech-engine.js';
-import { applyTheme, themeOf } from './lib/theme.js';
+import { applyLook } from './lib/theme.js';
 import { startIconizer } from './lib/icons.js';
 import { micButton, toLocalInput, fromLocalInput, h } from './lib/ui.js';
 import { initI18n } from './lib/i18n.js';
@@ -17,7 +17,7 @@ init();
 async function init() {
   [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   data = await loadData();
-  applyTheme(themeOf(data.settings));
+  applyLook(data.settings);
   configureSpeech(data.settings, data.settings.voiceLang || navigator.language);
   initI18n(data.settings.lang);
   const url = tab?.url || '';

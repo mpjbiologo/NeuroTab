@@ -14,7 +14,7 @@ test('lateral com sub-abas, links antigos, busca e histórico', async () => {
     assert.equal(await p.locator('.tabs').count(), 0, 'sem abas no topo');
     // todas as sub-abas existem e cada uma tem conteúdo
     const pages = await p.$$eval('.pane', (els) => els.map((e) => e.dataset.page));
-    assert.equal(pages.length, 27, '11 categorias, 27 páginas');
+    assert.equal(pages.length, 29, '11 categorias, 29 páginas');
     assert.equal(await p.locator('.side-cat').count(), 11);
     for (const id of pages) assert.ok((await p.textContent(`#page-${id}`)).trim().length > 20, `página vazia: ${id}`);
     // categoria com sub-abas abre e só ela fica aberta

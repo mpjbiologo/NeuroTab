@@ -15,6 +15,7 @@ import { repositionFree, setEditing } from './newtab/free.js';
 import { setupClock } from './newtab/hero.js';
 import { openWidgetPicker, renderLayoutPicker, setupLayouts } from './newtab/layouts.js';
 import { editGroup, editLink, renderDock, setupExternalDrop, setupPanelBehaviour } from './newtab/rail.js';
+import { hides, toggleHold, setupDockHide } from './newtab/dock-hide.js';
 import { setupOmni } from './newtab/search.js';
 import { setupUpdates } from './newtab/updates.js';
 import { setupVoice } from './newtab/voice.js';
@@ -93,6 +94,7 @@ async function init() {
   $('#addGroup').addEventListener('click', () => editGroup());
   $('#panelAdd').addEventListener('click', () => editLink());
   $('#pinDock').addEventListener('click', async () => {
+    if (hides()) { toggleHold(); return; }
     S.data.settings.dockPinned = !S.data.settings.dockPinned;
     await saveData(S.data);
   });
@@ -101,6 +103,7 @@ async function init() {
   $('#addWidget').addEventListener('click', openWidgetPicker);
   setupLayouts();
   setupPanelBehaviour();
+  setupDockHide();
   let rz;
   let lastNarrow = innerWidth < 700;
   window.addEventListener('resize', () => {

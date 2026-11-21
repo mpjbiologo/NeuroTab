@@ -1,0 +1,61 @@
+/* NeuroTab — blocos de atalho (#59): formatos, tamanhos e estilo. Usado pela nova aba e pelas prévias das configurações.
+   Variáveis na raiz (lib/tiles.js → paintTiles): --tile-gap, --tile-op, --tile-scale, --radius;
+   atributos: data-tfill (site | single | none), data-tborder, data-tshadow. Em cada bloco: --c (cor), --ct (texto), data-shape. */
+.grid { display: grid; grid-template-columns: repeat(var(--gcols, 3), minmax(0, 1fr)); gap: var(--tile-gap, 6px); }
+.tile {
+  --c: #555; --ct: #1d1d1d; --s: var(--tile-scale, 1);
+  --fill-a: color-mix(in srgb, var(--c) var(--tile-op, 100%), transparent);
+  --fill-b: color-mix(in srgb, color-mix(in srgb, var(--c) 78%, white) var(--tile-op, 100%), transparent);
+  --tile-ring: inset 0 0 0 1px var(--tint-2);
+  --tile-drop: 0 1px 3px rgba(0,0,0,.35);
+  position: relative; aspect-ratio: 1.55; min-width: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--fill-a), var(--fill-b));
+  box-shadow: var(--tile-ring), var(--tile-drop);
+  color: var(--ct); text-decoration: none; overflow: hidden; transition: transform .12s, filter .12s;
+}
+.tile:hover { transform: translateY(-2px); filter: brightness(1.06); }
+.tile:focus-visible { outline: none; box-shadow: var(--ring); }
+[data-tfill="none"] .tile { background: transparent; --tile-ring: inset 0 0 0 1px var(--border-strong); --ct: var(--text); }
+[data-tborder="0"] .tile { --tile-ring: 0 0 0 0 transparent; }
+[data-tshadow="0"] .tile { --tile-drop: 0 0 0 0 transparent; }
+
+/* Ícone (favicon, imagem enviada, emoji ou letra) */
+.tic { display: inline-grid; place-items: center; flex: none; width: calc(16px * var(--s, 1)); height: calc(16px * var(--s, 1)); box-sizing: content-box; line-height: 1; }
+.tic img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.tic-emoji { font-size: calc(14px * var(--s, 1)); }
+.tic-letter { background: var(--c, #666); color: var(--ct, #fff); border-radius: 4px; font-weight: 700; font-size: calc(11px * var(--s, 1)); font-family: var(--font-display); }
+
+/* Bloco (clássico): faixa branca com ícone e nome */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 90%;
+  padding: 3px 10px; border-radius: var(--radius-md); background: rgba(255,255,255,.93);
+  font-size: calc(var(--fs-sm) * var(--s, 1)); line-height: 1.4; color: #1d1d1d; white-space: nowrap; overflow: hidden;
+}
+.pill .tt { overflow: hidden; text-overflow: ellipsis; }
+
+/* Quadrado: ícone grande num selo, nome embaixo */
+.tile[data-shape="square"] { aspect-ratio: 1; width: min(100%, calc(132px * var(--s))); justify-self: center; }
+.tile[data-shape="square"] .pill { flex-direction: column; gap: calc(8px * var(--s)); background: none; padding: 0; max-width: 88%; color: var(--ct); font-weight: 600; }
+.tile[data-shape="square"] .tic { width: calc(26px * var(--s)); height: calc(26px * var(--s)); padding: calc(8px * var(--s)); border-radius: var(--radius-md); background: rgba(255,255,255,.93); }
+.tile[data-shape="square"] .tic-emoji { font-size: calc(22px * var(--s)); }
+.tile[data-shape="square"] .tt { max-width: 100%; }
+
+/* Círculo: o ícone vira uma bolha colorida e o nome fica embaixo, sobre o fundo */
+.tile[data-shape="circle"] { aspect-ratio: auto; justify-self: center; width: 100%; max-width: calc(140px * var(--s)); background: none; box-shadow: none; overflow: visible; padding: 6px 2px; }
+.tile[data-shape="circle"]:focus-visible { box-shadow: none; }
+.tile[data-shape="circle"]:focus-visible .tic { box-shadow: var(--ring); }
+.tile[data-shape="circle"] .pill { flex-direction: column; gap: 7px; background: none; padding: 0; max-width: 100%; color: var(--text); text-shadow: 0 1px 6px rgba(0,0,0,.55); }
+.tile[data-shape="circle"] .tic { width: calc(30px * var(--s)); height: calc(30px * var(--s)); padding: calc(13px * var(--s)); border-radius: 50%; background: linear-gradient(135deg, var(--fill-a), var(--fill-b)); box-shadow: var(--tile-ring), var(--tile-drop); }
+.tile[data-shape="circle"] .tic img { border-radius: 6px; }
+.tile[data-shape="circle"] .tic-letter, .tile[data-shape="circle"] .tic-emoji { font-size: calc(24px * var(--s)); color: var(--ct); text-shadow: none; }
+[data-tfill="none"] .tile[data-shape="circle"] .tic { background: var(--tint-2); }
+.tile[data-shape="circle"] .tt { max-width: 100%; font-size: calc(var(--fs-xs) * var(--s)); }
+
+/* Pílula: cápsula com o ícone num círculo branco */
+.tile[data-shape="pill"] { aspect-ratio: auto; height: calc(46px * var(--s)); border-radius: var(--radius-pill, 999px); justify-content: flex-start; padding: 0 calc(6px * var(--s)); }
+.tile[data-shape="pill"] .pill { background: none; padding: 0 6px 0 0; gap: 9px; max-width: 100%; color: var(--ct); font-weight: 600; }
+.tile[data-shape="pill"] .tic { width: calc(20px * var(--s)); height: calc(20px * var(--s)); padding: calc(7px * var(--s)); border-radius: 50%; background: rgba(255,255,255,.93); }
+
+.tile[data-shape="square"] .tic-letter, .tile[data-shape="pill"] .tic-letter { color: #1d1d1d; font-size: calc(16px * var(--s)); }

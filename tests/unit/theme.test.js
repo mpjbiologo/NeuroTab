@@ -25,7 +25,7 @@ test('cada tema define todos os tokens do padrão', () => {
 
 test('telas usam tokens, não cores soltas', () => {
   // Exceções: prévia de cor do atalho (#555/#666), mapa (fundo/rótulo claros), QR (precisa de branco), escuro de fotos.
-  const allow = { 'src/newtab.css': ['#666', '#555', '#222', '#1d1d1d', '#fff', '#dfe3e8', '#333', '#111'], 'src/options.css': ['#fff'], 'src/popup.css': [] };
+  const allow = { 'src/newtab.css': ['#666', '#555', '#222', '#1d1d1d', '#fff', '#dfe3e8', '#333', '#111'], 'src/options.css': ['#fff'], 'src/popup.css': [], 'src/tiles.css': ['#555', '#1d1d1d', '#666', '#fff'] };
   for (const [file, ok] of Object.entries(allow)) {
     const s = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
     const loose = [...new Set(s.match(/#[0-9a-fA-F]{3,6}\b/g) || [])].filter((c) => !ok.includes(c.toLowerCase()));

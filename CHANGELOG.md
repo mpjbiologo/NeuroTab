@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.7.8 — em preparação
+**Do seu jeito: a barra some quando você quer, os atalhos ganham forma e ícone, e as cores são suas.**
+
+- 🫥 **Barra de atalhos que se esconde (#64):** em Aparência → Layout, escolha *Sempre visível*, *Esconder sozinha* (volta ao levar o mouse até a borda) ou *Recolhida* (abre pela alça). A barra passa por cima, então os widgets não pulam
+  - Fica aberta enquanto o mouse ou o foco do teclado estiver nela e some depois do tempo que você escolher
+  - **Ctrl+.** abre pelo teclado e Esc fecha; o 📌 segura a barra aberta sem mudar a configuração
+  - No celular e no tablet abre com um toque na alça; quem pede menos movimento no sistema vê sem animação
+- 🔲 **Estilo dos atalhos (#59):** nova página Aparência → Estilo dos atalhos, com prévia
+  - Formatos bloco, quadrado, círculo e pílula; tamanho, cantos, espaço, contorno e sombra
+  - Fundo com a cor de cada site, uma cor só ou transparente, com opacidade
+  - 6 estilos prontos: Clássico, Suave, Minimal, Vidro, Bolha e Cápsula
+  - **Cada atalho pode ter o seu:** ícone do site, imagem enviada (reduzida para 64 px), emoji ou letra, e formato próprio. Em Editar → "Ícone e formato deste atalho"
+  - Site sem ícone ou com ícone quebrado mostra a inicial colorida; "Restaurar" volta o visual sem mexer nos atalhos
+- 🎨 **Editor visual (#58):** nova página Aparência → Editor visual, sobre o tema escolhido
+  - Cores de destaque, fundo, painéis, texto e bordas; transparência, cantos, sombras, densidade e estilo dos widgets (translúcido, sólido, contorno ou minimalista)
+  - 5 paletas prontas e uma **prévia da nova aba** que muda na hora; nada muda de verdade até você clicar em **Aplicar**
+  - Avisa antes de aplicar quando o texto fica difícil de ler. Se algo der errado, `options.html#reset-tema` volta tudo ao padrão
+  - **Seus temas:** salvar, duplicar, excluir, exportar e importar como arquivo
+- 🌤️ **Novo widget "Como foi hoje?" (#58):** humor em 5 carinhas, energia em 5 níveis e uma frase, um registro por dia
+  - Histórico com gráfico de 7, 30 ou 90 dias, médias e calendário; dá para editar ou apagar qualquer dia
+  - Exportar em planilha (CSV) e apagar tudo
+  - **Privado:** fica só neste computador, não sincroniza e nunca vai para a IA. Sem notificações nem cobranças
+- A integração com a Microsoft (Outlook e OneDrive) ficou para depois
+
 ## v0.7.7.4 — em preparação
 **E-mail: os não lidos de todas as suas contas do Gmail na nova aba, com aviso quando chega um novo.**
 

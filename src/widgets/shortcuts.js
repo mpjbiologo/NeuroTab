@@ -1,5 +1,6 @@
 // Widget: atalhos em blocos coloridos (o visual clássico do Speed Dial).
 import { h, showCtx } from '../lib/ui.js';
+import { tileEl, tileScale, sanitizeTiles } from '../lib/tiles.js';
 
 export default {
   id: 'shortcuts',
@@ -21,16 +22,16 @@ export default {
       fit();
       const target = data.settings.openInNewTab ? '_blank' : '_self';
       grid.replaceChildren(...data.links.filter((l) => l.groupId === gid).map((l) => {
-        const img = h('img', { alt: '', src: ctx.faviconFor(l) });
-        img.onerror = () => { img.style.display = 'none'; };
-        const a = h('a', { class: 'tile', href: l.url, target, title: l.url, style: { '--c': l.color } }, h('span', { class: 'pill' }, img, h('span', {}, l.title)));
+        const a = tileEl(l, data.settings, { faviconFor: ctx.faviconFor, target });
         a.addEventListener('contextmenu', (e) => showCtx(e, [['↗ Abrir em nova aba', () => window.open(l.url, '_blank')], ['✎ Editar', () => ctx.openLinkDialog(l)]]));
         return a;
       }));
       if (!grid.children.length) grid.append(h('p', { class: 'empty' }, '🔗 Grupo sem atalhos.'));
     }
     function fit() {
-      const cols = Math.max(2, Math.min(ctx.data.settings.columns, Math.floor((grid.clientWidth || 600) / 140)));
+      const t = sanitizeTiles(ctx.data.settings.tiles);
+      const min = (t.shape === 'pill' ? 170 : t.shape === 'classic' ? 140 : 96) * tileScale(t.size);
+      const cols = Math.max(2, Math.min(ctx.data.settings.columns, Math.floor((grid.clientWidth || 600) / min)));
       grid.style.setProperty('--gcols', cols);
     }
     el.append(grid);

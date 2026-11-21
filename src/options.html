@@ -6,6 +6,7 @@
   <title>Configurações — NeuroTab</title>
   <link rel="icon" href="../icons/icon32.png">
   <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="tiles.css">
   <link rel="stylesheet" href="options.css">
   <script src="theme-boot.js"></script>
 </head>
@@ -42,6 +43,7 @@
     <section id="tab-geral" class="card">
       <h2 data-page="tema">Tema</h2>
       <p class="hint">O tema vale para a nova aba, estas configurações e o botão da extensão.</p>
+      <p class="hint look-note" id="lookNote" hidden>Você tem ajustes do Editor visual por cima do tema. <a href="#editor">Abrir o editor</a> · <button type="button" class="linkish" id="lookClear">Usar o tema puro</button></p>
       <div class="theme-pick" id="themePick" role="radiogroup" aria-label="Tema"></div>
       <h2 data-page="layout">Layout</h2>
       <div class="opt">
@@ -54,8 +56,24 @@
         </select>
       </div>
       <div class="opt">
-        <div><b>Manter o painel de atalhos sempre aberto</b><small>Só nas posições laterais. Também dá para usar o 📌 da barra.</small></div>
+        <div><b>Exibição da barra</b><small>Esconder libera a tela: a barra volta ao levar o mouse até a borda, pela alça ou com Ctrl+. No celular e no tablet, abre com um toque na alça.</small></div>
+        <select data-k="dockMode" id="dockMode">
+          <option value="always">Sempre visível</option>
+          <option value="auto">Esconder sozinha</option>
+          <option value="collapsed">Recolhida (abre pela alça)</option>
+        </select>
+      </div>
+      <div class="opt" id="dockDelayOpt">
+        <div><b>Esconder depois de</b><small>Tempo sem o mouse na barra até ela sair. <output id="dockDelayOut"></output></small></div>
+        <input type="range" min="0" max="3" step="0.1" data-k="dockHideDelay" data-num>
+      </div>
+      <div class="opt" id="dockPinOpt">
+        <div><b>Manter o painel de atalhos sempre aberto</b><small>Só nas posições laterais, com a barra sempre visível. Também dá para usar o 📌 da barra.</small></div>
         <label class="sw"><input type="checkbox" data-k="dockPinned"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Barra como no começo</b><small>Volta para a lateral esquerda, sempre visível.</small></div>
+        <button type="button" class="btn" id="dockReset">Restaurar barra</button>
       </div>
       <div class="opt">
         <div><b>Mostrar relógio e saudação</b></div>
@@ -75,6 +93,97 @@
         </select>
       </div>
       <p class="hint">Os widgets do centro (notas, clima, cotações…) são organizados direto na nova aba, pelo botão 🧩.</p>
+      <h2 data-page="estilo-atalhos">Estilo dos atalhos</h2>
+      <p class="hint">Vale para os blocos do widget "Atalhos". Cada atalho ainda pode ter ícone, cor e formato próprios: botão direito nele → Editar → "Ícone e formato deste atalho".</p>
+      <div class="tile-presets" id="tilePresets" role="radiogroup" aria-label="Estilos prontos"></div>
+      <div class="tile-preview" id="tilePreview" aria-label="Prévia dos atalhos"><div class="grid"></div></div>
+      <div class="opt">
+        <div><b>Formato</b></div>
+        <select data-k="tiles.shape">
+          <option value="classic">Bloco</option>
+          <option value="square">Quadrado</option>
+          <option value="circle">Círculo</option>
+          <option value="pill">Pílula</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Tamanho</b></div>
+        <select data-k="tiles.size">
+          <option value="s">Pequeno</option>
+          <option value="m">Médio</option>
+          <option value="l">Grande</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Cantos arredondados</b><small>Para os formatos Bloco e Quadrado.</small></div>
+        <input type="range" min="0" max="28" data-k="tileRadius" data-num>
+      </div>
+      <div class="opt">
+        <div><b>Espaço entre os blocos</b></div>
+        <input type="range" min="0" max="24" data-k="tiles.gap" data-num>
+      </div>
+      <div class="opt">
+        <div><b>Cor de fundo</b></div>
+        <select data-k="tiles.fill" id="tileFill">
+          <option value="site">Cor de cada site</option>
+          <option value="single">Uma cor só</option>
+          <option value="none">Transparente (só contorno)</option>
+        </select>
+      </div>
+      <div class="opt" id="tileColorOpt">
+        <div><b>Cor dos blocos</b></div>
+        <input type="color" data-k="tiles.fillColor">
+      </div>
+      <div class="opt">
+        <div><b>Opacidade do fundo</b><small>Menos opaco deixa ver a imagem de fundo.</small></div>
+        <input type="range" min="15" max="100" data-k="tiles.opacity" data-num>
+      </div>
+      <div class="opt">
+        <div><b>Contorno</b></div>
+        <label class="sw"><input type="checkbox" data-k="tiles.border"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Sombra</b></div>
+        <label class="sw"><input type="checkbox" data-k="tiles.shadow"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Estilo padrão</b><small>Volta ao visual clássico. Os atalhos, a ordem e os ícones próprios ficam como estão.</small></div>
+        <button type="button" class="btn" id="tileReset">Restaurar estilo</button>
+      </div>
+      <h2 data-page="editor">Editor visual</h2>
+      <p class="hint">Mude cores, transparência, cantos e o estilo dos widgets por cima do tema. Nada muda na nova aba até você clicar em <b>Aplicar</b>. Se algo ficar ilegível, abra <code>options.html#reset-tema</code> para voltar ao padrão.</p>
+      <div class="ed-wrap">
+        <div class="ed-form" id="edForm">
+          <div class="ed-row"><label for="edBase">Tema de base</label><select id="edBase"></select></div>
+          <div class="ed-row"><span class="ed-lbl">Paletas prontas</span><div class="ed-palettes" id="edPalettes"></div></div>
+          <fieldset class="ed-group"><legend>Cores</legend><div id="edColors"></div></fieldset>
+          <fieldset class="ed-group"><legend>Formas e profundidade</legend>
+            <div class="ed-row"><label for="edOpacity">Transparência dos painéis</label><div class="ed-ctl"><input type="range" id="edOpacity" min="20" max="100"><output id="edOpacityOut"></output><button type="button" class="ed-undo" data-clear="opacity" title="Usar a do tema">↺</button></div></div>
+            <div class="ed-row"><label for="edRadius">Cantos</label><div class="ed-ctl"><input type="range" id="edRadius" min="0" max="28"><output id="edRadiusOut"></output><button type="button" class="ed-undo" data-clear="radius" title="Usar os do tema">↺</button></div></div>
+            <div class="ed-row"><label for="edShadow">Sombras</label><select id="edShadow"></select></div>
+            <div class="ed-row"><label for="edDensity">Densidade</label><select id="edDensity"></select></div>
+            <div class="ed-row"><label for="edWidget">Estilo dos widgets</label><select id="edWidget"></select></div>
+          </fieldset>
+        </div>
+        <div class="ed-side">
+          <div class="ed-preview" id="edPreview" aria-label="Prévia da nova aba"></div>
+          <ul class="ed-warn" id="edWarn" role="status"></ul>
+          <div class="actions ed-actions">
+            <span class="ed-dirty" id="edDirty" hidden>Alterações não aplicadas</span>
+            <button type="button" class="btn" id="edReset">Restaurar padrão</button>
+            <button type="button" class="btn" id="edCancel">Cancelar</button>
+            <button type="button" class="btn primary" id="edApply">Aplicar</button>
+          </div>
+          <h3 class="ed-h3">Seus temas</h3>
+          <div class="ed-themes" id="edThemes"></div>
+          <div class="actions ed-file">
+            <button type="button" class="btn" id="edSave">＋ Salvar como tema</button>
+            <button type="button" class="btn" id="edExport">Exportar</button>
+            <label class="btn" for="edImport">Importar…</label>
+            <input type="file" id="edImport" accept="application/json,.json" hidden>
+          </div>
+        </div>
+      </div>
       <h2 data-page="relogio">Relógio e clima</h2>
       <div class="opt">
         <div><b>Mostrar o clima ao lado do relógio</b><small>Clique nele para ver a previsão dos próximos dias.</small></div>
@@ -118,12 +227,8 @@
         <label class="sw"><input type="checkbox" data-k="showAddButtons"><span></span></label>
       </div>
       <div class="opt">
-        <div><b>Blocos por linha no widget "Atalhos"</b></div>
+        <div><b>Blocos por linha no widget "Atalhos"</b><small>Formato, cores e tamanho: Aparência → Estilo dos atalhos.</small></div>
         <select data-k="columns" data-num id="cols"></select>
-      </div>
-      <div class="opt">
-        <div><b>Cantos arredondados dos blocos</b></div>
-        <input type="range" min="0" max="20" data-k="tileRadius" data-num>
       </div>
       <h2 data-page="timer">Timer e despertador</h2>
       <div class="opt">

@@ -3,34 +3,36 @@ import { SEARCH_ENGINES } from '../lib/store.js';
 import { $, $$, h } from '../lib/ui.js';
 import { photoList, photoUrl, preload } from '../lib/photos.js';
 import { t } from '../lib/i18n.js';
-import { applyTheme, themeOf } from '../lib/theme.js';
+import { applyLook } from '../lib/theme.js';
 import { S, heroEl, omniEl } from './state.js';
 import { dockPos, openPanel } from './rail.js';
+import { applyDockMode } from './dock-hide.js';
+import { paintTiles } from '../lib/tiles.js';
 
 // ---------- Aparência ----------
 export function applySettings() {
   const s = S.data.settings;
   const root = document.documentElement.style;
   root.setProperty('--cols', s.columns);
-  root.setProperty('--radius', s.tileRadius + 'px');
+  paintTiles(document.documentElement, s);
   root.setProperty('--dim', s.bgDim);
   // Cor de fundo própria só se a pessoa trocou a padrão; senão vale a do tema.
   if (s.bgColor && !/^#141418$/i.test(s.bgColor)) root.setProperty('--bg-color', s.bgColor);
   else root.removeProperty('--bg-color');
-  applyTheme(themeOf(s));
+  applyLook(s);
   const b = document.body.classList;
   const pos = dockPos();
   ['left', 'right', 'top', 'bottom'].forEach((p) => b.toggle('dock-' + p, pos === p));
   b.toggle('narrow', innerWidth < 700);
   const lateral = pos === 'left' || pos === 'right';
-  b.toggle('pinned', lateral && s.dockPinned);
-  $('#pinDock').classList.toggle('on', s.dockPinned);
+  b.toggle('pinned', lateral && s.dockPinned && s.dockMode === 'always');
+  applyDockMode();
   heroEl.hidden = !s.showClock;
   omniEl.hidden = !s.showSearch;
   $('#omni').placeholder = `Pesquisar atalhos, notas ou no ${(SEARCH_ENGINES[s.searchEngine] || SEARCH_ENGINES.google).name}…  (Ctrl+K)`;
   $('#addGroup').hidden = !s.showAddButtons;
   $('#panelAdd').hidden = !s.showAddButtons;
-  if (lateral && s.dockPinned) openPanel(S.activeId, true);
+  if (lateral && s.dockPinned && s.dockMode === 'always') openPanel(S.activeId, true);
   applyBackground();
 }
 
