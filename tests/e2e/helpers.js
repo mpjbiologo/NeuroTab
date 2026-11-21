@@ -1,7 +1,7 @@
 // Ajudantes dos testes de ponta a ponta: abre um Chromium com a extensão carregada da pasta do projeto,
 // simula a rede (nenhum teste depende de internet) e, se pedido, simula microfone e voz.
 import { chromium } from 'playwright';
-import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync, cpSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -115,7 +115,7 @@ export function fakeMicWav(pattern = [[1.2, 0.4], [2.5, 0]], rate = 16000) {
   return file;
 }
 
-export async function launch({ locale = 'pt-BR', viewport = { width: 1366, height: 850 }, voice = false, ai, fakeMic = null, args = [] } = {}) {
+export async function launch({ locale = 'pt-BR', viewport = { width: 1366, height: 850 }, voice = false, ai, fakeMic = null, args = [], ext = EXT } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'neurotab-e2e-'));
   const ctx = await chromium.launchPersistentContext(dir, {
     headless: true,
@@ -123,7 +123,7 @@ export async function launch({ locale = 'pt-BR', viewport = { width: 1366, heigh
     locale,
     viewport,
     acceptDownloads: true,
-    args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`, `--lang=${locale}`,
+    args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`, `--lang=${locale}`,
       ...args,
       ...(fakeMic ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${fakeMic}`, '--autoplay-policy=no-user-gesture-required'] : [])],
   });
@@ -168,3 +168,13 @@ export async function launch({ locale = 'pt-BR', viewport = { width: 1366, heigh
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Cópia temporária da extensão com o manifest alterado (ex.: permissões opcionais já concedidas no teste). */
+export function extWith(changeManifest) {
+  const dir = mkdtempSync(join(tmpdir(), 'neurotab-ext-'));
+  for (const f of ['src', 'icons', '_locales']) cpSync(join(EXT, f), join(dir, f), { recursive: true });
+  const m = JSON.parse(readFileSync(join(EXT, 'manifest.json'), 'utf8'));
+  changeManifest(m);
+  writeFileSync(join(dir, 'manifest.json'), JSON.stringify(m));
+  return dir;
+}

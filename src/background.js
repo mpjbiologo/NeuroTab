@@ -12,6 +12,7 @@ import { findAddress } from './lib/address.js';
 import { discardTempCapture } from './lib/captures.js';
 import { loadCalendar, eventsBetween, refreshFeeds, CAL_KEY, CAL_CACHE_KEY, GOOGLE_REFRESH_MIN } from './lib/calendar.js';
 import { syncNow, syncConfig, WATCHED_KEYS } from './lib/sync.js';
+import { addClip, clipConfig, pruneClips, CLIP_CFG_KEY } from './lib/clipboard.js';
 
 // Janela de análise aberta com uma imagem temporária: quando ela fecha (a conexão cai), o fundo apaga a
 // imagem se ninguém a guardou. Mais confiável que apagar de dentro da janela, que pode fechar antes de terminar.
@@ -258,6 +259,8 @@ function scheduleSync(ms = 15000) {
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'ntsync') return backgroundSync();
+  if (alarm.name === 'clipwatch') return syncClipboard().catch(() => {});
+  if (alarm.name === 'clipprune') return pruneClips().catch(() => {});
   if (alarm.name.startsWith('cal-')) return fireCalAlarm(alarm.name);
   if (alarm.name === 'calfeeds') return refreshFeeds().then(syncCalAlarms).catch(() => {});
   if (alarm.name === 'calsync') return syncCalAlarms();
@@ -329,16 +332,35 @@ chrome.notifications.onClicked.addListener(async (nid) => {
 });
 
 // ---------- Som (documento offscreen) ----------
-async function ensureOffscreen() {
+const OFF_URL = 'src/offscreen.html';
+async function offscreenExists() {
+  const offscreen = globalThis.chrome?.offscreen;
+  if (!offscreen) return false;
+  return offscreen.hasDocument
+    ? offscreen.hasDocument()
+    : (await chrome.runtime.getContexts({ contextTypes: ['OFFSCREEN_DOCUMENT'] })).length > 0;
+}
+async function ensureOffscreen({ clipboard = false } = {}) {
   // Só existe no Chrome/Edge (no Firefox o som toca direto aqui, ver directPlayer).
+  // Um documento só: com a área de transferência ligada, ele é criado com o motivo CLIPBOARD (e não fecha
+  // sozinho depois de 30 s sem som, como acontece com AUDIO_PLAYBACK).
   const offscreen = globalThis.chrome?.offscreen;
   if (!offscreen) return;
-  const has = offscreen.hasDocument
-    ? await offscreen.hasDocument()
-    : (await chrome.runtime.getContexts({ contextTypes: ['OFFSCREEN_DOCUMENT'] })).length > 0;
-  if (has) return;
+  if (!clipboard) { const c = await clipConfig(); clipboard = !!(c.monitor && !c.paused && (await hasClipRead())); }
+  const KEY = 'nt_offscreen_clip';
+  const hadClip = !!(await chrome.storage.session.get(KEY))[KEY];
+  if (await offscreenExists()) {
+    if (!clipboard || hadClip) return;
+    const snd = (await chrome.storage.local.get(CK.sound))[CK.sound];
+    if (snd?.playing) return; // não corta um despertador tocando; tenta de novo no próximo minuto
+    await offscreen.closeDocument().catch(() => {});
+  }
   try {
-    await offscreen.createDocument({ url: 'src/offscreen.html', reasons: ['AUDIO_PLAYBACK'], justification: 'Tocar o som de despertadores e timers da NeuroTab' });
+    await offscreen.createDocument(clipboard
+      ? { url: OFF_URL, reasons: ['CLIPBOARD', 'AUDIO_PLAYBACK'], justification: 'Acompanhar a área de transferência (opção ligada pela pessoa) e tocar o som de despertadores e timers' }
+      : { url: OFF_URL, reasons: ['AUDIO_PLAYBACK'], justification: 'Tocar o som de despertadores e timers da NeuroTab' });
+    await chrome.storage.session.set({ [KEY]: clipboard });
+    if (clipboard) await chrome.runtime.sendMessage({ target: 'offscreen', type: 'clip-start' }).catch(() => {});
   } catch (e) {
     if (!String(e).includes('single offscreen')) console.warn(e);
   }
@@ -462,6 +484,89 @@ async function runUpdateCheck() {
   }
 }
 
+// ---------- Área de transferência (#51) ----------
+const CLIP_SCRIPT = 'nt-clip';
+const CLIP_SITES = ['https://*/*'];
+const hasClipRead = () => chrome.permissions.contains({ permissions: ['clipboardRead'] }).catch(() => false);
+
+async function clipBadge(on) {
+  try {
+    const cur = await chrome.action.getBadgeText({});
+    if (cur === 'NEW') return; // o aviso de versão nova tem prioridade
+    if (on) {
+      await chrome.action.setBadgeBackgroundColor({ color: '#22b8c9' });
+      await chrome.action.setBadgeText({ text: '●' });
+      await chrome.action.setTitle({ title: t('NeuroTab · acompanhando a área de transferência') });
+    } else if (cur === '●') {
+      await chrome.action.setBadgeText({ text: '' });
+      await chrome.action.setTitle({ title: 'NeuroTab' });
+    }
+  } catch { /* sem ícone de ação */ }
+}
+
+/** Liga ou desliga cada nível conforme a configuração e as permissões concedidas. */
+async function syncClipboard({ injectOpenTabs = false } = {}) {
+  const cfg = await clipConfig();
+  // nível 2: captura nos sites
+  let sitesOn = false;
+  try {
+    sitesOn = cfg.sites && !cfg.paused && (await chrome.permissions.contains({ origins: CLIP_SITES }));
+    const reg = await chrome.scripting.getRegisteredContentScripts({ ids: [CLIP_SCRIPT] });
+    if (sitesOn && !reg.length) {
+      const def = { id: CLIP_SCRIPT, matches: CLIP_SITES, js: ['src/clip-content.js'], runAt: 'document_start', allFrames: true };
+      await chrome.scripting.registerContentScripts([{ ...def, persistAcrossSessions: true }]).catch(() => chrome.scripting.registerContentScripts([def]));
+    }
+    if (!sitesOn && reg.length) await chrome.scripting.unregisterContentScripts({ ids: [CLIP_SCRIPT] });
+    if (sitesOn && injectOpenTabs) {
+      // abas já abertas passam a capturar sem precisar recarregar
+      for (const tab of await chrome.tabs.query({ url: CLIP_SITES })) {
+        if (!tab.incognito) chrome.scripting.executeScript({ target: { tabId: tab.id, allFrames: true }, files: ['src/clip-content.js'] }).catch(() => {});
+      }
+    }
+  } catch (e) {
+    console.warn('NeuroTab: captura nos sites', e);
+  }
+  // nível 3: acompanhamento contínuo (Chrome/Edge)
+  const monitorOn = !!(cfg.monitor && !cfg.paused && chrome.offscreen && (await hasClipRead()));
+  if (monitorOn) {
+    await ensureOffscreen({ clipboard: true });
+    await chrome.runtime.sendMessage({ target: 'offscreen', type: 'clip-start' }).catch(() => {});
+    chrome.alarms.create('clipwatch', { periodInMinutes: 1 }); // reabre o documento se o navegador o fechar
+  } else {
+    chrome.alarms.clear('clipwatch');
+    if (await offscreenExists()) await chrome.runtime.sendMessage({ target: 'offscreen', type: 'clip-stop' }).catch(() => {});
+  }
+  await clipBadge(monitorOn || sitesOn);
+}
+
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg?.type === 'clip:copy') {
+    // do content script, numa aba normal (nunca anônima)
+    if (!sender.tab || sender.tab.incognito || sender.id !== chrome.runtime.id) return;
+    clipConfig().then((cfg) => {
+      if (!cfg.sites || cfg.paused) return;
+      return addClip({ text: msg.text, via: 'site', source: { url: sender.url || sender.tab.url || msg.url, title: sender.tab.title || msg.title } });
+    }).catch((e) => console.warn('NeuroTab: área de transferência', e));
+  }
+  if (msg?.type === 'clip:monitor') {
+    // só do documento oculto da própria extensão
+    if (sender.tab || sender.id !== chrome.runtime.id || !String(sender.url || '').includes('/src/offscreen.html')) return;
+    clipConfig().then((cfg) => {
+      if (!cfg.monitor || cfg.paused) return;
+      return addClip({ text: msg.text || '', image: msg.image || null, via: 'monitor' });
+    }).catch((e) => console.warn('NeuroTab: área de transferência', e));
+  }
+});
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local' && changes[CLIP_CFG_KEY]) {
+    const before = changes[CLIP_CFG_KEY].oldValue || {};
+    const after = changes[CLIP_CFG_KEY].newValue || {};
+    syncClipboard({ injectOpenTabs: after.sites && !before.sites }).catch(() => {});
+  }
+});
+chrome.permissions.onAdded?.addListener(() => syncClipboard().catch(() => {}));
+chrome.permissions.onRemoved?.addListener(() => syncClipboard().catch(() => {}));
+
 // ---------- Eventos ----------
 function setupPeriodic() {
   chrome.alarms.create('update-check', { delayInMinutes: 1, periodInMinutes: 12 * 60 });
@@ -469,6 +574,7 @@ function setupPeriodic() {
   chrome.alarms.create('calfeeds', { delayInMinutes: 3, periodInMinutes: GOOGLE_REFRESH_MIN }); // agendas por link (30 min) e do Google (10 min)
   chrome.alarms.create('calsync', { delayInMinutes: 5, periodInMinutes: 6 * 60 }); // avisos das próximas 48 h
   chrome.alarms.create('ntsync', { delayInMinutes: 1, periodInMinutes: 5 }); // sincronização entre aparelhos
+  chrome.alarms.create('clipprune', { delayInMinutes: 10, periodInMinutes: 30 }); // prazo dos itens copiados
 }
 
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -477,12 +583,18 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   syncCalAlarms();
   syncClock();
   setupPeriodic();
+  syncClipboard().catch(() => {});
   if (details.reason === 'update') {
     await chrome.storage.local.set({ [WHATSNEW_KEY]: chrome.runtime.getManifest().version });
     await chrome.action.setBadgeText({ text: '' });
   }
 });
-chrome.runtime.onStartup.addListener(() => { rebuildMenus(); syncAlarms(); syncCalAlarms(); syncClock(); setupPeriodic(); scheduleSync(5000); });
+chrome.runtime.onStartup.addListener(async () => {
+  rebuildMenus(); syncAlarms(); syncCalAlarms(); syncClock(); setupPeriodic(); scheduleSync(5000);
+  // "apagar quando o computador desligar": o navegador abriu de novo, o histórico (menos os fixados) começa vazio
+  await pruneClips({ startup: true }).catch(() => {});
+  syncClipboard().catch(() => {});
+});
 
 // Comando de teclado global: abrir a NeuroTab ouvindo um comando de voz.
 chrome.commands.onCommand.addListener(async (cmd) => {

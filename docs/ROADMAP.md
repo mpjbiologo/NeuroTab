@@ -25,11 +25,12 @@ Primeiro a base, depois os recursos.
 - ✅ **0.7.5.2 / 0.7.5.3 — Aba Mídia:** guardar ou não a imagem analisada e IA própria para imagens (a 0.7.5.3 leva às lojas a 0.7.5.2, que não chegou a ser enviada).
 - ✅ **0.7.5.1 — Correções:** a barra de organizar não fica mais atrás dos widgets (#60); a descrição de imagens só usa modelos que enxergam.
 - ✅ **0.7.6 — Agenda:** agenda própria (próximos, dia, semana, mês, repetição, avisos), Google Agenda, Outlook e iCloud por link, importar/exportar `.ics` e o cérebro respondendo sobre compromissos (#26).
-- **0.7.6.1 — Contas e sincronização:** várias contas Google e sincronização criptografada das notas, atalhos, configurações, agenda e hábitos pelo Google Drive (#27, adiantada da v1.0).
-- **0.7.6.2 — Agenda pela conta Google:** todos os calendários, criar e editar eventos lá (#26; depende da verificação do Google).
-- **0.7.6.3 — Microsoft:** Outlook (agenda) e OneDrive (sincronização), com as mesmas contas.
-- **0.7.7 — Área de transferência:** widget com histórico do que você copia, só neste computador, com pausa, expiração e proteção de senhas e códigos (#51). Compartilhar com o celular fica para depois.
-- **0.7.8 — Do seu jeito:** atalhos com formato (redondo, quadrado, arredondado), cor e ícone próprios, favicon automático com recarga e envio de ícone (#59); editor visual da aparência em Configurações → Aparência, construído sobre os três temas: cores, transparência, cantos, estilo dos widgets, prévia, restaurar padrão e exportar/importar tema (#58).
+- ✅ **0.7.6.1 — Contas e sincronização:** várias contas Google e sincronização criptografada das notas, atalhos, configurações, agenda e hábitos pelo Google Drive (#27, adiantada da v1.0).
+- ✅ **0.7.6.2 — Agenda pela conta Google:** todos os calendários, criar e editar eventos lá (#26). A verificação do Google para tirar o aviso de "app não verificado" está em andamento.
+- **0.7.6.3 — Microsoft:** Outlook (agenda) e OneDrive (sincronização), com as mesmas contas. Começa quando o app estiver registrado no Microsoft Entra.
+- **0.7.7 — Área de transferência:** widget com histórico do que você copia, só neste computador: colar no widget, ao copiar em sites e acompanhar tudo o que você copia; pausa, proteção de senhas e códigos, e apagar ao desligar o computador por padrão (#51). Já preparada para compartilhar com outros computadores e o celular numa versão seguinte.
+- **0.7.7.1 — E-mail:** widget com os e-mails novos das contas conectadas (Gmail e, depois da 0.7.6.3, Outlook), várias contas no mesmo lugar (#20).
+- **0.7.8 — Do seu jeito:** barra de atalhos que se esconde e aparece quando o mouse chega perto (#64); atalhos com formato (redondo, quadrado, arredondado), cor e ícone próprios, favicon automático com recarga e envio de ícone (#59); editor visual da aparência em Configurações → Aparência, construído sobre os três temas: cores, transparência, cantos, estilo dos widgets, prévia, restaurar padrão e exportar/importar tema (#58).
 
 ### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 4 atualizações
 - **Primeiro, uma central de IA:** vários provedores, servidores e modelos ao mesmo tempo, com um modelo para cada tarefa (conversa, cérebro, busca por significado, imagens, transcrição, reuniões…), regras claras de prioridade e nenhuma troca silenciosa do computador para a internet (#63, que absorve a #7). A voz da v0.8 precisa disso: um modelo para transcrever e outro para responder.
@@ -40,7 +41,7 @@ Primeiro a base, depois os recursos.
 - Visual futurista da voz (#39).
 
 ### [v0.9 — Conhecimento e captura](https://github.com/mpjbiologo/NeuroTab/milestone/5) · 3 atualizações (captura primeiro, conhecimento depois)
-- **Central de ações do botão direito** (#55): o menu entende o contexto e manda o conteúdo ao lugar certo. Reúne salvar trecho como nota, tarefa ou lembrete (#56), captura de imagens e arquivos (#12), recorte de tela para a biblioteca (#37) e a área de transferência (#51).
+- **Central de ações do botão direito** (#55): o menu entende o contexto e manda o conteúdo ao lugar certo. Reúne salvar trecho como nota, tarefa ou lembrete (#56), captura de imagens e arquivos (#12), recorte de tela para a biblioteca (#37).
 - Separar provedores, embeddings e tarefas de IA (#7), base para o resto.
 - NeuroPilot: sugestões proativas locais (#8).
 - Central de conhecimento: fontes e documentos (#9) e adaptador opcional do Open Notebook (#10).
@@ -48,14 +49,13 @@ Primeiro a base, depois os recursos.
 - Escolher a pasta das mídias e avaliar downloads de áudio e vídeo de sites, sem contornar DRM nem restrições (#45).
 
 ### [v1.0 — Estável e completa](https://github.com/mpjbiologo/NeuroTab/milestone/6) · 1 a 2 atualizações
-- Sincronização opcional e criptografada entre dispositivos (#27).
 - Painel de privacidade, permissões e fluxo de dados (#28).
 - Matriz de testes funcionais para Chrome, Edge e Firefox (#13).
 - Configurações: reorganizar as abas e agrupar as permissões; o visual novo já saiu na 0.7.4 (#46).
 - Revisão geral: textos, acessibilidade, desempenho e documentação.
 
 ### [1.x — Depois da 1.0](https://github.com/mpjbiologo/NeuroTab/milestone/7)
-Modo Investigação (#23), mapa de conhecimento (#22), automações visuais (#24), espaços de trabalho (#25), notificações de celular e e-mail (#19, #20), diálogo entre dois modelos de IA (#21), linha do tempo e métricas (#30, #31), widgets de terceiros (#32), versão desktop (#33), perfis independentes para computadores compartilhados (#47), widget de velocidade da internet e ping (#52), central de entretenimento por voz (#48) e navegador para Android baseado em Chromium com atualizações pelo GitHub (#42).
+Modo Investigação (#23), mapa de conhecimento (#22), automações visuais (#24), espaços de trabalho (#25), notificações de celular (#19), diálogo entre dois modelos de IA (#21), linha do tempo e métricas (#30, #31), widgets de terceiros (#32), versão desktop (#33), perfis independentes para computadores compartilhados (#47), widget de velocidade da internet e ping (#52), central de entretenimento por voz (#48) e navegador para Android baseado em Chromium com atualizações pelo GitHub (#42).
 
 ## Regras do caminho
 

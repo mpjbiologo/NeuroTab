@@ -8,6 +8,7 @@ import { S, bus } from './state.js';
 import { ctx } from './context.js';
 import { openItemDialog } from './editor.js';
 import { renderWidgets } from './widgets.js';
+import { loadClips, searchClips, KINDS as CLIP_KINDS, CLIP_KEY, hostOf as clipHost } from '../lib/clipboard.js';
 
 // =====================================================================
 // BUSCA UNIVERSAL (Ctrl+K)
@@ -18,6 +19,11 @@ export function setupOmni() {
   $('#omniMicSlot').append(micButton(input, { lang: S.data.settings.voiceLang, title: 'Falar' }));
   let results = [];
   let sel = 0;
+  // itens da área de transferência (só deste computador) também aparecem na busca
+  let clips = [];
+  const loadClipCache = () => loadClips().then((x) => { clips = x; }).catch(() => {});
+  loadClipCache();
+  chrome.storage.onChanged.addListener((ch, area) => { if (area === 'local' && ch[CLIP_KEY]) loadClipCache(); });
   let moved = false; // a pessoa escolheu um item com as setas: o Enter abre esse item
 
   const saveAs = async (type, q) => {
@@ -44,6 +50,11 @@ export function setupOmni() {
     results = [];
     const sections = [];
     if (links.length) sections.push(['Atalhos', links.map((l) => ({ icon: h('img', { src: ctx.faviconFor(l), alt: '' }), label: l.title, sub: hostOf(l.url), action: () => { location.href = l.url; } }))]);
+    const copied = q.length >= 2 ? searchClips(clips.filter((c) => c.kind !== 'image'), q).slice(0, 4) : [];
+    if (copied.length) sections.push(['Área de transferência', copied.map((c) => ({
+      icon: CLIP_KINDS[c.kind]?.icon || '📋', label: c.text.replace(/\s+/g, ' ').slice(0, 90), sub: [c.source?.url ? clipHost(c.source.url) : '', Brain.relTime(c.updatedAt)].filter(Boolean).join(' · '),
+      action: async () => { await navigator.clipboard.writeText(c.text); toast('Copiado ✓'); },
+    }))]);
     if (notes.length) sections.push(['Cérebro', notes.map((it) => ({ icon: Brain.TYPES[it.type]?.icon, label: Brain.displayTitle(it), sub: Brain.relTime(it.createdAt), action: () => openItemDialog(it) }))]);
     const acts = [];
     if (looksLikeMath(q) || /^-?[\d.,]+\s*\S+(\s\S+)?\s+(em|para)\s+\S+$/i.test(q) || /^dias?\s(ate|até|desde)\s/i.test(q)) {

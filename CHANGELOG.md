@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.7.7 — em preparação
+**Área de transferência: o que você copia fica guardado, só no seu computador.**
+
+- 📋 **Novo widget Área de transferência (#51):** histórico do que você copia, com tipo (texto, link, e-mail, telefone, cor, código, imagem), de onde veio e há quanto tempo. Um clique copia de novo; ★ fixa; pesquisa e filtro; vira nota, tarefa (com lembrete) ou imagem da biblioteca. Também aparece na busca Ctrl+K
+- Três jeitos de capturar, você escolhe:
+  - **Colar no widget** (sempre ligado)
+  - **Ao copiar em sites:** guarda também o site de origem
+  - **Acompanhar tudo o que você copia**, de qualquer programa (Word, PDF, WhatsApp…), com o navegador aberto. No Chrome e no Edge funciona com a nova aba fechada; no Firefox, com ela aberta. O ícone da extensão mostra um ● enquanto está ligado
+- 🔒 **Privado por padrão:** fica só neste computador (não sincroniza, não vai para o backup nem para a IA), ignora campos de senha, bancos e o que parece senha, código ou cartão, e **apaga sozinho quando o navegador fecha ou o computador desliga** (ou em 1 hora, 1 dia, 7 dias, 30 dias, ou nunca). Os fixados ficam. Dá para pausar a qualquer momento
+- Preparada para, numa próxima versão, compartilhar o que você copia entre seus computadores e o celular
+
 ## v0.7.6.2 — em preparação
 **Agenda pela conta Google: todas as suas agendas na nova aba, com criar e editar compromissos lá.**
 
