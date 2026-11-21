@@ -1,0 +1,9 @@
+{
+  "name": "NeuroTab · Área de transferência",
+  "short_name": "NeuroTab",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#141a2e",
+  "theme_color": "#141a2e",
+  "icons": [{ "src": "../icon.png", "sizes": "128x128", "type": "image/png" }]
+}

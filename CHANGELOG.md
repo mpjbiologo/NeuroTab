@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.7.7.2 — em preparação
+**Área de transferência entre computador e celular, do jeito que você escolher.**
+
+- 📤 **Compartilhar com outros aparelhos:** no widget Área de transferência, escolha por onde e o quê. Pode ligar vários caminhos ao mesmo tempo:
+  - 📷 **QR code:** cada item mostra um QR para a câmera do celular. Nada sai do computador
+  - ☁️ **Minha nuvem:** pela pasta oculta do Google Drive, com a criptografia da sincronização. No celular, uma página do site entra com a sua conta (sem instalar nada)
+  - 🔔 **ntfy:** quase instantâneo, cifrado com uma chave que só vai no QR de pareamento (servidor ntfy.sh ou próprio)
+  - ✈️ **Telegram:** chega numa conversa com o seu bot; o que você manda para ele vem para o computador
+  - 🏠 **Rede local:** com o programinha **NeuroTab Ponte** (Windows, macOS e Linux), o celular abre uma página no mesmo Wi-Fi, sem internet e sem conta
+- Regras: enviar só o que você mandar (botão 📤), os fixados ou tudo; imagens (não, pequenas ou todas); enviar e receber, só enviar ou só receber; nome de cada aparelho
+- O que chega de outro aparelho aparece com 📥 e o nome dele, e nunca é reenviado
+- A proteção de senhas ficou mais precisa: palavras como "Recebido!" não são mais confundidas com senha
+
 ## v0.7.7 — em preparação
 **Área de transferência: o que você copia fica guardado, só no seu computador.**
 

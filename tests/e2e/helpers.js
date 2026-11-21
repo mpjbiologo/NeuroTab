@@ -164,7 +164,7 @@ export async function launch({ locale = 'pt-BR', viewport = { width: 1366, heigh
     rmSync(dir, { recursive: true, force: true });
   }
 
-  return { ctx, id, open, seed, settings, storage, errors, calls, close };
+  return { ctx, id, dir, open, seed, settings, storage, errors, calls, close };
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

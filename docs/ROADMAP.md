@@ -28,8 +28,9 @@ Primeiro a base, depois os recursos.
 - ✅ **0.7.6.1 — Contas e sincronização:** várias contas Google e sincronização criptografada das notas, atalhos, configurações, agenda e hábitos pelo Google Drive (#27, adiantada da v1.0).
 - ✅ **0.7.6.2 — Agenda pela conta Google:** todos os calendários, criar e editar eventos lá (#26). A verificação do Google para tirar o aviso de "app não verificado" está em andamento.
 - **0.7.6.3 — Microsoft:** Outlook (agenda) e OneDrive (sincronização), com as mesmas contas. Começa quando o app estiver registrado no Microsoft Entra.
-- **0.7.7 — Área de transferência:** widget com histórico do que você copia, só neste computador: colar no widget, ao copiar em sites e acompanhar tudo o que você copia; pausa, proteção de senhas e códigos, e apagar ao desligar o computador por padrão (#51). Já preparada para compartilhar com outros computadores e o celular numa versão seguinte.
-- **0.7.7.1 — E-mail:** widget com os e-mails novos das contas conectadas (Gmail e, depois da 0.7.6.3, Outlook), várias contas no mesmo lugar (#20).
+- ✅ **0.7.7 — Área de transferência:** widget com histórico do que você copia, só neste computador: colar no widget, ao copiar em sites e acompanhar tudo o que você copia; pausa, proteção de senhas e códigos, e apagar ao desligar o computador por padrão (#51). Já preparada para compartilhar com outros computadores e o celular numa versão seguinte.
+- **0.7.7.2 — Área de transferência entre aparelhos:** QR code, sua nuvem (Google Drive), ntfy, Telegram e rede local (NeuroTab Ponte), com regras de cada pessoa (#51).
+- **0.7.7.3 — E-mail:** widget com os e-mails novos das contas conectadas (Gmail e, depois da 0.7.6.3, Outlook), várias contas no mesmo lugar (#20).
 - **0.7.8 — Do seu jeito:** barra de atalhos que se esconde e aparece quando o mouse chega perto (#64); atalhos com formato (redondo, quadrado, arredondado), cor e ícone próprios, favicon automático com recarga e envio de ícone (#59); editor visual da aparência em Configurações → Aparência, construído sobre os três temas: cores, transparência, cantos, estilo dos widgets, prévia, restaurar padrão e exportar/importar tema (#58).
 
 ### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 4 atualizações

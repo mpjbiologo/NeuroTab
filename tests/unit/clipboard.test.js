@@ -25,7 +25,7 @@ test('tipos', () => {
 test('proteção: senhas, códigos, chaves e cartões ficam de fora; texto comum e Pix não', () => {
   for (const s of ['482913', '4111 1111 1111 1111', 'Tr0ca@Senha', 'sk-abcdefghijklmnopqrstu', 'AIzaSyA1234567890abcdefghijk', 'eyJhbGciOiJI.eyJzdWIiOiIx.SflKxwRJSMeKKF2', 'ghp_abcdefghijklmnopqrstuvwxyz0123456789'])
     assert.ok(C.looksSensitive(s), `devia barrar: ${s}`);
-  for (const s of ['Reunião às 15h na sala 2', 'https://exemplo.com/Pagina?Id=3&x=Y', 'ana@gmail.com', 'Bom dia!', '00020126580014BR.GOV.BCB.PIX0136abc', '4111 1111 1111 1112', 'paralelepípedo'])
+  for (const s of ['Recebido!', 'Olá,Mundo!', 'Reunião às 15h na sala 2', 'https://exemplo.com/Pagina?Id=3&x=Y', 'ana@gmail.com', 'Bom dia!', '00020126580014BR.GOV.BCB.PIX0136abc', '4111 1111 1111 1112', 'paralelepípedo'])
     assert.equal(C.looksSensitive(s), false, `não devia barrar: ${s}`);
 });
 

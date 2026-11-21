@@ -12,7 +12,9 @@ import { findAddress } from './lib/address.js';
 import { discardTempCapture } from './lib/captures.js';
 import { loadCalendar, eventsBetween, refreshFeeds, CAL_KEY, CAL_CACHE_KEY, GOOGLE_REFRESH_MIN } from './lib/calendar.js';
 import { syncNow, syncConfig, WATCHED_KEYS } from './lib/sync.js';
-import { addClip, clipConfig, pruneClips, CLIP_CFG_KEY } from './lib/clipboard.js';
+import { addClip, clipConfig, pruneClips, CLIP_CFG_KEY, CLIP_KEY } from './lib/clipboard.js';
+import { shareConfig, canReceive, cleanPayload, NATIVE_HOST } from './lib/clipboard-share.js';
+import { dispatchShares, pollShares, receivePayload, patchState, me as shareMe } from './lib/clipboard-sync.js';
 
 // Janela de análise aberta com uma imagem temporária: quando ela fecha (a conexão cai), o fundo apaga a
 // imagem se ninguém a guardou. Mais confiável que apagar de dentro da janela, que pode fechar antes de terminar.
@@ -261,6 +263,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'ntsync') return backgroundSync();
   if (alarm.name === 'clipwatch') return syncClipboard().catch(() => {});
   if (alarm.name === 'clipprune') return pruneClips().catch(() => {});
+  if (alarm.name === 'clipshare') return Promise.all([pollShares(), syncPonte()]).catch(() => {});
   if (alarm.name.startsWith('cal-')) return fireCalAlarm(alarm.name);
   if (alarm.name === 'calfeeds') return refreshFeeds().then(syncCalAlarms).catch(() => {});
   if (alarm.name === 'calsync') return syncCalAlarms();
@@ -539,6 +542,58 @@ async function syncClipboard({ injectOpenTabs = false } = {}) {
   await clipBadge(monitorOn || sitesOn);
 }
 
+// ---------- Compartilhar com outros aparelhos (0.7.7.2) ----------
+let ponte = null; // conexão com a NeuroTab Ponte (rede local)
+const lanTransport = { images: true, async send(p) { if (!ponte) throw new Error('A Ponte não está conectada.'); ponte.postMessage({ type: 'item', payload: p }); return {}; } };
+
+async function syncPonte() {
+  const share = shareConfig(await clipConfig());
+  const allowed = await chrome.permissions.contains({ permissions: ['nativeMessaging'] }).catch(() => false);
+  if (!(share.enabled && share.lan.on && allowed && share.lan.token)) {
+    if (ponte) { ponte.disconnect(); ponte = null; }
+    await patchState('lan', { status: 'off', urls: [] });
+    return;
+  }
+  if (ponte) return;
+  try {
+    ponte = chrome.runtime.connectNative(NATIVE_HOST);
+  } catch (e) {
+    await patchState('lan', { status: 'off', error: String(e.message || e) });
+    return;
+  }
+  ponte.onMessage.addListener(async (m) => {
+    if (m?.type === 'ready') await patchState('lan', { status: 'on', urls: (m.urls || []).slice(0, 8), port: m.port, version: m.version || '', error: '' });
+    if (m?.type === 'incoming' && canReceive(shareConfig(await clipConfig()))) await receivePayload(cleanPayload(m.payload), 'Rede local');
+    if (m?.type === 'error') await patchState('lan', { error: String(m.message || '') });
+  });
+  ponte.onDisconnect.addListener(async () => {
+    const err = chrome.runtime.lastError?.message || '';
+    ponte = null;
+    await patchState('lan', { status: 'off', urls: [], error: /not found|no such native|not registered/i.test(err) ? 'A NeuroTab Ponte não está instalada neste computador.' : err || 'A Ponte foi fechada.' });
+  });
+  const who = await shareMe(share);
+  ponte.postMessage({ type: 'hello', token: share.lan.token, port: share.lan.port, name: who.name, deviceId: who.id });
+}
+
+async function syncShareAlarm() {
+  const share = shareConfig(await clipConfig());
+  const polls = canReceive(share) && (share.cloud.on || share.ntfy.on || share.telegram.on);
+  if (polls) chrome.alarms.create('clipshare', { periodInMinutes: 0.5 });
+  else chrome.alarms.clear('clipshare');
+}
+
+let dispatchTimer = null;
+function scheduleDispatch() {
+  clearTimeout(dispatchTimer);
+  dispatchTimer = setTimeout(() => dispatchShares({ lan: ponte ? lanTransport : null }).catch((e) => console.warn('NeuroTab: compartilhar', e)), 400);
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, reply) => {
+  if (sender.id !== chrome.runtime.id || sender.tab?.url?.startsWith('http')) return;
+  if (msg?.type === 'clipshare:poll') { pollShares({ only: msg.only || null }).then((got) => reply({ got: got.length }), (e) => reply({ error: e.message })); return true; }
+  if (msg?.type === 'clipshare:sync') { Promise.all([syncPonte(), syncShareAlarm()]).then(() => reply({ ok: true })); return true; }
+});
+
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg?.type === 'clip:copy') {
     // do content script, numa aba normal (nunca anônima)
@@ -558,11 +613,14 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
   }
 });
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === 'local' && changes[CLIP_CFG_KEY]) {
+  if (areaName !== 'local') return;
+  if (changes[CLIP_CFG_KEY]) {
     const before = changes[CLIP_CFG_KEY].oldValue || {};
     const after = changes[CLIP_CFG_KEY].newValue || {};
     syncClipboard({ injectOpenTabs: after.sites && !before.sites }).catch(() => {});
+    if (JSON.stringify(before.share || {}) !== JSON.stringify(after.share || {})) { syncPonte().catch(() => {}); syncShareAlarm().catch(() => {}); }
   }
+  if (changes[CLIP_KEY]) scheduleDispatch();
 });
 chrome.permissions.onAdded?.addListener(() => syncClipboard().catch(() => {}));
 chrome.permissions.onRemoved?.addListener(() => syncClipboard().catch(() => {}));
@@ -584,6 +642,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   syncClock();
   setupPeriodic();
   syncClipboard().catch(() => {});
+  syncPonte().catch(() => {});
+  syncShareAlarm().catch(() => {});
   if (details.reason === 'update') {
     await chrome.storage.local.set({ [WHATSNEW_KEY]: chrome.runtime.getManifest().version });
     await chrome.action.setBadgeText({ text: '' });
@@ -594,6 +654,8 @@ chrome.runtime.onStartup.addListener(async () => {
   // "apagar quando o computador desligar": o navegador abriu de novo, o histórico (menos os fixados) começa vazio
   await pruneClips({ startup: true }).catch(() => {});
   syncClipboard().catch(() => {});
+  syncPonte().catch(() => {});
+  syncShareAlarm().catch(() => {});
 });
 
 // Comando de teclado global: abrir a NeuroTab ouvindo um comando de voz.

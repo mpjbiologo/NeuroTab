@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>NeuroTab · Rede local</title>
+<style>
+  :root { color-scheme: dark; --bg:#0e1222; --card:#171d33; --line:#2a3354; --text:#eef0ff; --muted:#a9b0d6; --accent:#7c5cff; --on:#fff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { position: sticky; top: 0; padding: 12px 16px; background: rgba(14,18,34,.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: center; }
+  header b { flex: 1; font-size: 18px; }
+  main { max-width: 640px; margin: 0 auto; padding: 14px 16px 90px; display: grid; gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  textarea { width: 100%; min-height: 84px; font: inherit; color: var(--text); background: #10162b; border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+  .btn { appearance: none; border: 1px solid var(--line); background: #222a48; color: var(--text); padding: 10px 16px; border-radius: 12px; font: inherit; font-weight: 600; text-decoration: none; display: inline-block; }
+  .btn.primary { background: var(--accent); border: 0; color: var(--on); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .txt { white-space: pre-wrap; word-break: break-word; max-height: 9.5em; overflow: auto; }
+  img { max-width: 100%; border-radius: 10px; }
+  .meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; }
+  #st { position: fixed; left: 16px; right: 16px; bottom: 16px; max-width: 608px; margin: auto; padding: 10px; border-radius: 12px; background: #222a48; text-align: center; display: none; }
+</style>
+</head>
+<body>
+<header><b>📋 NeuroTab · <span id="pc">Rede local</span></b><span class="muted" id="live"></span></header>
+<main>
+  <section class="card">
+    <textarea id="box" placeholder="Escreva ou cole aqui…"></textarea>
+    <div class="row">
+      <button class="btn primary" id="send">📤 Enviar para o computador</button>
+      <button class="btn" id="pick">🖼️ Imagem</button>
+      <input type="file" id="file" accept="image/*" hidden>
+    </div>
+  </section>
+  <div id="list"></div>
+  <p class="muted" style="text-align:center">Funciona só neste Wi-Fi, enquanto o navegador estiver aberto no computador.</p>
+</main>
+<div id="st" role="status"></div>
+<script>
+(function () {
+  var KEY = 'nt_ponte_' + location.host;
+  var m = /[#&]t=([^&]+)/.exec(location.hash);
+  if (m) { localStorage.setItem(KEY, decodeURIComponent(m[1])); history.replaceState(null, '', location.pathname); }
+  var token = localStorage.getItem(KEY) || '';
+  var me = localStorage.getItem('nt_ponte_me') || ('cel-' + Math.random().toString(36).slice(2));
+  localStorage.setItem('nt_ponte_me', me);
+  var $ = function (id) { return document.getElementById(id); };
+  var timer;
+  function say(t, ms) { var s = $('st'); s.textContent = t; s.style.display = 'block'; clearTimeout(timer); timer = setTimeout(function () { s.style.display = 'none'; }, ms || 2500); }
+  if (!token) { $('list').innerHTML = '<p class="card">Abra esta página pelo QR code da NeuroTab no computador (widget Área de transferência → 📤 → Rede local).</p>'; return; }
+  function api(path, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({ 'X-NT-Token': token }, opts.headers || {});
+    return fetch(path, opts).then(function (r) {
+      if (r.status === 401) throw new Error('Código de acesso inválido. Leia o QR de novo.');
+      if (!r.ok) throw new Error('Erro ' + r.status);
+      return r.json();
+    });
+  }
+  function copy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+    say(ok ? 'Copiado ✓' : 'Toque e segure no texto para copiar.');
+  }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function render(items) {
+    var list = $('list');
+    list.innerHTML = '';
+    if (!items.length) { list.appendChild(el('p', 'card muted', 'Nada por aqui ainda.')); return; }
+    items.forEach(function (p) {
+      var c = el('article', 'card');
+      if (p.image && p.image.data && /^data:image\//.test(p.image.data)) { var img = el('img'); img.src = p.image.data; img.alt = ''; c.appendChild(img); }
+      if (p.text) c.appendChild(el('div', 'txt', p.text));
+      var meta = el('div', 'meta');
+      var who = p.from && p.from.id === me ? 'este celular' : (p.from && p.from.name) || '';
+      meta.appendChild(el('small', 'muted', who + ' · ' + new Date(p.at).toLocaleString([], { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })));
+      if (p.text) { var b = el('button', 'btn', 'Copiar'); b.onclick = function () { copy(p.text); }; meta.appendChild(b); }
+      else if (p.image) { var a = el('a', 'btn', '⬇️'); a.href = p.image.data; a.download = 'imagem.webp'; meta.appendChild(a); }
+      c.appendChild(meta);
+      list.appendChild(c);
+    });
+  }
+  function load() { return api('/api/items').then(function (j) { if (j.name) $('pc').textContent = j.name; render(j.items || []); }).catch(function (e) { say('⚠️ ' + e.message, 5000); }); }
+  function send(body) {
+    body.from = { id: me, name: localStorage.getItem('nt_ponte_name') || 'Celular' };
+    return api('/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function () { say('Enviado ✓'); load(); });
+  }
+  $('send').onclick = function () { var t = $('box').value.trim(); if (!t) return; send({ text: t }).then(function () { $('box').value = ''; }).catch(function (e) { say('⚠️ ' + e.message, 5000); }); };
+  $('pick').onclick = function () { $('file').click(); };
+  $('file').onchange = function () {
+    var f = this.files[0]; if (!f) return;
+    var img = new Image(), url = URL.createObjectURL(f);
+    img.onload = function () {
+      var k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      send({ image: { data: c.toDataURL('image/jpeg', 0.85), w: c.width, h: c.height, type: 'image/jpeg' } }).catch(function (e) { say('⚠️ ' + e.message, 5000); });
+    };
+    img.src = url;
+    this.value = '';
+  };
+  load();
+  try {
+    var es = new EventSource('/api/events?t=' + encodeURIComponent(token));
+    es.onopen = function () { $('live').textContent = '● ao vivo'; };
+    es.onmessage = function () { load(); };
+    es.onerror = function () { $('live').textContent = ''; };
+  } catch (e) { setInterval(load, 5000); }
+})();
+</script>
+</body>
+</html>

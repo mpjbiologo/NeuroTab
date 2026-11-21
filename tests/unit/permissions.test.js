@@ -34,8 +34,9 @@ test('permissões de API usadas no código', () => {
     assert.ok(manifest.permissions.includes(p), `falta ${p}`);
     assert.ok(used.includes('chrome.' + p), `${p} declarada mas não usada`);
   }
-  const src = execFileSync('grep', ['-rhoE', "clipboardRead", 'src'], { cwd: root.pathname }).toString();
-  for (const p of manifest.optional_permissions) assert.ok(p === 'clipboardRead' ? src.includes(p) : used.includes('chrome.' + p), `${p} opcional não usada`);
+  const src = execFileSync('grep', ['-rhoE', "clipboardRead|connectNative", 'src'], { cwd: root.pathname }).toString();
+  const special = { clipboardRead: 'clipboardRead', nativeMessaging: 'connectNative' }; // não são namespaces chrome.*
+  for (const p of manifest.optional_permissions) assert.ok(special[p] ? src.includes(special[p]) : used.includes('chrome.' + p), `${p} opcional não usada`);
 });
 
 test('manifest do Firefox é gerado corretamente', () => {
