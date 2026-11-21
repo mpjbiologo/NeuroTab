@@ -94,7 +94,8 @@ test('Opções: escolha do motor, servidores conhecidos e teste de conexão do W
     let tested = 0;
     await x.ctx.route('http://127.0.0.1:8000/**', (r) => { tested++; r.fulfill({ json: { text: '' }, headers: CORS }); });
     const p = await x.open('src/options.html');
-    await p.click('[data-tab="ia"]');
+    await p.evaluate(() => { location.hash = 'voz'; });
+    await p.waitForSelector('#page-voz:not([hidden])');
     assert.equal(await p.inputValue('#voiceEngine'), 'auto');
     assert.equal(await p.isVisible('#whisperBox'), false);
     await p.selectOption('#voiceEngine', 'whisper');
@@ -129,7 +130,8 @@ test('Opções: navegador sem pt-BR no computador baixa pt-PT; falha explica o m
     });
     const p = await x.open('src/options.html');
     await x.settings(p, { voiceLang: 'pt-BR' });
-    await p.click('[data-tab="ia"]');
+    await p.evaluate(() => { location.hash = 'voz'; });
+    await p.waitForSelector('#page-voz:not([hidden])');
     await p.waitForFunction(() => /pt-PT/.test(document.querySelector('#deviceStatus').textContent));
     assert.match(await p.textContent('#deviceStatus'), /não tem pt-BR no computador; vamos usar pt-PT/);
     // recusa: motivo na tela e o Whisper aparece como alternativa

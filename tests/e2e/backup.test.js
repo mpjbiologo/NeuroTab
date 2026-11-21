@@ -16,7 +16,7 @@ test('backup completo: importar, exportar com chaves protegidas e restaurar', as
     assert.equal((await x.storage(o, 'nt_data')).links.length, 18);
 
     await x.settings(o, { ai: { keys: { gemini: 'AIzaSyTESTE-chave-1234567890' } }, brapiToken: 'BRAPI' });
-    await o.click('[data-tab=backup]');
+    await o.evaluate(() => { location.hash = 'exportar'; });
     await o.check('#inclKeys');
     await o.fill('#bkPwd', 'segredo123');
     await o.fill('#bkPwd2', 'segredo123');
@@ -31,7 +31,7 @@ test('backup completo: importar, exportar com chaves protegidas e restaurar', as
 
     // apaga a chave e restaura: senha errada mostra erro, senha certa restaura
     await x.settings(o, { ai: { keys: {} }, brapiToken: '' });
-    await o.click('[data-tab=backup]');
+    await o.evaluate(() => { location.hash = 'importar'; });
     await o.setInputFiles('#importFile', file);
     await o.waitForSelector('#pwdDlg[open]');
     await o.fill('#pwdIn', 'errada');
@@ -46,7 +46,7 @@ test('backup completo: importar, exportar com chaves protegidas e restaurar', as
 
     // backup comum (sem marcar) nunca leva chaves
     await o.reload();
-    await o.click('[data-tab=backup]');
+    await o.evaluate(() => { location.hash = 'exportar'; });
     const [dl2] = await Promise.all([o.waitForEvent('download'), o.click('#exportBtn')]);
     await dl2.saveAs(join(tmp, 'c.json'));
     assert.ok(!readFileSync(join(tmp, 'c.json'), 'utf8').includes('AIzaSyTESTE'));

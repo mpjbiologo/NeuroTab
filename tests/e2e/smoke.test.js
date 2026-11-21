@@ -11,8 +11,10 @@ for (const [locale, word] of [['pt-BR', 'Captura rápida'], ['en-US', 'Quick cap
       assert.ok(await nt.isVisible('#clock'), 'relógio visível');
       assert.ok((await nt.textContent('body')).includes(word), `widget de captura em ${locale}`);
       const opt = await x.open('src/options.html');
-      for (const tab of await opt.$$eval('[data-tab]', (els) => els.map((e) => e.dataset.tab))) {
-        await opt.click(`[data-tab="${tab}"]`);
+      // todas as sub-abas da lateral abrem sem erro
+      for (const page of await opt.$$eval('.side-link', (els) => els.map((e) => e.dataset.page))) {
+        await opt.evaluate((pg) => { location.hash = pg; }, page);
+        await opt.waitForSelector(`#page-${page}:not([hidden])`);
       }
       await x.open('src/popup.html');
       assert.deepEqual(x.errors, []);

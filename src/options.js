@@ -1,5 +1,6 @@
 // NeuroTab — página de configurações.
 import { setupAccounts } from './options-accounts.js';
+import { setupNav } from './options-nav.js';
 import {
   DATA_KEY, SEARCH_ENGINES, DEFAULT_SETTINGS, mergeSettings,
   loadData, saveData, loadBg, saveBg, parseBackup, toBackup, collectSecrets, applySecrets, uid,
@@ -48,12 +49,12 @@ async function init() {
   setupThemePicker();
   fillSettings();
   bindSettings();
-  setupTabs();
   setupBackground();
   setupAi();
   setupNotes();
   setupBackup();
   setupAccounts(toast);
+  setupNav(); // depois de tudo montado: as seções viram páginas da lateral
   setupDonation();
   setupVoiceOptions();
   setupPhotos();
@@ -65,20 +66,6 @@ async function init() {
   chrome.storage.onChanged.addListener(async (c, area) => {
     if (area === 'local' && c[DATA_KEY]) { data = await loadData(); applyTheme(themeOf(data.settings)); paintThemePicker(); fillSettings(); showStats(); renderPlaces(); }
   });
-}
-
-// ---------- Abas ----------
-function setupTabs() {
-  const open = (name) => {
-    $$('.tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
-    $$('main > section').forEach((s) => { s.hidden = s.id !== 'tab-' + name; });
-    history.replaceState(null, '', '#' + name);
-  };
-  $$('.tabs button').forEach((b) => b.addEventListener('click', () => open(b.dataset.tab)));
-  $('#donateBtn').addEventListener('click', () => { open('apoie'); scrollTo({ top: 0, behavior: 'smooth' }); });
-  const fromHash = () => { const h = location.hash.slice(1); if ($('#tab-' + h)) open(h); };
-  window.addEventListener('hashchange', fromHash);
-  fromHash();
 }
 
 // ---------- Configurações simples (data-k) ----------

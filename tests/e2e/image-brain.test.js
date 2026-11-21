@@ -252,7 +252,7 @@ test('Configurações: aba Mídia com as opções de imagens', async () => {
   const x = await launch();
   try {
     const o = await x.open('src/options.html#midia');
-    await o.waitForSelector('#tab-midia:not([hidden])');
+    await o.waitForSelector('#page-imagens:not([hidden])');
     assert.equal(await o.inputValue('select[data-k="media.save"]'), 'ask');
     await o.selectOption('select[data-k="media.save"]', 'auto');
     await o.selectOption('#mediaProvider', 'openai');
@@ -261,8 +261,8 @@ test('Configurações: aba Mídia com as opções de imagens', async () => {
     assert.equal(s.media.save, 'auto');
     assert.equal(s.media.provider, 'openai');
     assert.match(await o.textContent('#mediaProviderNote'), /Falta a chave de OpenAI/);
-    assert.equal(await o.isVisible('#tab-midia #visionModel'), true);
-    assert.equal(await o.locator('#tab-ia >> text=Ler o texto das imagens salvas').count(), 0, 'saiu da aba IA');
+    assert.equal(await o.isVisible('#page-imagens #visionModel'), true);
+    assert.equal(await o.locator('.pane[data-page^="ia"] >> text=Ler o texto das imagens salvas').count(), 0, 'saiu da aba IA');
     assert.deepEqual(x.errors, []);
   } finally {
     await x.close();

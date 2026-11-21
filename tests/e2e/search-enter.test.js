@@ -87,7 +87,7 @@ test('"Salvar como tarefa" cria a tarefa com o lembrete do texto; Shift+Enter co
 test('Opções: o Enter da barra pode ser trocado', async () => {
   const x = await launch();
   try {
-    const o = await x.open('src/options.html');
+    const o = await x.open('src/options.html#pesquisa');
     assert.equal(await o.inputValue('select[data-k="searchEnter"]'), 'web');
     await o.selectOption('select[data-k="searchEnter"]', 'ask');
     await o.waitForTimeout(300);
