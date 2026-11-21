@@ -52,6 +52,12 @@ export const FEATURES = {
     origins: ['http://localhost/*', 'http://127.0.0.1/*'],
     managed: true,
   },
+  clipboardSites: {
+    label: 'Área de transferência nos sites',
+    why: 'Quando você liga "Ao copiar em sites" no widget Área de transferência, guarda neste computador o texto que você copia e o site de origem. Nada é enviado. Não funciona em janelas anônimas nem em campos de senha.',
+    origins: ['https://*/*'],
+    managed: true, // pedido no widget
+  },
   sites: {
     label: 'Outros sites (sob demanda)',
     why: 'Pedido site a site quando você adiciona um feed de notícias, salva uma imagem pelo menu ou usa uma IA com endereço próprio.',
