@@ -7,7 +7,8 @@ import {
   CLIP_KEY, CLIP_CFG_KEY, KINDS, RETENTION, DEFAULT_IGNORE, loadClips, clipConfig, setClipConfig, addClip, updateClip,
   removeClip, clearClips, pruneClips, searchClips, shrinkImage, dataUrlToBlob, hostOf,
 } from '../lib/clipboard.js';
-import { shareTargets } from '../lib/clipboard-share.js';
+import { shareConfig } from '../lib/clipboard-share.js';
+import { openShareDialog, qrDialog, QR_MAX } from './clipboard-share-ui.js';
 import { t } from '../lib/i18n.js';
 
 const perms = () => globalThis.chrome?.permissions;
@@ -45,6 +46,7 @@ export default {
     const list = h('ul', { class: 'clip-list' });
     const drop = h('div', { class: 'clip-drop', tabindex: '0', title: 'Clique aqui e cole (Ctrl+V)' }, '⌨️ Clique aqui e cole (Ctrl+V)');
     ctx.actions.append(
+      h('button', { title: 'Compartilhar com outros aparelhos', onclick: () => openShareDialog(ctx) }, '📤'),
       h('button', { title: 'Colar o que está copiado agora', onclick: () => pasteNow() }, '📋'),
       h('button', { title: 'Configurar a área de transferência', onclick: () => settings() }, '⚙️'),
     );
@@ -117,19 +119,27 @@ export default {
     }
     function row(it) {
       const icon = KINDS[it.kind]?.icon || '📄';
-      const meta = [it.source?.url ? hostOf(it.source.url) : '', relTime(it.updatedAt), it.count > 1 ? `×${it.count}` : ''].filter(Boolean).join(' · ');
+      const share = shareConfig(cfg);
+      const meta = [
+        it.origin === 'remote' ? `📥 ${it.from?.name || t('outro aparelho')}` : it.source?.url ? hostOf(it.source.url) : '',
+        relTime(it.updatedAt), it.count > 1 ? `×${it.count}` : '',
+        it.sharedAt && it.sharedVia?.length ? '📤 ✓' : '', it.shareError ? '⚠️' : '',
+      ].filter(Boolean).join(' · ');
+      const canSend = share.enabled && share.direction !== 'receive' && it.origin !== 'remote';
       const btn = (title, label, fn) => h('button', { class: 'chip', type: 'button', title, onclick: (e) => { e.stopPropagation(); fn().catch((err) => ctx.toast(err.message)); } }, label);
       return h('li', { class: 'clip-item' + (it.pinned ? ' pinned' : ''), 'data-kind': it.kind },
         h('button', { class: 'clip-main', type: 'button', title: t('Clique para copiar de novo'), onclick: () => copyBack(it) },
           h('span', { class: 'clip-ico', 'aria-hidden': 'true' }, icon), preview(it)),
         h('div', { class: 'clip-meta' },
           h('small', { class: 'muted', title: it.source?.title || '' }, meta),
-          h('span', { class: 'clip-acts' },
+          h('span', { class: 'clip-acts', title: it.shareError || '' },
             btn(it.pinned ? 'Desafixar' : 'Fixar (não apaga sozinho)', it.pinned ? '★' : '☆', () => updateClip(it.id, { pinned: !it.pinned })),
             it.kind === 'link' ? h('a', { class: 'chip', href: /^https?:/i.test(it.text.trim()) ? it.text.trim() : 'https://' + it.text.trim(), target: '_blank', rel: 'noopener noreferrer', title: t('Abrir'), onclick: (e) => e.stopPropagation() }, '↗') : null,
             it.kind !== 'image' ? btn('Salvar como nota', '🧠', () => toBrain(it, 'note')) : null,
             it.kind !== 'image' && it.kind !== 'link' ? btn('Salvar como tarefa', '☑️', () => toBrain(it, 'task')) : null,
             it.kind === 'image' ? btn('Guardar na biblioteca de imagens', '🖼️', () => toLibrary(it)) : null,
+            it.kind !== 'image' && it.text.length <= QR_MAX ? btn('Mostrar QR para o celular', '📱', async () => qrDialog(t('Ler com o celular'), it.text, t('Aponte a câmera do celular para o código.'))) : null,
+            canSend ? btn(it.sharedAt ? 'Enviar de novo para meus aparelhos' : 'Enviar para meus aparelhos', '📤', async () => { await updateClip(it.id, { shareRequested: true, sharedAt: null, shareError: '' }); ctx.toast('Enviando para seus aparelhos 📤'); }) : null,
             btn('Excluir', '✕', () => removeClip(it.id)))));
     }
     function render() {
@@ -173,7 +183,6 @@ export default {
         if (!ok) { monitor.checked = false; say.textContent = t('Sem a permissão de ler a área de transferência, o acompanhamento não funciona.'); return; }
         if (!confirm(t('Ligar o acompanhamento? A NeuroTab vai guardar, só neste computador, tudo o que você copiar (de qualquer programa) enquanto o navegador estiver aberto. O ícone da extensão mostra um ● enquanto estiver ligado. Senhas e códigos são ignorados quando reconhecidos.'))) monitor.checked = false;
       });
-      const targets = shareTargets();
       const dlg = h('dialog', { class: 'dlg clip-dlg' }, h('form', { method: 'dialog' },
         h('h2', {}, '📋 Área de transferência'),
         h('p', { class: 'muted' }, 'Tudo fica só neste computador: não sincroniza, não vai para o backup e não é enviado à IA. Só vira nota se você pedir.'),
@@ -195,7 +204,8 @@ export default {
         h('label', {}, 'Sites ignorados (um por linha)', ignore),
         h('button', { class: 'btn', type: 'button', onclick: () => { ignore.value = DEFAULT_IGNORE.join('\n'); } }, 'Restaurar a lista padrão'),
         h('h3', {}, 'Compartilhar com outros aparelhos'),
-        targets.length ? null : h('p', { class: 'muted' }, '🔜 Em breve: ver e enviar o que você copia entre seus computadores e o celular, com a mesma criptografia da sincronização.'),
+        h('p', { class: 'muted' }, 'QR code, sua nuvem, ntfy, Telegram ou a rede local: você escolhe.'),
+        h('button', { class: 'btn', type: 'button', onclick: () => { dlg.close(); openShareDialog(ctx); } }, '📤 Configurar compartilhamento'),
         say,
         h('div', { class: 'actions' },
           h('button', { class: 'btn danger', type: 'button', onclick: async () => {
@@ -236,14 +246,33 @@ export default {
       }, 2000);
     }
 
+    // 🔔 ntfy ao vivo: com a nova aba aberta, chega na hora (o fundo confere a cada 30 s)
+    let live = null;
+    let liveKey = '';
+    function syncLive() {
+      const sh = shareConfig(cfg);
+      const on = sh.enabled && sh.direction !== 'send' && sh.ntfy.on && sh.ntfy.topic;
+      const key = on ? `${sh.ntfy.server}|${sh.ntfy.topic}` : '';
+      if (key === liveKey) return;
+      live?.close();
+      live = null;
+      liveKey = key;
+      if (!on) return;
+      try {
+        live = new EventSource(`${sh.ntfy.server.replace(/\/+$/, '')}/${encodeURIComponent(sh.ntfy.topic)}/sse`);
+        live.onmessage = () => chrome.runtime.sendMessage({ type: 'clipshare:poll', only: 'ntfy' }).catch(() => {});
+      } catch { /* sem ao vivo: fica o alarme */ }
+    }
+
     async function reload() {
       [items, cfg] = await Promise.all([loadClips(), clipConfig()]);
       render();
       syncPolling();
+      syncLive();
     }
     const onStore = (changes, areaName) => { if (areaName === 'local' && (changes[CLIP_KEY] || changes[CLIP_CFG_KEY])) reload(); };
     chrome.storage.onChanged.addListener(onStore);
-    ctx.onCleanup(() => { chrome.storage.onChanged.removeListener(onStore); clearInterval(pollTimer); });
+    ctx.onCleanup(() => { chrome.storage.onChanged.removeListener(onStore); clearInterval(pollTimer); live?.close(); });
     ctx.every(60_000, render); // "há 2 min" anda
     pruneClips().finally(reload);
     return {};

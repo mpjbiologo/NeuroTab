@@ -34,6 +34,16 @@ jobs:
       - name: Testes de unidade
         run: npm run test:unit
 
+      # NeuroTab Ponte (rede local): testes em Go; o e2e também compila e usa a Ponte de verdade
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: ponte/go.mod
+
+      - name: Testes da NeuroTab Ponte
+        working-directory: ponte
+        run: go vet ./... && go test ./...
+
       - name: Empacotar (Chromium e Firefox)
         run: ./scripts/build.sh
 

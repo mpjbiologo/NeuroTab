@@ -93,8 +93,9 @@ export function looksSensitive(text) {
   if (/^000201/.test(s)) return false; // Pix copia e cola: é para colar no banco, não é segredo
   if (s.length >= 24 && /^[A-Za-z0-9+/=_-]+$/.test(s) && /\d/.test(s) && /[a-z]/i.test(s)) return 'token';
   if (s.length >= 8 && s.length <= 64) {
+    // senha: 3 tipos de caractere, com letra e número ("Recebido!" ou "Olá!" não são senhas)
     const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((r) => r.test(s)).length;
-    if (classes >= 3) return 'senha';
+    if (classes >= 3 && /\d/.test(s) && /[A-Za-z]/.test(s)) return 'senha';
   }
   return false;
 }
@@ -163,8 +164,9 @@ export async function pruneClips({ startup = false, now = Date.now() } = {}) {
  * Guarda um item. Recusa (devolve { skipped }) se estiver pausado, se o site for ignorado ou se parecer senha.
  * via: 'manual' | 'paste' | 'site' | 'monitor' | 'remote' (outro aparelho, no futuro)
  */
-export async function addClip({ text = '', image = null, via = 'manual', source = null, force = false, now = Date.now() }) {
+export async function addClip({ text = '', image = null, via = 'manual', source = null, force = false, from = null, now = Date.now() }) {
   const cfg = await clipConfig();
+  if (via === 'remote') force = true; // veio de outro aparelho seu, de propósito
   if (!force && cfg.paused && via !== 'manual' && via !== 'paste') return { skipped: 'paused' };
   if (source?.url && ignoredSite(source.url, cfg.ignore)) return { skipped: 'site' };
   const body = String(text || '').replace(/\r\n/g, '\n');
@@ -186,7 +188,9 @@ export async function addClip({ text = '', image = null, via = 'manual', source 
         text: image ? '' : body.slice(0, MAX_TEXT), truncated: body.length > MAX_TEXT,
         image: image ? { data: image.data, w: image.w, h: image.h, type: image.type || 'image/webp', size: image.size || 0 } : null,
         source: source && (source.url || source.title) ? { url: source.url || '', title: (source.title || '').slice(0, 200) } : null,
-        via, deviceId: dev, origin: via === 'remote' ? 'remote' : 'local', pinned: false, count: 1, createdAt: now, updatedAt: now,
+        via, deviceId: via === 'remote' ? from?.id || '' : dev, origin: via === 'remote' ? 'remote' : 'local',
+        from: via === 'remote' ? { id: from?.id || '', name: String(from?.name || '').slice(0, 60) } : null,
+        pinned: false, count: 1, createdAt: now, updatedAt: now,
       };
     }
     const next = pruneList([item, ...items.filter((it) => it.id !== item.id)], cfg, now);

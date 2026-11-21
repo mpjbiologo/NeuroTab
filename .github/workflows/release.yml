@@ -53,6 +53,40 @@ jobs:
           tag_name: ${{ github.event.release.tag_name }}
           files: dist/*.zip
 
+  # 3b) NeuroTab Ponte (rede local da área de transferência): um programa por sistema, anexado à release.
+  #     O widget baixa de releases/latest/download/neurotab-ponte-<sistema>.
+  ponte:
+    needs: testes
+    if: github.event_name == 'release'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: ponte/go.mod
+
+      - name: Compilar para Windows, macOS e Linux
+        working-directory: ponte
+        run: |
+          V=$(jq -r .version ../manifest.json)
+          mkdir -p dist
+          build() { CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build -trimpath -ldflags "-s -w -X main.version=$V" -o "dist/$3" .; }
+          build windows amd64 neurotab-ponte-windows-amd64.exe
+          build darwin  arm64 neurotab-ponte-macos-arm64
+          build darwin  amd64 neurotab-ponte-macos-amd64
+          build linux   amd64 neurotab-ponte-linux-amd64
+          build linux   arm64 neurotab-ponte-linux-arm64
+          (cd dist && sha256sum neurotab-ponte-* > neurotab-ponte-SHA256SUMS.txt)
+          ls -la dist
+
+      - name: Anexar à release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: ponte/dist/*
+
   # 4) Envia a versão para a loja do Firefox (AMO). A Mozilla revisa e, aprovada, todo mundo atualiza sozinho.
   #    Precisa dos segredos AMO_JWT_ISSUER e AMO_JWT_SECRET (docs/store/FIREFOX.md). Sem eles, é pulado.
   #    Job separado: se a AMO falhar, a release e as outras lojas não são afetadas (e dá para rodar de novo só ele).

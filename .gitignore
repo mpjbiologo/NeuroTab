@@ -5,3 +5,4 @@ node_modules/
 *.spd
 build/
 !tests/fixtures/*.spd
+ponte/dist/

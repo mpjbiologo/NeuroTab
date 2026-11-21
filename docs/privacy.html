@@ -18,7 +18,7 @@
 <body>
 <p><a href="./">← NeuroTab</a></p>
 <h1>Política de privacidade</h1>
-<p class="muted">Última atualização: 20 de novembro de 2026 · versão 0.7.7</p>
+<p class="muted">Última atualização: 20 de novembro de 2026 · versão 0.7.7.2</p>
 <nav><a href="#pt">Português</a><a href="#en">English</a><a href="#es">Español</a></nav>
 
 <section id="pt">
@@ -50,7 +50,16 @@
 <h3>Permissões</h3>
 <p>Cotações, endereços do Trânsito, fotos do Bing/NASA, histórico de mais visitados, abas fechadas e acesso a outros sites são <b>opcionais</b>: o navegador pede sua autorização na primeira vez que você usa o recurso. As chaves de API ficam só no seu navegador e só entram no backup exportado se você marcar essa opção (com senha opcional para criptografá-las).</p>
 <h3>Área de transferência</h3>
-<p>O widget Área de transferência é opcional e começa só com o que você colar nele. Se você ligar "Ao copiar em sites" ou "Acompanhar tudo o que eu copio", a NeuroTab guarda o que você copia <b>só neste computador</b>: não sincroniza, não vai para o backup, não é enviado à IA nem a nenhum servidor. Campos de senha, sites de bancos e o que parece senha, código ou cartão são ignorados. Por padrão, o histórico é apagado quando o navegador fecha ou o computador desliga, e você pode pausar, limpar ou excluir itens a qualquer momento.</p>
+<p>O widget Área de transferência é opcional e começa só com o que você colar nele. Se você ligar "Ao copiar em sites" ou "Acompanhar tudo o que eu copio", a NeuroTab guarda o que você copia <b>neste computador</b> (só sai dele se você ligar o compartilhamento, abaixo): não sincroniza, não vai para o backup, não é enviado à IA nem a nenhum servidor. Campos de senha, sites de bancos e o que parece senha, código ou cartão são ignorados. Por padrão, o histórico é apagado quando o navegador fecha ou o computador desliga, e você pode pausar, limpar ou excluir itens a qualquer momento.</p>
+<h3>Compartilhar a área de transferência com outros aparelhos</h3>
+<p>Opcional e desligado por padrão. Você escolhe o caminho e o que é enviado (só o que você mandar, os fixados ou tudo):</p>
+<ul>
+<li><b>QR code:</b> o item aparece como código na tela; nada sai do computador.</li>
+<li><b>Minha nuvem:</b> um arquivo na pasta oculta da NeuroTab no seu Google Drive, criptografado com a sua senha de sincronização. A página do celular (mpjbiologo.github.io/NeuroTab/cola/) entra com a sua conta e lê esse arquivo direto do Google, no seu celular.</li>
+<li><b>ntfy:</b> as mensagens passam pelo servidor ntfy que você escolher (ntfy.sh ou um próprio), criptografadas com uma chave que só vai no QR de pareamento; o servidor não consegue ler, a menos que você ligue a opção de texto aberto.</li>
+<li><b>Telegram:</b> as mensagens vão para uma conversa sua com o seu próprio bot e passam pelos servidores do Telegram, que podem ler o conteúdo.</li>
+<li><b>Rede local:</b> o programa opcional NeuroTab Ponte, no seu computador, abre uma página para o celular no mesmo Wi-Fi, protegida por um código de acesso; nada sai da sua rede.</li>
+</ul>
 <h3>Contas Google e dados das APIs do Google</h3>
 <p>O uso e a transferência, pela NeuroTab, de informações recebidas das APIs do Google seguem a <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de Dados do Usuário dos Serviços de API do Google</a>, incluindo os requisitos de Uso Limitado. Os dados da sua conta são usados só para os recursos que você ligou (sincronizar suas notas, mostrar e editar sua agenda), não são enviados a nenhum outro lugar, não são usados para publicidade nem para treinar modelos de IA, e nenhuma pessoa os lê. Você pode desconectar a conta a qualquer momento em Configurações → Contas e sincronização (isso revoga o acesso) e apagar os dados da nuvem pelo botão "Apagar dados da nuvem".</p>
 <h3>Seus dados, seu controle</h3>
@@ -89,6 +98,15 @@
 <p>Quotes, Traffic addresses, Bing/NASA photos, top sites, recently closed tabs and access to other sites are <b>optional</b>: the browser asks you the first time you use the feature. API keys stay in your browser and only go into an exported backup if you tick that option (with an optional password to encrypt them).</p>
 <h3>Clipboard</h3>
 <p>The Clipboard widget is optional and starts with only what you paste into it. If you turn on "When copying on websites" or "Monitor everything I copy", NeuroTab keeps what you copy <b>only on this computer</b>: it isn't synced, isn't included in backups and isn't sent to the AI or to any server. Password fields, bank websites and anything that looks like a password, code or card are ignored. By default, the history is deleted when the browser closes or the computer shuts down, and you can pause, clear or delete items at any time.</p>
+<h3>Sharing the clipboard with other devices</h3>
+<p>Optional and off by default. You choose the path and what is sent (only what you send, pinned items or everything):</p>
+<ul>
+<li><b>QR code:</b> the item appears as a code on the screen; nothing leaves the computer.</li>
+<li><b>My cloud:</b> a file in NeuroTab's hidden folder in your Google Drive, encrypted with your sync password. The phone page (mpjbiologo.github.io/NeuroTab/cola/) signs in with your account and reads that file directly from Google, on your phone.</li>
+<li><b>ntfy:</b> messages go through the ntfy server you choose (ntfy.sh or your own), encrypted with a key that only goes in the pairing QR; the server can't read them unless you turn on plain text.</li>
+<li><b>Telegram:</b> messages go to a chat with your own bot and pass through Telegram's servers, which can read the content.</li>
+<li><b>Local network:</b> the optional NeuroTab Ponte program on your computer opens a page for the phone on the same Wi-Fi, protected by an access code; nothing leaves your network.</li>
+</ul>
 <h3>Google accounts and Google API data</h3>
 <p>NeuroTab's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Your account data is used only for the features you turned on (syncing your notes, showing and editing your calendar), is not sent anywhere else, is not used for advertising or to train AI models, and no human reads it. You can disconnect the account at any time in Settings → Accounts & sync (this revokes access) and delete the cloud data with "Delete cloud data".</p>
 <h3>Your data, your control</h3>
@@ -127,6 +145,15 @@
 <p>Las cotizaciones, las direcciones de Tráfico, las fotos de Bing/NASA, los sitios más visitados, las pestañas cerradas y el acceso a otros sitios son <b>opcionales</b>: el navegador te pide permiso la primera vez que usas la función. Las claves de API se quedan en tu navegador y solo se incluyen en la copia exportada si marcas esa opción (con contraseña opcional para cifrarlas).</p>
 <h3>Portapapeles</h3>
 <p>El widget Portapapeles es opcional y empieza solo con lo que pegues en él. Si activas "Al copiar en sitios" o "Seguir todo lo que copio", NeuroTab guarda lo que copias <b>solo en esta computadora</b>: no se sincroniza, no va a la copia de seguridad y no se envía a la IA ni a ningún servidor. Los campos de contraseña, los sitios de bancos y lo que parece contraseña, código o tarjeta se ignoran. De forma predeterminada, el historial se borra cuando se cierra el navegador o se apaga la computadora, y puedes pausar, borrar o eliminar elementos en cualquier momento.</p>
+<h3>Compartir el portapapeles con otros dispositivos</h3>
+<p>Opcional y desactivado de forma predeterminada. Tú eliges el camino y qué se envía (solo lo que mandes, los fijados o todo):</p>
+<ul>
+<li><b>Código QR:</b> el elemento aparece como código en la pantalla; nada sale de la computadora.</li>
+<li><b>Mi nube:</b> un archivo en la carpeta oculta de NeuroTab en tu Google Drive, cifrado con tu contraseña de sincronización. La página del celular (mpjbiologo.github.io/NeuroTab/cola/) entra con tu cuenta y lee ese archivo directo de Google, en tu celular.</li>
+<li><b>ntfy:</b> los mensajes pasan por el servidor ntfy que elijas (ntfy.sh o uno propio), cifrados con una clave que solo va en el QR de emparejamiento; el servidor no puede leerlos, salvo que actives el texto abierto.</li>
+<li><b>Telegram:</b> los mensajes van a una conversación con tu propio bot y pasan por los servidores de Telegram, que pueden leer el contenido.</li>
+<li><b>Red local:</b> el programa opcional NeuroTab Ponte, en tu computadora, abre una página para el celular en el mismo Wi-Fi, protegida por un código de acceso; nada sale de tu red.</li>
+</ul>
 <h3>Cuentas de Google y datos de las API de Google</h3>
 <p>El uso y la transferencia, por parte de NeuroTab, de información recibida de las API de Google cumplen la <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de Datos del Usuario de los Servicios de API de Google</a>, incluidos los requisitos de Uso Limitado. Los datos de tu cuenta se usan solo para las funciones que activaste (sincronizar tus notas, mostrar y editar tu agenda), no se envían a ningún otro lugar, no se usan para publicidad ni para entrenar modelos de IA, y ninguna persona los lee. Puedes desconectar la cuenta en cualquier momento en Configuración → Cuentas y sincronización (esto revoca el acceso) y borrar los datos de la nube con "Borrar datos de la nube".</p>
 <h3>Tus datos, tu control</h3>
