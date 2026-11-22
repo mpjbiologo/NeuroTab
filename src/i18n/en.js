@@ -1197,6 +1197,13 @@ export default {
     "Resumir com a IA na internet sem perguntar": "Summarize with online AI without asking",
     "Guardar as imagens dos posts na biblioteca": "Keep post images in the library",
     "Ler os avisos de licença completos": "Read the full license notices",
+    "Ícones dos sites": "Site icons",
+    "Só o navegador": "Browser only",
+    "Google — alta resolução": "Google — high resolution",
+    "Atualizar os ícones dos atalhos": "Refresh shortcut icons",
+    "Atualizar ícones": "Refresh icons",
+    "Sem a permissão, os ícones continuam vindo só do navegador.": "Without permission, icons keep coming from the browser only.",
+    "✓ Ligado.": "✓ On.",
   },
   // Textos com partes variáveis: {0}, {1}… (a ordem pode mudar na tradução)
   patterns: [

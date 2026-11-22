@@ -38,7 +38,7 @@ export const ctx = {
   semanticOn: () => semanticOn(S.data.settings) && embedConfig(S.data.settings).supported,
   smartSearch: (q, limit = 20, list = S.items) => hybridSearch(S.data.settings, list, q, limit),
   openLinkDialog: (link, preset) => editLink(link, preset),
-  faviconFor: (l) => l.favicon || faviconUrl(l.url),
+  faviconFor: (l) => l.favicon || faviconUrl(l.url, 64),
   openSettings: (hash = '') => { location.href = 'options.html' + hash; },
   /** Trechos de dados dos widgets para o cérebro (contrato brainContext, docs/dev/WIDGETS.md). */
   brainExtras: (question) => brainExtras(question),

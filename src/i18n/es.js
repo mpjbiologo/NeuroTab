@@ -1197,6 +1197,13 @@ export default {
     "Resumir com a IA na internet sem perguntar": "Resumir con la IA en internet sin preguntar",
     "Guardar as imagens dos posts na biblioteca": "Guardar las imágenes de los posts en la biblioteca",
     "Ler os avisos de licença completos": "Leer los avisos de licencia completos",
+    "Ícones dos sites": "Iconos de los sitios",
+    "Só o navegador": "Solo el navegador",
+    "Google — alta resolução": "Google — alta resolución",
+    "Atualizar os ícones dos atalhos": "Actualizar los iconos de los accesos",
+    "Atualizar ícones": "Actualizar iconos",
+    "Sem a permissão, os ícones continuam vindo só do navegador.": "Sin el permiso, los iconos siguen viniendo solo del navegador.",
+    "✓ Ligado.": "✓ Activado.",
   },
   patterns: [
     ["{0} dias", "{0} días"],

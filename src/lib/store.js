@@ -83,6 +83,7 @@ export const DEFAULT_SETTINGS = {
   slideSource: 'local', // local | bing | nasa | all
   slideInterval: 5, // minutos
   tileRadius: 4,
+  iconSource: 'browser', // de onde vêm os ícones dos atalhos: browser | google | duckduckgo (precisa da permissão)
   tiles: DEFAULT_TILES, // formato, tamanho e cores dos blocos de atalho (#59)
   look: DEFAULT_LOOK, // ajustes do editor visual por cima do tema (#58)
   customThemes: [], // [{ id, name, base, look }] temas salvos pela pessoa
@@ -149,6 +150,7 @@ export function mergeSettings(s = {}) {
     mediaSave: sanitizeMediaSave(s.mediaSave),
     customThemes: Array.isArray(s.customThemes) ? s.customThemes.map((t) => sanitizeTheme(t, THEME_IDS)).filter(Boolean).slice(0, MAX_THEMES) : [],
     dockMode: ['always', 'auto', 'collapsed'].includes(s.dockMode) ? s.dockMode : 'always',
+    iconSource: ['browser', 'google', 'duckduckgo'].includes(s.iconSource) ? s.iconSource : 'browser',
     ai: { ...DEFAULT_AI, ...(s.ai || {}), keys: { ...(s.ai?.keys || {}) }, models: { ...(s.ai?.models || {}) }, embedModels: { ...(s.ai?.embedModels || {}) }, baseUrls: { ...(s.ai?.baseUrls || {}) } },
   };
 }
@@ -254,18 +256,67 @@ export function faviconUrl(pageUrl, size = 32) {
   return u.toString();
 }
 
-// Baixa o favicon, devolve { favicon: dataURL, color: '#rrggbb' } com a cor dominante.
+// ---------- Ícones dos sites em boa resolução ----------
+// Fontes, da mais privada para a mais completa. O navegador só guarda 16–32 px da maioria dos sites;
+// o serviço de ícones do Google entrega até 256 px (só o endereço do site vai para lá) e o DuckDuckGo, o .ico do site.
+export const ICON_SOURCES = {
+  browser: { label: 'Só o navegador (pode ficar borrado)', origins: [] },
+  google: { label: 'Google — alta resolução', origins: ['https://t1.gstatic.com/*'] },
+  duckduckgo: { label: 'DuckDuckGo', origins: ['https://icons.duckduckgo.com/*'] },
+};
+export const ICON_SIZE = 96; // guardado em 96×96: nítido até o maior bloco em tela de alta densidade
+
+export function iconCandidates(pageUrl, source = 'browser') {
+  let u;
+  try { u = new URL(pageUrl); } catch { return []; }
+  const out = [];
+  if (source === 'google') out.push(`https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(u.origin)}&size=128`);
+  if (source === 'duckduckgo' || !HAS_FAVICON_API) out.push(`https://icons.duckduckgo.com/ip3/${u.hostname}.ico`);
+  if (HAS_FAVICON_API) out.push(faviconUrl(pageUrl, 128), faviconUrl(pageUrl, 32));
+  return out;
+}
+
+async function iconSource() {
+  try {
+    const src = (await chrome.storage.local.get(DATA_KEY))[DATA_KEY]?.settings?.iconSource;
+    if (!ICON_SOURCES[src] || src === 'browser') return 'browser';
+    const ok = await chrome.permissions.contains({ origins: ICON_SOURCES[src].origins });
+    return ok ? src : 'browser';
+  } catch { return 'browser'; }
+}
+
+/** Baixa as fontes em ordem e fica com a maior imagem (para na primeira com 96 px ou mais). */
+export async function bestIcon(pageUrl, source) {
+  let best = null;
+  for (const url of iconCandidates(pageUrl, source ?? (await iconSource()))) {
+    try {
+      const r = await fetch(url, { credentials: 'omit' });
+      if (!r.ok) continue;
+      const bmp = await createImageBitmap(await r.blob());
+      const side = Math.min(bmp.width, bmp.height);
+      if (side < 8) continue;
+      if (!best || side > best.side) best = { bmp, side };
+      if (side >= ICON_SIZE) break;
+    } catch { /* tenta a próxima fonte */ }
+  }
+  return best?.bmp || null;
+}
+
+// Baixa o favicon, devolve { favicon: dataURL (até 96×96 PNG), color: '#rrggbb' } com a cor dominante.
 // Funciona na página e no service worker (OffscreenCanvas).
-export async function inspectFavicon(pageUrl) {
+export async function inspectFavicon(pageUrl, { source } = {}) {
   const out = { favicon: '', color: PALETTE[Math.floor(Math.random() * PALETTE.length)] };
   try {
-    const blob = await (await fetch(faviconUrl(pageUrl, 32))).blob();
-    out.favicon = await blobToDataUrl(blob);
-    const bmp = await createImageBitmap(blob);
-    const c = new OffscreenCanvas(bmp.width, bmp.height);
+    const bmp = await bestIcon(pageUrl, source);
+    if (!bmp) throw new Error('sem ícone');
+    const side = Math.min(ICON_SIZE, Math.max(bmp.width, bmp.height));
+    const k = side / Math.max(bmp.width, bmp.height);
+    const c = new OffscreenCanvas(side, side);
     const ctx = c.getContext('2d');
-    ctx.drawImage(bmp, 0, 0);
-    const px = ctx.getImageData(0, 0, bmp.width, bmp.height).data;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bmp, (side - bmp.width * k) / 2, (side - bmp.height * k) / 2, bmp.width * k, bmp.height * k);
+    out.favicon = await blobToDataUrl(await c.convertToBlob({ type: 'image/png' }));
+    const px = ctx.getImageData(0, 0, side, side).data;
     let r = 0, g = 0, b = 0, w = 0, satSum = 0, n = 0;
     for (let i = 0; i < px.length; i += 4) {
       const a = px[i + 3] / 255;
@@ -280,7 +331,7 @@ export async function inspectFavicon(pageUrl) {
     // Ícone sem cor (ex.: globo padrão) → mantém uma cor da paleta.
     if (w > 0 && satSum / n > 0.12) out.color = rgbToHex(r / w, g / w, b / w);
   } catch (e) {
-    console.warn('NeuroTab: favicon indisponível', e);
+    console.warn('NeuroTab: favicon indisponível', e?.message || e);
   }
   return out;
 }

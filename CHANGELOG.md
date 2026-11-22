@@ -1,6 +1,12 @@
 # Changelog
 
-## v0.7.9 — em preparação
+## v0.7.9.1 — em preparação
+**Ícones dos atalhos nítidos.**
+
+- 🔲 Os ícones dos sites agora são guardados em 96 px (antes 32 px). Em Aparência → Estilo dos atalhos → *Ícones dos sites*, escolha **Google — alta resolução** (ou DuckDuckGo) e clique em *Atualizar ícones* para trocar os que já existem. Ícones que você escolheu e as cores não mudam
+- Mesmo sem mudar a fonte, a NeuroTab pede ao navegador o maior ícone que ele tiver de cada site
+
+## v0.7.9
 **Salve Reels, TikToks, vídeos e artigos com resumo, e descubra o que acontece com a sua internet.**
 
 - 🎬 **Salvar no cérebro com resumo (#67):** botão direito na página → NeuroTab → *🎬 Salvar no cérebro com resumo*, o novo botão no ícone da extensão, ou cole o link na Captura rápida

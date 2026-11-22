@@ -6,7 +6,7 @@ import {
   sanitizeLook, isDefaultLook, lookWarnings, rgbToHex, themeFile, parseThemeFile, sanitizeTheme,
 } from './lib/look.js';
 import { DEFAULT_TILES, TILE_PRESETS, presetOf, paintTiles, tileEl, sanitizeTiles } from './lib/tiles.js';
-import { faviconUrl, saveData } from './lib/store.js';
+import { faviconUrl, saveData, inspectFavicon, ICON_SOURCES } from './lib/store.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -86,7 +86,52 @@ function setupTiles() {
   $('#tilePreview').closest('.pane')?.addEventListener('input', () => setTimeout(paintTilesPage, 0));
   $('#tilePreview').closest('.pane')?.addEventListener('change', () => setTimeout(paintTilesPage, 0));
   $('#tileReset').addEventListener('click', () => usePreset('classico', 'Estilo dos atalhos restaurado'));
+  setupIcons();
   paintTilesPage();
+}
+
+// Ícones dos atalhos em alta resolução: fonte (com permissão) e atualizar todos.
+function setupIcons() {
+  const sel = $('#iconSource');
+  sel.value = D().settings.iconSource || 'browser';
+  sel.addEventListener('change', async () => {
+    const src = sel.value;
+    const origins = ICON_SOURCES[src]?.origins || [];
+    if (origins.length && !(await chrome.permissions.request({ origins }).catch(() => false))) {
+      sel.value = D().settings.iconSource || 'browser';
+      api.toast('Sem a permissão, os ícones continuam vindo só do navegador.');
+      return;
+    }
+    D().settings.iconSource = src;
+    await save();
+    paintIconState();
+    if (src !== 'browser') refreshIcons();
+  });
+  $('#iconsRefresh').addEventListener('click', refreshIcons);
+  paintIconState();
+}
+function paintIconState() {
+  $('#iconSourceState').textContent = D().settings.iconSource === 'browser' ? '' : '✓ Ligado.';
+}
+async function refreshIcons() {
+  const btn = $('#iconsRefresh');
+  const links = D().links.filter((l) => !l.icon);
+  if (!links.length) return;
+  btn.disabled = true;
+  let done = 0;
+  const found = new Map(); // id → ícone novo (os dados podem ser recarregados enquanto isso; aplica no fim)
+  for (const l of links) {
+    const { favicon } = await inspectFavicon(l.url, { source: D().settings.iconSource });
+    if (favicon && favicon !== l.favicon) found.set(l.id, favicon);
+    btn.textContent = `${++done}/${links.length}…`;
+  }
+  let better = 0;
+  for (const l of D().links) if (found.has(l.id) && !l.icon) { l.favicon = found.get(l.id); better++; }
+  await save();
+  btn.disabled = false;
+  btn.textContent = 'Atualizar ícones';
+  paintTilesPage();
+  api.toast(`${better} ${better === 1 ? 'ícone atualizado' : 'ícones atualizados'}`);
 }
 
 async function usePreset(id, msg) {
