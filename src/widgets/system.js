@@ -204,9 +204,11 @@ export default {
         out.push(h('div', { class: 'sys-hint' },
           h('p', {}, '🌡 ', h('b', {}, t('Temperaturas no Windows:')), ' ', t('o Windows não entrega as temperaturas a programas comuns. Use o LibreHardwareMonitor (gratuito):')),
           h('ol', {},
-            h('li', {}, h('a', { href: LHM_GUIDE, target: '_blank', rel: 'noopener' }, t('Baixe o LibreHardwareMonitor')), ' ', t('e abra (de preferência como administrador).')),
+            h('li', {}, h('a', { href: LHM_GUIDE, target: '_blank', rel: 'noopener' }, t('Baixe o LibreHardwareMonitor')), ': ', t('na lista de arquivos, escolha'), ' ', h('code', {}, 'LibreHardwareMonitor.zip'), ' ', t('(não o que termina em .NET.10, que exige instalar o .NET 10).')),
+            h('li', {}, t('Descompacte numa pasta que você não vá apagar e abra o LibreHardwareMonitor.exe com o botão direito → Executar como administrador (sem isso, a temperatura do processador costuma ficar vazia).')),
             h('li', {}, t('No menu Options → Remote Web Server → marque "Run" (porta 8085).')),
-            h('li', {}, t('Aqui no ⚙️, ligue "Ler temperaturas do LibreHardwareMonitor".'))),
+            h('li', {}, t('Aqui no ⚙️, ligue "Ler temperaturas do LibreHardwareMonitor".')),
+            h('li', {}, t('Para abrir sozinho com o Windows: Options → Run On Windows Startup.'))),
           lhmErr ? h('p', { class: 'bad' }, '⚠️ ', lhmErr) : null));
       } else if (noTemp && v.notes.includes('temp-mac')) {
         out.push(h('p', { class: 'muted sys-note' }, '🌡 ', t('No macOS, as temperaturas só saem com acesso de administrador. O resto funciona normalmente.')));
