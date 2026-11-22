@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.10.1
+**Passo a passo do LibreHardwareMonitor mais claro.**
+
+- 🌡 O widget Sistema agora diz qual arquivo baixar: **`LibreHardwareMonitor.zip`** (funciona em qualquer Windows 10/11), e não o `LibreHardwareMonitor.NET.10.zip`, que só abre com o .NET 10 instalado
+- Também explica abrir como administrador (sem isso, a temperatura do processador costuma ficar vazia) e como fazê-lo abrir junto com o Windows
+
 ## v0.7.10
 **Veja o que o seu computador está fazendo: temperaturas, memória, discos e os programas que mais gastam.**
 
