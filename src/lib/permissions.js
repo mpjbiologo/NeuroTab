@@ -58,6 +58,19 @@ export const FEATURES = {
     origins: ['https://mail.google.com/*'],
     managed: true, // pedido no widget
   },
+  mediaLinks: {
+    label: 'Salvar mídia a partir de links',
+    why: 'Para salvar no cérebro com resumo um post do Instagram, TikTok, X ou um vídeo do YouTube a partir do link (botão direito no link ou Captura rápida), a NeuroTab abre o link numa aba escondida e lê a legenda, a transcrição e o autor. Para posts do X, busca o texto completo no FixTweet (api.fxtwitter.com). Nada é enviado a esses sites além do próprio pedido da página.',
+    origins: ['https://www.instagram.com/*', 'https://www.tiktok.com/*', 'https://www.youtube.com/*', 'https://x.com/*', 'https://api.fxtwitter.com/*'],
+    data: ['websiteContent'],
+    managed: true, // pedido em Configurações → Mídia
+  },
+  network: {
+    label: 'Widget Rede (velocidade e DNS)',
+    why: 'Mede a velocidade da internet e a latência baixando e enviando dados de teste para o servidor da Cloudflare, e compara a rapidez dos DNS seguros (Cloudflare, Google, Quad9, AdGuard, OpenDNS e NextDNS) com consultas a nomes comuns. Só quando você pede um teste ou liga o monitor; nenhum dado seu é enviado.',
+    origins: ['https://speed.cloudflare.com/*', 'https://cloudflare-dns.com/*', 'https://dns.google/*', 'https://dns.quad9.net/*', 'https://dns.adguard-dns.com/*', 'https://doh.opendns.com/*', 'https://dns.nextdns.io/*'],
+    managed: true, // pedido no widget
+  },
   clipboardSites: {
     label: 'Área de transferência nos sites',
     why: 'Quando você liga "Ao copiar em sites" no widget Área de transferência, guarda neste computador o texto que você copia e o site de origem. Nada é enviado. Não funciona em janelas anônimas nem em campos de senha.',

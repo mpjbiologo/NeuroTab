@@ -11,17 +11,17 @@ export const NAV = [
   { id: 'novaaba', icon: '🏠', label: 'Nova aba', pages: ['pesquisa', 'atalhos', 'relogio', 'timer'] },
   { id: 'ia', icon: '🤖', label: 'Inteligência artificial', pages: ['ia', 'ia-organizar'] },
   { id: 'voz', icon: '🎙️', label: 'Voz', pages: ['voz', 'voz-leitura', 'voz-ativacao', 'voz-comandos'] },
-  { id: 'midia', icon: '🎞️', label: 'Mídia', pages: ['imagens', 'videos'] },
+  { id: 'midia', icon: '🎞️', label: 'Mídia', pages: ['imagens', 'salvar-midia'] },
   { id: 'notas', icon: '📝', label: 'Notas', pages: ['keep', 'exportar-notas', 'limpeza', 'integracoes'] },
   { id: 'contas', icon: '☁️', label: 'Contas e sincronização', pages: ['contas', 'sync'] },
   { id: 'privacidade', icon: '🔒', label: 'Privacidade', pages: ['permissoes'] },
   { id: 'backup', icon: '💾', label: 'Backup', pages: ['importar', 'exportar'] },
-  { id: 'sistema', icon: '⚙️', label: 'Sistema', pages: ['atualizacoes'] },
+  { id: 'sistema', icon: '⚙️', label: 'Sistema', pages: ['atualizacoes', 'creditos'] },
   { id: 'apoie', icon: '❤', label: 'Apoie', pages: ['apoie'], heart: true },
 ];
 
 // Endereços das abas antigas (#ia, #contas…) continuam funcionando.
-export const LEGACY = { geral: 'tema', fundo: 'fundo', ia: 'ia', midia: 'imagens', notas: 'keep', contas: 'contas', backup: 'importar', apoie: 'apoie', 'reset-tema': 'editor', aparencia: 'editor' };
+export const LEGACY = { geral: 'tema', fundo: 'fundo', ia: 'ia', midia: 'imagens', notas: 'keep', contas: 'contas', backup: 'importar', apoie: 'apoie', 'reset-tema': 'editor', videos: 'salvar-midia', sobre: 'creditos', aparencia: 'editor' };
 const FIRST = 'tema';
 
 const $ = (s) => document.querySelector(s);

@@ -4,6 +4,8 @@ import { migrateIfNeeded, normalizeItems, CURRENT_SCHEMA } from './migrations.js
 import { DEFAULT_LOOK, sanitizeLook, sanitizeTheme, MAX_THEMES } from './look.js';
 import { DEFAULT_TILES, sanitizeTiles, cleanIcon, SHAPES } from './tiles.js';
 import { THEMES as THEME_IDS } from './theme.js';
+import { DEFAULT_NET, sanitizeNet } from './net.js';
+import { DEFAULT_MEDIA_SAVE, sanitizeMediaSave } from './media.js';
 
 export const DATA_KEY = 'nt_data';
 export const BG_KEY = 'nt_bg';
@@ -84,6 +86,8 @@ export const DEFAULT_SETTINGS = {
   tiles: DEFAULT_TILES, // formato, tamanho e cores dos blocos de atalho (#59)
   look: DEFAULT_LOOK, // ajustes do editor visual por cima do tema (#58)
   customThemes: [], // [{ id, name, base, look }] temas salvos pela pessoa
+  mediaSave: DEFAULT_MEDIA_SAVE, // "Salvar no cérebro com resumo": categorias, IA na internet, imagens (#67)
+  net: DEFAULT_NET, // widget Rede: servidor, tamanho do teste, DNS comparados, monitor de travadas (#52)
   // Widgets
   weather: null, // (antigo) { name, lat, lon } — migrado para places
   places: [], // [{ id, name, region, lat, lon, tz }] — o primeiro é a cidade principal
@@ -141,6 +145,8 @@ export function mergeSettings(s = {}) {
     media: { ...DEFAULT_MEDIA, ...(s.media || {}) },
     tiles: sanitizeTiles(s.tiles),
     look: sanitizeLook(s.look),
+    net: sanitizeNet(s.net),
+    mediaSave: sanitizeMediaSave(s.mediaSave),
     customThemes: Array.isArray(s.customThemes) ? s.customThemes.map((t) => sanitizeTheme(t, THEME_IDS)).filter(Boolean).slice(0, MAX_THEMES) : [],
     dockMode: ['always', 'auto', 'collapsed'].includes(s.dockMode) ? s.dockMode : 'always',
     ai: { ...DEFAULT_AI, ...(s.ai || {}), keys: { ...(s.ai?.keys || {}) }, models: { ...(s.ai?.models || {}) }, embedModels: { ...(s.ai?.embedModels || {}) }, baseUrls: { ...(s.ai?.baseUrls || {}) } },

@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 V=$(node -p "require('./manifest.json').version")
 rm -rf build dist
 mkdir -p build/chromium build/firefox dist
-for d in build/chromium build/firefox; do cp -r manifest.json src icons _locales LICENSE "$d/"; done
+for d in build/chromium build/firefox; do cp -r manifest.json src icons _locales LICENSE THIRD-PARTY-NOTICES.md "$d/"; done
 node scripts/firefox-manifest.mjs build/firefox/manifest.json
 (cd build/chromium && zip -qr ../../dist/neurotab.zip .)
 (cd build/firefox && zip -qr ../../dist/neurotab-firefox.zip .)

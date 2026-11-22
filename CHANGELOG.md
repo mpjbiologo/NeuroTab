@@ -1,6 +1,26 @@
 # Changelog
 
-## v0.7.8 — em preparação
+## v0.7.9 — em preparação
+**Salve Reels, TikToks, vídeos e artigos com resumo, e descubra o que acontece com a sua internet.**
+
+- 🎬 **Salvar no cérebro com resumo (#67):** botão direito na página → NeuroTab → *🎬 Salvar no cérebro com resumo*, o novo botão no ícone da extensão, ou cole o link na Captura rápida
+  - Funciona com Instagram, TikTok, X, YouTube e artigos. A NeuroTab lê a legenda, a transcrição que o próprio site oferece (YouTube, TikTok) ou o texto do artigo **na página aberta**, com o seu login
+  - A IA devolve título, resumo, pontos-chave, **categoria** e tags, reaproveitando as tags que você já usa. As categorias são editáveis em Configurações → Mídia
+  - Vira um item **🎬 Mídia** no cérebro (com filtro próprio): plataforma, autor, categoria, pontos-chave, legenda e transcrição, e os botões Reprocessar, Abrir original e exportar a nota
+  - Mesmo link com outro rastreio não duplica; links do `youtu.be`, `/shorts` e do Twitter são padronizados
+  - IA no computador (Ollama): resume na hora. IA na internet: só com a sua autorização (botão Resumir), ou ligue "resumir sem perguntar"
+  - **Exportar para o Obsidian:** uma nota .md por item, numa pasta por categoria
+  - Adaptado do **[Kora](https://github.com/Joaovitor12j/kora)**, de Joao V Santos (licença MIT). Créditos em Configurações → Sistema → Sobre e créditos
+- 📶 **Novo widget Rede (#52):**
+  - **Velocidade:** download, upload, latência, jitter e falhas, com o volume de dados mostrado antes, histórico e "para que serve" (navegar, vídeo, chamadas, jogos, lives) com o motivo
+  - **Travadas:** monitor opcional com gráfico, limite configurável e registro dos picos; pode vigiar em segundo plano e avisar quando a internet travar
+  - **Melhor DNS:** compara Cloudflare, Google, Quad9, AdGuard, OpenDNS e NextDNS e mostra como usar o vencedor no navegador, no Windows, no macOS, no Android e no roteador
+  - **Com a NeuroTab Ponte:** ping de verdade separando roteador e operadora ("o lag é no Wi-Fi ou na internet?"), DNS da operadora pelo jeito clássico, **aparelhos no Wi-Fi** (com nomes que você dá e aviso de aparelho novo), **programas com conexões** e o uso da rede do computador agora
+  - Tudo configurável no ⚙️ do widget: servidor de teste, tamanho, endereços extras, intervalo, limite das travadas e quais DNS comparar. Nenhum teste roda sem você pedir
+- **NeuroTab Ponte:** ganhou o diagnóstico de rede. Baixe a versão nova na release para usar o ping, os aparelhos e os programas
+- Nova página **Sobre e créditos** nas configurações, com os projetos de código aberto usados e as licenças
+
+## v0.7.8
 **Do seu jeito: a barra some quando você quer, os atalhos ganham forma e ícone, e as cores são suas.**
 
 - 🫥 **Barra de atalhos que se esconde (#64):** em Aparência → Layout, escolha *Sempre visível*, *Esconder sozinha* (volta ao levar o mouse até a borda) ou *Recolhida* (abre pela alça). A barra passa por cima, então os widgets não pulam

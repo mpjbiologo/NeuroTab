@@ -174,4 +174,6 @@ O Actions confere a versão, roda os testes de novo e anexa o `neurotab.zip` e o
 
 [MIT](LICENSE) © Marcos de Paula Júnior
 
+**Créditos:** o "Salvar no cérebro com resumo" foi adaptado do [Kora](https://github.com/Joaovitor12j/kora), de Joao V Santos (MIT). Outros projetos usados e as licenças completas: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
 *A NeuroTab é um projeto independente. Ela não tem relação com os autores da extensão "Speed Dial" nem usa código dela: apenas lê o formato de backup para facilitar a migração. O gerador de QR Code é de Kazuhiko Arase (MIT).*
