@@ -12,6 +12,7 @@ A fonte da verdade é `src/lib/permissions.js`; o teste `tests/unit/permissions.
 | `favicon` (só Chromium) | Ícones dos atalhos |
 | `alarms`, `notifications` | Lembretes, despertador, timer e pomodoro |
 | `offscreen` (só Chromium) | Tocar o som do alarme em segundo plano |
+| `downloads`, `cookies` (opcionais) | Baixar o vídeo de um item da Mídia: `chrome.downloads` quando o site entrega o .mp4; os cookies só do site do vídeo vão para a NeuroTab Ponte (yt-dlp) quando "Usar o meu login" está ligado. Pedidas no clique em Baixar vídeo ou em Configurações → Mídia |
 | `system.cpu`, `system.memory` (opcionais, só Chromium) | Widget Sistema sem a NeuroTab Ponte: uso do processador e da memória; pedidas no widget |
 | `topSites`, `sessions`, `tabs` (opcionais) | Widget "Navegação": mais visitados e abas fechadas; pedidas ao adicionar o widget |
 

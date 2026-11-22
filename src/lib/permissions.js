@@ -71,6 +71,13 @@ export const FEATURES = {
     data: ['websiteContent'],
     managed: true, // pedido em Configurações → Mídia
   },
+  mediaDownload: {
+    label: 'Baixar vídeos da Mídia',
+    why: 'Baixa para a pasta Downloads o vídeo dos posts salvos (Instagram, TikTok e X) e, se você deixar, usa o seu login nesses sites para a NeuroTab Ponte conseguir baixar. Os cookies vão só para a Ponte, no seu computador.',
+    origins: [],
+    permissions: ['downloads', 'cookies'],
+    managed: true, // pedido na janela do item e em Configurações → Mídia
+  },
   systemInfo: {
     label: 'Widget Sistema pelo navegador (processador e memória)',
     why: 'Sem a NeuroTab Ponte, o widget Sistema mostra o uso do processador e da memória pelas interfaces do próprio navegador (Chrome e Edge). Nada sai do computador.',

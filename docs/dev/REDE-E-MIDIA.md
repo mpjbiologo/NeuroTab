@@ -18,6 +18,12 @@
 - **Alertas:** `evalAlerts` (memória só depois de 60 s acima); notificações no máximo 1 por tipo a cada 15 min (`nt_sys_alerted` em `storage.session`).
 - **Configuração:** `settings.system` (`sanitizeSys`).
 
+## Baixar vídeos da Mídia (0.7.11)
+- **Puro e testado:** `src/lib/media-download.js` — configuração (`settings.mediaDl`), `canDownload` (só instagram/tiktok/x; YouTube nunca), `dlTarget` (pasta/nome), `pickFxVideo` (FixTweet), `netscapeCookies`, e `findVideoInPage` (roda na página: TikTok `bitrateInfo`/`playAddr`; Instagram `video_versions` mais perto do id do post; `<video>` com src http).
+- **Fluxo** (`src/lib/media-dl-run.js`, no service worker): acha o .mp4 direto (aba informada → aba já aberta com o post → aba escondida) e baixa com `chrome.downloads` (andamento por `downloads.search`); se não der e o modo permitir, NeuroTab Ponte (`connectNative`, `{type:'dl', op:'get'}`), com os cookies do site quando permitido. Andamento em `storage.session` (`nt_media_dl`); resultado em `item.media.download` (`via`, `file`, `downloadId`).
+- **Ponte** (`ponte/download.go`): `tools`, `install` (SHA-256 da mesma release), `get` (yt-dlp com `--progress-template`/`--print after_move:filepath`), `reveal` (só dentro de Downloads). Testes com um yt-dlp de mentira (`download_test.go` e `tests/e2e/media-download.test.js`).
+- **Permissões:** `downloads` e `cookies` opcionais; origens `https://*.instagram.com/*` etc. (o login fica em `.instagram.com`, fora de `www`).
+
 ## Salvar mídia (#67)
 Adaptado do [Kora](https://github.com/Joaovitor12j/kora) (MIT, Joao V Santos). Créditos em `THIRD-PARTY-NOTICES.md` e em Configurações → Sistema → Sobre e créditos.
 

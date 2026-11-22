@@ -570,6 +570,54 @@
         <div><b>Exportar para o Obsidian</b><small>Uma nota .md por item, numa pasta por categoria (os sem categoria vão para <code>_inbox</code>), no mesmo formato das notas do Kora. <span id="mediaCount"></span></small></div>
         <button type="button" class="btn" id="mediaExport">Exportar…</button>
       </div>
+      <h3 id="baixar-videos">⬇ Baixar vídeos</h3>
+      <p>Na janela de um item 🎬 Mídia do cérebro, clique em <b>⬇ Baixar vídeo</b>, ou use o botão direito na página do post → <b>NeuroTab → ⬇ Baixar o vídeo</b>. Funciona com <b>Instagram, TikTok e X</b>. O vídeo vai para a pasta <b>Downloads</b> do computador.</p>
+      <p class="hint">O navegador baixa sozinho quando o site entrega o vídeo inteiro (X, TikTok e parte do Instagram). Quando o vídeo vem com o áudio separado, a <b>NeuroTab Ponte</b> baixa com o <a href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">yt-dlp</a> e junta tudo com o <a href="https://ffmpeg.org" target="_blank" rel="noopener">ffmpeg</a>. O YouTube não permite baixar vídeos por extensões, então ele fica de fora. Baixe só para uso pessoal e respeite os direitos de quem criou.</p>
+      <div class="opt">
+        <div><b>Baixar o vídeo junto ao salvar</b><small>Ao salvar um post com vídeo, já baixa. Só funciona com as permissões abaixo já dadas.</small></div>
+        <label class="sw"><input type="checkbox" data-k="mediaDl.auto"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Como baixar</b><small>Automático: tenta pelo navegador e, se não der, pela NeuroTab Ponte.</small></div>
+        <select data-k="mediaDl.engine">
+          <option value="auto">Automático</option>
+          <option value="browser">Só pelo navegador</option>
+          <option value="ponte">Sempre pela NeuroTab Ponte</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Qualidade</b><small>A melhor que o site tiver, até o limite escolhido.</small></div>
+        <select data-k="mediaDl.quality">
+          <option value="best">A melhor</option>
+          <option value="1080">Até 1080p</option>
+          <option value="720">Até 720p</option>
+          <option value="480">Até 480p (arquivo menor)</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Pasta dentro de Downloads</b><small>Ex.: <code>NeuroTab</code> ou <code>NeuroTab/Vídeos</code>.</small></div>
+        <input type="text" data-k="mediaDl.folder" maxlength="120" placeholder="NeuroTab">
+      </div>
+      <div class="opt">
+        <div><b>Uma pasta por categoria</b><small>Ex.: <code>Downloads/NeuroTab/ia</code>.</small></div>
+        <label class="sw"><input type="checkbox" data-k="mediaDl.byCategory"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Perguntar onde salvar</b><small>Só nos downloads feitos pelo navegador.</small></div>
+        <label class="sw"><input type="checkbox" data-k="mediaDl.saveAs"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Usar o meu login nos sites</b><small>O Instagram quase sempre exige login para baixar. A NeuroTab entrega à Ponte só os cookies do site do vídeo, num arquivo temporário apagado logo depois; nada sai do computador.</small></div>
+        <label class="sw"><input type="checkbox" data-k="mediaDl.cookies"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Permissões</b><small>Downloads do navegador, abrir os sites do vídeo e (se ligado acima) ler o login deles. <span id="dlPermState"></span></small></div>
+        <button type="button" class="btn" id="dlPerms">Permitir</button>
+      </div>
+      <div class="opt opt-col">
+        <div><b>NeuroTab Ponte, yt-dlp e ffmpeg</b><small>A Ponte procura o yt-dlp e o ffmpeg no computador. Se não tiver, ela baixa as versões oficiais e confere a assinatura (SHA-256) antes de usar. No macOS e no Linux, instale o ffmpeg pelo Homebrew (<code>brew install ffmpeg</code>) ou pelo gerenciador de pacotes (<code>sudo apt install ffmpeg</code>).</small></div>
+        <div id="dlTools" class="dl-tools"><button type="button" class="btn" id="dlCheck">Verificar</button></div>
+      </div>
       <p class="hint">🎙️ Transcrever o áudio de vídeos sem legenda chega com a central de IA da v0.8, que terá um modelo próprio para transcrição.</p>
     </section>
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.7.11
+**Baixe para o computador o vídeo dos posts que você salvou.**
+
+- ⬇ **Baixar vídeo** na janela de um item 🎬 Mídia do cérebro, ou pelo botão direito na página do post → *NeuroTab → ⬇ Baixar o vídeo (e salvar no cérebro)*
+  - Funciona com **Instagram, TikTok e X**. O vídeo vai para `Downloads/NeuroTab` (com uma pasta por categoria, se quiser)
+  - **Pelo navegador**, quando o site entrega o vídeo inteiro (X, TikTok e parte do Instagram): sem instalar nada
+  - **Pela NeuroTab Ponte**, quando o vídeo vem com o áudio separado (o normal no Instagram): ela usa o [yt-dlp](https://github.com/yt-dlp/yt-dlp) e o [ffmpeg](https://ffmpeg.org) para baixar na melhor qualidade e juntar tudo num .mp4. Se você não tiver os dois, a Ponte baixa as versões oficiais e confere a assinatura (SHA-256) antes de usar (o ffmpeg automático é só no Windows; no macOS e no Linux, pelo `brew` ou `apt`)
+  - **Usa o seu login** no site, quando ele exige (o Instagram quase sempre exige): só os cookies do site do vídeo, entregues à Ponte num arquivo temporário apagado logo depois
+  - Andamento na janela do item, com Cancelar; depois, *Mostrar na pasta* e *Abrir*
+  - Se o post já estiver aberto numa aba, lê de lá, sem abrir outra
+- ⚙️ **Configurações → Mídia → Baixar vídeos:** baixar junto ao salvar, navegador ou Ponte, qualidade (até 1080p, 720p ou 480p), pasta, uma pasta por categoria, perguntar onde salvar, usar o login, permissões e o estado do yt-dlp e do ffmpeg (com Instalar e Atualizar)
+- 🚫 **YouTube fica de fora:** as lojas de extensões não permitem baixar vídeos do YouTube
+- **NeuroTab Ponte:** ganhou o download de vídeos. Baixe a versão nova na release
+
 ## v0.7.10.1
 **Passo a passo do LibreHardwareMonitor mais claro.**
 

@@ -21,8 +21,8 @@ async function runExtractor(tabId) {
   return r.result;
 }
 
-/** Abre o link numa aba em segundo plano, lê e fecha (precisa da permissão do site). */
-async function extractFromLink(url) {
+/** Abre o link numa aba em segundo plano, roda fn(tabId) e fecha (precisa da permissão do site). */
+export async function withHiddenTab(url, fn) {
   const tab = await chrome.tabs.create({ url, active: false });
   try {
     await new Promise((resolve, reject) => {
@@ -31,11 +31,12 @@ async function extractFromLink(url) {
       chrome.tabs.onUpdated.addListener(on);
     });
     await new Promise((r) => setTimeout(r, 2500)); // redes sociais terminam de montar depois do "complete"
-    return await runExtractor(tab.id);
+    return await fn(tab.id);
   } finally {
     chrome.tabs.remove(tab.id).catch(() => {});
   }
 }
+const extractFromLink = (url) => withHiddenTab(url, runExtractor);
 
 async function fxTwitter(url) {
   const p = tweetParts(url);
