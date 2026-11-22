@@ -58,6 +58,12 @@ export const FEATURES = {
     origins: ['https://mail.google.com/*'],
     managed: true, // pedido no widget
   },
+  siteIcons: {
+    label: 'Ícones dos atalhos em alta resolução',
+    why: 'Busca o ícone de cada atalho em boa resolução no serviço de ícones do Google (t1.gstatic.com) ou do DuckDuckGo, conforme a sua escolha em Aparência → Estilo dos atalhos. Só o endereço do site vai para lá.',
+    origins: ['https://t1.gstatic.com/*', 'https://icons.duckduckgo.com/*'],
+    managed: true, // pedido em Estilo dos atalhos
+  },
   mediaLinks: {
     label: 'Salvar mídia a partir de links',
     why: 'Para salvar no cérebro com resumo um post do Instagram, TikTok, X ou um vídeo do YouTube a partir do link (botão direito no link ou Captura rápida), a NeuroTab abre o link numa aba escondida e lê a legenda, a transcrição e o autor. Para posts do X, busca o texto completo no FixTweet (api.fxtwitter.com). Nada é enviado a esses sites além do próprio pedido da página.',

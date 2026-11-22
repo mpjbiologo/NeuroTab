@@ -3,7 +3,7 @@
   "name": "__MSG_extName__",
   "short_name": "NeuroTab",
   "description": "__MSG_extDescription__",
-  "version": "0.7.9",
+  "version": "0.7.9.1",
   "default_locale": "pt_BR",
   "homepage_url": "https://github.com/mpjbiologo/NeuroTab",
   "icons": {
@@ -72,6 +72,8 @@
     "https://www.youtube.com/*",
     "https://x.com/*",
     "https://api.fxtwitter.com/*",
+    "https://t1.gstatic.com/*",
+    "https://icons.duckduckgo.com/*",
     "https://*/*"
   ],
   "commands": {

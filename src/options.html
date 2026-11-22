@@ -147,6 +147,18 @@
         <label class="sw"><input type="checkbox" data-k="tiles.shadow"><span></span></label>
       </div>
       <div class="opt">
+        <div><b>Ícones dos sites</b><small>O navegador só guarda os ícones em 16–32 px, que ficam borrados nos blocos grandes. O Google entrega a maioria em alta resolução (até 256 px); só o endereço de cada site vai para lá. <span id="iconSourceState"></span></small></div>
+        <select id="iconSource">
+          <option value="browser">Só o navegador</option>
+          <option value="google">Google — alta resolução</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Atualizar os ícones dos atalhos</b><small>Busca de novo o ícone de todos os atalhos, na melhor resolução da fonte escolhida. Ícones que você escolheu (imagem, emoji, letra) e as cores não mudam.</small></div>
+        <button type="button" class="btn" id="iconsRefresh">Atualizar ícones</button>
+      </div>
+      <div class="opt">
         <div><b>Estilo padrão</b><small>Volta ao visual clássico. Os atalhos, a ordem e os ícones próprios ficam como estão.</small></div>
         <button type="button" class="btn" id="tileReset">Restaurar estilo</button>
       </div>
