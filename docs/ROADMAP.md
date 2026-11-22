@@ -29,9 +29,10 @@ Primeiro a base, depois os recursos.
 - ✅ **0.7.6.2 — Agenda pela conta Google:** todos os calendários, criar e editar eventos lá (#26). A verificação do Google para tirar o aviso de "app não verificado" está em andamento.
 - ✅ **0.7.7 — Área de transferência:** widget com histórico do que você copia, só neste computador: colar no widget, ao copiar em sites e acompanhar tudo o que você copia; pausa, proteção de senhas e códigos, e apagar ao desligar o computador por padrão (#51). Já preparada para compartilhar com outros computadores e o celular numa versão seguinte.
 - ✅ **0.7.7.2 — Área de transferência entre aparelhos:** QR code, sua nuvem (Google Drive), ntfy, Telegram e rede local (NeuroTab Ponte), com regras de cada pessoa (#51).
-- **0.7.7.3 — Configurações de cara nova:** categorias na lateral esquerda com sub-abas (11 categorias, 27 páginas), conteúdo ocupando a tela com as opções lado a lado, busca nas configurações e gaveta no celular; os endereços antigos continuam funcionando (#46, adiantada da v1.0).
-- **0.7.7.4 — E-mail:** widget com os e-mails novos das contas conectadas (Gmail e, depois da Microsoft, Outlook), várias contas no mesmo lugar (#20).
-- **0.7.8 — Do seu jeito:** barra de atalhos que se esconde (sempre visível, esconder sozinha ou recolhida com alça; teclado, toque e 📌) (#64); atalhos com formato (bloco, quadrado, círculo, pílula), tamanho, cores, 6 estilos prontos e ícone próprio por atalho (imagem enviada, emoji ou letra), com reserva quando o site não tem ícone (#59); editor visual como sub-aba de Aparência, sobre os três temas: cores, transparência, cantos, sombras, densidade e estilo dos widgets, com prévia, aplicar/cancelar/restaurar, temas salvos e arquivo de tema; e o widget "Como foi hoje?" (humor, energia e uma frase por dia, só no computador) (#58).
+- ✅ **0.7.7.3 — Configurações de cara nova:** categorias na lateral esquerda com sub-abas (11 categorias, 27 páginas), conteúdo ocupando a tela com as opções lado a lado, busca nas configurações e gaveta no celular; os endereços antigos continuam funcionando (#46, adiantada da v1.0).
+- ✅ **0.7.7.4 — E-mail:** widget com os e-mails novos das contas conectadas (Gmail e, depois da Microsoft, Outlook), várias contas no mesmo lugar (#20).
+- ✅ **0.7.8 — Do seu jeito:** barra de atalhos que se esconde (sempre visível, esconder sozinha ou recolhida com alça; teclado, toque e 📌) (#64); atalhos com formato (bloco, quadrado, círculo, pílula), tamanho, cores, 6 estilos prontos e ícone próprio por atalho (imagem enviada, emoji ou letra), com reserva quando o site não tem ícone (#59); editor visual como sub-aba de Aparência, sobre os três temas: cores, transparência, cantos, sombras, densidade e estilo dos widgets, com prévia, aplicar/cancelar/restaurar, temas salvos e arquivo de tema; e o widget "Como foi hoje?" (humor, energia e uma frase por dia, só no computador) (#58).
+- **0.7.9 — Salvar mídia e rede:** Reels, TikTok, X, YouTube e artigos no cérebro com resumo, pontos-chave, categoria e tags, adaptado do [Kora](https://github.com/Joaovitor12j/kora) (MIT, com créditos) (#67); e widget **Rede**: velocidade, latência, jitter e travadas, o que está usando a rede, o melhor DNS para a sua conexão e alertas, tudo configurável (#52, adiantada da 1.x).
 - **Depois — Microsoft:** Outlook (agenda e e-mail) e OneDrive (sincronização), com as mesmas contas. Fica para quando o app estiver registrado no Microsoft Entra; ganha o número da versão em que entrar.
 
 ### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 4 atualizações
@@ -49,6 +50,7 @@ Primeiro a base, depois os recursos.
 - Central de conhecimento: fontes e documentos (#9) e adaptador opcional do Open Notebook (#10).
 - Modo Estudante (#11).
 - Escolher a pasta das mídias e avaliar downloads de áudio e vídeo de sites, sem contornar DRM nem restrições (#45).
+- **Finanças pessoais:** entradas e saídas, contas e cartões, contas a pagar, orçamento e importação de extratos e faturas (OFX, CSV e PDF), só no computador e com cofre opcional (#66). O conector de Open Finance por agregador fica para a 1.x.
 
 ### [v1.0 — Estável e completa](https://github.com/mpjbiologo/NeuroTab/milestone/6) · 1 a 2 atualizações
 - Painel de privacidade, permissões e fluxo de dados (#28).
@@ -56,7 +58,7 @@ Primeiro a base, depois os recursos.
 - Revisão geral: textos, acessibilidade, desempenho e documentação.
 
 ### [1.x — Depois da 1.0](https://github.com/mpjbiologo/NeuroTab/milestone/7)
-Modo Investigação (#23), mapa de conhecimento (#22), automações visuais (#24), espaços de trabalho (#25), notificações de celular (#19), diálogo entre dois modelos de IA (#21), linha do tempo e métricas (#30, #31), widgets de terceiros (#32), versão desktop (#33), perfis independentes para computadores compartilhados (#47), widget de velocidade da internet e ping (#52), central de entretenimento por voz (#48) e navegador para Android baseado em Chromium com atualizações pelo GitHub (#42).
+Modo Investigação (#23), mapa de conhecimento (#22), automações visuais (#24), espaços de trabalho (#25), notificações de celular (#19), diálogo entre dois modelos de IA (#21), linha do tempo e métricas (#30, #31), widgets de terceiros (#32), versão desktop (#33), perfis independentes para computadores compartilhados (#47), modo múltiplos monitores com um perfil por monitor (#65, junto com #25 e #47, que pedem a mesma base de "configurações por contexto"), conector de Open Finance para as finanças (#66), central de entretenimento por voz (#48) e navegador para Android baseado em Chromium com atualizações pelo GitHub (#42).
 
 ## Regras do caminho
 
