@@ -1,4 +1,5 @@
-// NeuroTab Ponte — leva a área de transferência da NeuroTab para o celular pela rede local (0.7.7.2).
+// NeuroTab Ponte — leva a área de transferência da NeuroTab para o celular pela rede local (0.7.7.2)
+// e faz o diagnóstico de rede do widget Rede (0.7.9): ping, DNS, aparelhos e programas.
 //
 // Dois jeitos de rodar:
 //   - aberto pela pessoa (duplo clique / terminal): instala e registra no Chrome, Edge, Brave, Chromium e Firefox;
@@ -48,6 +49,17 @@ func runNative(in *os.File, out *os.File) error {
 	first, err := readMsg(r)
 	if err != nil {
 		return err
+	}
+	if first.Type == "net" { // diagnóstico de rede: responde e fecha (widget Rede, 0.7.9)
+		res, err := handleNet(first.Op, first.Payload)
+		if err != nil {
+			return w.send(Msg{Type: "net", Op: first.Op, Message: err.Error()})
+		}
+		b, err := json.Marshal(res)
+		if err != nil {
+			return err
+		}
+		return w.send(Msg{Type: "net", Op: first.Op, Payload: b, Version: version})
 	}
 	if first.Type != "hello" || len(first.Token) < 16 {
 		_ = w.send(Msg{Type: "error", Message: "a extensão não mandou o token"})

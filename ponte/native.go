@@ -15,6 +15,7 @@ const maxIn = 64 << 20 // o navegador manda até 64 MB por mensagem
 
 type Msg struct {
 	Type     string          `json:"type"`
+	Op       string          `json:"op,omitempty"`
 	Token    string          `json:"token,omitempty"`
 	Port     int             `json:"port,omitempty"`
 	Name     string          `json:"name,omitempty"`

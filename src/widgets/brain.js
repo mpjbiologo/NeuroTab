@@ -1,5 +1,7 @@
 // Widget: meu cérebro — tudo o que foi salvo, com busca, filtros, seleção múltipla e lixeira.
 import { h } from '../lib/ui.js';
+import { t } from '../lib/i18n.js';
+import { PLATFORMS } from '../lib/media-links.js';
 import {
   TYPES, displayTitle, relTime, searchItems, updateItem, fmtDateTime, toMarkdown,
   trashItems, loadTrash, restoreFromTrash, purgeTrash, TRASH_DAYS,
@@ -7,7 +9,7 @@ import {
 import { hostOf } from '../lib/store.js';
 
 const FILTERS = [
-  ['all', 'Tudo'], ['note', '📝 Notas'], ['task', '☑️ Tarefas'], ['clip', '✂️ Trechos'], ['page', '🔖 Páginas'], ['idea', '💡 Ideias'], ['image', '🖼️ Imagens'], ['pinned', '📌'], ['trash', '🗑'],
+  ['all', 'Tudo'], ['note', '📝 Notas'], ['task', '☑️ Tarefas'], ['clip', '✂️ Trechos'], ['page', '🔖 Páginas'], ['idea', '💡 Ideias'], ['image', '🖼️ Imagens'], ['media', '🎬 Mídia'], ['pinned', '📌'], ['trash', '🗑'],
 ];
 
 export function itemRow(it, ctx, { checkbox = false, select = null, semantic = false } = {}) {
@@ -26,7 +28,11 @@ export function itemRow(it, ctx, { checkbox = false, select = null, semantic = f
   } else if (checkbox) {
     lead = h('input', { type: 'checkbox', checked: it.done, onclick: (e) => e.stopPropagation(), onchange: (e) => updateItem(it.id, { done: e.target.checked }) });
   } else {
-    lead = h('span', { class: 'ic' }, it.pinned ? '📌' : TYPES[it.type]?.icon || '📝');
+    lead = h('span', { class: 'ic' }, it.pinned ? '📌' : it.type === 'media' ? PLATFORMS[it.media?.platform]?.icon || '🎬' : TYPES[it.type]?.icon || '📝');
+  }
+  if (it.type === 'media') {
+    if (it.media?.category) meta.push(h('span', { class: 'tag cat' }, it.media.category));
+    else meta.push(h('span', { class: 'when' }, '⏳ ' + t('resumo pendente')));
   }
   return h('div', {
     class: 'item' + (it.done ? ' done' : '') + (select?.has(it.id) ? ' picked' : ''),

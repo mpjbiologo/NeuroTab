@@ -330,3 +330,6 @@ main { width: 100%; max-width: 1480px; }
 .btn:disabled { opacity: .5; cursor: default; }
 #tileReset, #dockReset { white-space: nowrap; }
 .ed-file .btn { height: 36px; display: inline-flex; align-items: center; }
+.opt.opt-col { display: grid; gap: 8px; }
+.opt-col textarea { width: 100%; font: var(--fs-sm)/1.5 var(--font-mono, monospace); background: var(--field); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 8px 10px; }
+.credits { display: grid; gap: 8px; padding-left: 18px; }

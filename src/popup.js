@@ -34,7 +34,7 @@ async function init() {
   if (data.groups.some((g) => g.id === r[ACTIVE_KEY])) $('#group').value = r[ACTIVE_KEY];
   const exists = data.links.some((l) => l.url === url);
   $('#already').hidden = !exists;
-  if (!web) { $('#addShortcut').disabled = true; $('#savePage').disabled = true; $('#grab').disabled = true; }
+  if (!web) { $('#addShortcut').disabled = true; $('#savePage').disabled = true; $('#saveMedia').disabled = true; $('#grab').disabled = true; }
 
   // Seleção atual entra automaticamente como citação
   if (web) {
@@ -62,6 +62,15 @@ async function init() {
   $('#savePage').onclick = async () => {
     await capture({ type: 'page', title: tab.title, url, pageTitle: tab.title, source: 'popup' });
     flash('Página salva 🔖');
+    renderExisting();
+  };
+  $('#saveMedia').onclick = async () => {
+    $('#saveMedia').disabled = true;
+    flash('Lendo e resumindo… 🎬');
+    const r = await chrome.runtime.sendMessage({ type: 'media:save', tabId: tab.id }).catch((e) => ({ error: e.message }));
+    $('#saveMedia').disabled = false;
+    if (r?.error && !r.id) { flash('Não deu: ' + r.error); return; }
+    flash(r.status === 'processado' ? 'Salvo com resumo 🎬' : r.existed ? 'Já estava salvo — atualizado 🎬' : 'Salvo 🎬 (resumo pendente)');
     renderExisting();
   };
   $('#addShortcut').onclick = async () => {

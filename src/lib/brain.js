@@ -10,6 +10,7 @@ export const TYPES = {
   page: { label: 'Página', icon: '🔖' },
   idea: { label: 'Ideia', icon: '💡' },
   image: { label: 'Imagem', icon: '🖼️' }, // texto lido de uma imagem da biblioteca (captureId)
+  media: { label: 'Mídia', icon: '🎬' }, // post, vídeo ou artigo salvo com resumo (#67): campos em item.media
 };
 
 export async function loadItems() {
@@ -42,6 +43,7 @@ export function makeItem(p = {}) {
     updatedAt: now,
     enriched: !!p.enriched,
     ...(p.captureId ? { captureId: p.captureId } : {}),
+    ...(p.media && typeof p.media === 'object' ? { media: p.media } : {}),
   };
 }
 

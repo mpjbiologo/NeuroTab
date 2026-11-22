@@ -4,6 +4,7 @@ import { isConfigured, enrich } from '../lib/ai.js';
 import { $, toast, toLocalInput, fromLocalInput } from '../lib/ui.js';
 import { S } from './state.js';
 import { ctx } from './context.js';
+import { mediaPanel } from './media-panel.js';
 
 // =====================================================================
 // ITEM DO CÉREBRO (editar/criar)
@@ -28,6 +29,7 @@ export function openItemDialog(item, preset = {}) {
       : '';
   };
   fill(it);
+  mediaPanel($('#itemMedia'), item && it.type === 'media' ? it : null, () => dlg.close('cancel'));
   $('#itemDelete').hidden = !item;
   // Item lido de uma imagem da biblioteca: botão para abrir a imagem (e analisar de novo).
   const img = $('#itemImage');

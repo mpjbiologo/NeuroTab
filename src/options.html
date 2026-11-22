@@ -253,7 +253,17 @@
         <button class="btn" id="reset">Restaurar padrões</button>
         <span class="hint">As alterações são salvas automaticamente.</span>
       </div>
-    </section>
+          <h2 data-page="creditos">Sobre e créditos</h2>
+      <p><b>NeuroTab</b> <span id="aboutVersion"></span> — código aberto, licença MIT. <a href="https://github.com/mpjbiologo/NeuroTab" target="_blank" rel="noopener">github.com/mpjbiologo/NeuroTab</a></p>
+      <p>A NeuroTab usa ou adapta o trabalho destes projetos. Obrigado!</p>
+      <ul class="credits">
+        <li><b><a href="https://github.com/Joaovitor12j/kora" target="_blank" rel="noopener">Kora</a></b> — Joao V Santos · licença MIT. O "Salvar no cérebro com resumo" (Mídia) foi adaptado dele: padronização de links, categorias, pedido à IA e formato das notas.</li>
+        <li><b><a href="https://github.com/naptha/tesseract.js" target="_blank" rel="noopener">Tesseract.js</a></b> · Apache-2.0 — leitura do texto das imagens no computador.</li>
+        <li><b>QR Code Generator for JavaScript</b> — Kazuhiko Arase · MIT — códigos QR.</li>
+        <li><b><a href="https://lucide.dev" target="_blank" rel="noopener">Lucide Icons</a></b> · ISC — ícones.</li>
+      </ul>
+      <p><a id="noticesLink" target="_blank" rel="noopener">Ler os avisos de licença completos</a></p>
+</section>
 
     <!-- FUNDO -->
     <section id="tab-fundo" class="card" hidden>
@@ -521,8 +531,34 @@
         <div><b>Ler o texto das imagens salvas</b><small>Feito aqui no computador: as imagens da biblioteca não saem dele. Na primeira vez, baixa o pacote do idioma (de 1,4 a 3 MB).</small></div>
         <label class="sw"><input type="checkbox" data-k="imageOcr"><span></span></label>
       </div>
-      <h2 data-page="videos">Vídeos e áudios</h2>
-      <p class="hint">🎬 Em breve: transcrever e resumir áudios e vídeos, com a mesma escolha de IA e de onde processar (no computador ou na internet). As configurações vão ficar aqui.</p>
+      <h2 data-page="salvar-midia">Salvar mídia</h2>
+      <p>Reels, TikToks, posts do X, vídeos do YouTube e artigos viram notas no cérebro com <b>título, resumo, pontos-chave, categoria e tags</b>. Use o botão direito na página → <b>NeuroTab → 🎬 Salvar no cérebro com resumo</b>, ou cole o link na Captura rápida. A NeuroTab lê a legenda, a transcrição do vídeo (quando o site oferece) ou o texto do artigo <b>na própria página</b>, com o seu login.</p>
+      <p class="hint">Adaptado do <a href="https://github.com/Joaovitor12j/kora" target="_blank" rel="noopener">Kora</a>, de Joao V Santos (licença MIT). Veja <a href="#creditos">Sobre e créditos</a>.</p>
+      <div class="opt">
+        <div><b>Resumir com a IA na internet sem perguntar</b><small>A legenda e o texto vão para a IA configurada. Desligado, o item fica com o resumo pendente e você clica em Resumir quando quiser. Com uma IA no computador (Ollama), nada sai dele e não há pergunta.</small></div>
+        <label class="sw"><input type="checkbox" data-k="mediaSave.cloudOK"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Guardar as imagens dos posts na biblioteca</b><small>Fotos e carrosséis vão para a biblioteca de imagens e o cérebro lê o texto delas (no computador).</small></div>
+        <select data-k="mediaSave.images">
+          <option value="never">Não guardar</option>
+          <option value="always">Guardar</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Salvar a partir de links</b><small>Para salvar pelo botão direito num link ou pela Captura rápida, a NeuroTab abre o link numa aba escondida e lê. Precisa da permissão para Instagram, TikTok, YouTube e X (e o FixTweet, que entrega o texto completo dos posts do X). <span id="mediaLinksState"></span></small></div>
+        <button type="button" class="btn" id="mediaLinks">Permitir</button>
+      </div>
+      <div class="opt opt-col">
+        <div><b>Categorias</b><small>Uma por linha, no formato <code>nome: o que entra nela</code>. A IA escolhe exatamente uma. "outros" fica sempre por último.</small></div>
+        <textarea id="mediaCats" rows="10" spellcheck="false"></textarea>
+        <div class="row"><button type="button" class="btn primary" id="mediaCatsSave">Salvar categorias</button><button type="button" class="btn" id="mediaCatsReset">Restaurar as padrão</button></div>
+      </div>
+      <div class="opt">
+        <div><b>Exportar para o Obsidian</b><small>Uma nota .md por item, numa pasta por categoria (os sem categoria vão para <code>_inbox</code>), no mesmo formato das notas do Kora. <span id="mediaCount"></span></small></div>
+        <button type="button" class="btn" id="mediaExport">Exportar…</button>
+      </div>
+      <p class="hint">🎙️ Transcrever o áudio de vídeos sem legenda chega com a central de IA da v0.8, que terá um modelo próprio para transcrição.</p>
     </section>
 
     <section id="tab-notas" class="card" hidden>

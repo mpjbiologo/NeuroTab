@@ -15,6 +15,8 @@ import { syncNow, syncConfig, WATCHED_KEYS } from './lib/sync.js';
 import { addClip, clipConfig, pruneClips, CLIP_CFG_KEY, CLIP_KEY } from './lib/clipboard.js';
 import { shareConfig, canReceive, cleanPayload, NATIVE_HOST } from './lib/clipboard-share.js';
 import { checkMail, mailConfig, notificationsFor, MAIL_CFG_KEY, GMAIL_ORIGIN } from './lib/mail.js';
+import { saveMedia, summarizeMedia } from './lib/media-save.js';
+import { NET_KEY, sanitizeNet, sanitizeStore, serverBase, originOf, measureLatency, median, SAMPLES_MAX } from './lib/net.js';
 import { dispatchShares, pollShares, receivePayload, patchState, me as shareMe } from './lib/clipboard-sync.js';
 
 // Janela de análise aberta com uma imagem temporária: quando ela fecha (a conexão cai), o fundo apaga a
@@ -37,6 +39,8 @@ async function rebuildMenus() {
   chrome.contextMenus.create({ id: 'nt-root', title: 'NeuroTab', contexts: all });
   chrome.contextMenus.create({ id: 'nt-clip', parentId: 'nt-root', title: t('✂️ Salvar trecho no cérebro'), contexts: ['selection'] });
   chrome.contextMenus.create({ id: 'nt-page', parentId: 'nt-root', title: t('🔖 Salvar página no cérebro (ler depois)'), contexts: ['page'] });
+  chrome.contextMenus.create({ id: 'nt-media', parentId: 'nt-root', title: t('🎬 Salvar no cérebro com resumo'), contexts: ['page'] });
+  chrome.contextMenus.create({ id: 'nt-media-link', parentId: 'nt-root', title: t('🎬 Salvar link no cérebro com resumo'), contexts: ['link'] });
   chrome.contextMenus.create({ id: 'nt-link', parentId: 'nt-root', title: t('🔗 Salvar link no cérebro'), contexts: ['link'] });
   chrome.contextMenus.create({ id: 'nt-image', parentId: 'nt-root', title: t('🖼️ Salvar imagem na biblioteca'), contexts: ['image'] });
   chrome.contextMenus.create({ id: 'nt-analyze', parentId: 'nt-root', title: t('🔍 Analisar imagem'), contexts: ['image'] });
@@ -141,6 +145,16 @@ async function flashBadge(tabId, ok, detail = '') {
   }, 6000);
 }
 
+/** Aviso depois de salvar uma mídia: resumida, já existia ou esperando (autorização da IA / permissão do site). */
+async function mediaSaved({ item, existed, pending }) {
+  if (!item) return;
+  const m = item.media || {};
+  const title = m.status === 'processado' ? t('🎬 Salvo no cérebro') + (m.category ? ` · ${m.category}` : '') : existed ? t('🎬 Já estava salvo — atualizado') : t('🎬 Salvo no cérebro (resumo pendente)');
+  const why = m.error === 'cloud' ? t('Para resumir, abra o item no cérebro e clique em Resumir (a IA configurada é na internet).') : m.error || '';
+  chrome.notifications.create('media:' + item.id, { type: 'basic', iconUrl: chrome.runtime.getURL('icons/icon128.png'), title, message: (m.status === 'processado' ? item.summary || item.title : why || item.title || item.url).slice(0, 250) });
+  if (pending) console.info('NeuroTab: mídia pendente', m.error);
+}
+
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   const id = String(info.menuItemId);
   let ok = true;
@@ -157,6 +171,10 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       await captureAndEnrich({ type: 'clip', text: info.selectionText, url: info.pageUrl, pageTitle: tab?.title, source: 'context' });
     } else if (id === 'nt-page') {
       await captureAndEnrich({ type: 'page', title: tab?.title, url: info.pageUrl, pageTitle: tab?.title, source: 'context' });
+    } else if (id === 'nt-media') {
+      await mediaSaved(await saveMedia({ tab }));
+    } else if (id === 'nt-media-link') {
+      await mediaSaved(await saveMedia({ url: info.linkUrl }));
     } else if (id === 'nt-link') {
       await captureAndEnrich({ type: 'page', title: info.selectionText || '', url: info.linkUrl, source: 'context' });
     } else if (id === 'nt-image') {
@@ -265,6 +283,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'clipwatch') return syncClipboard().catch(() => {});
   if (alarm.name === 'clipprune') return pruneClips().catch(() => {});
   if (alarm.name === 'mail') return runMailCheck().catch((e) => console.warn('NeuroTab: e-mail', e));
+  if (alarm.name === 'netmon') return runNetMonitor().catch((e) => console.warn('NeuroTab: rede', e));
   if (alarm.name === 'clipshare') return Promise.all([pollShares(), syncPonte()]).catch(() => {});
   if (alarm.name.startsWith('cal-')) return fireCalAlarm(alarm.name);
   if (alarm.name === 'calfeeds') return refreshFeeds().then(syncCalAlarms).catch(() => {});
@@ -339,7 +358,8 @@ chrome.notifications.onClicked.addListener(async (nid) => {
     return;
   }
   if (nid.startsWith('clock-') || nid === 'timer' || nid === 'pomo') { stopSound(); return; }
-  await chrome.tabs.create({ url: NEWTAB + (nid.startsWith('rem-') ? '#item=' + nid.slice(4) : '') }); // aviso da agenda: abre a nova aba
+  const item = nid.startsWith('rem-') ? nid.slice(4) : nid.startsWith('media:') ? nid.slice(6) : '';
+  await chrome.tabs.create({ url: NEWTAB + (item ? '#item=' + item : '') }); // aviso da agenda: abre a nova aba
 });
 
 // ---------- Som (documento offscreen) ----------
@@ -630,8 +650,8 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
   if (changes[CLIP_KEY]) scheduleDispatch();
 });
-chrome.permissions.onAdded?.addListener(() => { syncClipboard().catch(() => {}); syncMailAlarm().catch(() => {}); });
-chrome.permissions.onRemoved?.addListener(() => { syncClipboard().catch(() => {}); syncMailAlarm().catch(() => {}); });
+chrome.permissions.onAdded?.addListener(() => { syncClipboard().catch(() => {}); syncMailAlarm().catch(() => {}); syncNetAlarm().catch(() => {}); });
+chrome.permissions.onRemoved?.addListener(() => { syncClipboard().catch(() => {}); syncMailAlarm().catch(() => {}); syncNetAlarm().catch(() => {}); });
 
 // ---------- E-mail (#20) ----------
 async function syncMailAlarm() {
@@ -664,6 +684,59 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (a.enabled !== b.enabled || a.interval !== b.interval) syncMailAlarm().catch(() => {});
 });
 
+// ---------- Salvar mídia pela nova aba (Captura rápida, botão Resumir) ----------
+chrome.runtime.onMessage.addListener((msg, sender, reply) => {
+  if (sender.id !== chrome.runtime.id || sender.tab?.url?.startsWith('http')) return;
+  if (msg?.type === 'media:save' && (Number.isInteger(msg.tabId) || /^https?:\/\//.test(msg.url || ''))) {
+    (Number.isInteger(msg.tabId) ? saveMedia({ tab: { id: msg.tabId } }) : saveMedia({ url: String(msg.url || '') })).then((r) => reply({ id: r.item?.id, existed: r.existed, pending: r.pending, status: r.item?.media?.status, error: r.item?.media?.error }), (e) => reply({ error: e.message }));
+    return true;
+  }
+  if (msg?.type === 'media:summarize') {
+    summarizeMedia(String(msg.id || ''), { allowCloud: !!msg.allowCloud }).then(reply, (e) => reply({ error: e.message }));
+    return true;
+  }
+});
+
+// ---------- Monitor de travadas em segundo plano (widget Rede, #52) ----------
+// Só quando a pessoa liga "vigiar também com a nova aba fechada": 3 pedidos mínimos por minuto.
+async function netSettings() { return sanitizeNet((await loadData()).settings.net); }
+async function syncNetAlarm() {
+  const n = await netSettings();
+  const ok = n.monitor.on && n.monitor.background && (await chrome.permissions.contains({ origins: [originOf(serverBase(n))] }).catch(() => false));
+  if (ok) chrome.alarms.create('netmon', { delayInMinutes: 1, periodInMinutes: 1 });
+  else chrome.alarms.clear('netmon');
+}
+async function runNetMonitor() {
+  const n = await netSettings();
+  if (!n.monitor.on || !n.monitor.background) return syncNetAlarm();
+  const samples = await measureLatency({ url: `${serverBase(n)}/__down?bytes=0`, count: 3, gap: 300 });
+  const ok = samples.filter(Number.isFinite);
+  const s = { t: Date.now(), ms: ok.length ? median(ok) : null, bg: 1 };
+  const store = sanitizeStore((await chrome.storage.local.get(NET_KEY))[NET_KEY]);
+  store.samples.push(s);
+  store.samples = store.samples.slice(-SAMPLES_MAX);
+  await chrome.storage.local.set({ [NET_KEY]: store });
+  const lag = !Number.isFinite(s.ms) || s.ms > n.monitor.lagMs;
+  if (!lag || !n.monitor.notify) return;
+  const { nt_net_notified: last = 0 } = await chrome.storage.session.get('nt_net_notified');
+  if (Date.now() - last < 10 * 60e3) return;
+  await chrome.storage.session.set({ nt_net_notified: Date.now() });
+  chrome.notifications.create('net:lag', {
+    type: 'basic', iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+    title: t('Sua internet travou'),
+    message: Number.isFinite(s.ms) ? `${t('Latência de')} ${Math.round(s.ms)} ms (${t('limite')}: ${n.monitor.lagMs} ms).` : t('Sem resposta do servidor de teste.'),
+  });
+}
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg?.type === 'net:monitor' && sender.id === chrome.runtime.id) syncNetAlarm().catch(() => {});
+});
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !changes[DATA_KEY]) return;
+  const a = changes[DATA_KEY].oldValue?.settings?.net?.monitor || {};
+  const b = changes[DATA_KEY].newValue?.settings?.net?.monitor || {};
+  if (a.on !== b.on || a.background !== b.background) syncNetAlarm().catch(() => {});
+});
+
 // ---------- Eventos ----------
 function setupPeriodic() {
   chrome.alarms.create('update-check', { delayInMinutes: 1, periodInMinutes: 12 * 60 });
@@ -684,6 +757,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   syncPonte().catch(() => {});
   syncShareAlarm().catch(() => {});
   syncMailAlarm().catch(() => {});
+  syncNetAlarm().catch(() => {});
   if (details.reason === 'update') {
     await chrome.storage.local.set({ [WHATSNEW_KEY]: chrome.runtime.getManifest().version });
     await chrome.action.setBadgeText({ text: '' });
@@ -697,6 +771,7 @@ chrome.runtime.onStartup.addListener(async () => {
   syncPonte().catch(() => {});
   syncShareAlarm().catch(() => {});
   syncMailAlarm().catch(() => {});
+  syncNetAlarm().catch(() => {});
 });
 
 // Comando de teclado global: abrir a NeuroTab ouvindo um comando de voz.

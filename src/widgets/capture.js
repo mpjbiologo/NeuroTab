@@ -2,6 +2,7 @@
 import { h, micButton, toLocalInput, fromLocalInput } from '../lib/ui.js';
 import { parseReminder, fmtDateTime } from '../lib/brain.js';
 import { saveCapture, validateImage } from '../lib/captures.js';
+import { extractUrls, platformOf, PLATFORMS } from '../lib/media-links.js';
 import { t } from '../lib/i18n.js';
 
 export default {
@@ -23,8 +24,25 @@ export default {
     const save = h('button', { class: 'btn primary', type: 'button', onclick: () => submit() }, 'Salvar');
 
     const detected = () => (when.hidden ? parseReminder(ta.value) : fromLocalInput(when.value));
+    // Link de post, vídeo ou artigo colado sozinho: oferece salvar com resumo (#67).
+    const mediaUrl = () => { const u = extractUrls(ta.value); const rest = ta.value.replace(u[0] || '', '').trim(); return u.length === 1 && rest.length < 4 ? u[0] : ''; };
+    const mediaBtn = h('button', { class: 'chip media-offer', type: 'button', hidden: true, onclick: async () => {
+      const url = mediaUrl();
+      if (!url) return;
+      mediaBtn.disabled = true;
+      ctx.toast('Lendo e resumindo… 🎬');
+      const r = await chrome.runtime.sendMessage({ type: 'media:save', url }).catch((e) => ({ error: e.message }));
+      mediaBtn.disabled = false;
+      if (r?.error && !r.id) { ctx.toast(t('Não deu para salvar:') + ' ' + r.error); return; }
+      ta.value = '';
+      updateHint();
+      ctx.toast(r.status === 'processado' ? 'Salvo no cérebro com resumo 🎬' : r.existed ? 'Já estava salvo — atualizado 🎬' : 'Salvo no cérebro 🎬 (resumo pendente: abra o item para ver o motivo)');
+    } }, '🎬 ', t('Salvar com resumo'));
     const updateHint = () => {
       const ts = detected();
+      const mu = mediaUrl();
+      mediaBtn.hidden = !mu;
+      if (mu) { hint.textContent = `🎬 ${PLATFORMS[platformOf(mu)].label}: ${t('salve com título, resumo, pontos-chave e categoria.')}`; return; }
       hint.textContent = ts ? `⏰ Lembrete: ${fmtDateTime(ts)}` : ctx.aiReady() ? '✨ A IA vai dar título, tags e detectar lembretes.' : '';
     };
     ta.addEventListener('input', updateHint);
@@ -90,7 +108,7 @@ export default {
       pasteBox.hidden = false;
     });
 
-    el.append(ta, pasteBox, h('div', { class: 'toolbar' }, ...chips, clockBtn, when, h('span', { class: 'grow' }), mic, save), hint);
+    el.append(ta, pasteBox, h('div', { class: 'toolbar' }, ...chips, clockBtn, when, h('span', { class: 'grow' }), mediaBtn, mic, save), hint);
     updateHint();
     return { destroy: clearPaste };
   },
