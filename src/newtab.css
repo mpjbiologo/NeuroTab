@@ -1058,3 +1058,11 @@ input[type=checkbox], input[type=radio], input[type=range], progress { accent-co
 .sys-hint ol { padding-left: 20px; }
 .sys-note { margin: 0; font-size: var(--fs-xs); }
 .sys .bad { color: var(--bad); }
+
+/* Baixar vídeo da Mídia (0.7.11) */
+.im-dl { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding-top: 6px; border-top: 1px solid var(--border); }
+.im-dl .ok { color: var(--ok); }
+.im-dl .warn { color: var(--warn); }
+.im-dl-bar { flex: 1 1 140px; max-width: 260px; height: 6px; border-radius: 3px; background: var(--tint-2); overflow: hidden; }
+.im-dl-bar i { display: block; height: 100%; background: var(--accent); transition: width var(--dur-2); }
+.im-dl-note { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; flex-basis: 100%; }

@@ -6,6 +6,7 @@ import { DEFAULT_TILES, sanitizeTiles, cleanIcon, SHAPES } from './tiles.js';
 import { THEMES as THEME_IDS } from './theme.js';
 import { DEFAULT_NET, sanitizeNet } from './net.js';
 import { DEFAULT_MEDIA_SAVE, sanitizeMediaSave } from './media.js';
+import { DEFAULT_MEDIA_DL, sanitizeMediaDl } from './media-download.js';
 import { DEFAULT_SYS, sanitizeSys } from './sysinfo.js';
 
 export const DATA_KEY = 'nt_data';
@@ -88,6 +89,7 @@ export const DEFAULT_SETTINGS = {
   tiles: DEFAULT_TILES, // formato, tamanho e cores dos blocos de atalho (#59)
   look: DEFAULT_LOOK, // ajustes do editor visual por cima do tema (#58)
   customThemes: [], // [{ id, name, base, look }] temas salvos pela pessoa
+  mediaDl: DEFAULT_MEDIA_DL, // baixar o vídeo dos itens de Mídia (0.7.11)
   mediaSave: DEFAULT_MEDIA_SAVE, // "Salvar no cérebro com resumo": categorias, IA na internet, imagens (#67)
   net: DEFAULT_NET,
   system: DEFAULT_SYS, // widget Sistema: o que mostrar, °C/°F, intervalo, alertas, LibreHardwareMonitor (0.7.10) // widget Rede: servidor, tamanho do teste, DNS comparados, monitor de travadas (#52)
@@ -150,6 +152,7 @@ export function mergeSettings(s = {}) {
     look: sanitizeLook(s.look),
     net: sanitizeNet(s.net),
     mediaSave: sanitizeMediaSave(s.mediaSave),
+    mediaDl: sanitizeMediaDl(s.mediaDl),
     system: sanitizeSys(s.system),
     customThemes: Array.isArray(s.customThemes) ? s.customThemes.map((t) => sanitizeTheme(t, THEME_IDS)).filter(Boolean).slice(0, MAX_THEMES) : [],
     dockMode: ['always', 'auto', 'collapsed'].includes(s.dockMode) ? s.dockMode : 'always',

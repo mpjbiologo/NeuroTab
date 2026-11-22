@@ -115,7 +115,7 @@ export function fakeMicWav(pattern = [[1.2, 0.4], [2.5, 0]], rate = 16000) {
   return file;
 }
 
-export async function launch({ locale = 'pt-BR', viewport = { width: 1366, height: 850 }, voice = false, ai, fakeMic = null, args = [], ext = EXT } = {}) {
+export async function launch({ locale = 'pt-BR', viewport = { width: 1366, height: 850 }, voice = false, ai, fakeMic = null, args = [], ext = EXT, env = null } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'neurotab-e2e-'));
   const ctx = await chromium.launchPersistentContext(dir, {
     headless: true,
@@ -123,6 +123,7 @@ export async function launch({ locale = 'pt-BR', viewport = { width: 1366, heigh
     locale,
     viewport,
     acceptDownloads: true,
+    ...(env ? { env: { ...process.env, ...env } } : {}),
     args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`, `--lang=${locale}`,
       ...args,
       ...(fakeMic ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${fakeMic}`, '--autoplay-policy=no-user-gesture-required'] : [])],

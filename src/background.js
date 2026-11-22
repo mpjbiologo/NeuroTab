@@ -16,6 +16,8 @@ import { addClip, clipConfig, pruneClips, CLIP_CFG_KEY, CLIP_KEY } from './lib/c
 import { shareConfig, canReceive, cleanPayload, NATIVE_HOST } from './lib/clipboard-share.js';
 import { checkMail, mailConfig, notificationsFor, MAIL_CFG_KEY, GMAIL_ORIGIN } from './lib/mail.js';
 import { saveMedia, summarizeMedia } from './lib/media-save.js';
+import { downloadMedia, cancelDownload, revealDownload } from './lib/media-dl-run.js';
+import { sanitizeMediaDl, canDownload } from './lib/media-download.js';
 import { NET_KEY, sanitizeNet, sanitizeStore, serverBase, originOf, measureLatency, median, SAMPLES_MAX } from './lib/net.js';
 import { dispatchShares, pollShares, receivePayload, patchState, me as shareMe } from './lib/clipboard-sync.js';
 
@@ -41,6 +43,7 @@ async function rebuildMenus() {
   chrome.contextMenus.create({ id: 'nt-page', parentId: 'nt-root', title: t('🔖 Salvar página no cérebro (ler depois)'), contexts: ['page'] });
   chrome.contextMenus.create({ id: 'nt-media', parentId: 'nt-root', title: t('🎬 Salvar no cérebro com resumo'), contexts: ['page'] });
   chrome.contextMenus.create({ id: 'nt-media-link', parentId: 'nt-root', title: t('🎬 Salvar link no cérebro com resumo'), contexts: ['link'] });
+  chrome.contextMenus.create({ id: 'nt-media-dl', parentId: 'nt-root', title: t('⬇ Baixar o vídeo (e salvar no cérebro)'), contexts: ['page', 'video'], documentUrlPatterns: DL_PAGES });
   chrome.contextMenus.create({ id: 'nt-link', parentId: 'nt-root', title: t('🔗 Salvar link no cérebro'), contexts: ['link'] });
   chrome.contextMenus.create({ id: 'nt-image', parentId: 'nt-root', title: t('🖼️ Salvar imagem na biblioteca'), contexts: ['image'] });
   chrome.contextMenus.create({ id: 'nt-analyze', parentId: 'nt-root', title: t('🔍 Analisar imagem'), contexts: ['image'] });
@@ -146,6 +149,23 @@ async function flashBadge(tabId, ok, detail = '') {
 }
 
 /** Aviso depois de salvar uma mídia: resumida, já existia ou esperando (autorização da IA / permissão do site). */
+// Baixar vídeos da Mídia (0.7.11): só nestes sites (YouTube nunca).
+const DL_PAGES = ['https://www.instagram.com/*', 'https://www.tiktok.com/*', 'https://x.com/*', 'https://twitter.com/*'];
+
+function notifyDownloaded(item) {
+  chrome.notifications.create('media-dl:' + item.id, { type: 'basic', iconUrl: chrome.runtime.getURL('icons/icon128.png'), title: t('⬇ Vídeo baixado'), message: (item.title || item.url || '').slice(0, 200) });
+}
+
+/** "Baixar junto ao salvar" (Configurações → Mídia): sem perguntar nada; só com as permissões já dadas. */
+async function autoDownload(saved, tabId = null) {
+  const item = saved?.item;
+  if (!canDownload(item) || item.media?.download) return;
+  const cfg = sanitizeMediaDl((await loadData()).settings.mediaDl);
+  if (!cfg.auto) return;
+  const r = await downloadMedia(item.id, { tabId });
+  if (r.ok) notifyDownloaded(item);
+}
+
 async function mediaSaved({ item, existed, pending }) {
   if (!item) return;
   const m = item.media || {};
@@ -172,9 +192,19 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     } else if (id === 'nt-page') {
       await captureAndEnrich({ type: 'page', title: tab?.title, url: info.pageUrl, pageTitle: tab?.title, source: 'context' });
     } else if (id === 'nt-media') {
-      await mediaSaved(await saveMedia({ tab }));
+      const saved = await saveMedia({ tab });
+      await mediaSaved(saved);
+      autoDownload(saved, tab?.id).catch(() => {});
+    } else if (id === 'nt-media-dl') {
+      const saved = await saveMedia({ tab });
+      await mediaSaved(saved);
+      const r = await downloadMedia(saved.item.id, { tabId: tab?.id });
+      if (!r.ok) { ok = false; failure = r.need === 'ponte' ? t('Este vídeo precisa da NeuroTab Ponte. Abra o item no cérebro e clique em Baixar vídeo.') : t(r.error || ''); }
+      else notifyDownloaded(saved.item);
     } else if (id === 'nt-media-link') {
-      await mediaSaved(await saveMedia({ url: info.linkUrl }));
+      const saved = await saveMedia({ url: info.linkUrl });
+      await mediaSaved(saved);
+      autoDownload(saved).catch(() => {});
     } else if (id === 'nt-link') {
       await captureAndEnrich({ type: 'page', title: info.selectionText || '', url: info.linkUrl, source: 'context' });
     } else if (id === 'nt-image') {
@@ -688,7 +718,16 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   if (sender.id !== chrome.runtime.id || sender.tab?.url?.startsWith('http')) return;
   if (msg?.type === 'media:save' && (Number.isInteger(msg.tabId) || /^https?:\/\//.test(msg.url || ''))) {
-    (Number.isInteger(msg.tabId) ? saveMedia({ tab: { id: msg.tabId } }) : saveMedia({ url: String(msg.url || '') })).then((r) => reply({ id: r.item?.id, existed: r.existed, pending: r.pending, status: r.item?.media?.status, error: r.item?.media?.error }), (e) => reply({ error: e.message }));
+    (Number.isInteger(msg.tabId) ? saveMedia({ tab: { id: msg.tabId } }) : saveMedia({ url: String(msg.url || '') })).then((r) => { autoDownload(r, Number.isInteger(msg.tabId) ? msg.tabId : null).catch(() => {}); return r; }).then((r) => reply({ id: r.item?.id, existed: r.existed, pending: r.pending, status: r.item?.media?.status, error: r.item?.media?.error }), (e) => reply({ error: e.message }));
+    return true;
+  }
+  if (msg?.type === 'media:download' && typeof msg.id === 'string') {
+    downloadMedia(msg.id, { via: msg.via === 'ponte' ? 'ponte' : null, tabId: Number.isInteger(msg.tabId) ? msg.tabId : null }).then(reply, (e) => reply({ error: e.message }));
+    return true;
+  }
+  if (msg?.type === 'media:download-cancel') { reply({ ok: cancelDownload(String(msg.id || '')) }); return; }
+  if (msg?.type === 'media:reveal') {
+    revealDownload(String(msg.id || ''), { open: !!msg.open }).then(reply, (e) => reply({ error: e.message }));
     return true;
   }
   if (msg?.type === 'media:summarize') {
