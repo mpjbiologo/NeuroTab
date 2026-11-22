@@ -71,6 +71,13 @@ export const FEATURES = {
     data: ['websiteContent'],
     managed: true, // pedido em Configurações → Mídia
   },
+  systemInfo: {
+    label: 'Widget Sistema pelo navegador (processador e memória)',
+    why: 'Sem a NeuroTab Ponte, o widget Sistema mostra o uso do processador e da memória pelas interfaces do próprio navegador (Chrome e Edge). Nada sai do computador.',
+    origins: [],
+    permissions: ['system.cpu', 'system.memory'],
+    managed: true, // pedido no widget
+  },
   network: {
     label: 'Widget Rede (velocidade e DNS)',
     why: 'Mede a velocidade da internet e a latência baixando e enviando dados de teste para o servidor da Cloudflare, e compara a rapidez dos DNS seguros (Cloudflare, Google, Quad9, AdGuard, OpenDNS e NextDNS) com consultas a nomes comuns. Só quando você pede um teste ou liga o monitor; nenhum dado seu é enviado.',
@@ -113,8 +120,8 @@ export async function hasData(type) {
 }
 
 /** Pede origens e/ou consentimento de dados num único pedido. Chamar direto no clique, sem await antes. */
-export function requestAccess({ origins = [], data = [] } = {}) {
-  const req = { origins };
+export function requestAccess({ origins = [], permissions = [], data = [] } = {}) {
+  const req = { origins, ...(permissions.length ? { permissions } : {}) };
   if (usesDataConsent() && data.length) req.data_collection = data;
   return api().request(req).catch(() => false);
 }

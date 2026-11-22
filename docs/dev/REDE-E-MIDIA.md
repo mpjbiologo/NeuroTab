@@ -10,6 +10,14 @@
 - **Monitor:** na aba, a cada `monitor.every` s; em segundo plano (alarme `netmon`, 1/min) só com `monitor.background`. Aviso de travada no máximo a cada 10 min.
 - **Dados:** `nt_net` (testes, amostras, nomes dos aparelhos, último DNS), só local.
 
+## Widget Sistema (0.7.10) — `src/widgets/system.js`
+- **Fontes**, juntadas por `mergeSys` (`src/lib/sysinfo.js`, puro e testado): Ponte > LibreHardwareMonitor (temperaturas, GPU, discos) > navegador (`chrome.system.cpu/memory`, só Chromium). `v.sources` diz quais responderam.
+- **Ponte** (`src/lib/sys-ponte.js` → `ponte/sys*.go`): `connectNative` com `{type:'sys', op:'stream', payload:{interval, procs}}`; a Ponte manda um `SysSnap` a cada intervalo até a porta fechar (`op:'snapshot'` responde uma vez). Leitores sem dependências: `/proc` + `hwmon`/`thermal_zone` (Linux), `sysctl`/`vm_stat`/`pmset`/`ps` (macOS), `kernel32` + PowerShell (Windows); GPU NVIDIA por `nvidia-smi`. `notes` explica o que falta (`temp-windows`, `temp-mac`).
+- **LibreHardwareMonitor:** `GET <url>/data.json` (só `http://localhost`/`127.0.0.1`, permissão pedida para a origem), lido por `parseLhm`.
+- **Ciclo:** só com o widget visível (IntersectionObserver) e a aba visível; para tudo ao sair. Gráficos com os últimos 150 pontos, em memória.
+- **Alertas:** `evalAlerts` (memória só depois de 60 s acima); notificações no máximo 1 por tipo a cada 15 min (`nt_sys_alerted` em `storage.session`).
+- **Configuração:** `settings.system` (`sanitizeSys`).
+
 ## Salvar mídia (#67)
 Adaptado do [Kora](https://github.com/Joaovitor12j/kora) (MIT, Joao V Santos). Créditos em `THIRD-PARTY-NOTICES.md` e em Configurações → Sistema → Sobre e créditos.
 

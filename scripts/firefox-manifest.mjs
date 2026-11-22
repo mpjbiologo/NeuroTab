@@ -11,6 +11,9 @@ m.background = { scripts: ['src/background.js'], type: 'module' };
 // Permissões que só existem no Chromium.
 m.permissions = m.permissions.filter((p) => !['favicon', 'offscreen'].includes(p));
 
+// system.* (widget Sistema pelo navegador) só existe no Chromium; no Firefox o widget usa a NeuroTab Ponte.
+m.optional_permissions = (m.optional_permissions || []).filter((p) => !p.startsWith('system.'));
+
 // Ícones dos sites vêm do DuckDuckGo no Firefox.
 m.host_permissions = [...new Set([...(m.host_permissions || []), 'https://icons.duckduckgo.com/*'])];
 
