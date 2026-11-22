@@ -20,5 +20,6 @@ import clipboard from './clipboard.js';
 import email from './email.js';
 import mood from './mood.js';
 import network from './network.js';
+import system from './system.js';
 
-export const WIDGETS = Object.fromEntries([capture, focus, reminders, agenda, email, clipboard, brain, ask, weather, quotes, clock, calc, browsing, traffic, photos, imageLibrary, habits, mood, network, news, shortcuts].map((w) => [w.id, w]));
+export const WIDGETS = Object.fromEntries([capture, focus, reminders, agenda, email, clipboard, brain, ask, weather, quotes, clock, calc, browsing, traffic, photos, imageLibrary, habits, mood, network, news, shortcuts, system].map((w) => [w.id, w]));

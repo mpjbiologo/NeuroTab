@@ -12,6 +12,7 @@ A fonte da verdade é `src/lib/permissions.js`; o teste `tests/unit/permissions.
 | `favicon` (só Chromium) | Ícones dos atalhos |
 | `alarms`, `notifications` | Lembretes, despertador, timer e pomodoro |
 | `offscreen` (só Chromium) | Tocar o som do alarme em segundo plano |
+| `system.cpu`, `system.memory` (opcionais, só Chromium) | Widget Sistema sem a NeuroTab Ponte: uso do processador e da memória; pedidas no widget |
 | `topSites`, `sessions`, `tabs` (opcionais) | Widget "Navegação": mais visitados e abas fechadas; pedidas ao adicionar o widget |
 
 ## Acesso a sites
@@ -32,6 +33,7 @@ Não há acesso obrigatório a "todos os sites" nem a endereços `http://` (exce
 
 ## Diferenças entre navegadores
 
+- **Firefox** não tem `system.*`: o widget Sistema usa só a NeuroTab Ponte (as permissões são removidas do pacote).
 - **Firefox** não tem `favicon` nem `offscreen`: os ícones vêm do DuckDuckGo (`icons.duckduckgo.com`, acesso extra só no pacote do Firefox) e o som toca na página de fundo. O pacote é gerado por `scripts/firefox-manifest.mjs`.
 - **Consentimento de dados (Firefox 140+):** o pacote do Firefox declara `required: ["none"]` e `optional: ["locationInfo", "websiteContent"]`. A localização é pedida ao adicionar uma cidade ou buscar um endereço; o envio de conteúdo à IA, ao salvar o provedor. Sem consentimento, o clima não é buscado e a IA não é chamada. No Chromium esse consentimento não existe e as verificações sempre passam.
 - Recusar uma permissão desliga só aquele recurso; o resto continua funcionando.

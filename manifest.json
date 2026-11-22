@@ -3,7 +3,7 @@
   "name": "__MSG_extName__",
   "short_name": "NeuroTab",
   "description": "__MSG_extDescription__",
-  "version": "0.7.9.1",
+  "version": "0.7.10",
   "default_locale": "pt_BR",
   "homepage_url": "https://github.com/mpjbiologo/NeuroTab",
   "icons": {
@@ -96,7 +96,9 @@
     "tabs",
     "identity",
     "clipboardRead",
-    "nativeMessaging"
+    "nativeMessaging",
+    "system.cpu",
+    "system.memory"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"

@@ -1,6 +1,24 @@
 # Changelog
 
-## v0.7.9.1 — em preparação
+## v0.7.10
+**Veja o que o seu computador está fazendo: temperaturas, memória, discos e os programas que mais gastam.**
+
+- 🖥️ **Novo widget Sistema:**
+  - **Processador:** uso agora, gráfico dos últimos minutos, uso de cada núcleo, frequência e temperatura
+  - **Placa de vídeo:** uso, memória de vídeo e temperatura (NVIDIA pelo `nvidia-smi`, AMD no Linux, qualquer uma pelo LibreHardwareMonitor)
+  - **Memória:** em uso, livre e troca (swap), com gráfico
+  - **Discos:** espaço livre e ocupado de cada um, com cor de alerta quando está acabando
+  - **Bateria** (notebooks) e há quanto tempo o computador está ligado
+  - **Programas que mais gastam**, por processador ou por memória
+  - Todos os sensores de temperatura numa lista que abre
+  - Atualiza a cada 2 s (configurável) **só enquanto o widget está na tela**; parado, não gasta nada
+  - **Alertas** opcionais: processador ou placa de vídeo quente, disco quase cheio e memória cheia por mais de 1 minuto (no máximo um aviso de cada tipo a cada 15 min)
+  - No ⚙️: o que mostrar, °C ou °F, intervalo, limites dos alertas e as fontes
+- 🌡 **Temperaturas no Windows:** o Windows não entrega as temperaturas a programas comuns, então o widget lê do **[LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)** (gratuito): abra-o, em *Options → Remote Web Server* marque *Run* (porta 8085) e ligue a opção no ⚙️ do widget. O passo a passo aparece no próprio widget
+- Sem a NeuroTab Ponte, no Chrome e no Edge o widget mostra pelo menos o processador e a memória pelo próprio navegador (permissão pedida no widget)
+- **NeuroTab Ponte:** ganhou a leitura do sistema (Windows, macOS e Linux). Baixe a versão nova na release para usar o widget completo
+
+## v0.7.9.1
 **Ícones dos atalhos nítidos.**
 
 - 🔲 Os ícones dos sites agora são guardados em 96 px (antes 32 px). Em Aparência → Estilo dos atalhos → *Ícones dos sites*, escolha **Google — alta resolução** (ou DuckDuckGo) e clique em *Atualizar ícones* para trocar os que já existem. Ícones que você escolheu e as cores não mudam

@@ -34,8 +34,8 @@ test('permissões de API usadas no código', () => {
     assert.ok(manifest.permissions.includes(p), `falta ${p}`);
     assert.ok(used.includes('chrome.' + p), `${p} declarada mas não usada`);
   }
-  const src = execFileSync('grep', ['-rhoE', "clipboardRead|connectNative", 'src'], { cwd: root.pathname }).toString();
-  const special = { clipboardRead: 'clipboardRead', nativeMessaging: 'connectNative' }; // não são namespaces chrome.*
+  const src = execFileSync('grep', ['-rhoE', "clipboardRead|connectNative|system\\.cpu|system\\.memory", 'src'], { cwd: root.pathname }).toString();
+  const special = { clipboardRead: 'clipboardRead', nativeMessaging: 'connectNative', 'system.cpu': 'system.cpu', 'system.memory': 'system.memory' }; // não são namespaces chrome.*
   for (const p of manifest.optional_permissions) assert.ok(special[p] ? src.includes(special[p]) : used.includes('chrome.' + p), `${p} opcional não usada`);
 });
 
@@ -47,6 +47,7 @@ test('manifest do Firefox é gerado corretamente', () => {
   const ff = JSON.parse(readFileSync(file, 'utf8'));
   assert.deepEqual(ff.background, { scripts: ['src/background.js'], type: 'module' });
   assert.ok(!ff.permissions.includes('offscreen') && !ff.permissions.includes('favicon'));
+  assert.ok(!ff.optional_permissions.some((p) => p.startsWith('system.')), 'system.* não existe no Firefox');
   assert.equal(ff.browser_specific_settings.gecko.id, 'neurotab@mpjbiologo.github.io');
   assert.ok(ff.host_permissions.includes('https://icons.duckduckgo.com/*'));
   assert.equal(ff.browser_specific_settings.gecko.strict_min_version, '140.0');

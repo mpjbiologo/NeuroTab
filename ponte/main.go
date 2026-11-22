@@ -1,5 +1,5 @@
 // NeuroTab Ponte — leva a área de transferência da NeuroTab para o celular pela rede local (0.7.7.2)
-// e faz o diagnóstico de rede do widget Rede (0.7.9): ping, DNS, aparelhos e programas.
+// e faz o diagnóstico de rede do widget Rede (0.7.9) e as leituras do widget Sistema (0.7.10).
 //
 // Dois jeitos de rodar:
 //   - aberto pela pessoa (duplo clique / terminal): instala e registra no Chrome, Edge, Brave, Chromium e Firefox;
@@ -49,6 +49,9 @@ func runNative(in *os.File, out *os.File) error {
 	first, err := readMsg(r)
 	if err != nil {
 		return err
+	}
+	if first.Type == "sys" { // widget Sistema (0.7.10): uma leitura ou leituras contínuas até a extensão fechar
+		return runSys(*first, r, w)
 	}
 	if first.Type == "net" { // diagnóstico de rede: responde e fecha (widget Rede, 0.7.9)
 		res, err := handleNet(first.Op, first.Payload)
