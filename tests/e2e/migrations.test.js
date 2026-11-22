@@ -8,7 +8,14 @@ test('dados da v0.3 são migrados ao abrir a nova aba', async () => {
   try {
     // Grava os dados antigos a partir de uma página neutra (a nova aba reage a mudanças no armazenamento).
     const g = await x.open('src/grant.html', { wait: 200 });
-    await x.seed(g, fixtureJSON('legacy-v0.3-storage.json'), { clear: true, reload: false });
+    // Grava antes e só depois apaga o resto: com clear() + set(), o service worker podia ver o nt_data vazio
+    // no meio e gravar os padrões por cima dos dados antigos (o teste falhava às vezes).
+    const legacy = fixtureJSON('legacy-v0.3-storage.json');
+    await g.evaluate(async (v) => {
+      await chrome.storage.local.set(v);
+      const extra = Object.keys(await chrome.storage.local.get(null)).filter((k) => !(k in v));
+      await chrome.storage.local.remove(extra);
+    }, legacy);
     await g.close();
     const p = await x.open('src/newtab.html', { wait: 300 });
     // Espera a migração terminar (em vez de um tempo fixo, que falhava com a máquina carregada).
