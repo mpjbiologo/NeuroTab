@@ -265,6 +265,65 @@
         <button class="btn" id="reset">Restaurar padrões</button>
         <span class="hint">As alterações são salvas automaticamente.</span>
       </div>
+      <h2 data-page="apps">Apps externos</h2>
+      <p>A NeuroTab funciona sozinha no navegador. Alguns recursos precisam de um programa no computador, porque uma extensão não pode, por segurança, ler os sensores, a rede ou gravar arquivos fora da pasta Downloads. Todos são <b>opcionais</b>, gratuitos e de código aberto: só instale o que for usar.</p>
+
+      <div class="app-card" id="appPonte">
+        <div class="app-h"><h3>🔌 NeuroTab Ponte</h3><span class="app-tag">Opcional · da NeuroTab</span></div>
+        <p>Programa pequeno da própria NeuroTab, feito com o mesmo código aberto da extensão. O navegador o abre sozinho quando precisa e o fecha quando termina; ele não fica rodando à toa nem envia nada para fora do computador.</p>
+        <p><b>Por que existe:</b> o navegador não deixa uma extensão medir o ping de verdade, ver os aparelhos da rede, ler a temperatura do processador ou rodar o yt-dlp. A Ponte faz só isso, e só quando a NeuroTab pede.</p>
+        <ul class="app-uses">
+          <li>📋 Área de transferência no celular, pela rede local</li>
+          <li>📶 Widget Rede: ping, DNS da operadora, aparelhos e programas usando a rede</li>
+          <li>🖥️ Widget Sistema: discos, temperaturas, placa de vídeo e programas</li>
+          <li>⬇ Baixar vídeos da Mídia (com o yt-dlp e o ffmpeg)</li>
+        </ul>
+        <p class="app-status" id="ponteStatus"></p>
+        <div class="toolbar"><a class="btn primary" id="ponteDownload" target="_blank" rel="noopener">⬇ Baixar a Ponte</a><button type="button" class="btn" id="ponteCheck">Verificar</button><a class="btn" href="https://github.com/mpjbiologo/NeuroTab/tree/main/ponte" target="_blank" rel="noopener">Código-fonte</a></div>
+        <details class="app-av" open>
+          <summary>⚠️ O antivírus ou o Windows podem avisar — é seguro</summary>
+          <p>Ao baixar ou abrir a Ponte, o <b>Windows (SmartScreen)</b>, o <b>Edge/Chrome</b> ou antivírus como o <b>Avast</b> podem analisar o arquivo, perguntar se você quer mantê-lo ou mostrar "O Windows protegeu o computador". Isso acontece com quase todo programa novo de código aberto: o aviso vem da <b>falta de reputação</b> (poucos downloads ainda) e de uma assinatura digital paga, não de algo errado no arquivo.</p>
+          <p><b>Por que dá para confiar:</b> o código é aberto; o arquivo é compilado automaticamente pelo GitHub a partir desse código, na hora da release; e cada versão publica a soma SHA-256 de cada arquivo (<code>neurotab-ponte-SHA256SUMS.txt</code>), para você conferir que recebeu exatamente o que foi compilado.</p>
+          <ol>
+            <li><b>No download (Edge/Chrome):</b> se aparecer "não é baixado com frequência", clique em <b>⋯ → Manter → Mostrar mais → Manter mesmo assim</b>.</li>
+            <li><b>Ao abrir (SmartScreen):</b> em "O Windows protegeu o computador", clique em <b>Mais informações → Executar assim mesmo</b>.</li>
+            <li><b>Antivírus (Avast, AVG, Defender…):</b> deixe terminar a análise. Se ele colocar o arquivo em quarentena, restaure e adicione uma exceção para o arquivo.</li>
+            <li><b>Para conferir (opcional):</b> no PowerShell, rode <code>Get-FileHash .\neurotab-ponte-windows-amd64.exe</code> e compare com a linha do arquivo no <code>neurotab-ponte-SHA256SUMS.txt</code> da release.</li>
+          </ol>
+          <p class="hint">Estamos pedindo uma assinatura digital gratuita para projetos de código aberto; com ela, esses avisos diminuem.</p>
+        </details>
+      </div>
+
+      <div class="app-card">
+        <div class="app-h"><h3>🎞️ yt-dlp</h3><span class="app-tag">Opcional · usado pela Ponte</span></div>
+        <p>Programa de código aberto (licença Unlicense) que baixa vídeos de sites.</p>
+        <p><b>Por que existe:</b> o Instagram entrega o vídeo e o áudio em pedaços separados, que o navegador não consegue juntar num arquivo. O yt-dlp baixa os pedaços na melhor qualidade. A Ponte só o usa para Instagram, TikTok e X; nunca para o YouTube.</p>
+        <p class="app-status" id="ytdlpStatus"></p>
+        <div class="toolbar"><a class="btn" href="#salvar-midia">⚙️ Instalar em Salvar mídia → Baixar vídeos</a><a class="btn" href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">Site oficial</a></div>
+      </div>
+
+      <div class="app-card">
+        <div class="app-h"><h3>🎚️ ffmpeg</h3><span class="app-tag">Opcional · usado pela Ponte</span></div>
+        <p>Programa de código aberto (licença LGPL/GPL) para converter áudio e vídeo.</p>
+        <p><b>Por que existe:</b> junta o vídeo e o áudio que o yt-dlp baixou num único .mp4. Sem ele, a Ponte baixa só a versão que já vem com áudio, às vezes em qualidade menor.</p>
+        <p class="app-status" id="ffmpegStatus"></p>
+        <div class="toolbar"><a class="btn" href="#salvar-midia">⚙️ Instalar em Salvar mídia → Baixar vídeos</a><a class="btn" href="https://ffmpeg.org" target="_blank" rel="noopener">Site oficial</a></div>
+      </div>
+
+      <div class="app-card">
+        <div class="app-h"><h3>🌡️ LibreHardwareMonitor</h3><span class="app-tag">Opcional · só Windows</span></div>
+        <p>Programa de código aberto (licença MPL-2.0) que lê os sensores do computador.</p>
+        <p><b>Por que existe:</b> o Windows não entrega as temperaturas do processador e da placa de vídeo a programas comuns. O LibreHardwareMonitor lê e mostra numa página local (<code>http://localhost:8085</code>), de onde o widget Sistema pega os números. Baixe o <code>LibreHardwareMonitor.zip</code> e ligue <b>Options → Remote Web Server → Run</b>.</p>
+        <p class="hint">Ele precisa rodar como administrador para ler os sensores, e alguns antivírus avisam do driver que ele usa para isso.</p>
+        <div class="toolbar"><a class="btn" href="https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases" target="_blank" rel="noopener">Baixar</a></div>
+      </div>
+
+      <div class="app-card">
+        <div class="app-h"><h3>🦙 Ollama</h3><span class="app-tag">Opcional · IA no computador</span></div>
+        <p>Programa de código aberto (licença MIT) que roda modelos de IA no próprio computador.</p>
+        <p><b>Por que existe:</b> com ele, os resumos, a organização do cérebro e a análise de imagens são feitos sem internet e sem enviar nada para fora. Precisa de um computador com memória suficiente para o modelo.</p>
+        <div class="toolbar"><a class="btn" href="#ia">⚙️ Configurar em IA → Provedor e modelo</a><a class="btn" href="https://ollama.com" target="_blank" rel="noopener">Site oficial</a></div>
+      </div>
           <h2 data-page="creditos">Sobre e créditos</h2>
       <p><b>NeuroTab</b> <span id="aboutVersion"></span> — código aberto, licença MIT. <a href="https://github.com/mpjbiologo/NeuroTab" target="_blank" rel="noopener">github.com/mpjbiologo/NeuroTab</a></p>
       <p>A NeuroTab usa ou adapta o trabalho destes projetos. Obrigado!</p>

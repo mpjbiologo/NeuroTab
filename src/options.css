@@ -338,3 +338,18 @@ main { width: 100%; max-width: 1480px; }
 .dl-tools { display: grid; gap: 8px; }
 .dl-tool { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .dl-tool small { color: var(--text-2); }
+
+/* Sistema → Apps externos */
+.app-card { border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin: 14px 0; display: grid; gap: 6px; }
+.app-card p { margin: 0; }
+.app-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.app-h h3 { margin: 0; }
+.app-tag { font-size: var(--fs-xs); color: var(--text-2); border: 1px solid var(--border); border-radius: 999px; padding: 1px 10px; }
+.app-uses { margin: 2px 0; padding-left: 20px; display: grid; gap: 2px; }
+.app-status { font-size: var(--fs-sm); color: var(--text-2); }
+.app-status:empty { display: none; }
+.app-status.ok { color: var(--ok); } .app-status.warn { color: var(--warn); } .app-status.bad { color: var(--bad); }
+.app-av { margin-top: 6px; padding: 10px 12px; border-radius: 10px; background: color-mix(in oklch, var(--warn) 10%, transparent); }
+.app-av summary { cursor: pointer; font-weight: 600; }
+.app-av p, .app-av ol { margin: 8px 0 0; }
+.app-av ol { padding-left: 20px; display: grid; gap: 4px; }

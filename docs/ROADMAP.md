@@ -36,7 +36,8 @@ Primeiro a base, depois os recursos.
 - ✅ **0.7.9.1 — Ícones nítidos:** ícones dos atalhos guardados em 96 px, com a opção de buscá-los em alta resolução no Google ou no DuckDuckGo.
 - ✅ **0.7.10 — Sistema:** widget com uso e temperatura do processador e da placa de vídeo, memória, discos, bateria e os programas que mais gastam, com gráficos e alertas; pela NeuroTab Ponte, com temperaturas no Windows pelo LibreHardwareMonitor e só processador e memória pelo navegador quando não há Ponte.
 - ✅ **0.7.10.1 — LibreHardwareMonitor mais claro:** o widget diz qual arquivo baixar e como abrir.
-- **0.7.11 — Baixar vídeos da Mídia:** o vídeo dos posts salvos (Instagram, TikTok e X) vai para a pasta Downloads, pelo navegador ou pela NeuroTab Ponte com o yt-dlp e o ffmpeg, usando o login do site quando preciso; configurável em Configurações → Mídia. YouTube fica de fora (regra das lojas).
+- ✅ **0.7.11 — Baixar vídeos da Mídia:** o vídeo dos posts salvos (Instagram, TikTok e X) vai para a pasta Downloads, pelo navegador ou pela NeuroTab Ponte com o yt-dlp e o ffmpeg, usando o login do site quando preciso; configurável em Configurações → Mídia. YouTube fica de fora (regra das lojas).
+- **0.7.11.1 — Apps externos:** página que explica cada programa externo (Ponte, yt-dlp, ffmpeg, LibreHardwareMonitor, Ollama), com o aviso do antivírus; metadados no executável da Ponte para Windows e pedido de assinatura digital gratuita.
 - **Depois — Microsoft:** Outlook (agenda e e-mail) e OneDrive (sincronização), com as mesmas contas. Fica para quando o app estiver registrado no Microsoft Entra; ganha o número da versão em que entrar.
 
 ### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 4 atualizações

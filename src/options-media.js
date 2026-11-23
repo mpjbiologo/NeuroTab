@@ -6,6 +6,7 @@ import { categoriesToText, categoriesFromText, DEFAULT_CATEGORIES, sanitizeMedia
 import { MEDIA_ORIGINS } from './lib/media-save.js';
 import { sanitizeMediaDl, DL_ORIGINS, DL_ERRORS } from './lib/media-download.js';
 import { ponteDl } from './lib/media-dl-run.js';
+import { NATIVE_HOST } from './lib/clipboard-share.js';
 import { ponteAllowed, askPonte } from './lib/net-ponte.js';
 import { ponteDownloads } from './widgets/clipboard-share-ui.js';
 import { t } from './lib/i18n.js';
@@ -47,6 +48,7 @@ export function setupMediaSave(a) {
   $('#mediaExport').onclick = exportObsidian;
 
   setupMediaDl();
+  setupApps();
 
   // Sobre e créditos
   $('#aboutVersion').textContent = 'v' + chrome.runtime.getManifest().version;
@@ -117,6 +119,7 @@ async function checkTools(ask) {
     const dl = ponteDownloads();
     box.replaceChildren(h('p', { class: 'hint' }, '⚠️ ', t(DL_ERRORS[e.code] || e.message)),
       ['missing', 'old'].includes(e.code) ? h('a', { class: 'btn primary', href: dl.url(dl.mine), target: '_blank', rel: 'noopener' }, '⬇ ', t('Baixar a Ponte para'), ' ', dl.all[dl.mine].label) : null,
+      ['missing', 'old'].includes(e.code) ? h('p', { class: 'hint' }, '🛡️ ', t('Se o Windows ou o antivírus avisar ao baixar ou abrir, é normal em programa novo e é seguro.'), ' ', h('a', { href: '#apps' }, t('Veja como seguir'))) : null,
       again);
     return;
   }
@@ -144,5 +147,71 @@ async function install(what, btn) {
     btn.disabled = false;
     btn.textContent = label;
     api.toast(t('Não deu para instalar:') + ' ' + (e.code === 'manual' ? t('instale pelo gerenciador de pacotes do sistema') : e.message));
+  }
+}
+
+// ---------- Sistema → Apps externos ----------
+/** Versão da NeuroTab Ponte instalada: { state: ok|missing|old|timeout, version }. */
+function ponteInfo() {
+  return new Promise((resolve) => {
+    let port;
+    try { port = chrome.runtime.connectNative(NATIVE_HOST); } catch { resolve({ state: 'missing' }); return; }
+    let done = false;
+    const fin = (v) => { if (done) return; done = true; try { port.disconnect(); } catch { /* já fechou */ } resolve(v); };
+    port.onMessage.addListener((m) => fin(m?.type === 'net' ? { state: 'ok', version: m.version || '' } : { state: 'old' }));
+    port.onDisconnect.addListener(() => {
+      const msg = chrome.runtime.lastError?.message || '';
+      fin(/not found|no such native|not registered|specified native messaging host/i.test(msg) ? { state: 'missing' } : { state: 'old' });
+    });
+    port.postMessage({ type: 'net', op: 'info' });
+    setTimeout(() => fin({ state: 'timeout' }), 15000);
+  });
+}
+
+const older = (a, b) => {
+  const x = String(a).split('.').map(Number);
+  const y = String(b).split('.').map(Number);
+  if (x.some(Number.isNaN) || y.some(Number.isNaN)) return false; // "dev" (compilada à mão)
+  for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0);
+  return false;
+};
+
+function setupApps() {
+  if (!$('#appPonte')) return;
+  const dl = ponteDownloads();
+  const a = $('#ponteDownload');
+  a.href = dl.url(dl.mine);
+  a.textContent = `⬇ ${t('Baixar a Ponte para')} ${dl.all[dl.mine].label}`;
+  $('#ponteCheck').onclick = () => checkApps(true);
+  ponteAllowed().then((ok) => checkApps(false, ok));
+}
+
+async function checkApps(ask, allowed = null) {
+  const st = $('#ponteStatus');
+  const yt = $('#ytdlpStatus');
+  const ff = $('#ffmpegStatus');
+  const set = (el, txt, cls = '') => { el.textContent = txt; el.className = 'app-status ' + cls; };
+  if (!(allowed ?? (await ponteAllowed())) && !(ask && (await askPonte()))) {
+    set(st, t('Ainda não verificada. Clique em Verificar (o navegador pede permissão para falar com a Ponte).'));
+    set(yt, t('Verifique a Ponte primeiro.'));
+    set(ff, t('Verifique a Ponte primeiro.'));
+    return;
+  }
+  set(st, '⏳ ' + t('Verificando…'));
+  const info = await ponteInfo();
+  const mine = chrome.runtime.getManifest().version;
+  if (info.state === 'missing') set(st, '❌ ' + t('Não instalada neste computador. Baixe, abra o arquivo uma vez e clique em Verificar.'), 'bad');
+  else if (info.state === 'old') set(st, '⚠️ ' + t('Instalada, mas é uma versão antiga. Baixe a nova e abra uma vez para atualizar.'), 'warn');
+  else if (info.state === 'timeout') set(st, '⚠️ ' + t('A Ponte não respondeu. Um antivírus pode estar bloqueando: veja o aviso abaixo.'), 'warn');
+  else if (info.version && older(info.version, mine)) set(st, `✅ ${t('Instalada')} — ${t('versão')} ${info.version}. ${t('Há uma versão mais nova')} (${mine}): ${t('baixe e abra uma vez para ter os recursos novos.')}`, 'warn');
+  else set(st, `✅ ${t('Instalada')}${info.version ? ` — ${t('versão')} ${info.version}` : ''}.`, 'ok');
+  if (info.state !== 'ok') { set(yt, '—'); set(ff, '—'); return; }
+  try {
+    const r = await ponteDl('tools');
+    set(yt, r.ytdlp.path ? `✅ ${t('Instalado')} — ${r.ytdlp.version}` : '❌ ' + t('Não instalado'), r.ytdlp.path ? 'ok' : '');
+    set(ff, r.ffmpeg.path ? `✅ ${t('Instalado')} — ${r.ffmpeg.version}` : '❌ ' + t('Não instalado'), r.ffmpeg.path ? 'ok' : '');
+  } catch (e) {
+    set(yt, t(DL_ERRORS[e.code] || e.message), 'warn');
+    set(ff, '—');
   }
 }
