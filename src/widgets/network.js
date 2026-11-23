@@ -10,7 +10,7 @@ import {
   verdict, rankDns, lagEvents, lagWhere, measureLatency, measureDown, measureUp, benchDoh, validServer, validTarget, median, HISTORY_MAX, SAMPLES_MAX,
 } from '../lib/net.js';
 import { PonteError, ponteAllowed, askPonte, pingReal, dnsUdp, netInfo, lanDevices, netProcs, netUsage } from '../lib/net-ponte.js';
-import { ponteDownloads } from './clipboard-share-ui.js';
+import { ponteDownloads, ponteSafetyNote } from './clipboard-share-ui.js';
 
 const fmtMbps = (v) => (Number.isFinite(v) ? (v >= 100 ? Math.round(v) : v.toFixed(1).replace('.', ',')) : '—');
 const fmtMs = (v) => (Number.isFinite(v) ? Math.round(v) + ' ms' : '—');
@@ -380,6 +380,7 @@ export default {
           h('a', { class: 'btn primary', href: dl.url(dl.mine), target: '_blank', rel: 'noopener' }, '⬇ ', t('Baixar a Ponte para'), ' ', dl.all[dl.mine].label),
           h('button', { class: 'btn', type: 'button', onclick: async () => { if (await askPonte()) { await checkPonte(true); if (ponteOk === true) refreshWho(false); render(); } } }, t('Já instalei — conectar'))),
         h('p', { class: 'muted' }, t('Depois de baixar, abra o programa uma vez: ele se registra nos navegadores. Nada sai do seu computador.')),
+        ponteSafetyNote(),
       ];
     }
 

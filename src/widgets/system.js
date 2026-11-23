@@ -7,7 +7,7 @@ import { requestAccess } from '../lib/permissions.js';
 import { sanitizeSys, mergeSys, evalAlerts, readBrowser, readLhm, fmtBytes, fmtTemp, fmtPct, fmtUptime, memUsedPct, diskFreePct, validLhmUrl } from '../lib/sysinfo.js';
 import { openSysStream } from '../lib/sys-ponte.js';
 import { PonteError, ponteAllowed, askPonte } from '../lib/net-ponte.js';
-import { ponteDownloads } from './clipboard-share-ui.js';
+import { ponteDownloads, ponteSafetyNote } from './clipboard-share-ui.js';
 
 const HIST = 150; // pontos nos gráficos (~5 min a cada 2 s)
 const ALERT_KEY = 'nt_sys_alerted';
@@ -229,6 +229,7 @@ export default {
         h('div', { class: 'toolbar' },
           h('a', { class: 'btn primary', href: dl.url(dl.mine), target: '_blank', rel: 'noopener' }, '⬇ ', t('Baixar a Ponte para'), ' ', dl.all[dl.mine].label),
           h('button', { class: 'btn', type: 'button', onclick: async () => { if (await askPonte()) { ponteHelpOpen = false; restart(); } } }, t('Já instalei — conectar'))),
+        ponteSafetyNote(),
         chromium ? h('p', { class: 'muted' }, t('Ou veja só o processador e a memória pelo navegador:'), ' ', h('button', { type: 'button', class: 'linkish', onclick: async () => { if (await requestAccess({ permissions: ['system.cpu', 'system.memory'] })) { ponteHelpOpen = false; restart(); } } }, t('permitir'))) : null,
       ];
     }

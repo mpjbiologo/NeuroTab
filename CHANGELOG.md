@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.11.1
+**Apps externos: o que cada programa faz e por que a NeuroTab precisa dele.**
+
+- ⚙️ **Configurações → Sistema → Apps externos:** NeuroTab Ponte, yt-dlp, ffmpeg, LibreHardwareMonitor e Ollama, cada um com o que é, a licença, **por que existe** e em quais recursos é usado. Para a Ponte, o yt-dlp e o ffmpeg, mostra se estão instalados e a versão (e avisa quando a Ponte está desatualizada)
+- 🛡️ **Aviso do antivírus:** explica por que o Windows (SmartScreen), o Edge/Chrome ou antivírus como o Avast podem reclamar da Ponte (programa novo, sem reputação nem assinatura paga), por que é seguro e como seguir passo a passo, inclusive como conferir a soma SHA-256. O aviso também aparece ao lado de cada botão de baixar a Ponte
+- **NeuroTab Ponte no Windows:** o executável agora traz nome, descrição, versão, ícone e manifesto (aba *Detalhes* nas propriedades do arquivo), o que ajuda os antivírus a reconhecê-lo
+- Pedido de assinatura digital gratuita (SignPath Foundation) em preparação: política em `docs/CODE_SIGNING_POLICY.md`
+
 ## v0.7.11
 **Baixe para o computador o vídeo dos posts que você salvou.**
 

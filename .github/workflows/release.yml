@@ -67,6 +67,19 @@ jobs:
           go-version: '1.24'
           cache-dependency-path: ponte/go.mod
 
+      # Nome, versão, descrição e ícone no executável do Windows (aba "Detalhes" nas propriedades do arquivo).
+      # Programas sem esses dados chamam mais a atenção de antivírus. Se a ferramenta falhar, compila sem eles.
+      - name: Metadados do executável do Windows
+        working-directory: ponte
+        run: |
+          V=$(jq -r .version ../manifest.json)
+          if go install github.com/tc-hib/go-winres@latest && "$(go env GOPATH)/bin/go-winres" make --arch amd64 --product-version "$V" --file-version "$V"; then
+            ls -la rsrc_windows_*.syso
+          else
+            rm -f rsrc_windows_*.syso
+            echo "::warning::A Ponte para Windows saiu sem os metadados (go-winres falhou)."
+          fi
+
       - name: Compilar para Windows, macOS e Linux
         working-directory: ponte
         run: |

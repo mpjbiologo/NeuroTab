@@ -16,12 +16,12 @@ export const NAV = [
   { id: 'contas', icon: '☁️', label: 'Contas e sincronização', pages: ['contas', 'sync'] },
   { id: 'privacidade', icon: '🔒', label: 'Privacidade', pages: ['permissoes'] },
   { id: 'backup', icon: '💾', label: 'Backup', pages: ['importar', 'exportar'] },
-  { id: 'sistema', icon: '⚙️', label: 'Sistema', pages: ['atualizacoes', 'creditos'] },
+  { id: 'sistema', icon: '⚙️', label: 'Sistema', pages: ['atualizacoes', 'apps', 'creditos'] },
   { id: 'apoie', icon: '❤', label: 'Apoie', pages: ['apoie'], heart: true },
 ];
 
 // Endereços das abas antigas (#ia, #contas…) continuam funcionando.
-export const LEGACY = { geral: 'tema', fundo: 'fundo', ia: 'ia', midia: 'imagens', notas: 'keep', contas: 'contas', backup: 'importar', apoie: 'apoie', 'reset-tema': 'editor', videos: 'salvar-midia', sobre: 'creditos', aparencia: 'editor' };
+export const LEGACY = { geral: 'tema', fundo: 'fundo', ia: 'ia', midia: 'imagens', notas: 'keep', contas: 'contas', backup: 'importar', apoie: 'apoie', 'reset-tema': 'editor', videos: 'salvar-midia', sobre: 'creditos', ponte: 'apps', 'apps-externos': 'apps', aparencia: 'editor' };
 const FIRST = 'tema';
 
 const $ = (s) => document.querySelector(s);

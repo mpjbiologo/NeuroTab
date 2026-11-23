@@ -27,6 +27,12 @@ export function ponteDownloads() {
   return { mine, all, url: (k) => RELEASES + all[k].file };
 }
 
+/** Aviso curto ao lado do botão de baixar a Ponte: antivírus e SmartScreen podem reclamar; leva às instruções. */
+export function ponteSafetyNote() {
+  return h('p', { class: 'muted ponte-safe' }, '🛡️ ', t('Se o Windows ou o antivírus avisar ao baixar ou abrir, é normal em programa novo e é seguro.'), ' ',
+    h('a', { href: chrome.runtime.getURL('src/options.html#apps'), target: '_blank' }, t('Veja como seguir')));
+}
+
 export function qrDialog(title, text, note = '') {
   const dlg = h('dialog', { class: 'dlg clip-qr' }, h('form', { method: 'dialog' },
     h('h2', {}, title),
@@ -149,6 +155,7 @@ export async function openShareDialog(ctx) {
       h('div', { class: 'share-row' },
         h('a', { class: 'btn', href: dl.url(dl.mine), rel: 'noopener' }, `⬇️ ${t('Baixar para')} ${dl.all[dl.mine].label}`),
         h('details', {}, h('summary', {}, 'Outros sistemas'), ...Object.keys(dl.all).filter((k) => k !== dl.mine).map((k) => h('a', { href: dl.url(k), rel: 'noopener' }, dl.all[k].label)))),
+        ponteSafetyNote(),
       h('details', {}, h('summary', {}, 'Como instalar'),
         h('p', {}, h('b', {}, 'Windows: '), 'abra o arquivo baixado. Se aparecer "O Windows protegeu o computador", clique em "Mais informações" → "Executar assim mesmo". Quando o celular conectar pela primeira vez, permita o acesso em redes privadas.'),
         h('p', {}, h('b', {}, 'macOS: '), 'no Terminal: ', h('code', {}, 'chmod +x ~/Downloads/neurotab-ponte-macos-* && xattr -d com.apple.quarantine ~/Downloads/neurotab-ponte-macos-*; ~/Downloads/neurotab-ponte-macos-*')),
