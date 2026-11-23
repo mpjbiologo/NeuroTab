@@ -13,8 +13,9 @@ import { UPDATE_KEY, isStoreInstall } from './lib/update.js';
 import { FEATURES, hasFeature, requestFeature, revokeFeature, grantedSites, revokeSite } from './lib/permissions.js';
 import { SOURCES, addFiles, listLocal, clearLocal } from './lib/photos.js';
 import { initI18n, LOCALE, t } from './lib/i18n.js';
-import { PROVIDERS, aiConfig, requestPermission, listModels, complete } from './lib/ai.js';
-import { embedConfig, indexItems, indexStatus, clearIndex, EMBED_DEFAULTS } from './lib/semantic.js';
+import { aiConfig, requestPermission, isLocalAI } from './lib/ai.js';
+import { setupAiCentral, repaintAi } from './options-ai.js';
+import { embedConfig, indexItems, indexStatus, clearIndex } from './lib/semantic.js';
 import { pixPayload, qrSvg } from './lib/pix.js';
 import { PROJECT, DONATION } from './config.js';
 import { setHTML } from './lib/safe-html.js';
@@ -68,7 +69,7 @@ async function init() {
   startIconizer();
 
   chrome.storage.onChanged.addListener(async (c, area) => {
-    if (area === 'local' && c[DATA_KEY]) { data = await loadData(); applyLook(data.settings); paintThemePicker(); fillSettings(); showStats(); renderPlaces(); refreshLook(); }
+    if (area === 'local' && c[DATA_KEY]) { data = await loadData(); applyLook(data.settings); paintThemePicker(); fillSettings(); showStats(); renderPlaces(); refreshLook(); repaintAi(); }
   });
 }
 
@@ -116,16 +117,6 @@ async function chooseTheme(id) {
 const getK = (k) => k.split('.').reduce((o, p) => o?.[p], data.settings);
 const setK = (k, v) => { const ps = k.split('.'); const last = ps.pop(); ps.reduce((o, p) => (o[p] ??= {}), data.settings)[last] = v; };
 
-/** Aviso na aba Mídia quando a IA escolhida para imagens ainda não tem chave. */
-function mediaProviderNote() {
-  const id = data.settings.media?.provider || '';
-  const p = PROVIDERS[id];
-  const needsKey = p && !p.noKey && !data.settings.ai.keys?.[id];
-  $('#mediaProviderNote').textContent = !id ? t('Usa a mesma IA da aba IA e voz.')
-    : needsKey ? t('Falta a chave de') + ' ' + p.name + t(': configure na aba IA e voz (escolha o provedor, cole a chave e volte ao provedor de conversa, se quiser).')
-    : t('Só as imagens vão para') + ' ' + p.name + t('; a conversa continua com a IA da aba IA e voz.');
-}
-
 function fillSettings() {
   for (const el of $$('[data-k]')) {
     const v = getK(el.dataset.k);
@@ -134,7 +125,6 @@ function fillSettings() {
   }
   $('#autoEnrich').checked = !!data.settings.ai.autoEnrich;
   $('#imagesAllowed').checked = !!data.settings.ai.imagesAllowed;
-  $('#visionModel').value = data.settings.ai.visionModel || '';
   $('#sharePlaces').checked = data.settings.ai.sharePlaces !== false;
   $('#semantic').checked = !!data.settings.ai.semantic;
 }
@@ -146,7 +136,6 @@ function bindSettings() {
       const k = el.dataset.k;
       setK(k, el.type === 'checkbox' ? el.checked : 'num' in el.dataset ? Number(el.value) : el.value);
       await saveData(data);
-      if (k === 'media.provider') mediaProviderNote();
       if (k === 'lang') { location.reload(); return; }
       toast('Salvo ✓');
     }, el.type === 'text' ? 500 : 0));
@@ -214,92 +203,10 @@ async function optimizeImage(dataUrl, max = 2560, quality = 0.86) {
 
 // ---------- IA ----------
 function setupAi() {
-  const sel = $('#provider');
-  for (const [k, p] of Object.entries(PROVIDERS)) sel.add(new Option(p.name, k));
-  // Aba Mídia: IA preferencial para imagens (vazio = a mesma da aba IA).
-  const mp = $('#mediaProvider');
-  for (const [k, p] of Object.entries(PROVIDERS)) mp.add(new Option(p.name, k));
-  mp.value = data.settings.media?.provider || '';
-  mediaProviderNote();
-
-  const paint = () => {
-    const ai = data.settings.ai;
-    const id = sel.value;
-    const p = PROVIDERS[id];
-    $('#provNote').textContent = p.note || '';
-    $('#keyRow').hidden = !!p.noKey;
-    $('#keyLink').href = p.keyUrl || '#';
-    $('#keyLink').parentElement.hidden = !p.keyUrl;
-    $('#apiKey').value = ai.keys[id] || '';
-    $('#baseRow').hidden = !p.editableBase;
-    $('#baseUrl').value = ai.baseUrls[id] || p.base;
-    $('#model').value = ai.models[id] || p.defaultModel;
-    $('#modelList').replaceChildren();
-    $('#aiMsg').textContent = '';
-  };
-  sel.value = data.settings.ai.provider in PROVIDERS ? data.settings.ai.provider : 'gemini';
-  paint();
-  sel.addEventListener('change', paint);
-  $('#showKey').onclick = () => { const k = $('#apiKey'); k.type = k.type === 'password' ? 'text' : 'password'; };
-  $('#removeKey').onclick = async () => {
-    const id = sel.value;
-    if (!data.settings.ai.keys[id] && !$('#apiKey').value) return msg('Não há chave salva para este provedor.');
-    if (!confirm(`Apagar a chave de ${PROVIDERS[id].name} deste navegador?`)) return;
-    delete data.settings.ai.keys[id];
-    await saveData(data);
-    $('#apiKey').value = '';
-    msg('🗑 Chave apagada.', 'ok');
-  };
-
-  const staged = () => {
-    const s = structuredClone(data.settings);
-    const id = sel.value;
-    s.ai.provider = id;
-    s.ai.keys[id] = $('#apiKey').value.trim();
-    s.ai.models[id] = $('#model').value.trim();
-    if (PROVIDERS[id].editableBase) s.ai.baseUrls[id] = $('#baseUrl').value.trim();
-    return s;
-  };
-  const msg = (txt, cls = '') => { const m = $('#aiMsg'); m.className = 'msg ' + cls; m.textContent = t(txt); };
-
-  $('#loadModels').onclick = async () => {
-    const s = staged();
-    try {
-      if (!(await requestPermission(aiConfig(s)))) return msg('Permissão negada.', 'err');
-      msg('Carregando modelos…');
-      const models = await listModels(s);
-      $('#modelList').replaceChildren(...models.map((m) => new Option(m, m)));
-      msg(`${models.length} modelos disponíveis — clique no campo "Modelo" para escolher.`, 'ok');
-    } catch (e) {
-      msg('✕ ' + e.message, 'err');
-    }
-  };
-
-  $('#saveAi').onclick = async () => {
-    const s = staged();
-    const cfg = aiConfig(s);
-    if (!cfg.p.noKey && !cfg.key) return msg('Cole a chave de API.', 'err');
-    try {
-      if (!(await requestPermission(cfg))) return msg('Permissão negada pelo navegador.', 'err');
-      data.settings.ai = s.ai;
-      await saveData(data);
-      msg('Salvo. Testando…');
-      const t0 = performance.now();
-      const out = await complete(s, { messages: [{ role: 'user', content: 'Responda apenas: OK' }], maxTokens: 50 });
-      msg(`✓ Funcionando (${cfg.model}, ${Math.round(performance.now() - t0)} ms): "${out.trim().slice(0, 40)}"`, 'ok');
-      document.querySelector('#semantic').dispatchEvent(new Event('repaint'));
-    } catch (e) {
-      msg('✕ ' + e.message, 'err');
-    }
-  };
+  setupAiCentral({ data: () => data, toast, onChange: () => document.querySelector('#semantic').dispatchEvent(new Event('repaint')) });
 
   $('#sharePlaces').addEventListener('change', async (e) => {
     data.settings.ai.sharePlaces = e.target.checked;
-    await saveData(data);
-    toast('Salvo ✓');
-  });
-  $('#visionModel').addEventListener('change', async (e) => {
-    data.settings.ai.visionModel = e.target.value.trim();
     await saveData(data);
     toast('Salvo ✓');
   });
@@ -321,21 +228,13 @@ function setupAi() {
     $('#semBox').hidden = !on;
     if (!on) return;
     const c = embedConfig(data.settings);
-    const id = c.id;
-    $('#embedRow').hidden = EMBED_DEFAULTS[id] === null;
-    $('#embedModel').placeholder = EMBED_DEFAULTS[id] || 'ex.: nomic-embed-text';
-    $('#embedModel').value = (data.settings.ai.embedModels || {})[id] || '';
     $('#semIndex').hidden = $('#semClear').hidden = !c.supported;
-    if (EMBED_DEFAULTS[id] === null) {
-      $('#semInfo').textContent = `${c.p.name} não oferece embeddings. A busca no "Pergunte ao cérebro" usa a própria IA para escolher as notas relevantes (sem índice).`;
-      return;
-    }
     if (!c.supported) {
-      $('#semInfo').textContent = 'Configure e salve o provedor de IA acima (e informe o modelo de embeddings, se for "Outro compatível").';
+      $('#semInfo').textContent = t('A busca por significado precisa de um modelo de embeddings (Configurações → IA → Modelo por tarefa → Busca por significado). Sem ele, o "Pergunte ao cérebro" usa a própria IA para escolher as notas relevantes (sem índice).');
       return;
     }
     const st = await indexStatus(data.settings, await loadItems());
-    $('#semInfo').textContent = `Modelo: ${c.embedModel} · ${st.done} de ${st.total} notas indexadas. Notas novas são indexadas sozinhas quando você abre uma nova aba.`;
+    $('#semInfo').textContent = `${t('Modelo')}: ${c.name} · ${c.embedModel} · ${st.done} ${t('de')} ${st.total} ${t('notas indexadas. Notas novas são indexadas sozinhas quando você abre uma nova aba.')}`;
   };
   $('#semantic').addEventListener('change', async (e) => {
     if (e.target.checked) {
@@ -346,11 +245,6 @@ function setupAi() {
     await saveData(data);
     await paintSem();
     if (e.target.checked && embedConfig(data.settings).supported) $('#semIndex').click();
-  });
-  $('#embedModel').addEventListener('change', async (e) => {
-    data.settings.ai.embedModels = { ...(data.settings.ai.embedModels || {}), [embedConfig(data.settings).id]: e.target.value.trim() };
-    await saveData(data);
-    await paintSem();
   });
   $('#semIndex').onclick = async () => {
     const prog = $('#semProg');
@@ -393,10 +287,9 @@ function setupAi() {
     }[st] || '';
     $('#deviceInstall').hidden = st !== 'downloadable';
     const pick = currentEngine(lang);
-    const prov = data.settings.ai?.provider;
-    const aiLocal = prov === 'ollama' || /localhost|127\.0\.0\.1/.test(data.settings.ai?.baseUrls?.[prov] || '');
+    const aiLocal = isLocalAI(data.settings, 'chat');
     $('#localAiNote').hidden = !(data.settings.voiceLocalOnly && !aiLocal);
-    $('#localAiNote').textContent = `ℹ️ A fala fica no computador, mas as perguntas para a IA vão para ${PROVIDERS[prov]?.name || prov}. Para tudo ficar local, escolha Ollama em "IA".`;
+    $('#localAiNote').textContent = `ℹ️ A fala fica no computador, mas as perguntas para a IA vão para ${aiConfig(data.settings, 'chat').name}. Para tudo ficar local, escolha o Ollama em "IA".`;
     $('#voiceEngine').title = pick.engine ? (pick.local ? 'Agora: no computador 🔒' : 'Agora: serviço do navegador ☁') : (ENGINE_ERRORS[pick.reason] || '');
     const hasSR = speechAvailable();
     $('#wakeRow').hidden = !hasSR;

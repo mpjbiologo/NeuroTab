@@ -7,6 +7,7 @@ import { THEMES as THEME_IDS } from './theme.js';
 import { DEFAULT_NET, sanitizeNet } from './net.js';
 import { DEFAULT_MEDIA_SAVE, sanitizeMediaSave } from './media.js';
 import { DEFAULT_MEDIA_DL, sanitizeMediaDl } from './media-download.js';
+import { DEFAULT_AI, sanitizeAi } from './ai/config.js';
 import { DEFAULT_SYS, sanitizeSys } from './sysinfo.js';
 
 export const DATA_KEY = 'nt_data';
@@ -43,17 +44,7 @@ export function normalizeWidgets(list) {
   });
 }
 
-export const DEFAULT_AI = {
-  provider: 'gemini', // gemini | openai | anthropic | openrouter | ollama | custom
-  keys: {},
-  models: {},
-  baseUrls: {},
-  autoEnrich: true,
-  semantic: false, // busca por significado (embeddings)
-  embedModels: {}, // modelo de embeddings por provedor (vazio = padrão)
-  visionModel: '', // modelo para imagens (vazio: o da IA; no Ollama, um com visão já instalado)
-  imagesAllowed: false, // enviar imagens à IA na internet sem perguntar a cada vez (IA local nunca pergunta)
-};
+export { DEFAULT_AI };
 
 export const DEFAULT_SETTINGS = {
   // Layout
@@ -157,7 +148,7 @@ export function mergeSettings(s = {}) {
     customThemes: Array.isArray(s.customThemes) ? s.customThemes.map((t) => sanitizeTheme(t, THEME_IDS)).filter(Boolean).slice(0, MAX_THEMES) : [],
     dockMode: ['always', 'auto', 'collapsed'].includes(s.dockMode) ? s.dockMode : 'always',
     iconSource: ['browser', 'google', 'duckduckgo'].includes(s.iconSource) ? s.iconSource : 'browser',
-    ai: { ...DEFAULT_AI, ...(s.ai || {}), keys: { ...(s.ai?.keys || {}) }, models: { ...(s.ai?.models || {}) }, embedModels: { ...(s.ai?.embedModels || {}) }, baseUrls: { ...(s.ai?.baseUrls || {}) } },
+    ai: sanitizeAi(s.ai, s.media), // central de IA (0.8.0): migra a configuração antiga sozinha
   };
 }
 

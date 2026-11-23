@@ -4,6 +4,7 @@ import { h, toast } from '../lib/ui.js';
 import { t } from '../lib/i18n.js';
 import { updateItem } from '../lib/brain.js';
 import { isLocalAI } from '../lib/ai.js';
+import { modelChip } from '../lib/ai-ui.js';
 import { PLATFORMS } from '../lib/media-links.js';
 import { sanitizeMediaSave, noteMarkdown, notePath, CONTENT_LABEL } from '../lib/media.js';
 import { S } from './state.js';
@@ -22,15 +23,20 @@ export function mediaPanel(box, it, close) {
   const status = m.status === 'processado'
     ? h('small', { class: 'muted' }, `✓ ${t('Resumido por')} ${m.ai || 'IA'}`)
     : h('small', { class: 'warn' }, '⏳ ', cloud ? t('Resumo pendente: a IA configurada é na internet. Clique em Resumir para enviar a legenda e o texto deste item.') : m.error ? t(m.error) : t('Resumo pendente.'));
-  const run = async (allowCloud) => {
+  const chip = modelChip(() => S.data.settings, 'media');
+  const run = async (allowCloud, allowCloudReserve = false) => {
     btn.disabled = true;
     btn.textContent = '⏳ ' + t('Resumindo…');
-    const r = await chrome.runtime.sendMessage({ type: 'media:summarize', id: it.id, allowCloud }).catch((e) => ({ error: e.message }));
-    if (r?.ok) { toast('Resumo pronto 🎬'); close(); } else { toast(t('Não deu para resumir:') + ' ' + (r?.error === 'cloud' ? t('autorize a IA na internet') : r?.error || '')); btn.disabled = false; btn.textContent = label; }
+    const r = await chrome.runtime.sendMessage({ type: 'media:summarize', id: it.id, allowCloud, allowCloudReserve, override: chip.override() }).catch((e) => ({ error: e.message }));
+    if (r?.ok) { toast('Resumo pronto 🎬'); close(); return; }
+    btn.disabled = false;
+    btn.textContent = label;
+    if (r?.error === 'reserve' && confirm(`${t(r.message || '')}\n\n${t('Usar a Reserva só desta vez?')}`)) { run(allowCloud, true); return; }
+    toast(t('Não deu para resumir:') + ' ' + (r?.error === 'cloud' ? t('autorize a IA na internet') : r?.error === 'reserve' ? t('a IA principal não respondeu') : t(r?.error || '')));
   };
   const label = m.status === 'processado' ? '↻ ' + t('Reprocessar') : '✨ ' + t('Resumir');
   const btn = h('button', { type: 'button', class: 'chip', onclick: () => {
-    const needAsk = !isLocalAI(S.data.settings) && !cfg.cloudOK;
+    const needAsk = !isLocalAI(S.data.settings, 'media', { override: chip.override() }) && !cfg.cloudOK;
     if (needAsk && !confirm(t('A IA configurada é na internet. A legenda e o texto deste item vão para ela para gerar o resumo. Continuar?'))) return;
     run(needAsk);
   } }, label);
@@ -51,7 +57,7 @@ export function mediaPanel(box, it, close) {
     m.points?.length ? h('div', {}, h('b', {}, t('Pontos-chave')), h('ul', { class: 'im-points' }, ...m.points.map((p) => h('li', {}, p)))) : null,
     m.caption ? h('details', {}, h('summary', {}, t('Legenda original')), h('p', { class: 'im-text' }, m.caption)) : null,
     m.content ? h('details', {}, h('summary', {}, t(CONTENT_LABEL[m.contentType] || 'Conteúdo')), h('p', { class: 'im-text' }, m.content)) : null,
-    h('div', { class: 'toolbar' }, btn, h('a', { class: 'chip', href: it.url, target: '_blank', rel: 'noopener' }, '↗ ', t('Abrir original')), exp),
+    h('div', { class: 'toolbar' }, btn, chip.el, h('a', { class: 'chip', href: it.url, target: '_blank', rel: 'noopener' }, '↗ ', t('Abrir original')), exp),
     canDownload(it) ? downloadBox(it) : m.platform === 'youtube' ? h('small', { class: 'muted' }, '⬇ ', t('O YouTube não permite baixar vídeos por extensões.')) : null].filter(Boolean));
   box.hidden = false;
 }

@@ -117,7 +117,7 @@ test('Salvar mídia: Captura rápida → Instagram e YouTube resumidos, categori
     await panel.waitFor();
     assert.match(await panel.textContent(), /Instagram/);
     assert.equal(await panel.locator('.im-points li').count(), 2);
-    await panel.locator('select').selectOption('humor');
+    await panel.locator('select[title="Categoria"]').selectOption('humor');
     await p.waitForTimeout(300);
     assert.equal((await x.storage(p, 'nt_brain')).find((it) => it.id === ig.id).media.category, 'humor');
     const [dl] = await Promise.all([p.waitForEvent('download'), panel.locator('button:has-text(".md")').click()]);

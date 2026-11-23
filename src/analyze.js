@@ -4,7 +4,8 @@ import { loadData, saveData } from './lib/store.js';
 import { initI18n, t } from './lib/i18n.js';
 import { startIconizer } from './lib/icons.js';
 import { aiConfig, isConfigured, isLocalAI, requestPermission } from './lib/ai.js';
-import { visionNeedsConsent, visionTarget, visionSettings } from './lib/vision.js';
+import { visionNeedsConsent, visionTarget } from './lib/vision.js';
+import { modelChip, confirmReserve } from './lib/ai-ui.js';
 import { getCapture, analyzeCapture, captureStatus, keepCapture } from './lib/image-index.js';
 
 const $ = (s) => document.querySelector(s);
@@ -56,21 +57,27 @@ async function keep() {
   }
 }
 
+let chip = null;
 function setupAi() {
-  const ready = isConfigured(visionSettings(data.settings));
+  const ready = isConfigured(data.settings, 'images');
+  if (!chip) {
+    chip = modelChip(() => data.settings, 'images', { onChange: () => setupAi() });
+    $('#askRow').append(chip.el);
+  }
   $('#noAi').hidden = ready;
   $('#askRow').hidden = !ready;
-  const ask = ready && visionNeedsConsent(data.settings);
+  const ov = { override: chip.override() };
+  const ask = ready && visionNeedsConsent(data.settings, ov);
   $('#consent').hidden = !ask;
-  $('#target').textContent = ready ? visionTarget(data.settings) : '';
+  $('#target').textContent = ready ? visionTarget(data.settings, ov) : '';
   $('#describe').textContent = t(ask ? '✨ Enviar e descrever' : '✨ Descrever');
 }
 
-async function describe({ auto = false } = {}) {
+async function describe({ auto = false, allowCloudReserve = false } = {}) {
   const s = data.settings;
+  const override = chip?.override() || null;
   // Pedido de acesso ao provedor: direto no clique, sem await antes (Firefox).
-  const vs = visionSettings(s);
-  const perm = auto ? Promise.resolve(true) : requestPermission(aiConfig(vs)).catch(() => false);
+  const perm = auto ? Promise.resolve(true) : requestPermission(aiConfig(s, 'images', { override })).catch(() => false);
   const always = $('#always').checked;
   $('#describe').disabled = true;
   try {
@@ -80,14 +87,15 @@ async function describe({ auto = false } = {}) {
       await saveData(data);
       setupAi();
     }
-    say(isLocalAI(vs) ? 'Descrevendo aqui no computador…' : `Enviando a imagem a ${visionTarget(s)}…`);
-    const r = await analyzeCapture(s, id, { ocr: !rec.analyzedAt || !!rec.analyzeError, ai: true, allowed: true, question: $('#question').value.trim() });
+    say(isLocalAI(s, 'images', { override }) ? 'Descrevendo aqui no computador…' : `Enviando a imagem a ${visionTarget(s, { override })}…`);
+    const r = await analyzeCapture(s, id, { ocr: !rec.analyzedAt || !!rec.analyzeError, ai: true, allowed: true, question: $('#question').value.trim(), override, allowCloudReserve });
     rec = r.rec;
     show();
     say('✓ Pronto.', 'ok');
   } catch (e) {
     rec = (await getCapture(id)) || rec;
     show();
+    if (!auto && confirmReserve(e)) { $('#describe').disabled = false; return describe({ allowCloudReserve: true }); }
     say(auto ? 'Para descrever, clique em Descrever.' : e.message, auto ? '' : 'err');
   } finally {
     $('#describe').disabled = false;
@@ -142,6 +150,5 @@ async function describe({ auto = false } = {}) {
     say('A leitura do texto está desligada nas configurações.');
   }
   // IA no próprio computador: descreve sem perguntar.
-  const vs = visionSettings(data.settings);
-  if (isConfigured(vs) && isLocalAI(vs) && !rec.ai?.description) describe({ auto: true });
+  if (isConfigured(data.settings, 'images') && isLocalAI(data.settings, 'images') && !rec.ai?.description) describe({ auto: true });
 })();

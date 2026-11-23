@@ -29,7 +29,7 @@ export const ctx = {
   async capture(p) {
     const it = await Brain.addItem(p);
     S.items = await Brain.loadItems();
-    if (S.data.settings.ai.autoEnrich && isConfigured(S.data.settings)) {
+    if (S.data.settings.ai.autoEnrich && isConfigured(S.data.settings, 'organize')) {
       chrome.runtime.sendMessage({ type: 'enrich', id: it.id }).catch(() => {});
     }
     return it;

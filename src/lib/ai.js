@@ -1,72 +1,50 @@
-// NeuroTab — IA com vários provedores. As chamadas vão direto do navegador
-// para o provedor escolhido, com a chave do próprio usuário.
-import { displayTitle, searchItems, TYPES } from './brain.js';
+// NeuroTab — IA (fachada). Desde a 0.8.0 a central de IA escolhe o servidor e o modelo de cada tarefa
+// (lib/ai/router.js) e cada tipo de provedor tem um adaptador (lib/ai/providers/). As chamadas vão direto do
+// navegador para o servidor escolhido, com a chave do próprio usuário.
+import { displayTitle, TYPES } from './brain.js';
 import { hostOf } from './store.js';
-import { aiLanguageName } from './i18n.js';
 import { contextItems } from './semantic.js';
-import { redact, secretsFromHeaders } from './secrets.js';
 import { requestAccess, hasData } from './permissions.js';
+import { PROVIDERS, SHORT, whereOf } from './ai/catalog.js';
+import { AIError, AI_ERRORS, RETRYABLE } from './ai/errors.js';
+import { sanitizeAi, serverById } from './ai/config.js';
+import { resolve, crossesToCloud, pickLabel, PROBLEMS } from './ai/router.js';
+import { adapterFor } from './ai/providers/index.js';
+import { organizePrompt, askPrompt, commandPrompt } from './ai/prompts.js';
 
-export const PROVIDERS = {
-  gemini: {
-    name: 'Google Gemini',
-    note: 'Tem camada gratuita. Recomendado para começar.',
-    keyUrl: 'https://aistudio.google.com/apikey',
-    defaultModel: 'gemini-flash-latest',
-    base: 'https://generativelanguage.googleapis.com',
-  },
-  openai: {
-    name: 'OpenAI (ChatGPT)',
-    keyUrl: 'https://platform.openai.com/api-keys',
-    defaultModel: 'gpt-5-mini',
-    base: 'https://api.openai.com/v1',
-  },
-  anthropic: {
-    name: 'Anthropic (Claude)',
-    keyUrl: 'https://console.anthropic.com/settings/keys',
-    defaultModel: 'claude-haiku-5-5',
-    base: 'https://api.anthropic.com/v1',
-  },
-  openrouter: {
-    name: 'OpenRouter (centenas de modelos)',
-    note: 'Uma chave só para modelos de vários fornecedores, incluindo alguns gratuitos.',
-    keyUrl: 'https://openrouter.ai/keys',
-    defaultModel: 'openrouter/auto',
-    base: 'https://openrouter.ai/api/v1',
-  },
-  ollama: {
-    name: 'Ollama (no seu computador, sem chave)',
-    note: 'Rode o Ollama com OLLAMA_ORIGINS="chrome-extension://*" para liberar a extensão.',
-    noKey: true,
-    defaultModel: 'llama3.2',
-    base: 'http://localhost:11434/v1',
-    editableBase: true,
-  },
-  custom: {
-    name: 'Outro compatível com OpenAI (URL própria)',
-    note: 'LM Studio, Groq, Mistral, DeepSeek, Together…',
-    defaultModel: '',
-    base: '',
-    editableBase: true,
-  },
-};
+export { PROVIDERS, AIError, pickLabel };
 
-export function aiConfig(settings) {
-  const ai = settings.ai || {};
-  const id = PROVIDERS[ai.provider] ? ai.provider : 'gemini';
-  const p = PROVIDERS[id];
-  return {
-    id,
-    p,
-    key: (ai.keys || {})[id] || '',
-    model: (ai.models || {})[id] || p.defaultModel,
-    base: ((ai.baseUrls || {})[id] || p.base).replace(/\/+$/, ''),
-  };
+/** settings.ai já no formato da central (migra na hora se vier no formato antigo). */
+export function aiOf(settings) {
+  const ai = settings?.ai;
+  return ai?.v === 2 && Array.isArray(ai.servers) && ai.mirror ? ai : sanitizeAi(ai, settings?.media);
 }
 
-export function isConfigured(settings) {
-  const c = aiConfig(settings);
-  return !!(c.base && c.model && (c.p.noKey || c.key));
+/** O que a tarefa vai usar, no formato antigo ({ id, p, key, model, base }) mais { server, name, where, source }. */
+export function aiConfig(settings, task = 'chat', { override = null } = {}) {
+  const ai = aiOf(settings);
+  const { use } = resolve(ai, task, { override });
+  if (use) return { ...use, id: use.type, p: PROVIDERS[use.type] };
+  const s = serverById(ai, ai.primary?.server);
+  const type = s?.type || 'gemini';
+  return { id: type, type, p: PROVIDERS[type], key: '', model: '', base: s?.base || PROVIDERS[type].base, server: s?.id || '', name: s?.name || SHORT[type], where: whereOf(type, s?.base || PROVIDERS[type].base), none: true };
+}
+
+export function isConfigured(settings, task = 'chat') {
+  return !!resolve(aiOf(settings), task).use;
+}
+
+/** O que a tarefa usa fica no computador ou na rede de casa (não vai para a internet)? */
+export function isLocalAI(settings, task = 'chat', opts) {
+  return aiConfig(settings, task, opts).where !== 'cloud'; // sem IA pronta: onde iria o Padrão
+}
+
+/** Por que a tarefa não tem IA: "o servidor está desligado" etc. (vazio se tem). */
+export function whyNotConfigured(settings, task = 'chat') {
+  const { use, problems } = resolve(aiOf(settings), task);
+  if (use) return '';
+  const p = problems[0];
+  return p ? PROBLEMS[p.why] || '' : '';
 }
 
 export function originsFor(cfg) {
@@ -84,6 +62,9 @@ export function originsFor(cfg) {
 export function requestPermission(cfg) {
   const origins = originsFor(cfg);
   if (!origins.length) return Promise.reject(new Error('URL do provedor inválida.'));
+  // Servidor por http na rede de casa (ex.: Ollama em outro computador): a NeuroTab não pede acesso a "todos os
+  // sites por http"; o próprio servidor libera a extensão (OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*").
+  if (/^http:\/\//.test(origins[0]) && !/^http:\/\/(localhost|127\.0\.0\.1)\//.test(origins[0])) return requestAccess({ origins: [], data: ['websiteContent'] }).then(() => true, () => true);
   return requestAccess({ origins, data: ['websiteContent'] });
 }
 
@@ -92,123 +73,46 @@ async function ensureDataConsent() {
   if (!(await hasData('websiteContent'))) throw new Error('No Firefox, autorize o envio de conteúdo à IA: Configurações → IA e voz → Salvar.');
 }
 
-async function http(url, opts) {
-  let res;
-  try {
-    res = await fetch(url, opts);
-  } catch (e) {
-    throw new Error('Não foi possível conectar ao provedor de IA. Verifique a internet, a URL e a permissão de acesso.');
-  }
-  const txt = await res.text();
-  let json;
-  try { json = JSON.parse(txt); } catch { json = null; }
-  if (!res.ok) {
-    // Nunca mostrar a chave: alguns provedores repetem parte dela na mensagem de erro.
-    const msg = redact(json?.error?.message || json?.message || txt.slice(0, 200), secretsFromHeaders(opts?.headers));
-    if (res.status === 401 || res.status === 403) throw new Error('Chave de API recusada: ' + msg);
-    if (res.status === 429) throw new Error('Limite de uso atingido no provedor. Tente de novo em instantes. (' + msg + ')');
-    throw new Error(`Erro ${res.status}: ${msg}`);
-  }
-  return json;
-}
-
-// Conteúdo com imagem: content = [{ type: 'text', text }, { type: 'image', mime, data (base64) }].
-// Cada provedor tem o seu formato; convertemos aqui.
-const parts = (content) => (Array.isArray(content) ? content : [{ type: 'text', text: String(content ?? '') }]);
-const asText = (content) => (Array.isArray(content) ? content.filter((x) => x.type === 'text').map((x) => x.text).join('\n') : content);
-const toGemini = (content) => parts(content).map((x) => (x.type === 'image' ? { inline_data: { mime_type: x.mime, data: x.data } } : { text: x.text }));
-const toAnthropic = (content) => (Array.isArray(content)
-  ? content.map((x) => (x.type === 'image' ? { type: 'image', source: { type: 'base64', media_type: x.mime, data: x.data } } : { type: 'text', text: x.text }))
-  : content);
-const toOpenAI = (content) => (Array.isArray(content)
-  ? content.map((x) => (x.type === 'image' ? { type: 'image_url', image_url: { url: `data:${x.mime};base64,${x.data}` } } : { type: 'text', text: x.text }))
-  : content);
-
-/** A IA configurada roda no próprio computador (Ollama ou outro servidor em localhost)? */
-export function isLocalAI(settings) {
-  const c = aiConfig(settings);
-  if (c.id === 'ollama') return true;
-  try { return /^(localhost|127\.\d+\.\d+\.\d+|\[::1\])$/.test(new URL(c.base).hostname); } catch { return false; }
-}
-
 /**
+ * Pede uma resposta à IA da tarefa.
  * messages: [{ role: 'user' | 'assistant', content: string | partes (texto e imagem) }]
- * Retorna o texto da resposta.
+ * opts.task: tarefa (chat, organize, commands, media, images…); opts.override: { server, model } só desta vez;
+ * opts.allowCloudReserve: a pessoa autorizou cair na Reserva da internet; opts.onUse(pick): avisa o que foi usado;
+ * opts.model: outro modelo do mesmo servidor só nesta chamada (ex.: um com visão no Ollama).
  */
-export async function complete(settings, { system = '', messages, json = false, maxTokens = 1200, model = '' }) {
+export async function complete(settings, { task = 'chat', override = null, allowCloudReserve = false, onUse = null, system = '', messages, json = false, maxTokens = 1200, model = '' }) {
   await ensureDataConsent();
-  const c = { ...aiConfig(settings), ...(model ? { model } : {}) }; // model: outro modelo só nesta chamada (ex.: um com visão)
-  if (!isConfigured(settings)) throw new Error('Configure a IA em Configurações → IA.');
-
-  if (c.id === 'gemini') {
-    const body = {
-      contents: messages.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: toGemini(m.content) })),
-      generationConfig: { maxOutputTokens: maxTokens, ...(json ? { responseMimeType: 'application/json' } : {}) },
-    };
-    if (system) body.systemInstruction = { parts: [{ text: system }] };
-    const model = c.model.replace(/^models\//, '');
-    const r = await http(`${c.base}/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': c.key },
-      body: JSON.stringify(body),
-    });
-    const parts = r?.candidates?.[0]?.content?.parts || [];
-    const text = parts.filter((p) => !p.thought).map((p) => p.text || '').join('');
-    if (!text) throw new Error('A IA não retornou texto (' + (r?.candidates?.[0]?.finishReason || r?.promptFeedback?.blockReason || 'vazio') + ').');
-    return text;
+  const { use, reserve, problems } = resolve(aiOf(settings), task, { override });
+  if (!use) {
+    const why = problems[0] && PROBLEMS[problems[0].why];
+    throw new AIError('config', why ? `${AI_ERRORS.config} (${problems[0].server}: ${why})` : AI_ERRORS.config, { problems });
   }
-
-  if (c.id === 'anthropic') {
-    const r = await http(`${c.base}/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': c.key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({ model: c.model, max_tokens: maxTokens, system: system || undefined, messages: messages.map((m) => ({ ...m, content: toAnthropic(m.content) })) }),
-    });
-    return (r.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
+  const run = (p, m) => adapterFor(p.type).generate({ ...p, model: m || p.model }, { system, messages, json, maxTokens });
+  try {
+    onUse?.(use);
+    return await run(use, model);
+  } catch (e) {
+    const err = e instanceof AIError ? e : new AIError('failed', e?.message);
+    if (!reserve || !RETRYABLE.has(err.code)) throw err;
+    if (crossesToCloud(use, reserve) && !allowCloudReserve) {
+      throw new AIError('consent', `${pickLabel(use)} não respondeu (${err.message}). A Reserva, ${pickLabel(reserve)}, fica na internet: o conteúdo deste pedido seria enviado para lá.`, { from: use, to: reserve, cause: err });
+    }
+    onUse?.(reserve);
+    return await run(reserve, '');
   }
-
-  // OpenAI e compatíveis (OpenRouter, Ollama, LM Studio, Groq…)
-  const headers = { 'Content-Type': 'application/json' };
-  if (c.key) headers.Authorization = 'Bearer ' + c.key;
-  if (c.id === 'openrouter') {
-    headers['HTTP-Referer'] = 'https://github.com/mpjbiologo/NeuroTab';
-    headers['X-Title'] = 'NeuroTab';
-  }
-  const conv = messages.map((m) => ({ ...m, content: m.role === 'user' ? toOpenAI(m.content) : asText(m.content) }));
-  const msgs = system ? [{ role: 'system', content: system }, ...conv] : conv;
-  const body = { model: c.model, messages: msgs };
-  if (json && c.id !== 'ollama') body.response_format = { type: 'json_object' };
-  if (c.id === 'openai') body.max_completion_tokens = maxTokens * 4; // inclui raciocínio
-  else body.max_tokens = maxTokens;
-  const r = await http(`${c.base}/chat/completions`, { method: 'POST', headers, body: JSON.stringify(body) });
-  return r?.choices?.[0]?.message?.content || '';
 }
 
-export async function listModels(settings) {
-  const c = aiConfig(settings);
-  if (c.id === 'gemini') {
-    const r = await http(`${c.base}/v1beta/models?pageSize=200`, { headers: { 'x-goog-api-key': c.key } });
-    return (r.models || [])
-      .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
-      .map((m) => m.name.replace(/^models\//, ''))
-      .filter((n) => /gemini/.test(n) && !/(image|tts|audio|live|embedding|robotics|computer)/.test(n));
-  }
-  if (c.id === 'anthropic') {
-    const r = await http(`${c.base}/models?limit=100`, {
-      headers: { 'x-api-key': c.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    });
-    return (r.data || []).map((m) => m.id);
-  }
-  const headers = c.key ? { Authorization: 'Bearer ' + c.key } : {};
-  const r = await http(`${c.base}/models`, { headers });
-  let ids = (r.data || r.models || []).map((m) => m.id || m.name);
-  if (c.id === 'openai') ids = ids.filter((n) => /^(gpt|o\d|chatgpt)/.test(n) && !/(audio|realtime|image|tts|transcribe|search)/.test(n));
-  return ids.sort();
+/** Lista os modelos de um servidor (com o que cada um sabe fazer, quando o provedor informa). */
+export function listServerModels(server, key = '') {
+  return adapterFor(server.type).listModels({ type: server.type, base: server.base, key });
+}
+
+/** Testa um servidor e modelo: devolve { ms, text }. */
+export async function testServer(server, key, model) {
+  await ensureDataConsent();
+  const t0 = performance.now();
+  const text = await adapterFor(server.type).generate({ type: server.type, base: server.base, key, model }, { messages: [{ role: 'user', content: 'Responda apenas: OK' }], maxTokens: 50 });
+  return { ms: Math.round(performance.now() - t0), text: String(text || '').trim() };
 }
 
 export function parseJson(text) {
@@ -218,33 +122,19 @@ export function parseJson(text) {
   } catch {
     const m = clean.match(/\{[\s\S]*\}/);
     if (m) return JSON.parse(m[0]);
-    throw new Error('Resposta da IA em formato inesperado.');
+    throw new AIError('invalid', 'Resposta da IA em formato inesperado.');
   }
 }
 
-function nowContext() {
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const now = new Date();
-  const off = -now.getTimezoneOffset();
-  const sign = off >= 0 ? '+' : '-';
-  const hh = String(Math.floor(Math.abs(off) / 60)).padStart(2, '0');
-  const mm = String(Math.abs(off) % 60).padStart(2, '0');
-  return `Agora é ${now.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })} (fuso ${tz}, UTC${sign}${hh}:${mm}).`;
-}
-
 // ---------- Organizar um item (título, resumo, tags, tipo, lembrete) ----------
-export async function enrich(settings, item) {
-  const system = `Você organiza o "segundo cérebro" de uma pessoa. Responda SOMENTE com JSON válido; os textos (título, resumo, tags) devem estar em ${aiLanguageName()}.
-${nowContext()}
-Formato:
-{"titulo": "até 8 palavras", "resumo": "1 frase curta (ou vazio se o texto já for curto)", "tags": ["até 4 tags, minúsculas, sem #"], "tipo": "nota|tarefa|ideia|trecho|pagina", "lembrete": "data/hora ISO 8601 com fuso, ou null"}
-Regras: "tipo" é "tarefa" quando o texto descreve algo a fazer. Preencha "lembrete" SOMENTE se o texto pedir para lembrar/avisar ou citar data e hora para fazer algo.`;
+export async function enrich(settings, item, opts = {}) {
+  const system = organizePrompt();
   const content = [
     item.title && `Título atual: ${item.title}`,
     item.pageTitle && `Página: ${item.pageTitle} (${hostOf(item.url)})`,
     `Conteúdo:\n${(item.text || item.url || '').slice(0, 6000)}`,
   ].filter(Boolean).join('\n');
-  const out = parseJson(await complete(settings, { system, messages: [{ role: 'user', content }], json: true, maxTokens: 400 }));
+  const out = parseJson(await complete(settings, { ...opts, task: 'organize', system, messages: [{ role: 'user', content }], json: true, maxTokens: 400 }));
   const map = { nota: 'note', tarefa: 'task', ideia: 'idea', trecho: 'clip', pagina: 'page', página: 'page' };
   const patch = { enriched: true };
   if (!item.title && out.titulo) patch.title = String(out.titulo).slice(0, 90);
@@ -276,35 +166,19 @@ export async function buildContext(settings, items, question, limit = 14) {
  * Pergunta ao cérebro. `extras` são trechos de dados dos widgets ({ title, text, note? }),
  * ex.: locais e rotas do widget de mapas (lib/places.js), incluídos só quando a pergunta pede.
  */
-export async function ask(settings, items, question, history = [], extras = []) {
+export async function ask(settings, items, question, history = [], extras = [], opts = {}) {
   const { found, text } = await buildContext(settings, items, question);
   // A agenda dos próximos dias vai junto: "tenho algo livre na quinta?", "quando é o dentista?"
   const agenda = await import('./calendar.js').then((m) => m.calendarContext()).catch(() => '');
   if (agenda) extras = [...(extras || []), { title: 'AGENDA DO USUÁRIO (próximos 14 dias; horários no fuso dele)', text: agenda }];
   const extra = (extras || []).filter((x) => x?.text).map((x) => `\n\n${x.title}:${x.note ? `\n(${x.note})` : ''}\n${x.text}`).join('');
-  const system = `Você é o assistente do "segundo cérebro" do usuário, dentro da extensão NeuroTab. Responda em ${aiLanguageName()}, de forma direta e curta (use listas quando ajudar).
-${nowContext()}
-Use as notas abaixo como fonte principal e cite-as como [1], [2]… Se a resposta não estiver nas notas, diga isso em uma linha e então responda com conhecimento geral, deixando claro que não veio das notas.
-
-NOTAS DO USUÁRIO:
-${text || '(nenhuma nota salva ainda)'}${extra}`;
+  const system = askPrompt(text, extra);
   const messages = [...history.slice(-6), { role: 'user', content: question }];
-  const answer = await complete(settings, { system, messages, maxTokens: 900 });
+  const answer = await complete(settings, { ...opts, task: 'chat', system, messages, maxTokens: 900 });
   return { answer, sources: found };
 }
 
 // ---------- Interpretar um comando de voz (plano B quando as regras não entendem) ----------
 export async function interpretCommand(settings, text) {
-  const system = `Você interpreta comandos de voz de um assistente de nova aba do navegador. A frase pode estar em qualquer idioma.
-${nowContext()}
-Responda SOMENTE com JSON, um destes formatos:
-{"action":"note","text":"..."} · {"action":"idea","text":"..."} · {"action":"task","text":"..."}
-{"action":"reminder","text":"o que lembrar, sem a data","when":"ISO 8601 com fuso"}
-{"action":"timer","seconds":600} · {"action":"alarm","time":"HH:MM","days":[0-6, vazio = uma vez; 0 = domingo]}
-{"action":"pomodoro"} · {"action":"stop"} (parar som/alarme)
-{"action":"open","target":"nome do site"} · {"action":"search","query":"..."} · {"action":"route","target":"nome do lugar"}
-{"action":"weather"} · {"action":"quotes","query":"moeda ou ação"} · {"action":"tasks"} · {"action":"time"}
-{"action":"ask","query":"pergunta"} (qualquer pergunta ou conversa)
-Mantenha os textos no idioma original da frase.`;
-  return parseJson(await complete(settings, { system, messages: [{ role: 'user', content: text }], json: true, maxTokens: 200 }));
+  return parseJson(await complete(settings, { task: 'commands', system: commandPrompt(), messages: [{ role: 'user', content: text }], json: true, maxTokens: 200 }));
 }

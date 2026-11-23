@@ -1,6 +1,7 @@
 // Widget: pergunte ao seu cérebro (chat com as notas) + assistente de voz.
 import { h, micButton, miniMarkdown, speak } from '../lib/ui.js';
 import { ask, aiConfig } from '../lib/ai.js';
+import { modelChip, confirmReserve } from '../lib/ai-ui.js';
 import { displayTitle, searchItems } from '../lib/brain.js';
 import { t, LOCALE } from '../lib/i18n.js';
 import { localAnswer, gmapsRoute, wazeTo, streetEstimate, formatKm, formatMin, placesText } from '../lib/places.js';
@@ -21,6 +22,7 @@ export default {
     const mic = micButton(input, { lang: ctx.settings.voiceLang, title: 'Perguntar por voz', onFinal: (t) => go(t, true) });
     const spk = h('button', { title: 'Ler respostas em voz alta', onclick: async () => { await ctx.saveSettings({ speakAnswers: !ctx.settings.speakAnswers }); paintSpk(); } });
     const clear = h('button', { title: 'Limpar conversa', onclick: () => { history.length = 0; chat.replaceChildren(); intro(); } }, '🧹');
+    const chip = modelChip(() => ctx.settings, 'chat');
     const paintSpk = () => { spk.textContent = ctx.settings.speakAnswers ? '🔊' : '🔈'; };
     paintSpk();
     ctx.actions.append(spk, clear);
@@ -32,7 +34,7 @@ export default {
           h('p', {}, t('Para conversar com as suas notas, conecte uma IA. O Gemini tem camada gratuita.')),
           h('p', {}, h('button', { class: 'btn primary', onclick: () => ctx.openSettings('#ia') }, t('Configurar IA')))));
       } else {
-        chat.append(h('div', { class: 'msg bot' }, h('p', {}, t(`Pergunte qualquer coisa sobre o que você salvou. Usando ${aiConfig(ctx.settings).p.name}.`))));
+        chat.append(h('div', { class: 'msg bot' }, h('p', {}, t(`Pergunte qualquer coisa sobre o que você salvou. Usando ${aiConfig(ctx.settings, 'chat').name}.`))));
       }
     }
 
@@ -109,7 +111,10 @@ export default {
       chat.append(wait);
       chat.scrollTop = chat.scrollHeight;
       try {
-        const { answer, sources } = await ask(ctx.settings, ctx.items, q, history, ctx.brainExtras?.(q) || []);
+        const run = (allowCloudReserve) => ask(ctx.settings, ctx.items, q, history, ctx.brainExtras?.(q) || [], { override: chip.override(), allowCloudReserve });
+        let res;
+        try { res = await run(false); } catch (e) { if (!confirmReserve(e)) throw e; res = await run(true); }
+        const { answer, sources } = res;
         history.push({ role: 'user', content: q }, { role: 'assistant', content: answer });
         const msg = h('div', { class: 'msg bot', html: miniMarkdown(answer) });
         msg.addEventListener('click', (e) => {
@@ -127,7 +132,7 @@ export default {
       chat.scrollTop = chat.scrollHeight;
     }
 
-    el.append(chat, h('div', { class: 'row-input' }, input, mic, send));
+    el.append(chat, h('div', { class: 'row-input' }, input, mic, send), h('div', { class: 'ask-foot' }, chip.el));
     intro();
     const off = ctx.on('ask', (q) => { el.closest('.widget')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); go(q); });
     return { destroy: off };

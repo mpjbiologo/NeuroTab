@@ -67,7 +67,7 @@ export async function addShortcut({ url, title, groupId }) {
 async function captureAndEnrich(p) {
   const item = await addItem(p);
   const { settings } = await loadData();
-  if (settings.ai.autoEnrich && isConfigured(settings)) {
+  if (settings.ai.autoEnrich && isConfigured(settings, 'organize')) {
     try {
       await updateItem(item.id, await enrich(settings, item));
     } catch (e) {
@@ -731,7 +731,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     return true;
   }
   if (msg?.type === 'media:summarize') {
-    summarizeMedia(String(msg.id || ''), { allowCloud: !!msg.allowCloud }).then(reply, (e) => reply({ error: e.message }));
+    summarizeMedia(String(msg.id || ''), { allowCloud: !!msg.allowCloud, allowCloudReserve: !!msg.allowCloudReserve, override: msg.override?.server ? { server: String(msg.override.server), model: String(msg.override.model || '') } : null }).then(reply, (e) => reply({ error: e.message }));
     return true;
   }
 });
@@ -869,7 +869,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
       try {
         const { settings } = await loadData();
         const it = (await loadItems()).find((x) => x.id === msg.id);
-        if (it && isConfigured(settings)) await updateItem(it.id, await enrich(settings, it));
+        if (it && isConfigured(settings, 'organize')) await updateItem(it.id, await enrich(settings, it));
         reply({ ok: true });
       } catch (e) {
         reply({ ok: false, error: e.message });

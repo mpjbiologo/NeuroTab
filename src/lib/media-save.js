@@ -3,7 +3,7 @@
 // Inspirado no worker do Kora (MIT) — Joao V Santos — https://github.com/Joaovitor12j/kora (src/kora/worker.py).
 import { loadData } from './store.js';
 import { loadItems, addItem, updateItem } from './brain.js';
-import { complete, isConfigured, isLocalAI, aiConfig } from './ai.js';
+import { complete, isConfigured, isLocalAI } from './ai.js';
 import { aiLanguageName } from './i18n.js';
 import { canonicalize, platformOf, tweetParts } from './media-links.js';
 import { sanitizeMediaSave, systemPrompt, userPrompt, parseAnswer, knownTags, mediaItem, mediaText, fromFxTwitter } from './media.js';
@@ -97,35 +97,40 @@ function pickFilled(next, prev) {
 }
 
 /** Pede à IA o resumo. allowCloud: a pessoa autorizou agora (botão "Resumir"). */
-export async function summarizeMedia(id, { allowCloud = false } = {}) {
+export async function summarizeMedia(id, { allowCloud = false, override = null, allowCloudReserve = false } = {}) {
   const { settings } = await loadData();
   const cfg = sanitizeMediaSave(settings.mediaSave);
   const items = await loadItems();
   const it = items.find((x) => x.id === id);
   if (!it || it.type !== 'media') throw new Error('Item não encontrado.');
   const fail = async (error) => { await updateItem(id, { media: { ...it.media, status: 'pendente', error } }); return { error }; };
-  if (!isConfigured(settings)) return fail('Configure a IA em Configurações → IA para gerar o resumo.');
-  if (!isLocalAI(settings) && !cfg.cloudOK && !allowCloud) return fail('cloud');
+  if (!isConfigured(settings, 'media') && !override) return fail('Configure a IA em Configurações → IA para gerar o resumo.');
+  if (!isLocalAI(settings, 'media', { override }) && !cfg.cloudOK && !allowCloud) return fail('cloud');
   const m = it.media || {};
   if (!m.caption && !m.content && !it.pageTitle) return fail('Nada para resumir: a página não entregou texto.');
   try {
+    let used = null;
     const text = await complete(settings, {
+      task: 'media',
+      override,
+      allowCloudReserve: allowCloudReserve || cfg.cloudOK || allowCloud,
+      onUse: (p) => { used = p; },
       system: systemPrompt({ categories: cfg.categories, tags: knownTags(items), language: aiLanguageName() }),
       messages: [{ role: 'user', content: userPrompt({ platform: m.platform, title: it.pageTitle || it.title, author: m.author, caption: m.caption, content: m.content, contentType: m.contentType }, cfg.maxChars) }],
       json: true,
       maxTokens: 900,
     });
     const a = parseAnswer(text, cfg.categories);
-    const c = aiConfig(settings);
     await updateItem(id, {
       title: a.title,
       summary: a.summary,
       tags: [...new Set([...(it.tags || []), ...a.tags])].slice(0, 8),
       enriched: true,
-      media: { ...m, points: a.points, category: a.category, status: 'processado', error: '', ai: `${c.p?.name || c.id}${c.model ? ' · ' + c.model : ''}` },
+      media: { ...m, points: a.points, category: a.category, status: 'processado', error: '', ai: used ? `${used.name}${used.model ? ' · ' + used.model : ''}` : '' },
     });
     return { ok: true };
   } catch (e) {
+    if (e.code === 'consent') { await updateItem(id, { media: { ...it.media, status: 'pendente', error: 'reserve' } }); return { error: 'reserve', message: e.message }; }
     return fail(e.message || String(e));
   }
 }
