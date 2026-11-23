@@ -41,24 +41,19 @@ Primeiro a base, depois os recursos.
 - **Depois — Microsoft:** Outlook (agenda e e-mail) e OneDrive (sincronização), com as mesmas contas. Fica para quando o app estiver registrado no Microsoft Entra; ganha o número da versão em que entrar.
 
 ### [v0.8 — Assistente de voz e modo reunião](https://github.com/mpjbiologo/NeuroTab/milestone/4) · 4 atualizações
-- **Primeiro, uma central de IA:** vários provedores, servidores e modelos ao mesmo tempo, com um modelo para cada tarefa (conversa, cérebro, busca por significado, imagens, transcrição, reuniões…), regras claras de prioridade e nenhuma troca silenciosa do computador para a internet (#63, que absorve a #7). A voz da v0.8 precisa disso: um modelo para transcrever e outro para responder.
-- **Depois, a IA certa para o computador:** "Qual é a melhor IA para o meu computador?" nas Configurações de IA, com o que o navegador detecta, o que a pessoa completa à mão, modelos do Ollama recomendados e o passo a passo para instalar e ligar (#61). É a base da voz local da v0.8.
-- Responder falando ao ser chamado e conversar até 1 minuto de silêncio (#40).
-- Modo reunião: gravar, transcrever, resumo, pontos importantes e tarefas, com botão 📋 perto do microfone (#41).
-- Modo conversa: microfone sempre ligado e o cérebro responde a tudo, com botão 💬 perto do microfone (#44).
-- Visual futurista da voz (#39).
+- **0.8.0 — Primeiro, uma central de IA:** vários provedores, servidores e modelos ao mesmo tempo, com um modelo para cada tarefa (conversa, cérebro, busca por significado, imagens, transcrição, reuniões…), regras claras de prioridade e nenhuma troca silenciosa do computador para a internet (#63, que absorve a #7). A voz da v0.8 precisa disso: um modelo para transcrever e outro para responder.
+- **0.8.1 — Depois, a IA certa para o computador:** "Qual é a melhor IA para o meu computador?" nas Configurações de IA, com o que o navegador detecta, o que a pessoa completa à mão, modelos do Ollama recomendados e o passo a passo para instalar e ligar (#61). É a base da voz local da v0.8.
+- **0.8.2 — Voz que responde:** responder falando ao ser chamado e conversar até 1 minuto de silêncio (#40), com o visual futurista da voz (#39).
+- **0.8.3 — Reunião e conversa:** modo reunião (gravar, transcrever, resumo, pontos importantes e tarefas, botão 📋 perto do microfone) (#41) e modo conversa (microfone sempre ligado e o cérebro responde a tudo, botão 💬) (#44).
 
-### [v0.9 — Conhecimento e captura](https://github.com/mpjbiologo/NeuroTab/milestone/5) · 3 atualizações (captura primeiro, conhecimento depois)
-- **Central de ações do botão direito** (#55): o menu entende o contexto e manda o conteúdo ao lugar certo. Reúne salvar trecho como nota, tarefa ou lembrete (#56), captura de imagens e arquivos (#12), recorte de tela para a biblioteca (#37).
-- Separar provedores, embeddings e tarefas de IA (#7), base para o resto.
-- NeuroPilot: sugestões proativas locais (#8).
-- Central de conhecimento: fontes e documentos (#9) e adaptador opcional do Open Notebook (#10).
-- Modo Estudante (#11).
-- Escolher a pasta das mídias e avaliar downloads de áudio e vídeo de sites, sem contornar DRM nem restrições (#45).
-- **Finanças pessoais:** entradas e saídas, contas e cartões, contas a pagar, orçamento e importação de extratos e faturas (OFX, CSV e PDF), só no computador e com cofre opcional (#66). O conector de Open Finance por agregador fica para a 1.x.
+### [v0.9 — Conhecimento e captura](https://github.com/mpjbiologo/NeuroTab/milestone/5) · 4 atualizações (captura primeiro, conhecimento depois)
+- **0.9.0 — Central do botão direito** (#55): o menu entende o contexto e manda o conteúdo ao lugar certo. Reúne salvar trecho como nota, tarefa ou lembrete (#56), captura de imagens e arquivos (#12) e recorte de tela para a biblioteca (#37).
+- **0.9.1 — Finanças pessoais** (#66): entradas e saídas, contas e cartões, contas a pagar, orçamento e importação de extratos e faturas (OFX, CSV e PDF), só no computador e com cofre opcional. O conector de Open Finance por agregador fica para a 1.x.
+- **0.9.2 — Fontes e documentos:** central de conhecimento com fontes e documentos (#9), adaptador opcional do Open Notebook (#10) e o que falta da #45 (pasta para imagens e áudio; avaliar outros sites, sem contornar DRM nem restrições).
+- **0.9.3 — NeuroPilot e Modo Estudante:** sugestões proativas locais (#8) e Modo Estudante (#11), já usando a central de IA da 0.8.0.
 
 ### [v1.0 — Estável e completa](https://github.com/mpjbiologo/NeuroTab/milestone/6) · 1 a 2 atualizações
-- Painel de privacidade, permissões e fluxo de dados (#28).
+- Painel de privacidade, permissões e fluxo de dados (#28). Já começou: as páginas *Permissões e sites* e *Apps externos* (0.7.11.1) são a base; falta o fluxo de dados por recurso (o que sai, para onde e quando).
 - Matriz de testes funcionais para Chrome, Edge e Firefox (#13).
 - Revisão geral: textos, acessibilidade, desempenho e documentação.
 
