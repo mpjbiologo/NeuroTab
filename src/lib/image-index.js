@@ -134,7 +134,7 @@ export async function syncBrainItem(rec) {
  *    (a pessoa confirmou) ou da autorização permanente nas configurações.
  * Devolve { rec, item }.
  */
-export async function analyzeCapture(settings, id, { ocr = true, ai = false, allowed = false, question = '', onProgress } = {}) {
+export async function analyzeCapture(settings, id, { ocr = true, ai = false, allowed = false, question = '', onProgress, override = null, allowCloudReserve = false } = {}) {
   const rec = await getCapture(id);
   if (!rec) throw new Error('Imagem não encontrada na biblioteca.');
   const patch = { analyzeError: '' };
@@ -146,9 +146,9 @@ export async function analyzeCapture(settings, id, { ocr = true, ai = false, all
       patch.ocrConf = r.confidence;
     }
     if (ai) {
-      if (visionNeedsConsent(settings) && !allowed) throw new Error('Envio da imagem à IA não autorizado.');
+      if (visionNeedsConsent(settings, { override }) && !allowed) throw new Error('Envio da imagem à IA não autorizado.');
       onProgress?.({ step: 'ai' });
-      const d = await describeImage(settings, rec.blob, { question, ocrText: patch.ocrText ?? rec.ocrText ?? '', pageTitle: rec.pageTitle });
+      const d = await describeImage(settings, rec.blob, { question, ocrText: patch.ocrText ?? rec.ocrText ?? '', pageTitle: rec.pageTitle, override, allowCloudReserve });
       patch.ai = { ...d, question };
     }
     patch.address = patch.ai?.address || findAddress(patch.ai?.text || patch.ocrText || rec.ocrText || '') || rec.address || '';

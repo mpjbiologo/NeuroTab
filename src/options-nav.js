@@ -9,7 +9,7 @@ import { t } from './lib/i18n.js';
 export const NAV = [
   { id: 'aparencia', icon: '🎨', label: 'Aparência', pages: ['tema', 'editor', 'layout', 'estilo-atalhos', 'fundo', 'slides'] },
   { id: 'novaaba', icon: '🏠', label: 'Nova aba', pages: ['pesquisa', 'atalhos', 'relogio', 'timer'] },
-  { id: 'ia', icon: '🤖', label: 'Inteligência artificial', pages: ['ia', 'ia-organizar'] },
+  { id: 'ia', icon: '🤖', label: 'Inteligência artificial', pages: ['ia', 'ia-tarefas', 'ia-organizar'] },
   { id: 'voz', icon: '🎙️', label: 'Voz', pages: ['voz', 'voz-leitura', 'voz-ativacao', 'voz-comandos'] },
   { id: 'midia', icon: '🎞️', label: 'Mídia', pages: ['imagens', 'salvar-midia'] },
   { id: 'notas', icon: '📝', label: 'Notas', pages: ['keep', 'exportar-notas', 'limpeza', 'integracoes'] },
@@ -21,7 +21,7 @@ export const NAV = [
 ];
 
 // Endereços das abas antigas (#ia, #contas…) continuam funcionando.
-export const LEGACY = { geral: 'tema', fundo: 'fundo', ia: 'ia', midia: 'imagens', notas: 'keep', contas: 'contas', backup: 'importar', apoie: 'apoie', 'reset-tema': 'editor', videos: 'salvar-midia', sobre: 'creditos', ponte: 'apps', 'apps-externos': 'apps', aparencia: 'editor' };
+export const LEGACY = { geral: 'tema', fundo: 'fundo', ia: 'ia', midia: 'imagens', notas: 'keep', contas: 'contas', backup: 'importar', apoie: 'apoie', 'reset-tema': 'editor', videos: 'salvar-midia', sobre: 'creditos', ponte: 'apps', 'apps-externos': 'apps', aparencia: 'editor', tarefas: 'ia-tarefas' };
 const FIRST = 'tema';
 
 const $ = (s) => document.querySelector(s);

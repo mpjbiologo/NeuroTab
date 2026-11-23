@@ -4,82 +4,35 @@
 import { openDB } from './idb.js';
 import { aiConfig, isConfigured, complete, parseJson } from './ai.js';
 import { displayTitle, searchItems } from './brain.js';
-import { redact, secretsFromHeaders } from './secrets.js';
 import { hasData } from './permissions.js';
+import { EMBED_DEFAULTS } from './ai/catalog.js';
+import { adapterFor } from './ai/providers/index.js';
+import { AIError } from './ai/errors.js';
+import { rerankPrompt } from './ai/prompts.js';
+
+export { EMBED_DEFAULTS };
 
 const STORE = 'vectors';
-const DIM = 768;
 
-// Modelos de embeddings padrão. Anthropic não tem — usa o plano B (a IA reordena).
-export const EMBED_DEFAULTS = {
-  gemini: 'gemini-embedding-001',
-  openai: 'text-embedding-3-small',
-  openrouter: 'openai/text-embedding-3-small',
-  ollama: 'nomic-embed-text',
-  custom: '',
-  anthropic: null,
-};
-
+/** O servidor e o modelo de embeddings da tarefa "Busca por significado" (Configurações → IA → Modelo por tarefa). */
 export function embedConfig(settings) {
-  const c = aiConfig(settings);
-  const custom = (settings.ai?.embedModels || {})[c.id];
-  const model = custom || EMBED_DEFAULTS[c.id] || '';
-  return { ...c, embedModel: model, supported: !!model && isConfigured(settings), tag: `${c.id}:${model}` };
+  const c = aiConfig(settings, 'search');
+  const model = c.none ? '' : c.model;
+  // tag: identifica de qual servidor e modelo veio o vetor (vetores de modelos diferentes não se misturam)
+  return { ...c, embedModel: model, supported: !c.none && !!model, tag: `${c.server || c.id}:${model}` };
 }
 
 export function semanticOn(settings) {
-  return !!settings.ai?.semantic && isConfigured(settings);
-}
-
-// ---------- Chamadas de embeddings ----------
-async function post(url, headers, body) {
-  let res;
-  try {
-    res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
-  } catch {
-    throw new Error('Não foi possível conectar ao provedor de IA. Verifique a internet, a URL e a permissão de acesso.');
-  }
-  const txt = await res.text();
-  let json = null;
-  try { json = JSON.parse(txt); } catch { /* texto puro */ }
-  if (!res.ok) {
-    const msg = redact(json?.error?.message || json?.message || txt.slice(0, 200), secretsFromHeaders(headers));
-    const err = new Error(res.status === 429 ? 'Limite de uso atingido no provedor. Tente de novo em instantes.' : `Erro ${res.status}: ${msg}`);
-    err.status = res.status;
-    throw err;
-  }
-  return json;
+  return !!settings.ai?.semantic && (isConfigured(settings, 'search') || isConfigured(settings, 'chat'));
 }
 
 /** Gera vetores (normalizados) para uma lista de textos. kind: 'doc' | 'query'. */
 export async function embed(settings, texts, kind = 'doc') {
   if (!(await hasData('websiteContent'))) throw new Error('No Firefox, autorize o envio de conteúdo à IA: Configurações → IA e voz → Salvar.');
   const c = embedConfig(settings);
-  if (!c.supported) throw new Error('O provedor escolhido não oferece embeddings.');
-  let vecs;
-  if (c.id === 'gemini') {
-    const model = 'models/' + c.embedModel.replace(/^models\//, '');
-    const reqs = (opts) => texts.map((t) => ({ model, content: { parts: [{ text: t }] }, ...opts }));
-    const url = `${c.base}/v1beta/${model}:batchEmbedContents`;
-    const headers = { 'x-goog-api-key': c.key };
-    let r;
-    try {
-      r = await post(url, headers, { requests: reqs({ taskType: kind === 'query' ? 'RETRIEVAL_QUERY' : 'RETRIEVAL_DOCUMENT', outputDimensionality: DIM }) });
-    } catch (e) {
-      if (e.status !== 400) throw e;
-      r = await post(url, headers, { requests: reqs({}) }); // modelo sem suporte a esses campos
-    }
-    vecs = (r.embeddings || []).map((e) => e.values);
-  } else {
-    const headers = c.key ? { Authorization: 'Bearer ' + c.key } : {};
-    if (c.id === 'openrouter') { headers['HTTP-Referer'] = 'https://github.com/mpjbiologo/NeuroTab'; headers['X-Title'] = 'NeuroTab'; }
-    const prefix = /nomic/.test(c.embedModel) ? (kind === 'query' ? 'search_query: ' : 'search_document: ') : '';
-    const body = { model: c.embedModel, input: texts.map((t) => prefix + t) };
-    if (/text-embedding-3/.test(c.embedModel)) body.dimensions = DIM;
-    const r = await post(`${c.base}/embeddings`, headers, body);
-    vecs = (r.data || []).sort((a, b) => (a.index ?? 0) - (b.index ?? 0)).map((d) => d.embedding);
-  }
-  if (vecs.length !== texts.length || vecs.some((v) => !Array.isArray(v) || !v.length)) throw new Error('O provedor devolveu embeddings em formato inesperado.');
+  if (!c.supported) throw new AIError('unsupported', 'O servidor escolhido para a busca por significado não oferece embeddings.');
+  const vecs = await adapterFor(c.type).embed(c, texts, kind);
+  if (vecs.length !== texts.length || vecs.some((v) => !Array.isArray(v) || !v.length)) throw new AIError('invalid', 'O provedor devolveu embeddings em formato inesperado.');
   return vecs.map(normalizeVec);
 }
 
@@ -266,8 +219,8 @@ export async function rerankWithAI(settings, items, q, limit = 12) {
   const pool = items.slice(0, 150);
   if (!pool.length) return [];
   const list = pool.map((it, i) => `${i + 1}. ${displayTitle(it)} — ${(it.summary || it.text || it.url || '').replace(/\s+/g, ' ').slice(0, 140)}`).join('\n');
-  const system = 'Você ajuda a encontrar notas relevantes. Responda SOMENTE com JSON: {"ids": [números das notas mais relevantes, da mais para a menos relevante, no máximo ' + limit + ']}. Considere o significado, não só palavras iguais. Se nenhuma servir, devolva {"ids": []}.';
-  const out = parseJson(await complete(settings, { system, messages: [{ role: 'user', content: `Pergunta: ${q}\n\nNotas:\n${list}` }], json: true, maxTokens: 200 }));
+  const system = rerankPrompt(limit);
+  const out = parseJson(await complete(settings, { task: 'chat', system, messages: [{ role: 'user', content: `Pergunta: ${q}\n\nNotas:\n${list}` }], json: true, maxTokens: 200 }));
   return (out.ids || []).map((n) => pool[+n - 1]).filter(Boolean).slice(0, limit);
 }
 

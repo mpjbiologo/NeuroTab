@@ -1066,3 +1066,7 @@ input[type=checkbox], input[type=radio], input[type=range], progress { accent-co
 .im-dl-bar { flex: 1 1 140px; max-width: 260px; height: 6px; border-radius: 3px; background: var(--tint-2); overflow: hidden; }
 .im-dl-bar i { display: block; height: 100%; background: var(--accent); transition: width var(--dur-2); }
 .im-dl-note { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; flex-basis: 100%; }
+
+/* Selo da IA usada (0.8.0) */
+.widget select.ai-chip, select.ai-chip { font-size: var(--fs-2xs); width: auto; max-width: 240px; height: 24px; min-height: 0; padding: 0 6px; border-radius: var(--radius-pill); border: 1px solid var(--border); background-color: var(--tint-1); color: var(--text-2); }
+.ask-foot { display: flex; justify-content: flex-end; margin-top: 4px; }

@@ -1,6 +1,7 @@
 // NeuroTab — Janela de editar/criar um item do cérebro (nota, tarefa, lembrete, link).
 import * as Brain from '../lib/brain.js';
 import { isConfigured, enrich } from '../lib/ai.js';
+import { confirmReserve } from '../lib/ai-ui.js';
 import { $, toast, toLocalInput, fromLocalInput } from '../lib/ui.js';
 import { S } from './state.js';
 import { ctx } from './context.js';
@@ -46,13 +47,14 @@ export function openItemDialog(item, preset = {}) {
     pinned: f.pinned.checked,
   });
   $('#itemAi').onclick = async () => {
-    if (!isConfigured(S.data.settings)) { toast('Configure a IA em Configurações → IA'); return; }
+    if (!isConfigured(S.data.settings, 'organize')) { toast('Configure a IA em Configurações → IA'); return; }
     const btn = $('#itemAi');
     btn.disabled = true;
     btn.textContent = '✨ Organizando…';
     try {
       const cur = { ...it, ...read(), title: '' };
-      const patch = await enrich(S.data.settings, cur);
+      let patch;
+      try { patch = await enrich(S.data.settings, cur); } catch (e) { if (!confirmReserve(e)) throw e; patch = await enrich(S.data.settings, cur, { allowCloudReserve: true }); }
       fill({ ...cur, ...patch, title: patch.title || read().title, type: patch.type || cur.type });
       if (patch.summary) $('#itemMeta').textContent = 'Resumo: ' + patch.summary;
       it.summary = patch.summary || it.summary;

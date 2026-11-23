@@ -394,36 +394,28 @@
 
     <!-- IA -->
     <section id="tab-ia" class="card" hidden>
-      <h2 data-page="ia">Provedor e modelo</h2>
-      <p>A IA organiza suas notas (título, resumo, tags, lembretes) e responde perguntas sobre elas. As chamadas vão <b>direto do seu navegador</b> para o provedor, com a <b>sua</b> chave — a NeuroTab não tem servidor.</p>
+      <h2 data-page="ia">Servidores e modelos</h2>
+      <p>A IA organiza suas notas, responde perguntas, resume mídias e descreve imagens. Cadastre quantos servidores quiser — no seu computador (Ollama), na rede de casa ou na internet — e escolha qual usar em cada tarefa. As chamadas vão <b>direto do seu navegador</b> para o servidor, com a <b>sua</b> chave: a NeuroTab não tem servidor.</p>
       <div class="opt">
-        <div><b>Provedor</b><small id="provNote"></small></div>
-        <select id="provider"></select>
-      </div>
-      <div class="opt" id="keyRow">
-        <div><b>Chave de API</b><small><a id="keyLink" target="_blank">Obter uma chave →</a></small></div>
-        <div class="keybox">
-          <input type="password" id="apiKey" class="txt wide" placeholder="Cole sua chave aqui" autocomplete="off">
-          <button class="btn" id="showKey" title="Mostrar/ocultar">👁</button>
-          <button class="btn" id="removeKey" title="Apagar a chave salva deste provedor">🗑</button>
-        </div>
-      </div>
-      <div class="opt" id="baseRow">
-        <div><b>Endereço da API</b><small>Ex.: http://localhost:11434/v1</small></div>
-        <input type="text" id="baseUrl" class="txt wide">
+        <div><b>Padrão</b><small>O que toda tarefa usa, a menos que tenha um modelo próprio em "Modelo por tarefa".</small></div>
+        <select id="aiPrimary" class="ai-pick"></select>
       </div>
       <div class="opt">
-        <div><b>Modelo</b><small>Clique em "Carregar" para ver os disponíveis na sua conta.</small></div>
-        <div class="keybox">
-          <input type="text" id="model" class="txt" list="modelList">
-          <datalist id="modelList"></datalist>
-          <button class="btn" id="loadModels">Carregar</button>
-        </div>
+        <div><b>Reserva</b><small>Opcional. Só entra quando o escolhido não responde (sem conexão, limite de uso, servidor fora do ar). Se a Reserva for na internet e o escolhido for local, a NeuroTab pergunta antes.</small></div>
+        <select id="aiReserve" class="ai-pick"></select>
       </div>
+      <div id="aiServers" class="ai-servers"></div>
       <div class="foot">
-        <button class="btn primary" id="saveAi">Salvar e testar</button>
+        <button class="btn primary" id="aiAdd">＋ Adicionar servidor</button>
+        <button class="btn" id="aiExport" title="Servidores, modelos e regras, sem as chaves">Exportar configuração</button>
+        <label class="btn">Importar<input type="file" id="aiImport" accept="application/json,.json" hidden></label>
         <span id="aiMsg" class="msg"></span>
       </div>
+      <p class="hint">🔒 As chaves ficam guardadas só neste navegador. Elas não vão na sincronização nem na exportação da configuração de IA, e só vão para o backup se você marcar "Incluir chaves de API".</p>
+      <h2 data-page="ia-tarefas">Modelo por tarefa</h2>
+      <p>Cada tarefa usa o <b>Padrão</b>, a menos que você escolha outro modelo para ela. A ordem é sempre: a troca escolhida só para esta vez (o selo ao lado do botão) → a regra da tarefa → o Padrão. A <b>Reserva</b> só entra se o escolhido falhar.</p>
+      <div id="aiTasks" class="ai-tasks"></div>
+      <div class="foot"><button class="btn" id="aiTasksReset">Todas iguais ao Padrão</button></div>
       <h2 data-page="ia-organizar">Organização e busca</h2>
       <div class="opt">
         <div><b>Organizar automaticamente com IA</b><small>Ao salvar algo, a IA cria título, tags, resumo e detecta lembretes.</small></div>
@@ -439,10 +431,6 @@
       </div>
       <div class="sem-box" id="semBox" hidden>
         <p class="hint" id="semInfo"></p>
-        <div class="opt" id="embedRow">
-          <div><b>Modelo de embeddings</b><small>Deixe em branco para usar o padrão do provedor.</small></div>
-          <input type="text" id="embedModel" class="txt">
-        </div>
         <div class="foot">
           <button class="btn" id="semIndex">Indexar minhas notas</button>
           <button class="btn" id="semClear" title="Apaga o índice; ele é refeito na próxima indexação">Refazer índice</button>
@@ -450,7 +438,6 @@
         </div>
         <progress id="semProg" max="1" value="0" hidden></progress>
       </div>
-      <p class="hint">🔒 A chave fica guardada só neste navegador. Ela só vai para o backup se você marcar "Incluir chaves de API" na aba Backup.</p>
       <h2 data-page="voz">Fala e reconhecimento</h2>
       <div class="opt">
         <div><b>Idioma do ditado e da leitura</b></div>
@@ -587,12 +574,8 @@
         </select>
       </div>
       <div class="opt">
-        <div><b>IA para imagens</b><small id="mediaProviderNote"></small></div>
-        <select data-k="media.provider" id="mediaProvider"><option value="">A mesma da aba IA e voz</option></select>
-      </div>
-      <div class="opt">
-        <div><b>Modelo para imagens</b><small>Vazio: o modelo padrão da IA para imagens. No Ollama, se ele só entender texto, a NeuroTab usa um modelo com visão que já esteja instalado (ex.: gemma3, llava, qwen2.5vl).</small></div>
-        <input type="text" class="txt" id="visionModel" placeholder="automático" spellcheck="false" style="max-width:220px">
+        <div><b>IA para imagens</b><small id="imagesAiNote"></small></div>
+        <a class="btn" href="#ia-tarefas">Escolher em Modelo por tarefa</a>
       </div>
       <div class="opt">
         <div><b>Enviar imagens à IA sem perguntar</b><small>Para descrever uma imagem, ela vai ao provedor de IA. Desligado, a NeuroTab pergunta a cada vez. Com o Ollama, nada sai do computador e não há pergunta.</small></div>

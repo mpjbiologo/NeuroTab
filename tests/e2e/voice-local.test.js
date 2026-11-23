@@ -111,7 +111,7 @@ test('Opções: escolha do motor, servidores conhecidos e teste de conexão do W
     assert.equal(tested, 1);
     await p.click('label.sw:has(#voiceLocalOnly)');
     await p.waitForTimeout(300);
-    assert.match(await p.textContent('#localAiNote'), /Google Gemini/, 'avisa que a IA ainda é na nuvem');
+    assert.match(await p.textContent('#localAiNote'), /Gemini/, 'avisa que a IA ainda é na nuvem');
     assert.deepEqual(x.errors, []);
   } finally {
     await x.close();

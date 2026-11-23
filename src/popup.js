@@ -94,7 +94,7 @@ async function getSelection() {
 
 async function capture(p) {
   const it = await addItem(p);
-  if (data.settings.ai.autoEnrich && isConfigured(data.settings)) chrome.runtime.sendMessage({ type: 'enrich', id: it.id }).catch(() => {});
+  if (data.settings.ai.autoEnrich && isConfigured(data.settings, 'organize')) chrome.runtime.sendMessage({ type: 'enrich', id: it.id }).catch(() => {});
   return it;
 }
 

@@ -255,13 +255,12 @@ test('Configurações: aba Mídia com as opções de imagens', async () => {
     await o.waitForSelector('#page-imagens:not([hidden])');
     assert.equal(await o.inputValue('select[data-k="media.save"]'), 'ask');
     await o.selectOption('select[data-k="media.save"]', 'auto');
-    await o.selectOption('#mediaProvider', 'openai');
     await o.waitForTimeout(300);
     const s = (await x.storage(o, 'nt_data')).settings;
     assert.equal(s.media.save, 'auto');
-    assert.equal(s.media.provider, 'openai');
-    assert.match(await o.textContent('#mediaProviderNote'), /Falta a chave de OpenAI/);
-    assert.equal(await o.isVisible('#page-imagens #visionModel'), true);
+    // desde a 0.8.0, a IA das imagens é escolhida em IA → Modelo por tarefa
+    assert.match(await o.textContent('#imagesAiNote'), /Nenhuma IA com imagens configurada/);
+    assert.equal(await o.getAttribute('#page-imagens a[href="#ia-tarefas"]', 'href'), '#ia-tarefas');
     assert.equal(await o.locator('.pane[data-page^="ia"] >> text=Ler o texto das imagens salvas').count(), 0, 'saiu da aba IA');
     assert.deepEqual(x.errors, []);
   } finally {

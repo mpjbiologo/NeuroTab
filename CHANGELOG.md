@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.8.0
+**Central de IA: vários servidores e modelos ao mesmo tempo, um para cada tarefa.**
+
+- 🤖 **Configurações → IA → Servidores e modelos:** cadastre quantos servidores quiser — Ollama no computador ou em outro computador da rede de casa, Gemini, OpenAI, Anthropic, OpenRouter ou qualquer compatível com OpenAI. Cada um mostra **onde os dados vão** (🖥️ este computador, 🏠 rede de casa, ☁️ internet), se está respondendo e o que cada modelo sabe fazer (👁 imagens, 🔎 busca por significado), detectado sozinho quando o servidor informa. Testar, Editar, Ligar/Desligar (sem apagar) e Remover
+- ⭐ **Padrão e Reserva:** o Padrão é o que tudo usa; a Reserva, opcional, só entra quando o escolhido não responde. **Nunca troca sem avisar:** se a Reserva for na internet e a IA principal for local, a NeuroTab pergunta antes e diz o que seria enviado
+- 🧩 **Modelo por tarefa:** conversa, organizar o cérebro, comandos de voz, resumir mídia, imagens e busca por significado podem herdar o Padrão ou ter o seu próprio modelo. A tabela mostra de onde cada uma herda e avisa quando o modelo não serve para a tarefa
+- 🔁 **Trocar só desta vez:** um selo discreto ("🖥️ Ollama · llama3.2") aparece no widget Perguntar, no Resumir da mídia e na análise de imagens; escolha outro modelo só para aquela ação
+- 📤 **Exportar e importar** a configuração de IA, **sem as chaves**
+- **Erros mais claros:** sem conexão, chave recusada, limite de uso, modelo inexistente, modelo que não sabe fazer aquilo e resposta inválida
+- **Nada se perde:** a configuração antiga vira a central sozinha (o provedor atual vira o Padrão, as chaves e o índice da busca continuam valendo, e a "IA para imagens" da aba Mídia vira a regra da tarefa Imagens). Nenhuma permissão nova
+- Por dentro (#7): um adaptador por tipo de provedor com o mesmo contrato, a escolha do modelo separada e testada, e os textos enviados à IA separados por assunto e com versão (`docs/dev/IA.md`)
+
 ## v0.7.11.1
 **Apps externos: o que cada programa faz e por que a NeuroTab precisa dele.**
 

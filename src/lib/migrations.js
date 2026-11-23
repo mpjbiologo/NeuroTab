@@ -15,6 +15,8 @@ export const META_KEY = 'nt_meta';
 export const MIGRATION_BACKUP_KEY = 'nt_migration_backup';
 export const MIGRATED_KEYS = ['nt_data', 'nt_brain', 'nt_trash'];
 
+import { sanitizeAi } from './ai/config.js';
+
 const ITEM_TYPES = new Set(['note', 'task', 'idea', 'page', 'clip']); // mesmos de TYPES em brain.js
 
 /** Garante os campos obrigatórios de um item do cérebro. Devolve null se não houver como aproveitar. */
@@ -80,6 +82,19 @@ export const MIGRATIONS = [
             return o;
           });
         }
+        s.nt_data = { ...s.nt_data, settings: st };
+      }
+      return s;
+    },
+  },
+  {
+    to: 3,
+    name: 'Central de IA (0.8.0): provedor único → servidores, Padrão e regras por tarefa (chaves mantidas)',
+    up(state) {
+      const s = { ...state };
+      if (s.nt_data?.settings) {
+        const st = { ...s.nt_data.settings };
+        st.ai = sanitizeAi(st.ai, st.media);
         s.nt_data = { ...s.nt_data, settings: st };
       }
       return s;

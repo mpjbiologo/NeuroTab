@@ -93,3 +93,17 @@ test('normalizeItems: dados corrompidos', () => {
   assert.notEqual(out[1].id, out[2].id);
   assert.deepEqual(normalizeItems('lixo'), []);
 });
+
+test('passo 3: configuração de IA antiga vira a central de IA (0.8.0), sem perder chaves', () => {
+  const state = { nt_data: { settings: { ai: { provider: 'ollama', models: { ollama: 'llama3.2' }, keys: { gemini: 'G' } }, media: { provider: 'gemini' } } } };
+  const { state: s, applied } = applyMigrations(structuredClone(state), 2);
+  assert.deepEqual(applied, [3]);
+  const ai = s.nt_data.settings.ai;
+  assert.equal(ai.v, 2);
+  assert.deepEqual(ai.servers.map((x) => x.id).sort(), ['gemini', 'ollama']);
+  assert.deepEqual(ai.primary, { server: 'ollama', model: 'llama3.2' });
+  assert.deepEqual(ai.keys, { gemini: 'G' });
+  assert.equal(ai.tasks.images.server, 'gemini');
+  // idempotente
+  assert.deepEqual(applyMigrations(structuredClone(s), 2).state, s);
+});

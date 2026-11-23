@@ -130,26 +130,23 @@ export async function readText(blob, { lang = ocrLangFor(), onProgress } = {}) {
   return { text, confidence: Math.round(data?.confidence || 0) };
 }
 
-// ---------- Descrição e perguntas, pela IA configurada ----------
-/** Configurações com a IA preferencial para imagens (Configurações → Mídia), se escolhida. */
-export function visionSettings(settings) {
-  const p = settings?.media?.provider;
-  if (!p || p === settings?.ai?.provider) return settings;
-  return { ...settings, ai: { ...settings.ai, provider: p } };
-}
+// ---------- Descrição e perguntas, pela IA da tarefa "Imagens" ----------
+// Desde a 0.8.0 a IA das imagens é escolhida em Configurações → IA → Modelo por tarefa.
+/** Mantida por compatibilidade: a escolha agora é da central de IA. */
+export const visionSettings = (settings) => settings;
 
-/** A IA configurada aceita imagem? (Para modelos locais, depende do modelo: llava, gemma3, qwen2.5vl…) */
+/** Há IA para imagens? */
 export function visionAvailable(settings) {
-  return isConfigured(visionSettings(settings));
+  return isConfigured(settings, 'images');
 }
 
 /** Enviar a imagem precisa de autorização? (IA na internet e a pessoa ainda não liberou.) */
-export function visionNeedsConsent(settings) {
-  return !isLocalAI(visionSettings(settings)) && !settings?.ai?.imagesAllowed;
+export function visionNeedsConsent(settings, opts) {
+  return !isLocalAI(settings, 'images', opts) && !settings?.ai?.imagesAllowed;
 }
 
 /** Nome do serviço que vai receber a imagem (para a confirmação). */
-export const visionTarget = (settings) => aiConfig(visionSettings(settings)).p.name;
+export const visionTarget = (settings, opts) => aiConfig(settings, 'images', opts).name;
 
 // ---------- Ollama: só modelos com visão enxergam a imagem ----------
 // Um modelo só de texto (ex.: llama3.2, o padrão) recebe a imagem e a ignora sem avisar: a "descrição"
@@ -174,13 +171,10 @@ export async function ollamaSees(root, model) {
   return VISION_NAME.test(model);
 }
 
-/** Qual modelo usar para imagens no Ollama: o escolhido para imagens, o de texto (se enxergar) ou outro instalado com visão. */
-export async function ollamaVisionModel(settings) {
-  const c = aiConfig(settings);
+/** Qual modelo usar para imagens no Ollama: o escolhido, o de texto (se enxergar) ou outro instalado com visão. */
+export async function ollamaVisionModel(c) {
   const root = c.base.replace(/\/v1$/, '');
-  const chosen = (settings.ai?.visionModel || '').trim();
-  if (chosen) return chosen;
-  if (await ollamaSees(root, c.model)) return c.model;
+  if (c.model && await ollamaSees(root, c.model)) return c.model;
   let names = [];
   try { names = ((await ollamaJson(root, '/api/tags'))?.models || []).map((m) => m.name || m.model).filter(Boolean); } catch { /* lista indisponível */ }
   const ranked = [...names.filter((n) => VISION_NAME.test(n)), ...names.filter((n) => !VISION_NAME.test(n))].slice(0, 12);
@@ -194,11 +188,10 @@ export async function ollamaVisionModel(settings) {
  * Descreve a imagem e, se houver, responde a uma pergunta sobre ela.
  * Devolve { title, description, text, tags, address, answer }.
  */
-export async function describeImage(settings0, blob, { question = '', ocrText = '', pageTitle = '' } = {}) {
-  const settings = visionSettings(settings0);
+export async function describeImage(settings, blob, { question = '', ocrText = '', pageTitle = '', override = null, allowCloudReserve = false, onUse = null } = {}) {
   if (!visionAvailable(settings)) throw new Error('Configure a IA em Configurações → IA para descrever imagens.');
-  const c = aiConfig(settings);
-  const model = c.id === 'ollama' ? await ollamaVisionModel(settings) : (settings.ai?.visionModel || '').trim() || '';
+  const c = aiConfig(settings, 'images', { override });
+  const model = c.id === 'ollama' && c.autoVision ? await ollamaVisionModel(c) : '';
   const { blob: img } = await normalizeImage(blob, { max: 1600 });
   const data = await toBase64(img);
   const system = `Você analisa imagens salvas no "segundo cérebro" de uma pessoa. Responda SOMENTE com JSON válido, com os textos em ${aiLanguageName()}.
@@ -210,9 +203,9 @@ Formato: {"titulo": "até 8 palavras", "descricao": "2 a 4 frases sobre o que ap
   let raw;
   try {
     // Folga de tokens: modelos que "pensam" (Gemini, GPT-5) gastam parte do limite antes de responder.
-    raw = await complete(settings, { system, messages: [{ role: 'user', content }], json: true, maxTokens: 4000, model });
+    raw = await complete(settings, { task: 'images', override, allowCloudReserve, onUse, system, messages: [{ role: 'user', content }], json: true, maxTokens: 4000, model });
   } catch (e) {
-    if (/image|vision|multimodal|modalit|does not support/i.test(e?.message || '')) throw new Error('O modelo de IA escolhido não aceita imagens. Escolha um modelo com visão (ex.: gemma3, llava ou qwen2.5vl no Ollama).');
+    if (e?.code !== 'consent' && /image|vision|multimodal|modalit|does not support/i.test(e?.message || '')) throw new Error('O modelo de IA escolhido não aceita imagens. Escolha um modelo com visão (ex.: gemma3, llava ou qwen2.5vl no Ollama).');
     throw e;
   }
   let out;
