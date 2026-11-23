@@ -397,3 +397,15 @@ main { width: 100%; max-width: 1480px; }
 
 /* Prévia do visual da voz (0.8.2) */
 .viz-preview { width: 120px; height: 120px; border-radius: 12px; background: color-mix(in oklch, var(--accent) 6%, transparent); }
+
+/* Armazenamento (0.8.3, #68) */
+.stor-total { display: grid; gap: 6px; margin: 8px 0 12px; }
+.stor-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--tint-2); }
+.stor-bar i { display: block; height: 100%; }
+.stor-list, .stor-dl { display: grid; gap: 2px; }
+.stor-row { display: grid; grid-template-columns: 26px 1fr auto auto; gap: 10px; align-items: center; padding: 8px 4px; border-bottom: 1px solid var(--line); }
+.stor-row small { display: block; color: var(--text-3); }
+.stor-row .sz { font-variant-numeric: tabular-nums; color: var(--text-2); white-space: nowrap; }
+.stor-row .sw-dot { width: 10px; height: 10px; border-radius: 3px; }
+.stor-file { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
+.stor-file.gone { color: var(--text-3); }

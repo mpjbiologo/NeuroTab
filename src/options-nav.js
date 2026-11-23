@@ -16,7 +16,7 @@ export const NAV = [
   { id: 'contas', icon: '☁️', label: 'Contas e sincronização', pages: ['contas', 'sync'] },
   { id: 'privacidade', icon: '🔒', label: 'Privacidade', pages: ['permissoes'] },
   { id: 'backup', icon: '💾', label: 'Backup', pages: ['importar', 'exportar'] },
-  { id: 'sistema', icon: '⚙️', label: 'Sistema', pages: ['atualizacoes', 'apps', 'creditos'] },
+  { id: 'sistema', icon: '⚙️', label: 'Sistema', pages: ['armazenamento', 'atualizacoes', 'apps', 'creditos'] },
   { id: 'apoie', icon: '❤', label: 'Apoie', pages: ['apoie'], heart: true },
 ];
 
@@ -110,6 +110,7 @@ export function setupNav() {
     document.querySelector('.content')?.scrollTo?.({ top: 0 });
     scrollTo({ top: 0 });
     if (focus) panes.get(page).focus({ preventScroll: true });
+    dispatchEvent(new CustomEvent('nt-page', { detail: page })); // páginas que calculam algo ao abrir (Armazenamento)
   }
 
   // ---------- busca ----------

@@ -251,6 +251,27 @@
       <p class="hint">Cada acesso a um site existe por causa de um recurso. Os opcionais são pedidos só quando você usa o recurso e podem ser removidos aqui.</p>
       <div id="permList" class="perm-list"></div>
       <div id="permSites" class="perm-sites"></div>
+      <h2 data-page="armazenamento">Armazenamento</h2>
+      <p class="hint">Quanto cada parte da NeuroTab ocupa neste navegador, os vídeos que ela baixou e o que dá para limpar. Nada das suas notas é apagado por aqui.</p>
+      <div class="stor-total" id="storTotal"></div>
+      <div class="stor-list" id="storList"></div>
+      <div class="opt">
+        <div><b>Limpar caches sozinho</b><small>Notícias, citações, clima e agenda com mais de 30 dias.</small></div>
+        <label class="sw"><input type="checkbox" data-k="storageAutoCaches"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Apagar áudios de reuniões antigos</b><small>A transcrição, o resumo e a nota ficam.</small></div>
+        <select data-k="meetingAudioDays" data-num>
+          <option value="0">Nunca</option>
+          <option value="7">Depois de 7 dias</option>
+          <option value="30">Depois de 30 dias</option>
+          <option value="90">Depois de 90 dias</option>
+        </select>
+      </div>
+      <h3 class="sub">🎬 Vídeos baixados</h3>
+      <p class="hint" id="dlFolder"></p>
+      <div class="stor-dl" id="storDl"></div>
+      <div class="row" style="gap:8px;margin-top:8px"><button class="btn" id="storRefresh">↻ Atualizar</button><button class="btn" id="storBackup">💾 Fazer backup antes</button></div>
       <h2 data-page="atualizacoes">Atualizações</h2>
       <p class="hint" id="storeUpd" hidden>✓ Instalada pela loja: as atualizações chegam automaticamente.</p>
       <div class="opt" id="updRow">

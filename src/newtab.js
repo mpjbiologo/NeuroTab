@@ -121,6 +121,8 @@ async function init() {
   setupUpdates();
   setupVoice();
   setupModeFabs();
+  // Armazenamento (#68): limpeza automática (caches, áudios de reuniões antigos), no máximo 1×/dia
+  setTimeout(() => import('./lib/storage-usage.js').then((m) => m.autoClean(S.data.settings)).catch(() => {}), 4000);
   setupWake();
   startIconizer(); // ícones desenhados no lugar dos emojis da interface (#51)
   speechReady.then(() => updateWake()); // reconhecimento no computador confirmado: troca de motor se precisar

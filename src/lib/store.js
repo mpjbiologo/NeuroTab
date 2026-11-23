@@ -129,6 +129,7 @@ export const DEFAULT_SETTINGS = {
   meetingConsentSkip: false, // não mostrar de novo o aviso de consentimento
   meetingPinTab: true, // a aba da reunião abre fixada
   meetingAudioDays: 0, // apagar áudios de reuniões com mais de X dias (0 = nunca)
+  storageAutoCaches: false, // Armazenamento (0.8.3, #68): limpar caches com mais de 30 dias
   ttsVoice: '',
   ttsRate: 1,
   ttsPitch: 1,

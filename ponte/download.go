@@ -7,6 +7,8 @@ package main
 //   {"type":"dl","op":"install","payload":{"what":["yt-dlp","ffmpeg"]}} → baixa as versões oficiais (confere o SHA-256)
 //   {"type":"dl","op":"get","payload":{url,dir,name,quality,cookies}}  → progresso até {"stage":"done","file":…}
 //   {"type":"dl","op":"reveal","payload":{path,open}} → mostra o arquivo na pasta (ou abre), só dentro de Downloads
+//   {"type":"dl","op":"stat","payload":{paths}} → existe? tamanho? (Armazenamento, 0.8.3), só dentro de Downloads
+//   {"type":"dl","op":"remove","payload":{path}} → apaga um arquivo baixado, só dentro de Downloads
 //
 // Enquanto baixa, fechar a conexão cancela.
 
@@ -42,6 +44,7 @@ type dlReq struct {
 	Path    string   `json:"path"`
 	Open    bool     `json:"open"`
 	What    []string `json:"what"`
+	Paths   []string `json:"paths"`
 }
 
 type dlTool struct {
@@ -609,6 +612,48 @@ func reveal(q dlReq) error {
 	return cmd.Start() // explorer devolve código 1 mesmo quando dá certo; não espera
 }
 
+// ---------- Armazenamento (0.8.3): conferir e apagar arquivos baixados ----------
+
+type fileInfo struct {
+	Path   string `json:"path"`
+	Exists bool   `json:"exists"`
+	Size   int64  `json:"size,omitempty"`
+}
+
+func statFiles(paths []string) []fileInfo {
+	root := downloadsRoot()
+	out := make([]fileInfo, 0, len(paths))
+	for i, p := range paths {
+		if i >= 500 {
+			break
+		}
+		c := filepath.Clean(p)
+		fi := fileInfo{Path: p}
+		if filepath.IsAbs(c) && inside(root, c) {
+			if st, err := os.Stat(c); err == nil && st.Mode().IsRegular() {
+				fi.Exists, fi.Size = true, st.Size()
+			}
+		}
+		out = append(out, fi)
+	}
+	return out
+}
+
+func removeFile(q dlReq) error {
+	p := filepath.Clean(q.Path)
+	if !filepath.IsAbs(p) || !inside(downloadsRoot(), p) {
+		return errors.New("só arquivos da pasta Downloads")
+	}
+	st, err := os.Lstat(p)
+	if err != nil {
+		return errors.New("o arquivo não está mais lá")
+	}
+	if !st.Mode().IsRegular() {
+		return errors.New("só arquivos, não pastas")
+	}
+	return os.Remove(p)
+}
+
 // ---------- entrada ----------
 
 func runDL(first Msg, r io.Reader, w *writer) error {
@@ -655,6 +700,16 @@ func runDL(first Msg, r io.Reader, w *writer) error {
 			return send(ev, ev.Error)
 		}
 		return send(ev, "")
+	case "stat":
+		return send(struct {
+			Stage string     `json:"stage"`
+			Files []fileInfo `json:"files"`
+		}{"done", statFiles(q.Paths)}, "")
+	case "remove":
+		if err := removeFile(q); err != nil {
+			return send(dlEvent{Stage: "error", Code: "failed", Error: err.Error()}, err.Error())
+		}
+		return send(dlEvent{Stage: "done"}, "")
 	case "reveal":
 		if err := reveal(q); err != nil {
 			return send(dlEvent{Stage: "error", Code: "failed", Error: err.Error()}, err.Error())

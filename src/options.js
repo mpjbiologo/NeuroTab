@@ -26,6 +26,7 @@ import { commandLang } from './lib/assistant.js';
 import { applyLook, themeOf, THEMES } from './lib/theme.js';
 import { setupLook, refreshLook } from './options-look.js';
 import { setupMediaSave } from './options-media.js';
+import { setupStorage } from './options-storage.js';
 import { icon, startIconizer } from './lib/icons.js';
 import { configureSpeech, deviceLangFor, deviceStatus, deviceSupported, installDevice, currentEngine, speechAvailable, ENGINE_ERRORS, WHISPER_PRESETS, encodeWav, transcribeRequest } from './lib/speech-engine.js';
 
@@ -62,6 +63,7 @@ async function init() {
   setupNav(); // depois de tudo montado: as seções viram páginas da lateral
   setupLook({ data: () => data, toast, afterTheme: () => paintThemePicker() });
   setupMediaSave({ data: () => data, toast });
+  setupStorage({ data: () => data });
   setupDonation();
   setupVoiceOptions();
   setupPhotos();
