@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="theme.css">
+<script src="theme-boot.js"></script>
+<title>NeuroTab — Reunião</title>
+<style>
+  html { background: var(--bg); }
+  body { margin: 0; font-family: var(--font-ui); font-size: var(--fs-md); line-height: 1.5; background: var(--bg); color: var(--text); }
+  main { max-width: 920px; margin: 0 auto; padding: 22px 18px 40px; display: grid; gap: 16px; }
+  h1 { font-family: var(--font-display); font-size: var(--fs-2xl, 26px); margin: 0; }
+  h2 { font-size: var(--fs-lg); margin: 0 0 8px; }
+  h3 { font-size: var(--fs-md); margin: 14px 0 6px; }
+  section { background: var(--surface-1, var(--tint-1)); border: 1px solid var(--border); border-radius: var(--radius-lg, 16px); padding: 16px 18px; }
+  section[hidden] { display: none; }
+  p { margin: 6px 0; }
+  .muted { color: var(--text-3); }
+  .small { font-size: var(--fs-sm); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: var(--radius-sm, 8px); border: 1px solid var(--border-strong, var(--border)); background: var(--tint-1); color: var(--text); font: inherit; cursor: pointer; text-decoration: none; }
+  .btn.primary { background: var(--accent); color: var(--on-accent, #001018); border-color: transparent; font-weight: 600; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.sm { height: 30px; padding: 0 10px; font-size: var(--fs-sm); }
+  .hw { display: grid; gap: 6px; }
+  .hw-row { display: grid; grid-template-columns: 190px minmax(160px, 260px) 1fr; gap: 10px; align-items: center; }
+  .hw-row input[type=checkbox] { width: auto; height: auto; margin: 0; }
+  .hw-row > input, .hw-row > select { height: 34px; padding: 0 10px; border-radius: var(--radius-sm, 8px); border: 1px solid var(--border-strong, var(--border)); background: var(--field, var(--tint-1)); color: var(--text); font: inherit; width: 100%; box-sizing: border-box; }
+  .badge { font-size: var(--fs-xs); padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+  .b-ponte, .b-browser, .b-lhm { color: var(--ok); }
+  .b-estimate { color: var(--warn); }
+  .b-manual { color: var(--accent); }
+  .b-missing, .b-unknown { color: var(--text-3); }
+  .div { color: var(--warn); font-size: var(--fs-sm); }
+  .grade { font-size: var(--fs-lg); font-weight: 600; }
+  .purpose { margin-top: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+  .card { border: 1px solid var(--border); border-radius: var(--radius-md, 12px); padding: 12px; display: grid; gap: 6px; align-content: start; }
+  .card.main { border-color: var(--accent); }
+  .card .tag { font-size: var(--fs-xs); color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
+  .card code { font-size: var(--fs-md); font-weight: 600; }
+  .card ul { margin: 0; padding-left: 18px; font-size: var(--fs-sm); }
+  .bar { height: 6px; border-radius: 3px; background: var(--tint-2); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .guide ol { padding-left: 20px; display: grid; gap: 10px; }
+  .cmd { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+  .cmd code { flex: 1; background: var(--tint-2); padding: 6px 10px; border-radius: 8px; font-family: var(--font-mono, monospace); font-size: var(--fs-sm); overflow-x: auto; white-space: pre; }
+  .tabs { display: flex; gap: 6px; margin: 6px 0 10px; }
+  .tabs .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .ok { color: var(--ok); } .warn { color: var(--warn); } .err { color: var(--bad); }
+  footer { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: var(--fs-sm); color: var(--text-3); }
+  @media (max-width: 680px) { .hw-row { grid-template-columns: 1fr; } }
+
+  .src { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .src label { border: 1px solid var(--border); border-radius: var(--radius-md, 12px); padding: 12px; display: grid; gap: 4px; cursor: pointer; }
+  .src label:has(input:checked) { border-color: var(--accent); }
+  .src label.off { opacity: .5; cursor: default; }
+  .live-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .rec-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 0 0 color-mix(in oklch, var(--bad) 60%, transparent); animation: recPulse 1.4s ease-in-out infinite; }
+  .paused .rec-dot { background: var(--warn); animation: none; }
+  @keyframes recPulse { 50% { box-shadow: 0 0 0 8px transparent; } }
+  @media (prefers-reduced-motion: reduce) { .rec-dot { animation: none; } }
+  .timer { font-size: 28px; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .meters { display: flex; gap: 14px; align-items: center; font-size: var(--fs-sm); color: var(--text-3); }
+  .meter { width: 90px; height: 6px; border-radius: 3px; background: var(--tint-2); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .1s; }
+  .transcript { max-height: 46vh; overflow: auto; display: grid; gap: 4px; padding: 6px 2px; font-size: var(--fs-md); }
+  .seg { display: grid; grid-template-columns: 64px 1fr; gap: 8px; }
+  .seg time { color: var(--text-3); font-variant-numeric: tabular-nums; font-size: var(--fs-sm); padding-top: 2px; }
+  .seg.marked { background: color-mix(in oklch, var(--warn) 12%, transparent); border-radius: 6px; }
+  .seg.interim span { color: var(--text-3); font-style: italic; }
+  .sum h3 { margin-top: 16px; }
+  .sum ul { margin: 4px 0; padding-left: 20px; }
+  .task-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--line, var(--border)); }
+  .hist { display: grid; gap: 6px; }
+  .hist-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--line, var(--border)); }
+  audio { width: 100%; margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>📋 Modo reunião</h1>
+    <p class="muted">Grava, transcreve e, no fim, a sua IA entrega o resumo, os pontos importantes, as decisões e as tarefas. Tudo fica neste navegador; só o texto (ou o áudio, se você usa o Whisper) vai para o serviço que você escolheu.</p>
+  </header>
+
+  <section id="resumeSec" hidden>
+    <h2>⚠️ Reunião interrompida</h2>
+    <p id="resumeInfo"></p>
+    <div class="row"><button class="btn primary" id="resumeGo">Retomar a gravação</button><button class="btn" id="resumeEnd">Finalizar com o que foi gravado</button></div>
+  </section>
+
+  <section id="setupSec">
+    <h2>Nova reunião</h2>
+    <div class="src">
+      <label id="srcMicL"><span><input type="radio" name="src" value="mic" id="srcMic"> <b>🎤 Presencial</b></span><span class="small muted">Só o microfone do computador. Para reuniões na sala ou com caixa de som.</span></label>
+      <label id="srcTabL"><span><input type="radio" name="src" value="tab" id="srcTab"> <b>💻 Online (Meet, Zoom, Teams)</b></span><span class="small muted">Microfone + áudio da aba da reunião, para pegar todos os participantes mesmo com fone. Ao começar, escolha a aba da reunião e marque "Compartilhar áudio da aba".</span><span class="small warn" id="srcTabNote" hidden></span></label>
+    </div>
+    <p><label><input type="checkbox" id="keepAudio"> Guardar o áudio (além da transcrição)</label> <span class="small muted" id="audioEst">~0,5 a 1 MB por minuto de reunião; dá para apagar depois em Configurações → Sistema → Armazenamento.</span></p>
+    <div id="consent" class="small" hidden>
+      <p class="warn">⚖️ <b>Avise os participantes</b> de que a reunião será gravada e transcrita, antes de começar (LGPD e boa prática).</p>
+      <label><input type="checkbox" id="consentSkip"> Não mostrar de novo</label>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="start">⏺ Começar a reunião</button><span id="setupMsg" class="small"></span></div>
+  </section>
+
+  <section id="liveSec" hidden>
+    <div class="live-top">
+      <span class="rec-dot" aria-hidden="true"></span>
+      <span class="timer" id="timer">00:00</span>
+      <span id="liveState" aria-live="polite">Gravando</span>
+      <div class="meters"><span>🎤</span><span class="meter"><i id="mMic"></i></span><span id="mTabL" hidden>💻</span><span class="meter" id="mTabW" hidden><i id="mTab"></i></span></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="pauseBtn">⏸ Pausar</button>
+      <button class="btn" id="markBtn" title="Ou diga &quot;marca isso&quot;">⭐ Marcar ponto importante</button>
+      <button class="btn primary" id="endBtn">⏹ Encerrar</button>
+    </div>
+    <p id="liveWarn" class="small warn" aria-live="polite"></p>
+    <h3>Transcrição</h3>
+    <div class="transcript" id="transcript" aria-live="off"></div>
+  </section>
+
+  <section id="doneSec" hidden>
+    <h2 id="doneTitle"></h2>
+    <p id="doneInfo" class="small muted"></p>
+    <div id="sumBox" class="sum"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="genSum">✨ Gerar resumo</button>
+      <button class="btn" id="copySum">📋 Copiar resumo</button>
+      <button class="btn" id="exportMd">⬇ Exportar ata (Markdown)</button>
+      <button class="btn" id="dlAudio" hidden>⬇ Baixar o áudio</button>
+      <button class="btn" id="newMeeting">➕ Nova reunião</button>
+    </div>
+    <div id="audioBox"></div>
+    <details><summary>Transcrição completa</summary><pre id="fullText" class="small" style="white-space:pre-wrap"></pre></details>
+  </section>
+
+  <section id="histSec">
+    <h2>Reuniões</h2>
+    <div id="hist" class="hist"></div>
+  </section>
+</main>
+<script type="module" src="meeting.js"></script>
+</body>
+</html>

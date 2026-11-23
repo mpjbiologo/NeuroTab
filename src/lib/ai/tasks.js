@@ -7,6 +7,7 @@ export const TASKS = {
   commands: { icon: '🎙️', label: 'Entender comandos de voz', where: 'Quando as regras da voz não entendem a frase', needs: 'text' },
   media: { icon: '🎬', label: 'Resumir mídia', where: 'Salvar mídia no cérebro', needs: 'text' },
   images: { icon: '🖼️', label: 'Imagens', where: 'Ler texto, descrever e achar endereços em imagens', needs: 'vision' },
+  meeting: { icon: '📋', label: 'Resumo de reuniões', where: 'Modo reunião: resumo, decisões e tarefas', needs: 'text' },
   search: { icon: '🔎', label: 'Busca por significado', where: 'Índice do cérebro (embeddings)', needs: 'embed', reserve: false },
 };
 
