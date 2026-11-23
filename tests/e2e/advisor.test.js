@@ -43,11 +43,11 @@ test('assistente: detecta, completa à mão, recomenda, baixa, usa no NeuroTab e
     // sem a Ponte neste teste: o aviso de estimativa aparece
     await p.locator('#introMsg', { hasText: /estimar|Lido com/ }).waitFor();
     const ram = p.locator('.hw-row').first().locator('input[type=number]');
-    await ram.fill('16');
+    await ram.fill('13'); // valor que nenhum navegador estima (se igualar o detectado, não vira "informado")
     await ram.dispatchEvent('change');
     await p.locator('.hw-row').first().locator('.badge.b-manual').waitFor();
     const saved = await x.storage(p, 'nt_advisor');
-    assert.equal(saved.manual.ramGB, 16);
+    assert.equal(saved.manual.ramGB, 13);
 
     await p.click('#ollamaCheck');
     await p.locator('#ollamaStatus', { hasText: '0.20.0' }).waitFor();
