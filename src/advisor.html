@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="theme.css">
+<script src="theme-boot.js"></script>
+<title>NeuroTab — Qual é a melhor IA para o meu computador?</title>
+<style>
+  html { background: var(--bg); }
+  body { margin: 0; font-family: var(--font-ui); font-size: var(--fs-md); line-height: 1.5; background: var(--bg); color: var(--text); }
+  main { max-width: 920px; margin: 0 auto; padding: 22px 18px 40px; display: grid; gap: 16px; }
+  h1 { font-family: var(--font-display); font-size: var(--fs-2xl, 26px); margin: 0; }
+  h2 { font-size: var(--fs-lg); margin: 0 0 8px; }
+  h3 { font-size: var(--fs-md); margin: 14px 0 6px; }
+  section { background: var(--surface-1, var(--tint-1)); border: 1px solid var(--border); border-radius: var(--radius-lg, 16px); padding: 16px 18px; }
+  section[hidden] { display: none; }
+  p { margin: 6px 0; }
+  .muted { color: var(--text-3); }
+  .small { font-size: var(--fs-sm); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: var(--radius-sm, 8px); border: 1px solid var(--border-strong, var(--border)); background: var(--tint-1); color: var(--text); font: inherit; cursor: pointer; text-decoration: none; }
+  .btn.primary { background: var(--accent); color: var(--on-accent, #001018); border-color: transparent; font-weight: 600; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.sm { height: 30px; padding: 0 10px; font-size: var(--fs-sm); }
+  .hw { display: grid; gap: 6px; }
+  .hw-row { display: grid; grid-template-columns: 190px minmax(160px, 260px) 1fr; gap: 10px; align-items: center; }
+  .hw-row input[type=checkbox] { width: auto; height: auto; margin: 0; }
+  .hw-row > input, .hw-row > select { height: 34px; padding: 0 10px; border-radius: var(--radius-sm, 8px); border: 1px solid var(--border-strong, var(--border)); background: var(--field, var(--tint-1)); color: var(--text); font: inherit; width: 100%; box-sizing: border-box; }
+  .badge { font-size: var(--fs-xs); padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+  .b-ponte, .b-browser, .b-lhm { color: var(--ok); }
+  .b-estimate { color: var(--warn); }
+  .b-manual { color: var(--accent); }
+  .b-missing, .b-unknown { color: var(--text-3); }
+  .div { color: var(--warn); font-size: var(--fs-sm); }
+  .grade { font-size: var(--fs-lg); font-weight: 600; }
+  .purpose { margin-top: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+  .card { border: 1px solid var(--border); border-radius: var(--radius-md, 12px); padding: 12px; display: grid; gap: 6px; align-content: start; }
+  .card.main { border-color: var(--accent); }
+  .card .tag { font-size: var(--fs-xs); color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
+  .card code { font-size: var(--fs-md); font-weight: 600; }
+  .card ul { margin: 0; padding-left: 18px; font-size: var(--fs-sm); }
+  .bar { height: 6px; border-radius: 3px; background: var(--tint-2); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .guide ol { padding-left: 20px; display: grid; gap: 10px; }
+  .cmd { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+  .cmd code { flex: 1; background: var(--tint-2); padding: 6px 10px; border-radius: 8px; font-family: var(--font-mono, monospace); font-size: var(--fs-sm); overflow-x: auto; white-space: pre; }
+  .tabs { display: flex; gap: 6px; margin: 6px 0 10px; }
+  .tabs .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .ok { color: var(--ok); } .warn { color: var(--warn); } .err { color: var(--bad); }
+  footer { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: var(--fs-sm); color: var(--text-3); }
+  @media (max-width: 680px) { .hw-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>🧭 Qual é a melhor IA para o meu computador?</h1>
+    <p class="muted">A NeuroTab olha a memória, o processador, a placa de vídeo e o espaço em disco e indica os modelos de IA que rodam bem aqui, no Ollama — de graça, sem internet e sem enviar nada para fora.</p>
+  </header>
+
+  <section id="intro">
+    <h2>Antes de começar</h2>
+    <p>Vamos verificar: <b>memória (RAM)</b>, <b>processador</b>, <b>placa de vídeo e a memória dela</b>, <b>sistema</b>, <b>espaço livre em disco</b> e, se você tiver, o <b>Ollama</b> e os modelos instalados. Tudo é calculado aqui e guardado só neste navegador; você pode apagar quando quiser.</p>
+    <p class="small muted">O navegador não mostra tudo sozinho. Para medir com precisão, use a NeuroTab Ponte (o mesmo programa dos widgets Rede e Sistema). Sem ela, a NeuroTab estima o que der e você completa o resto.</p>
+    <div class="row" id="introActions">
+      <button class="btn primary" id="start">Começar</button>
+      <button class="btn" id="usePonte">🔌 Usar a NeuroTab Ponte (mais preciso)</button>
+      <button class="btn" id="useBrowser" hidden>🌐 Permitir ler processador e memória</button>
+    </div>
+    <p class="small" id="introMsg"></p>
+  </section>
+
+  <section id="hwSec" hidden>
+    <h2>Seu computador</h2>
+    <p class="small muted">✅ detectado · ⚠️ estimado · ✍️ informado por você · ❓ não disponível. Corrija o que estiver errado e preencha o que faltar — ou deixe "não sei".</p>
+    <div class="hw" id="hw"></div>
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="calc">Ver recomendações</button></div>
+  </section>
+
+  <section id="ollamaSec" hidden>
+    <h2>🦙 Ollama</h2>
+    <p id="ollamaStatus" class="small"></p>
+    <div class="row"><button class="btn" id="ollamaCheck">Verificar o Ollama</button><span class="small muted" id="ollamaAddr"></span></div>
+  </section>
+
+  <section id="results" hidden></section>
+  <section id="guide" class="guide" hidden></section>
+  <section id="cloud" hidden></section>
+
+  <footer id="foot" hidden>
+    <span id="diagAt"></span>
+    <button class="btn sm" id="redo">Refazer o diagnóstico</button>
+    <button class="btn sm" id="forget">Apagar o diagnóstico</button>
+    <span id="catInfo"></span>
+    <button class="btn sm" id="catUpdate">Atualizar recomendações</button>
+  </footer>
+</main>
+<script type="module" src="advisor.js"></script>
+</body>
+</html>

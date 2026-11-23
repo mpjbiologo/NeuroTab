@@ -183,3 +183,28 @@ export function importAi(ai, data, media) {
   if (data?.neurotab !== 'ai-config' || !Array.isArray(data.servers)) throw new Error('Este arquivo não é uma configuração de IA da NeuroTab.');
   return sanitizeAi({ ...ai, servers: data.servers, primary: data.primary, reserve: data.reserve, tasks: data.tasks || {}, mirror: undefined }, media);
 }
+
+/**
+ * Cadastra um modelo do Ollama na central (cria o servidor se ainda não existir).
+ * use: 'primary' (vira o Padrão), uma lista de tarefas, ou nada (só adiciona). Devolve o settings.ai novo.
+ */
+export function addOllamaModel(ai, base, model, { caps = {}, use = null } = {}) {
+  const root = String(base || 'http://localhost:11434').replace(/\/+$/, '').replace(/\/v1$/, '');
+  const out = { ...ai, servers: [...(ai.servers || [])], tasks: { ...(ai.tasks || {}) } };
+  let s = out.servers.find((x) => x.type === 'ollama' && x.base.replace(/\/v1$/, '') === root);
+  if (!s) {
+    s = sanitizeServer({ id: newServerId(out, 'ollama'), type: 'ollama', name: SHORT.ollama, base: root + '/v1', models: [] });
+    out.servers.push(s);
+  } else {
+    s = { ...s, models: [...s.models] };
+    out.servers = out.servers.map((x) => (x.id === s.id ? s : x));
+  }
+  if (!s.on) s.on = true;
+  const entry = { id: model, caps: { vision: caps.vision ?? null, embed: caps.embed ?? null }, manual: caps.vision != null || caps.embed != null };
+  const i = s.models.findIndex((m) => m.id === model);
+  if (i >= 0) s.models[i] = { ...s.models[i], caps: entry.caps }; else s.models.push(entry);
+  if (use === 'primary') out.primary = { server: s.id, model };
+  else if (Array.isArray(use)) for (const t of use) out.tasks[t] = { server: s.id, model };
+  if (!out.primary?.server) out.primary = { server: s.id, model };
+  return out;
+}

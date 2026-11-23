@@ -68,6 +68,16 @@ await complete(settings, { task: 'meeting', system, messages });
 
 Ela aparece sozinha em Configurações → IA → Modelo por tarefa.
 
+## Assistente "Qual é a melhor IA para o meu computador?" (0.8.1, #61)
+
+- `src/advisor.html` + `src/advisor.js`: a página (aberta em Configurações → IA → Servidores e modelos).
+- `src/lib/hw-detect.js`: junta a NeuroTab Ponte (`sys` snapshot), o navegador (`chrome.system.*`, `navigator.deviceMemory`, `userAgentData`, WebGPU) e o LibreHardwareMonitor. Cada campo guarda a fonte (`ponte`, `browser`, `lhm`, `estimate`).
+- `src/lib/ai/advisor.js` (puro, testado em `tests/unit/advisor.test.js`): `finalHw` (o que a pessoa escreve vence o detectado, com aviso de divergência; "não sei" vira `null`), `budget` (reserva = máx(3 GB, 25% da RAM); Apple = memória unificada; Intel integrada não conta), `placement` (`gpu`/`mixed`/`cpu`/`no`/`nodisk`), `speed` (pelos parâmetros **ativos**, para os MoE) e `recommend` → por finalidade: Recomendada, Mais leve e Mais forte, mais a nota geral (`otimo`/`bom`/`limitado`/`ruim`) e `cloud` quando vale sugerir IA na internet.
+- `src/data/ollama-models.json`: o catálogo (versão, data e, por modelo: tamanho do download, parâmetros totais e ativos, finalidades, visão, embedding, nota de português e de qualidade, versão mínima do Ollama quando conferida). **Para atualizar as recomendações sem lançar versão nova, edite esse arquivo na `main` e aumente `version`**: a extensão confere no GitHub (`catalog-store.js`) no máximo uma vez por semana ou pelo botão "Atualizar recomendações", e só aceita um catálogo válido e mais novo.
+- `src/lib/ollama.js`: `/api/version`, `/api/tags`, `/api/ps` (quanto ficou na placa de vídeo), `/api/pull` (NDJSON com progresso, cancelável) e `/api/generate` para o teste de velocidade (`eval_count / eval_duration`).
+- "Usar no NeuroTab" usa `addOllamaModel` (`ai/config.js`): cria o servidor Ollama se faltar, cadastra o modelo com as capacidades do catálogo e, se pedido, vira o Padrão ou a regra das tarefas da finalidade.
+- O diagnóstico fica em `storage.local` → `nt_advisor` (`{ at, detected, sources, manual }`), nunca sincroniza nem vai para o backup.
+
 ## Permissões
 
 Nenhuma nova. Cada servidor pede a origem dele ao ser salvo (`requestPermission`). Servidor por `http` na rede de casa (ex.: Ollama em outro computador) não pede `http://*/*`: o próprio servidor libera a extensão por CORS (`OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*"`).

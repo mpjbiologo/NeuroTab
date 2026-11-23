@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.8.1
+**Qual é a melhor IA para o meu computador? A NeuroTab descobre e indica os modelos certos.**
+
+- 🧭 **Configurações → IA → Servidores e modelos → "Avaliar este computador":** uma página que verifica a memória, o processador, a placa de vídeo e a memória dela, o sistema e o espaço livre em disco e indica os modelos do **Ollama** que rodam bem aqui — de graça, sem internet e sem enviar nada para fora
+  - **Com a NeuroTab Ponte** (e o LibreHardwareMonitor, se você usa), mede com precisão; **sem ela**, estima pelo navegador e você completa à mão. Cada dado mostra de onde veio (✅ detectado, ⚠️ estimado, ✍️ informado por você, ❓ não disponível), com dica de onde achar no Windows, no macOS e no Linux, e a opção "não sei". Se o que você escrever for diferente do detectado, vale o seu, com aviso
+  - **Recomendações por finalidade:** conversa e cérebro, imagens, busca por significado e comandos de voz, cada uma com a **Recomendada**, uma **Mais leve** e uma **Mais forte**, dizendo a memória necessária, o tamanho do download, se roda na placa de vídeo, no processador ou dividido, a velocidade esperada e a nota em português
+  - **Ollama:** mostra se está respondendo e quais modelos já estão instalados; **⬇ Baixar este modelo** direto pela página (com progresso e Cancelar), **✅ Usar no NeuroTab** (como Padrão, só para a finalidade ou só adicionar) e **⏱ Testar no meu computador** (palavras por segundo e quanto rodou na placa de vídeo)
+  - **Guia de instalação** para Windows, macOS e Linux, com os comandos prontos para copiar (instalar, liberar a NeuroTab no Ollama, baixar, testar, atualizar e remover) e os problemas mais comuns
+  - **Computador fraco?** Sugere IA na internet (Gemini, OpenRouter), deixando claro o que seria enviado
+  - **Recomendações atualizáveis:** a lista de modelos é conferida no GitHub no máximo uma vez por semana (ou pelo botão "Atualizar recomendações"), sem precisar de versão nova. O diagnóstico fica só neste navegador e pode ser apagado. Nenhuma permissão nova
+
 ## v0.8.0
 **Central de IA: vários servidores e modelos ao mesmo tempo, um para cada tarefa.**
 
