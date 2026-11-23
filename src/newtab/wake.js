@@ -4,7 +4,7 @@ import { createRecognizer, currentEngine } from '../lib/speech-engine.js';
 import { t } from '../lib/i18n.js';
 import { wakeVariants, afterWake, wakeWindowMs, shouldListen, wakePhraseOf, assistantName, isCancel, wakeState } from '../lib/wake-word.js';
 import { S } from './state.js';
-import { processVoice, startVoice, voiceCode } from './voice.js';
+import { processVoice, startVoice, startConversation, voiceCode } from './voice.js';
 
 // =====================================================================
 // PALAVRA DE ATIVAÇÃO (experimental)
@@ -69,7 +69,11 @@ function startWake() {
       wake.busy = false;
       if (S.data.settings.wakeBeep !== false) beep();
       if (isCancel(rest)) { toast(t('Cancelado')); updateWake(); return; }
-      if (rest.length >= 2) processVoice(rest);
+      const st = S.data.settings;
+      const withAsk = rest.length >= 2;
+      // Conversa (#40): cumprimenta falando (se o pedido não veio junto), ouve e continua até o silêncio.
+      if (st.voiceConversation !== false) startConversation({ greet: st.voiceGreet !== false && (!withAsk || !!st.voiceGreetAlways), first: withAsk ? rest : '' });
+      else if (withAsk) processVoice(rest);
       else startVoice({ fromWake: true });
       return;
     }

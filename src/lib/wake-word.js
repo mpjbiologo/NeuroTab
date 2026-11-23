@@ -97,7 +97,7 @@ export function shouldListen(s) {
 export function wakeState({ enabled, blocked, rec, session, busy }) {
   if (!enabled) return 'off';
   if (blocked) return 'error';
+  if (session) return 'listening'; // inclusive durante a conversa (#40): está ouvindo agora
   if (busy) return 'processing';
-  if (session) return 'listening';
   return rec ? 'waiting' : 'paused';
 }

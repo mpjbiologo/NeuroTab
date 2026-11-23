@@ -497,6 +497,16 @@ body.dock-right .voice-fab { right: calc(var(--rail) + 22px); }
 .voice-card { display: flex; gap: 18px; align-items: center; width: min(720px, 92vw); max-height: 72vh; padding: 20px 22px; border-radius: var(--radius-lg); background: var(--surface-strong); border: 1px solid var(--line); box-shadow: var(--shadow-pop); }
 .voice-orb { width: 64px; height: 64px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: var(--fs-3xl); background: var(--accent-soft); color: var(--accent-text); border: 1px solid color-mix(in oklch, var(--accent) 45%, transparent); }
 .voice.listening .voice-orb { animation: orb 1.3s ease-in-out infinite; }
+/* Visual novo da voz (#39): o canvas desenha o orbe, as ondas e o brilho; o clássico continua com o círculo em CSS. */
+.voice-orb { position: relative; }
+.voice-orb.viz { background: transparent; border-color: transparent; width: 88px; height: 88px; }
+.voice-orb.viz > span, .voice-orb.viz > .ico { position: relative; opacity: .9; color: #fff; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .4)); }
+.voice.listening .voice-orb.viz { animation: none; }
+.voice-viz { position: absolute; left: 50%; top: 50%; width: 180px; height: 180px; transform: translate(-50%, -50%); pointer-events: none; }
+.voice[data-state="error"] .voice-orb:not(.viz) { background: color-mix(in oklch, var(--warn) 25%, transparent); border-color: var(--warn); animation: none; }
+.voice-state { display: inline-block; margin-left: 6px; font-size: var(--fs-sm); color: var(--muted); letter-spacing: .02em; }
+.voice.conversation .voice-state::before { content: "● "; color: var(--accent-2); }
+@media (prefers-reduced-motion: reduce) { .voice.listening .voice-orb { animation: none; } }
 @keyframes orb { 0%,100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--accent-2) 60%, transparent); } 50% { box-shadow: 0 0 0 16px color-mix(in oklch, var(--accent-2) 0%, transparent); } }
 .voice-text { flex: 1; min-width: 0; max-height: calc(72vh - 40px); display: flex; flex-direction: column; }
 .heard { font-size: var(--fs-xl); line-height: 1.35; }

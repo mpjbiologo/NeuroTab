@@ -10,7 +10,7 @@ export const NAV = [
   { id: 'aparencia', icon: '🎨', label: 'Aparência', pages: ['tema', 'editor', 'layout', 'estilo-atalhos', 'fundo', 'slides'] },
   { id: 'novaaba', icon: '🏠', label: 'Nova aba', pages: ['pesquisa', 'atalhos', 'relogio', 'timer'] },
   { id: 'ia', icon: '🤖', label: 'Inteligência artificial', pages: ['ia', 'ia-tarefas', 'ia-organizar'] },
-  { id: 'voz', icon: '🎙️', label: 'Voz', pages: ['voz', 'voz-leitura', 'voz-ativacao', 'voz-comandos'] },
+  { id: 'voz', icon: '🎙️', label: 'Voz', pages: ['voz', 'voz-leitura', 'voz-ativacao', 'voz-conversa', 'voz-comandos'] },
   { id: 'midia', icon: '🎞️', label: 'Mídia', pages: ['imagens', 'salvar-midia'] },
   { id: 'notas', icon: '📝', label: 'Notas', pages: ['keep', 'exportar-notas', 'limpeza', 'integracoes'] },
   { id: 'contas', icon: '☁️', label: 'Contas e sincronização', pages: ['contas', 'sync'] },

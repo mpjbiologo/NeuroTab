@@ -73,6 +73,16 @@ Detalhes da gravação (`WhisperRecognizer`): fala começa com 120 ms acima do l
 | `paused` | Palavra de ativação pausada | pausada pelo clique, aba sem foco ou prazo vencido |
 | `error` | Permitir microfone | microfone bloqueado |
 
+## Conversa por voz e visual (0.8.2, #40 e #39)
+
+- `src/lib/voice-session.js` (puro, testado em `tests/unit/voice-session.test.js`): `greetingFor` (frase padrão nos 3 idiomas ou a própria, com `{nome}`/`{name}`/`{nombre}`; sem nome, o marcador some junto com a vírgula), `isGoodbye` (o texto todo tem de ser a despedida: "anotar obrigado ao João" não encerra), `silenceClock` (`kick` a cada fala, inclusive parcial; `pause` enquanto pensa e fala; vence uma vez) e os estados (`wake`, `greeting`, `listening`, `thinking`, `speaking`, `error`, `closed`).
+- `src/newtab/voice.js`: `startConversation({ greet, first })` roda dentro de `whileWakePaused` (a palavra de ativação fica parada a conversa toda). Ciclo: saudação falada → **só depois** abre o microfone → pedido (encerra após 1,6 s de pausa) → executa → fala → volta a ouvir. O navegador encerra a escuta de tempos em tempos: reabre com espera crescente se a escuta cair muito rápido. Microfone bloqueado ou motor indisponível encerram com a mensagem.
+- `src/newtab/wake.js`: só a frase → conversa com saudação; frase + pedido → executa direto (saudação só com "sempre cumprimentar"); com "Conversar depois de chamado" desligado, volta ao comportamento de um pedido só.
+- Botão 🎙 / Alt+M: um pedido só, ou a conversa sem saudação com "Conversa também pelo botão".
+- `src/lib/voice-viz.js`: canvas 2D a ~30 quadros/s, parado com a aba escondida. Estilos `orb`, `bars`, `line`, `particles` e `classic` (sem canvas, o círculo em CSS de antes). O volume vem de `openMeter()` (`getUserMedia` + `AnalyserNode`) aberto só com a tela de voz aberta e fechado ao fechar; negado ou desligado → onda simulada. A fala pulsa pelo `onboundary` (`speak(text, opts, { onWord })`); vozes que não avisam as palavras usam o ritmo simulado. `prefers-reduced-motion` → só o brilho muda.
+- Configurações → Voz → **Conversa e visual**: `voiceConversation`, `voiceGreet`, `voiceGreeting`, `voiceGreetAlways`, `voiceSilenceSecs` (30/60/120), `voiceConvButton`, `voiceViz`, `voiceVizMic`.
+- Testes e2e: `tests/e2e/voice-conversation.test.js` (voz simulada com fala de 600 ms para conferir a ordem fala → microfone; microfone falso do Chromium para o medidor).
+
 ## Privacidade e limites (por navegador)
 
 - **Nada é gravado.** O reconhecimento devolve texto; o áudio não é guardado pela NeuroTab.

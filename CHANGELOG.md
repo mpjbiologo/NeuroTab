@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.8.2
+**Voz que responde: o assistente conversa com você, com um visual novo.**
+
+- 🗣️ **Conversa por voz (#40):** diga "NeuroTab" e ele responde falando — **"Olá, Marcos, em que posso ajudar?"** — e só então abre o microfone (não ouve a própria voz). Depois de cada resposta volta a ouvir; para sozinho depois de **1 minuto sem ninguém falar** (ou 30 s / 2 min), com "Até mais!" e um bipe curto
+  - Encerre quando quiser dizendo **"obrigado", "pode parar" ou "tchau"** (também em inglês e espanhol), com Esc ou clicando fora
+  - Chamou já com o pedido ("NeuroTab, anotar comprar café")? Executa direto, sem a saudação — e continua ouvindo
+  - Frase de saudação personalizável com {nome}, ou desligada; o botão 🎙 e o Alt+M continuam com um pedido só, ou abrem a conversa se você preferir
+- ✨ **Visual futurista da voz (#39):** o círculo agora mostra o que está acontecendo — **ondas que seguem o volume do microfone** ao ouvir, um **anel girando** ao pensar e **pulsos a cada palavra** ao falar; âmbar quando falta o microfone
+  - 5 estilos em Configurações → Voz → **Conversa e visual**, com prévia: Orbe com ondas, Barras de equalizador, Linha de onda, Partículas e Clássico. A cor segue o destaque do tema
+  - O microfone do visual só fica aberto com a tela de voz aberta; nada é gravado nem enviado. Quem pede "menos movimento" no sistema vê só uma variação suave de brilho
+- O indicador da palavra de ativação mostra "ouvindo" durante toda a conversa
+
 ## v0.8.1
 **Qual é a melhor IA para o meu computador? A NeuroTab descobre e indica os modelos certos.**
 

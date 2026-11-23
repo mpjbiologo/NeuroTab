@@ -13,6 +13,8 @@ import { UPDATE_KEY, isStoreInstall } from './lib/update.js';
 import { FEATURES, hasFeature, requestFeature, revokeFeature, grantedSites, revokeSite } from './lib/permissions.js';
 import { SOURCES, addFiles, listLocal, clearLocal } from './lib/photos.js';
 import { initI18n, LOCALE, t } from './lib/i18n.js';
+import { greetingFor } from './lib/voice-session.js';
+import { createViz } from './lib/voice-viz.js';
 import { aiConfig, requestPermission, isLocalAI } from './lib/ai.js';
 import { setupAiCentral, repaintAi } from './options-ai.js';
 import { embedConfig, indexItems, indexStatus, clearIndex } from './lib/semantic.js';
@@ -618,6 +620,19 @@ function setupVoiceOptions() {
   $('[data-k="voiceLang"]').addEventListener('change', () => setTimeout(fill, 100));
   sel.addEventListener('change', async () => { data.settings.ttsVoice = sel.value; await saveData(data); toast('Voz salva ✓'); });
   $('#testVoice').onclick = () => speak('Olá! Eu sou a NeuroTab. Posso anotar ideias, criar lembretes e responder perguntas sobre as suas notas.', data.settings);
+  // Conversa e visual da voz (0.8.2): ouvir a saudação e prévia do visual passando pelos estados.
+  $('#testGreeting').onclick = () => speak(greetingFor({ ...data.settings, voiceGreeting: $('#voiceGreeting').value }, data.settings.voiceLang || LOCALE), { ...data.settings, voiceLang: data.settings.voiceLang || LOCALE });
+  const pv = $('#vizPreview');
+  if (pv) {
+    const reduced = !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const viz = createViz(pv, { style: data.settings.voiceViz, reduced, fps: 24 });
+    const cycle = ['listening', 'thinking', 'speaking'];
+    let i = 0;
+    viz.setState(cycle[0]);
+    setInterval(() => { if (!document.hidden) viz.setState(cycle[++i % cycle.length]); }, 2500);
+    setInterval(() => { if (viz.state === 'speaking') viz.pulse(); }, 320);
+    $('#voiceViz').addEventListener('change', (e) => viz.setStyle(e.target.value));
+  }
   $('#shortcutsBtn').onclick = () => chrome.tabs.create({ url: navigator.userAgent.includes('Edg/') ? 'edge://extensions/shortcuts' : 'chrome://extensions/shortcuts' });
   $('#testTimerSound').onclick = () => chrome.runtime.sendMessage({ type: 'previewSound', kind: $('#timerSound').value });
 }

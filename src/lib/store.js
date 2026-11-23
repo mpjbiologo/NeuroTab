@@ -109,6 +109,15 @@ export const DEFAULT_SETTINGS = {
   whisperModel: '',
   wakeMinutes: 10, // desliga sozinha após X min sem ser chamada
   speakAnswers: false,
+  // Conversa por voz (0.8.2, #40) e visual (#39)
+  voiceConversation: true, // chamado pela palavra de ativação, continua ouvindo até o silêncio
+  voiceGreet: true, // responde falando ao ser chamado
+  voiceGreeting: '', // frase própria com {nome}; vazia = padrão do idioma
+  voiceGreetAlways: false, // cumprimenta mesmo quando o pedido vem junto com a palavra de ativação
+  voiceSilenceSecs: 60, // encerra a conversa após X segundos sem ninguém falar
+  voiceConvButton: false, // o botão 🎙 / Alt+M também abre a conversa (senão, um pedido só)
+  voiceViz: 'orb', // orb | bars | line | particles | classic
+  voiceVizMic: true, // as ondas seguem o volume do microfone
   ttsVoice: '',
   ttsRate: 1,
   ttsPitch: 1,

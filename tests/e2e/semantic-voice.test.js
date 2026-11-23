@@ -86,7 +86,7 @@ for (const [locale, said, want] of [['en-US', 'remind me tomorrow at 9am to pay 
 test('palavra de ativação: escuta, executa, volta a escutar e pausa', async () => {
   const { x, p } = await setup();
   try {
-    await x.settings(p, { wakeWord: true });
+    await x.settings(p, { wakeWord: true, voiceConversation: false }); // um pedido só (a conversa tem teste próprio)
     await p.bringToFront();
     await p.evaluate(() => window.dispatchEvent(new Event('focus')));
     await p.waitForTimeout(600);
@@ -109,7 +109,7 @@ test('palavra de ativação: escuta, executa, volta a escutar e pausa', async ()
 test('nome do assistente e frase composta: bipe, estados, cancelar e tempo esgotado (#15)', async () => {
   const { x, p } = await setup();
   try {
-    await x.settings(p, { wakeWord: true, assistantName: 'Verônica', wakePhrase: 'Acorde Verônica', wakeCommandSecs: 3 });
+    await x.settings(p, { wakeWord: true, voiceConversation: false, assistantName: 'Verônica', wakePhrase: 'Acorde Verônica', wakeCommandSecs: 3 });
     await p.bringToFront();
     await p.evaluate(() => window.dispatchEvent(new Event('focus')));
     // Conta os bipes trocando o gerador de som por um falso
