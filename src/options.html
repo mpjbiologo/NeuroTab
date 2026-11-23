@@ -586,6 +586,24 @@
         <label class="sw"><input type="checkbox" data-k="voiceVizMic"><span></span></label>
       </div>
       <p class="hint">Quem pediu "menos movimento" no sistema vê só uma variação suave de brilho.</p>
+      <h3 class="sub">💬 Modo conversa</h3>
+      <div class="opt">
+        <div><b>Botões 💬 e 📋 perto do microfone</b><small>Modo conversa (Alt+C): o microfone fica ligado e o cérebro responde a tudo, lembrando o que já foi dito. Modo reunião (Alt+R): grava, transcreve e resume.</small></div>
+        <label class="sw"><input type="checkbox" data-k="voiceModeButtons"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Desligar o modo conversa após</b><small>Sem ninguém falar. Trocar de aba ou dizer "pode parar" também desliga.</small></div>
+        <select data-k="voiceChatIdleMin" data-num>
+          <option value="5">5 minutos</option>
+          <option value="10">10 minutos</option>
+          <option value="20">20 minutos</option>
+          <option value="30">30 minutos</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Interromper falando por cima</b><small>Começar a falar enquanto ele responde corta a resposta. Com caixa de som, ele pode se confundir com a própria voz: prefira fone.</small></div>
+        <label class="sw"><input type="checkbox" data-k="voiceChatBargeIn"><span></span></label>
+      </div>
       <h2 data-page="voz-comandos">Atalhos e comandos</h2>
       <div class="opt">
         <div><b>Atalho para comandos de voz</b><small>Padrão: <b>Alt+Shift+V</b> em qualquer aba (abre a NeuroTab ouvindo) e <b>Alt+M</b> na nova aba.</small></div>

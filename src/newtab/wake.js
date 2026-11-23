@@ -4,6 +4,7 @@ import { createRecognizer, currentEngine } from '../lib/speech-engine.js';
 import { t } from '../lib/i18n.js';
 import { wakeVariants, afterWake, wakeWindowMs, shouldListen, wakePhraseOf, assistantName, isCancel, wakeState } from '../lib/wake-word.js';
 import { S } from './state.js';
+import { meetingLive } from './modes.js';
 import { processVoice, startVoice, startConversation, voiceCode } from './voice.js';
 
 // =====================================================================
@@ -17,7 +18,7 @@ const variants = () => wakeVariants(wakePhraseOf(S.data.settings));
 const wakeMs = () => wakeWindowMs(S.data.settings.wakeMinutes);
 const wakeEnabled = () => !!S.data.settings.wakeWord && hasDictation();
 const wakeShouldListen = () => shouldListen({
-  enabled: wakeEnabled(), paused: wake.paused, blocked: wake.blocked, external: wake.external, busy: wake.busy,
+  enabled: wakeEnabled(), paused: wake.paused, blocked: wake.blocked, external: wake.external || meetingLive(), busy: wake.busy, // reunião gravando: o microfone é dela (#41)
   session: !!S.voiceSession, visible: document.visibilityState === 'visible', focused: document.hasFocus(),
   now: Date.now(), until: wake.until,
 });

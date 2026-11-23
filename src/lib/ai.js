@@ -173,8 +173,10 @@ export async function ask(settings, items, question, history = [], extras = [], 
   if (agenda) extras = [...(extras || []), { title: 'AGENDA DO USUÁRIO (próximos 14 dias; horários no fuso dele)', text: agenda }];
   const extra = (extras || []).filter((x) => x?.text).map((x) => `\n\n${x.title}:${x.note ? `\n(${x.note})` : ''}\n${x.text}`).join('');
   const system = askPrompt(text, extra);
-  const messages = [...history.slice(-6), { role: 'user', content: question }];
-  const answer = await complete(settings, { ...opts, task: 'chat', system, messages, maxTokens: 900 });
+  // historyMax: o modo conversa por voz (#44) manda mais trocas, com um resumo do começo da conversa.
+  const { historyMax = 6, ...rest } = opts;
+  const messages = [...history.slice(-historyMax), { role: 'user', content: question }];
+  const answer = await complete(settings, { ...rest, task: 'chat', system, messages, maxTokens: 900 });
   return { answer, sources: found };
 }
 
