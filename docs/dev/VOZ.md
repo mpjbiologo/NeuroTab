@@ -83,6 +83,21 @@ Detalhes da gravação (`WhisperRecognizer`): fala começa com 120 ms acima do l
 - Configurações → Voz → **Conversa e visual**: `voiceConversation`, `voiceGreet`, `voiceGreeting`, `voiceGreetAlways`, `voiceSilenceSecs` (30/60/120), `voiceConvButton`, `voiceViz`, `voiceVizMic`.
 - Testes e2e: `tests/e2e/voice-conversation.test.js` (voz simulada com fala de 600 ms para conferir a ordem fala → microfone; microfone falso do Chromium para o medidor).
 
+## Modo conversa (0.8.3, #44)
+
+- O mesmo ciclo da conversa de #40 (`startConversation({ kind: 'chat' })` em `newtab/voice.js`), com: liga/desliga pelo 💬, Alt+C ou "modo conversa"; histórico (`lib/chat-history.js`: últimas 6 trocas inteiras + resumo curto do começo, mandado ao `ask()` com `historyMax`); `runCommand(..., { chat: true })` manda o que não for comando direto para a IA (sem a interpretação nem a pesquisa na web); "anota isso" guarda a última resposta; desliga após `voiceChatIdleMin` (10 min) sem fala, trocando de aba, Esc ou "pode parar"; oferece salvar a conversa como nota.
+- Aviso da primeira vez (`voiceChatNoticed`): custo (cada fala é uma chamada à IA) e privacidade.
+- `voiceChatBargeIn`: falar por cima corta a resposta (medidor do microfone > 0,45 por 400 ms).
+- Botões 💬 e 📋 (`newtab/modes.js`) ficam acima do 🎙, na mesma faixa reservada do #38; com a tela de voz aberta continuam clicáveis.
+
+## Modo reunião (0.8.3, #41)
+
+- Página própria `src/meeting.html` (o reconhecimento de voz não funciona escondido nem em documento offscreen). Estado ao vivo em `storage.local` → `nt_meeting_live` (o 📋 da nova aba e o selo REC do ícone); a reunião em IndexedDB (`meetings`, salva a cada trecho) e o áudio em pedaços de 10 s (`meeting_audio`).
+- Online: `getDisplayMedia` (a pessoa escolhe a aba e marca "Compartilhar áudio da aba"; sem permissão nova) + microfone, misturados em `lib/audio-mix.js` (ganho + compressor). A faixa misturada vai para `SpeechRecognition.start(track)` (Chrome/Edge 135+) ou para o `WhisperRecognizer.start(track)`. Se a aba parar de compartilhar, segue só com o microfone.
+- `lib/meeting.js` (puro): tempo sem pausas, trechos com horário, ⭐ (botão, Alt+K ou "marca isso", ligada ao trecho), divisão em partes de 12 mil letras, prompts, validação do JSON da IA (`parseSummary`), nota em Markdown e retomada (`isInterrupted`).
+- Tarefa de IA `meeting` ("Resumo de reuniões") na central.
+- Palavra de ativação e conversa não rodam com a reunião gravando (`meetingLive()`).
+
 ## Privacidade e limites (por navegador)
 
 - **Nada é gravado.** O reconhecimento devolve texto; o áudio não é guardado pela NeuroTab.
