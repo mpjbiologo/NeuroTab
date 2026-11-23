@@ -251,6 +251,27 @@
       <p class="hint">Cada acesso a um site existe por causa de um recurso. Os opcionais são pedidos só quando você usa o recurso e podem ser removidos aqui.</p>
       <div id="permList" class="perm-list"></div>
       <div id="permSites" class="perm-sites"></div>
+      <h2 data-page="armazenamento">Armazenamento</h2>
+      <p class="hint">Quanto cada parte da NeuroTab ocupa neste navegador, os vídeos que ela baixou e o que dá para limpar. Nada das suas notas é apagado por aqui.</p>
+      <div class="stor-total" id="storTotal"></div>
+      <div class="stor-list" id="storList"></div>
+      <div class="opt">
+        <div><b>Limpar caches sozinho</b><small>Notícias, citações, clima e agenda com mais de 30 dias.</small></div>
+        <label class="sw"><input type="checkbox" data-k="storageAutoCaches"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Apagar áudios de reuniões antigos</b><small>A transcrição, o resumo e a nota ficam.</small></div>
+        <select data-k="meetingAudioDays" data-num>
+          <option value="0">Nunca</option>
+          <option value="7">Depois de 7 dias</option>
+          <option value="30">Depois de 30 dias</option>
+          <option value="90">Depois de 90 dias</option>
+        </select>
+      </div>
+      <h3 class="sub">🎬 Vídeos baixados</h3>
+      <p class="hint" id="dlFolder"></p>
+      <div class="stor-dl" id="storDl"></div>
+      <div class="row" style="gap:8px;margin-top:8px"><button class="btn" id="storRefresh">↻ Atualizar</button><button class="btn" id="storBackup">💾 Fazer backup antes</button></div>
       <h2 data-page="atualizacoes">Atualizações</h2>
       <p class="hint" id="storeUpd" hidden>✓ Instalada pela loja: as atualizações chegam automaticamente.</p>
       <div class="opt" id="updRow">
@@ -586,6 +607,42 @@
         <label class="sw"><input type="checkbox" data-k="voiceVizMic"><span></span></label>
       </div>
       <p class="hint">Quem pediu "menos movimento" no sistema vê só uma variação suave de brilho.</p>
+      <h3 class="sub">💬 Modo conversa</h3>
+      <div class="opt">
+        <div><b>Botões 💬 e 📋 perto do microfone</b><small>Modo conversa (Alt+C): o microfone fica ligado e o cérebro responde a tudo, lembrando o que já foi dito. Modo reunião (Alt+R): grava, transcreve e resume.</small></div>
+        <label class="sw"><input type="checkbox" data-k="voiceModeButtons"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Desligar o modo conversa após</b><small>Sem ninguém falar. Trocar de aba ou dizer "pode parar" também desliga.</small></div>
+        <select data-k="voiceChatIdleMin" data-num>
+          <option value="5">5 minutos</option>
+          <option value="10">10 minutos</option>
+          <option value="20">20 minutos</option>
+          <option value="30">30 minutos</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Interromper falando por cima</b><small>Começar a falar enquanto ele responde corta a resposta. Com caixa de som, ele pode se confundir com a própria voz: prefira fone.</small></div>
+        <label class="sw"><input type="checkbox" data-k="voiceChatBargeIn"><span></span></label>
+      </div>
+      <h3 class="sub">📋 Modo reunião</h3>
+      <div class="opt">
+        <div><b>Abrir o modo reunião</b><small>Grava em uma aba própria (presencial pelo microfone, ou online com o áudio da aba do Meet, Zoom ou Teams), transcreve e, no fim, a sua IA entrega resumo, pontos importantes, decisões e tarefas. Atalho: Alt+R na nova aba.</small></div>
+        <a class="btn" href="meeting.html" target="_blank" id="openMeeting">📋 Abrir</a>
+      </div>
+      <div class="opt">
+        <div><b>Aba da reunião fixada</b><small>Fica no começo da barra de abas, difícil de fechar sem querer.</small></div>
+        <label class="sw"><input type="checkbox" data-k="meetingPinTab"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Apagar áudios de reuniões antigos</b><small>A transcrição, o resumo e a nota ficam. Os áudios só existem se você marcou "Guardar o áudio".</small></div>
+        <select data-k="meetingAudioDays" data-num>
+          <option value="0">Nunca</option>
+          <option value="7">Depois de 7 dias</option>
+          <option value="30">Depois de 30 dias</option>
+          <option value="90">Depois de 90 dias</option>
+        </select>
+      </div>
       <h2 data-page="voz-comandos">Atalhos e comandos</h2>
       <div class="opt">
         <div><b>Atalho para comandos de voz</b><small>Padrão: <b>Alt+Shift+V</b> em qualquer aba (abre a NeuroTab ouvindo) e <b>Alt+M</b> na nova aba.</small></div>

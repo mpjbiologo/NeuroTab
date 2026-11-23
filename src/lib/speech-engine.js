@@ -261,11 +261,13 @@ export class WhisperRecognizer {
     this._pending = 0;
   }
 
-  async start() {
+  /** track (opcional, #41): transcreve essa faixa (ex.: microfone + áudio da aba da reunião) em vez do microfone. */
+  async start(track) {
     if (this._state !== 'idle') throw new Error('InvalidStateError: já iniciado');
     this._state = 'starting';
+    this._ownStream = !track;
     try {
-      this._stream = await this.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } });
+      this._stream = track ? new MediaStream([track]) : await this.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } });
     } catch (e) {
       this._fail(/denied|allowed|permission/i.test(e?.name + e?.message) ? 'not-allowed' : 'audio-capture', e?.message);
       return;
@@ -362,7 +364,7 @@ export class WhisperRecognizer {
   _cleanup() {
     try { this._node?.disconnect(); } catch { /* já solto */ }
     this._node = null;
-    this._stream?.getTracks?.().forEach((t) => t.stop());
+    if (this._ownStream !== false) this._stream?.getTracks?.().forEach((t) => t.stop()); // a faixa recebida é de quem chamou
     this._stream = null;
     this._ac?.close?.().catch?.(() => {});
     this._ac = null;

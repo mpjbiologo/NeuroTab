@@ -236,3 +236,31 @@ func TestReveal(t *testing.T) {
 		t.Error("arquivo que não existe devia falhar")
 	}
 }
+
+func TestStatERemove(t *testing.T) {
+	root := t.TempDir()
+	t.Setenv("NEUROTAB_DOWNLOAD_DIR", root)
+	f := filepath.Join(root, "NeuroTab", "video.mp4")
+	if err := os.MkdirAll(filepath.Dir(f), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(f, []byte("12345"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got := statFiles([]string{f, filepath.Join(root, "sumiu.mp4"), "/etc/passwd", filepath.Join(root, "NeuroTab")})
+	if !got[0].Exists || got[0].Size != 5 || got[1].Exists || got[2].Exists || got[3].Exists {
+		t.Errorf("%+v", got)
+	}
+	if err := removeFile(dlReq{Path: "/etc/passwd"}); err == nil {
+		t.Error("fora de Downloads devia falhar")
+	}
+	if err := removeFile(dlReq{Path: filepath.Join(root, "NeuroTab")}); err == nil {
+		t.Error("pasta devia falhar")
+	}
+	if err := removeFile(dlReq{Path: filepath.Join(root, "..", filepath.Base(root), "NeuroTab", "video.mp4")}); err != nil {
+		t.Error(err)
+	}
+	if _, err := os.Stat(f); !os.IsNotExist(err) {
+		t.Error("o arquivo devia ter sido apagado")
+	}
+}

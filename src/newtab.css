@@ -1080,3 +1080,32 @@ input[type=checkbox], input[type=radio], input[type=range], progress { accent-co
 /* Selo da IA usada (0.8.0) */
 .widget select.ai-chip, select.ai-chip { font-size: var(--fs-2xs); width: auto; max-width: 240px; height: 24px; min-height: 0; padding: 0 6px; border-radius: var(--radius-pill); border: 1px solid var(--border); background-color: var(--tint-1); color: var(--text-2); }
 .ask-foot { display: flex; justify-content: flex-end; margin-top: 4px; }
+
+/* ---------- Botões dos modos de voz (0.8.3): 💬 conversa (#44) e 📋 reunião (#41), acima do 🎙 ---------- */
+.mode-fabs { position: fixed; right: 28px; bottom: 84px; z-index: var(--z-floating); display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+body.dock-bottom .mode-fabs, body.narrow .mode-fabs { bottom: 136px; }
+body.dock-right .mode-fabs { right: calc(var(--rail) + 28px); }
+body.dock-hide.dock-right .mode-fabs { right: 28px; }
+body.dock-hide.dock-bottom:not(.dock-show):not(.narrow) .mode-fabs { bottom: 84px; }
+.mode-fab {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 40px; height: 40px; padding: 0 9px;
+  border-radius: 20px; border: 1px solid var(--border); background: var(--surface-strong); backdrop-filter: blur(10px);
+  color: var(--text); font-size: var(--fs-lg); cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.35); transition: transform .12s, box-shadow .2s;
+}
+.mode-fab:hover { transform: scale(1.06); }
+.mode-fab .mf-time { font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.mode-fab .mf-time:empty { display: none; }
+.mode-fab.on { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in oklch, var(--accent) 45%, transparent), 0 6px 18px rgba(0,0,0,.35); }
+.chat-fab.on { animation: modeRing 1.8s ease-in-out infinite; }
+.meet-fab.on { border-color: var(--bad); background: color-mix(in oklch, var(--bad) 22%, var(--surface-strong)); animation: meetPulse 1.6s ease-in-out infinite; }
+.meet-fab.on.paused { animation: none; border-color: var(--warn); background: color-mix(in oklch, var(--warn) 18%, var(--surface-strong)); }
+@keyframes modeRing { 50% { box-shadow: 0 0 0 6px color-mix(in oklch, var(--accent) 20%, transparent), 0 6px 18px rgba(0,0,0,.35); } }
+@keyframes meetPulse { 50% { box-shadow: 0 0 0 6px color-mix(in oklch, var(--bad) 25%, transparent), 0 6px 18px rgba(0,0,0,.35); } }
+@media (prefers-reduced-motion: reduce) { .chat-fab.on, .meet-fab.on { animation: none; } }
+/* O crédito da foto sobe para cima dos botões dos modos */
+body.has-mode-fabs #bgCredit { bottom: 180px; }
+body.has-mode-fabs.dock-bottom #bgCredit, body.has-mode-fabs.narrow #bgCredit { bottom: 232px; }
+/* Com a tela de voz aberta, 💬 e 📋 continuam clicáveis (para desligar a conversa ou ir à reunião) */
+body:has(#voice:not([hidden])) .mode-fabs { z-index: var(--z-modal); }
+/* Gravando: o tempo fica embaixo do 📋 (não alarga o botão para cima dos widgets) */
+.meet-fab.on { flex-direction: column; gap: 0; height: auto; min-height: 40px; padding: 4px 5px; border-radius: 14px; font-size: var(--fs-md); }

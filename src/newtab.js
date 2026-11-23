@@ -19,6 +19,7 @@ import { hides, toggleHold, setupDockHide } from './newtab/dock-hide.js';
 import { setupOmni } from './newtab/search.js';
 import { setupUpdates } from './newtab/updates.js';
 import { setupVoice } from './newtab/voice.js';
+import { setupModeFabs } from './newtab/modes.js';
 import { setupWake, updateWake } from './newtab/wake.js';
 import { setupWindowControls } from './newtab/wincontrols.js';
 import { setupImageReader } from './newtab/image-reader.js';
@@ -119,6 +120,9 @@ async function init() {
   });
   setupUpdates();
   setupVoice();
+  setupModeFabs();
+  // Armazenamento (#68): limpeza automática (caches, áudios de reuniões antigos), no máximo 1×/dia
+  setTimeout(() => import('./lib/storage-usage.js').then((m) => m.autoClean(S.data.settings)).catch(() => {}), 4000);
   setupWake();
   startIconizer(); // ícones desenhados no lugar dos emojis da interface (#51)
   speechReady.then(() => updateWake()); // reconhecimento no computador confirmado: troca de motor se precisar

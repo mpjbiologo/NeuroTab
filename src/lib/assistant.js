@@ -199,7 +199,11 @@ export function stripWhen(s) {
  * Executa uma frase. Retorna { reply, long? } — reply é falado e mostrado.
  * lang: 'pt' | 'en' | 'es' (idioma em que a pessoa falou).
  */
-export async function runCommand(raw, api, lang = 'pt') {
+/**
+ * opts.chat (modo conversa, #44): o que não for comando vai direto para a IA (com o histórico que o `api.ask`
+ * já carrega), sem a interpretação nem a pesquisa na web do plano B.
+ */
+export async function runCommand(raw, api, lang = 'pt', opts = {}) {
   const L = LEX[lang] || LEX.pt;
   const text = raw.trim();
   const t = fold(text).replace(/[.!]+$/, '').replace(/\?$/, '').trim();
@@ -295,6 +299,13 @@ export async function runCommand(raw, api, lang = 'pt') {
     const q = strip(text, L.askStrip) || text;
     if (!api.aiReady()) return { reply: 'Configure a IA nas configurações para eu responder perguntas.' };
     const { answer } = await api.ask(q);
+    return { reply: answer, long: true };
+  }
+
+  // Modo conversa: o resto é conversa com o cérebro.
+  if (opts.chat) {
+    if (!api.aiReady()) return { reply: 'Sem IA configurada: no modo conversa eu só entendo comandos.' };
+    const { answer } = await api.ask(text);
     return { reply: answer, long: true };
   }
 

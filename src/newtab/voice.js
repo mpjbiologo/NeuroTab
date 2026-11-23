@@ -16,6 +16,8 @@ import { assistantName, isCancel, commandWindowMs } from '../lib/wake-word.js';
 import { onEscape } from '../lib/window-manager.js';
 import { greetingFor, isGoodbye, silenceClock, silenceMs, FAREWELL, STATE_LABEL } from '../lib/voice-session.js';
 import { createViz, openMeter, vizStyle } from '../lib/voice-viz.js';
+import { newHistory, addTurn, historyMessages, conversationNote, isSaveThat, modeRequest } from '../lib/chat-history.js';
+import { openMeeting, meetingLive, paintModeFabs } from './modes.js';
 
 // Tela de voz: estado atual, visual (canvas) e microfone do visual; conversa em andamento (#39, #40).
 const V = { viz: null, meter: null, meterP: null, conv: null };
@@ -71,15 +73,34 @@ const hideLater = (ms) => setTimeout(() => { if (!S.voiceSession && !V.conv) hid
 /** Fala com o visual pulsando a cada palavra. */
 function say(text, lang) {
   setState('speaking');
-  return speak(text, { ...S.data.settings, voiceLang: lang || voiceCode() }, { onWord: () => V.viz?.pulse(), onStart: () => V.viz?.pulse() });
+  const done = speak(text, { ...S.data.settings, voiceLang: lang || voiceCode() }, { onWord: () => V.viz?.pulse(), onStart: () => V.viz?.pulse() });
+  if (V.conv?.kind === 'chat' && S.data.settings.voiceChatBargeIn) bargeIn(done);
+  return done;
 }
 
-export function voiceApi() {
+/** Interromper falando por cima (opção do modo conversa): voz alta e contínua no microfone corta a fala. */
+async function bargeIn(done) {
+  let own = null;
+  const m = V.meter || (own = await openMeter());
+  if (!m) return;
+  let loud = 0;
+  let over = false;
+  done.then(() => { over = true; });
+  while (!over) {
+    await new Promise((r) => setTimeout(r, 100));
+    loud = m.level() > 0.45 ? loud + 1 : 0;
+    if (loud >= 4) { speechSynthesis.cancel(); break; }
+  }
+  own?.close();
+}
+
+export function voiceApi(o = {}) {
   const eng = SEARCH_ENGINES[S.data.settings.searchEngine] || SEARCH_ENGINES.google;
   return {
     capture: (p) => ctx.capture(p),
     aiReady: () => isConfigured(S.data.settings),
-    ask: (q) => aiAsk(S.data.settings, S.items, q, [], brainExtras(q)),
+    // No modo conversa (#44) vai junto o histórico: "e amanhã?", "explica melhor".
+    ask: (q) => aiAsk(S.data.settings, S.items, q, o.history || [], brainExtras(q), { historyMax: Math.max(6, (o.history || []).length) }),
     placesAnswer: (q, lang) => {
       const a = localAnswer(q, S.data.settings, lang);
       if (!a) return null;
@@ -136,14 +157,58 @@ export function setupVoice() {
     if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 'm') { e.preventDefault(); V.conv ? stopVoice(true) : S.voiceSession ? stopVoice() : openVoice(); }
   });
   onEscape({ layer: 'overlay', isOpen: () => !$('#voice').hidden, close: () => stopVoice(true) });
+  // 💬 Modo conversa (#44): botão, Alt+C; o navegador não ouve com a aba escondida, então encerra.
+  $('#chatFab')?.addEventListener('click', () => toggleChat());
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey && !e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'c' && !e.target.closest?.('input,textarea,[contenteditable="true"]')) { e.preventDefault(); toggleChat(); }
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && V.conv) endConversation('hidden'); });
   chrome.runtime.onMessage.addListener((msg) => { if (msg?.type === 'startVoice' && document.visibilityState === 'visible') openVoice(); });
   if (location.hash === '#voice') { history.replaceState(null, '', location.pathname); setTimeout(openVoice, 300); }
 }
 
 /** Botão 🎙, Alt+M e atalho global: um pedido só, ou a conversa se a pessoa escolheu assim. */
 export function openVoice() {
+  if (meetingLive()) { toast(t('Há uma reunião sendo gravada: encerre a reunião para usar a voz aqui.')); return; }
   if (S.data.settings.voiceConvButton) startConversation({ greet: false });
   else startVoice();
+}
+
+/** Liga ou desliga o modo conversa. */
+export function toggleChat() {
+  if (V.conv?.kind === 'chat') { endConversation('user'); return; }
+  startChat();
+}
+
+export async function startChat() {
+  if (meetingLive()) { toast(t('Há uma reunião sendo gravada: encerre a reunião para usar o modo conversa.')); return; }
+  if (!hasDictation()) { toast(t('Reconhecimento de voz indisponível neste navegador.')); return; }
+  if (V.conv) endConversation('switch');
+  if (S.voiceSession) stopVoice(true);
+  if (!S.data.settings.voiceChatNoticed && !(await chatNotice())) return;
+  startConversation({ greet: S.data.settings.voiceGreet !== false, kind: 'chat' });
+}
+
+/** Aviso da primeira vez: custo (cada fala é uma chamada à IA) e privacidade. */
+function chatNotice() {
+  return new Promise((resolve) => {
+    const ov = $('#voice');
+    ov.hidden = false;
+    ensureViz();
+    setState('idle');
+    $('#voiceHeard').textContent = t('Modo conversa');
+    $('#voiceHeard').classList.remove('interim');
+    const done = async (ok) => {
+      if (ok) await ctx.saveSettings({ voiceChatNoticed: true });
+      $('#voiceReply').replaceChildren();
+      if (!ok) hideVoice();
+      resolve(ok);
+    };
+    $('#voiceReply').replaceChildren(
+      h('p', {}, t('O microfone fica ligado e tudo o que você disser vai para a sua IA, com o histórico da conversa. Cada fala é uma chamada à IA (pode ter custo, conforme o seu provedor).')),
+      h('p', { class: 'small muted' }, t('Desliga com o botão 💬, dizendo "pode parar", com Esc, trocando de aba ou após alguns minutos sem ninguém falar.')),
+      h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => done(true) }, t('Entendi, ligar')), h('button', { class: 'btn', onclick: () => done(false) }, t('Cancelar'))));
+  });
 }
 
 export function startVoice({ fromWake = false } = {}) {
@@ -212,21 +277,33 @@ export function processVoice(said) {
 }
 
 /** Executa o pedido e mostra a resposta; devolve { text, long, lang } para falar. */
-async function execute(said) {
+async function execute(said, conv = null) {
   const heard = $('#voiceHeard');
   const reply = $('#voiceReply');
   heard.textContent = `“${said}”`;
   heard.classList.remove('interim');
+  // Trocar de modo por voz: "NeuroTab, modo conversa", "iniciar reunião".
+  const mode = modeRequest(said);
+  if (mode === 'meeting' || (mode === 'chat' && conv?.kind !== 'chat')) return { switchTo: mode };
   reply.textContent = t('Processando…');
   setState('thinking');
   const lang = commandLang(voiceCode());
-  const r = await runCommand(said, voiceApi(), lang);
+  const chat = conv?.kind === 'chat';
+  let r;
+  const last = chat && conv.history.all.at(-1);
+  if (chat && isSaveThat(said) && last) {
+    // "anota isso": guarda a última resposta como nota
+    await ctx.capture({ type: 'note', text: last.assistant, source: 'voice' });
+    r = { reply: 'Anotado.' };
+  } else if (mode === 'chat') r = { reply: 'O modo conversa já está ligado.' };
+  else r = await runCommand(said, voiceApi(chat ? { history: historyMessages(conv.history) } : {}), lang, { chat });
   // A resposta sai no idioma em que a pessoa falou (respostas longas da IA já vêm no idioma da interface).
   const text = r.long || r.translated ? r.reply : tIn(lang, r.reply);
   // Respostas da IA vêm em Markdown (listas, negrito): formata em vez de mostrar os asteriscos.
   if (r.long) setHTML(reply, miniMarkdown(text));
   else reply.textContent = text;
   reply.scrollTop = 0;
+  if (chat) conv.history = addTurn(conv.history, said, text);
   return { text, long: !!r.long, lang: r.long ? S.data.settings.voiceLang : voiceCode() };
 }
 
@@ -235,6 +312,7 @@ async function runVoice(said) {
   ensureViz();
   try {
     const r = await execute(said);
+    if (r.switchTo) { hideVoice(); switchMode(r.switchTo); return; }
     await say(r.text, r.lang);
     setState('idle');
     // Respostas longas ficam na tela até a pessoa fechar; as curtas somem sozinhas.
@@ -248,9 +326,16 @@ async function runVoice(said) {
 
 // ---------- Conversa por voz (#40) ----------
 /** Chamado pela palavra de ativação: cumprimenta (falando), ouve, responde e volta a ouvir até o silêncio. */
-export function startConversation({ greet = true, first = '' } = {}) {
+function switchMode(mode) {
+  if (mode === 'chat') startChat();
+  else openMeeting();
+}
+
+/** kind: 'wake' (chamado, para após o silêncio, #40) ou 'chat' (modo conversa, #44: histórico e liga/desliga). */
+export function startConversation({ greet = true, first = '', kind = 'wake' } = {}) {
   if (V.conv || S.voiceSession) return;
-  const conv = { open: true, current: null, clock: null };
+  if (meetingLive()) { toast(t('Há uma reunião sendo gravada: encerre a reunião para usar a voz aqui.')); return; }
+  const conv = { open: true, current: null, clock: null, kind, history: newHistory() };
   V.conv = conv;
   return whileWakePaused(() => converse(conv, { greet, first }));
 }
@@ -260,12 +345,15 @@ async function converse(conv, { greet, first }) {
   const ov = $('#voice');
   ov.hidden = false;
   ov.classList.add('conversation');
+  ov.classList.toggle('chat-mode', conv.kind === 'chat');
+  paintModeFabs();
   $('#voiceHeard').textContent = '';
   $('#voiceHeard').classList.add('interim');
   $('#voiceReply').textContent = '';
   ensureViz();
   setState('wake');
-  conv.clock = silenceClock(silenceMs(s.voiceSilenceSecs), () => endConversation('silence'));
+  const idle = conv.kind === 'chat' ? Math.min(60, Math.max(1, +s.voiceChatIdleMin || 10)) * 60000 : silenceMs(s.voiceSilenceSecs);
+  conv.clock = silenceClock(idle, () => endConversation('silence'));
   try {
     if (greet && conv.open) {
       const g = greetingFor(s, voiceCode());
@@ -304,7 +392,8 @@ async function converse(conv, { greet, first }) {
 
 async function turn(conv, said) {
   try {
-    const r = await execute(said);
+    const r = await execute(said, conv);
+    if (r.switchTo) { endConversation('switch'); switchMode(r.switchTo); return; }
     if (!conv.open) return;
     await say(r.text, r.lang);
   } catch (e) {
@@ -367,7 +456,14 @@ function endConversation(reason, msg = '') {
   try { cur?.stop(); } catch { /* já parou */ }
   speechSynthesis?.cancel();
   const ov = $('#voice');
-  ov.classList.remove('conversation', 'listening');
+  ov.classList.remove('conversation', 'listening', 'chat-mode');
+  paintModeFabs();
+  // Modo conversa com algo dito: oferece salvar como nota (fica na tela até a pessoa responder ou 20 s).
+  if (conv.kind === 'chat' && conv.history.all.length && reason !== 'switch') {
+    offerSave(conv, reason);
+    paintWake();
+    return;
+  }
   if (reason === 'silence' || reason === 'bye') {
     const l = String(voiceCode()).slice(0, 2);
     $('#voiceHeard').textContent = FAREWELL[l] || FAREWELL.pt;
@@ -383,6 +479,28 @@ function endConversation(reason, msg = '') {
     hideVoice();
   }
   paintWake();
+}
+
+function offerSave(conv, reason) {
+  const ov = $('#voice');
+  ov.hidden = false;
+  const l = String(voiceCode()).slice(0, 2);
+  $('#voiceHeard').textContent = reason === 'silence' || reason === 'bye' ? FAREWELL[l] || FAREWELL.pt : t('Conversa encerrada');
+  $('#voiceHeard').classList.remove('interim');
+  if (reason === 'silence') beep({ down: true });
+  setState('closed');
+  let timer;
+  const close = () => { clearTimeout(timer); if (!S.voiceSession && !V.conv) hideVoice(); };
+  const save = async () => {
+    const text = conversationNote(conv.history, { title: t('Conversa por voz'), you: t('Você'), assistant: assistantName(S.data.settings) || 'NeuroTab', locale: LOCALE });
+    await ctx.capture({ type: 'note', text, source: 'voice' });
+    $('#voiceReply').textContent = '✅ ' + t('Conversa salva no cérebro.');
+    timer = setTimeout(close, 1500);
+  };
+  $('#voiceReply').replaceChildren(
+    h('p', {}, t('Salvar a conversa como nota?')),
+    h('div', { class: 'row' }, h('button', { class: 'btn primary', id: 'chatSave', onclick: save }, t('Salvar')), h('button', { class: 'btn', onclick: close }, t('Não'))));
+  timer = setTimeout(close, 20000);
 }
 
 export function stopVoice(close) {

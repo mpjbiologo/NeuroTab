@@ -118,6 +118,18 @@ export const DEFAULT_SETTINGS = {
   voiceConvButton: false, // o botão 🎙 / Alt+M também abre a conversa (senão, um pedido só)
   voiceViz: 'orb', // orb | bars | line | particles | classic
   voiceVizMic: true, // as ondas seguem o volume do microfone
+  // Modo conversa (0.8.3, #44)
+  voiceModeButtons: true, // mostra 💬 e 📋 perto do microfone
+  voiceChatIdleMin: 10, // desliga sozinho após X minutos sem ninguém falar
+  voiceChatBargeIn: false, // falar por cima interrompe a resposta (pode confundir com caixa de som)
+  voiceChatNoticed: false, // já viu o aviso de custo e privacidade
+  // Modo reunião (0.8.3, #41)
+  meetingSource: 'mic', // mic (presencial) | tab (online: microfone + áudio da aba)
+  meetingKeepAudio: false, // guarda o áudio além da transcrição
+  meetingConsentSkip: false, // não mostrar de novo o aviso de consentimento
+  meetingPinTab: true, // a aba da reunião abre fixada
+  meetingAudioDays: 0, // apagar áudios de reuniões com mais de X dias (0 = nunca)
+  storageAutoCaches: false, // Armazenamento (0.8.3, #68): limpar caches com mais de 30 dias
   ttsVoice: '',
   ttsRate: 1,
   ttsPitch: 1,

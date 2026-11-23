@@ -250,9 +250,10 @@ test('exportar sem chaves e importar mantendo as chaves deste navegador', () => 
 });
 
 test('tarefas novas se registram sem mexer na central', () => {
-  assert.ok(registerTask('meeting', { icon: '📋', label: 'Reuniões', where: 'Modo reunião' }));
+  assert.ok(registerTask('estudo', { icon: '🎓', label: 'Estudante', where: 'Modo estudante' }));
   assert.ok(!registerTask('chat', {}), 'não sobrescreve');
-  assert.equal(TASKS.meeting.needs, 'text');
-  assert.equal(resolve(central(), 'meeting').use.server, 'ollama');
-  delete TASKS.meeting;
+  assert.ok(!registerTask('meeting', {}), 'a reunião (0.8.3) já vem na central');
+  assert.equal(TASKS.estudo.needs, 'text');
+  assert.equal(resolve(central(), 'estudo').use.server, 'ollama');
+  delete TASKS.estudo;
 });

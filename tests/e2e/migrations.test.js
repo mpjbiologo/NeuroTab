@@ -36,7 +36,7 @@ test('dados da v0.3 são migrados ao abrir a nova aba', async () => {
   }
 });
 
-test('IndexedDB v2 → v3: fotos preservadas e biblioteca de imagens criada', async () => {
+test('IndexedDB v2 → v4: fotos preservadas, biblioteca de imagens e reuniões criadas', async () => {
   const x = await launch();
   try {
     const p = await x.open('src/grant.html', { wait: 200 });
@@ -53,8 +53,8 @@ test('IndexedDB v2 → v3: fotos preservadas e biblioteca de imagens criada', as
       const photo = await new Promise((r) => { const q = db.transaction('photos').objectStore('photos').get('p1'); q.onsuccess = () => r(q.result); });
       return { version: db.version, stores: [...db.objectStoreNames].sort(), photo: photo?.name };
     });
-    assert.equal(out.version, 3);
-    assert.deepEqual(out.stores, ['captures', 'photos', 'vectors']);
+    assert.equal(out.version, 4);
+    assert.deepEqual(out.stores, ['captures', 'meeting_audio', 'meetings', 'photos', 'vectors']);
     assert.equal(out.photo, 'praia.jpg');
   } finally {
     await x.close();

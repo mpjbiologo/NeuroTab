@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.8.3
+**Modo conversa, modo reunião e uma página para ver e limpar o espaço da NeuroTab.**
+
+- 💬 **Modo conversa (#44):** o botão 💬 (ou Alt+C, ou "NeuroTab, modo conversa") deixa o microfone ligado e o cérebro responde a tudo, **lembrando o que já foi dito** ("e amanhã?", "explica melhor")
+  - Comandos continuam valendo no meio da conversa ("timer de 10 minutos", "me lembra amanhã às 9h"); **"anota isso"** guarda a última resposta
+  - Desliga com 💬, "pode parar", Esc, trocando de aba ou depois de 10 minutos sem ninguém falar, e oferece **salvar a conversa como nota**
+  - Aviso na primeira vez sobre custo e privacidade; sem IA, só aceita comandos. Opção de interromper falando por cima
+- 📋 **Modo reunião (#41):** o botão 📋 (ou Alt+R, ou "NeuroTab, iniciar reunião") abre uma aba própria que grava e transcreve
+  - **Presencial** (microfone) ou **online** — Meet, Zoom, Teams: microfone + **áudio da aba da reunião**, para pegar todos os participantes mesmo com fone, **sem permissão nova**
+  - Durante: transcrição com horário, cronômetro, **Pausar**, **⭐ Marcar ponto importante** (ou dizer "marca isso") e Encerrar. Ponto vermelho no ícone da extensão e 📋 vermelho com o tempo na nova aba
+  - No fim, a sua IA entrega **resumo, pontos importantes, decisões, tarefas** (com botão para criar na NeuroTab) e **perguntas em aberto**; tudo vira uma nota "Reunião — data e hora" no cérebro
+  - Guardar o áudio é opcional (com player e download); exportar a ata em Markdown; retomar ou finalizar uma reunião interrompida; aviso para informar os participantes (LGPD)
+- 🗂️ **Armazenamento (#68):** Configurações → Sistema → Armazenamento mostra quanto ocupa cada parte (notas, lixeira, caches, índice da busca, fotos, reuniões, áudios…), com **limpar** e confirmação — nada das suas notas é apagado por aqui
+  - **Vídeos baixados** pela NeuroTab: pasta, tamanho, mostrar na pasta e apagar do computador (também os baixados pela NeuroTab Ponte)
+  - Limpeza automática opcional de caches e de áudios de reuniões antigos
+
 ## v0.8.2
 **Voz que responde: o assistente conversa com você, com um visual novo.**
 
