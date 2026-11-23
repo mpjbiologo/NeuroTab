@@ -394,3 +394,6 @@ main { width: 100%; max-width: 1480px; }
 .ai-dlg .toolbar input { flex: 1; }
 .ai-dlg .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 .ai-dlg .msg.err { color: var(--bad); } .ai-dlg .msg.ok { color: var(--ok); }
+
+/* Prévia do visual da voz (0.8.2) */
+.viz-preview { width: 120px; height: 120px; border-radius: 12px; background: color-mix(in oklch, var(--accent) 6%, transparent); }

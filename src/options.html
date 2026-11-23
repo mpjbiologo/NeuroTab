@@ -542,6 +542,50 @@
         </div>
       </div>
       <p class="hint" id="wakeNo" hidden>A palavra de ativação precisa de reconhecimento de voz: este navegador não oferece. Configure um Whisper local acima para usar.</p>
+      <h2 data-page="voz-conversa">Conversa e visual</h2>
+      <div class="opt">
+        <div><b>Conversar depois de chamado</b><small>Ao ouvir a palavra de ativação, o assistente responde, volta a ouvir depois de cada resposta e só para quando ninguém fala por um tempo. Diga "obrigado", "pode parar" ou "tchau" para encerrar antes.</small></div>
+        <label class="sw"><input type="checkbox" data-k="voiceConversation"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Responder falando ao ser chamado</b><small>O microfone só abre depois que a frase termina, para o assistente não ouvir a própria voz.</small></div>
+        <label class="sw"><input type="checkbox" data-k="voiceGreet"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Frase ao ser chamado</b><small>Use {nome} para o seu nome (o mesmo da saudação, em Aparência → Layout). Em branco: "Olá, {nome}, em que posso ajudar?" no idioma da voz.</small></div>
+        <div class="keybox"><input type="text" class="txt" data-k="voiceGreeting" id="voiceGreeting" placeholder="Olá, {nome}, em que posso ajudar?" maxlength="160"><button class="btn" id="testGreeting">▶ Ouvir</button></div>
+      </div>
+      <div class="opt">
+        <div><b>Cumprimentar mesmo com o pedido junto</b><small>Desligado: "NeuroTab, anotar comprar café" anota direto, sem a saudação.</small></div>
+        <label class="sw"><input type="checkbox" data-k="voiceGreetAlways"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Encerrar a conversa após</b></div>
+        <select data-k="voiceSilenceSecs" data-num>
+          <option value="30">30 segundos de silêncio</option>
+          <option value="60">1 minuto de silêncio</option>
+          <option value="120">2 minutos de silêncio</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Conversa também pelo botão 🎙</b><small>Desligado: o botão do microfone e o atalho Alt+M ouvem um pedido só.</small></div>
+        <label class="sw"><input type="checkbox" data-k="voiceConvButton"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Visual da voz</b><small>Como o assistente aparece enquanto ouve, pensa e fala. A cor segue o destaque do tema.</small></div>
+        <div class="keybox"><select data-k="voiceViz" id="voiceViz">
+          <option value="orb">Orbe com ondas</option>
+          <option value="bars">Barras de equalizador</option>
+          <option value="line">Linha de onda</option>
+          <option value="particles">Partículas</option>
+          <option value="classic">Clássico</option>
+        </select><canvas id="vizPreview" class="viz-preview" width="120" height="120" aria-hidden="true"></canvas></div>
+      </div>
+      <div class="opt">
+        <div><b>Ondas seguem o volume do microfone</b><small>Só enquanto a tela de voz está aberta. Nada é gravado nem enviado. Desligado: ondas simuladas.</small></div>
+        <label class="sw"><input type="checkbox" data-k="voiceVizMic"><span></span></label>
+      </div>
+      <p class="hint">Quem pediu "menos movimento" no sistema vê só uma variação suave de brilho.</p>
       <h2 data-page="voz-comandos">Atalhos e comandos</h2>
       <div class="opt">
         <div><b>Atalho para comandos de voz</b><small>Padrão: <b>Alt+Shift+V</b> em qualquer aba (abre a NeuroTab ouvindo) e <b>Alt+M</b> na nova aba.</small></div>

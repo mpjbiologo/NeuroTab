@@ -88,7 +88,8 @@ test('cancelar, tempo para o comando e estado do indicador', async () => {
   assert.equal(commandWindowMs(99), 30000);
   assert.equal(wakeState({ enabled: false }), 'off');
   assert.equal(wakeState({ enabled: true, blocked: true }), 'error');
-  assert.equal(wakeState({ enabled: true, busy: true, session: true }), 'processing');
+  assert.equal(wakeState({ enabled: true, busy: true, session: true }), 'listening', 'conversa (#40): ouvindo o próximo pedido');
+  assert.equal(wakeState({ enabled: true, busy: true, session: false }), 'processing');
   assert.equal(wakeState({ enabled: true, session: true }), 'listening');
   assert.equal(wakeState({ enabled: true, rec: {} }), 'waiting');
   assert.equal(wakeState({ enabled: true }), 'paused');

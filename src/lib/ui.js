@@ -151,8 +151,11 @@ export function voicesFor(lang = 'pt-BR') {
   return speechSynthesis.getVoices().filter((v) => v.lang.replace('_', '-').toLowerCase().startsWith(pre));
 }
 
-/** opts: string (idioma) ou settings ({ voiceLang, ttsVoice, ttsRate, ttsPitch }). Retorna Promise ao terminar. */
-export function speak(text, opts = 'pt-BR') {
+/**
+ * opts: string (idioma) ou settings ({ voiceLang, ttsVoice, ttsRate, ttsPitch }). Retorna Promise ao terminar.
+ * hooks (opcional): { onStart, onWord } — para o visual da voz pulsar a cada palavra (#39).
+ */
+export function speak(text, opts = 'pt-BR', hooks = {}) {
   if (!('speechSynthesis' in window)) return Promise.resolve();
   const o = typeof opts === 'string' ? { voiceLang: opts } : opts || {};
   const lang = o.voiceLang || LOCALE;
@@ -174,6 +177,8 @@ export function speak(text, opts = 'pt-BR') {
   return new Promise((res) => {
     u.onend = res;
     u.onerror = res;
+    if (hooks.onStart) u.onstart = hooks.onStart;
+    if (hooks.onWord) u.onboundary = (e) => { if (!e.name || e.name === 'word') hooks.onWord(e); };
     speechSynthesis.speak(u);
   });
 }
@@ -223,14 +228,15 @@ export function fromLocalInput(v) {
  * Sinal sonoro curto (dois tons) para avisar que a frase de ativação foi ouvida (#15).
  * Gerado na hora (Web Audio), sem arquivo de som. Devolve false se não deu para tocar.
  */
-export function beep() {
+/** Bipe curto; down=true desce (fim da conversa por voz). */
+export function beep({ down = false } = {}) {
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return false;
     const ac = (beep.ac ||= new AC());
     if (ac.state === 'suspended') ac.resume().catch(() => {});
     const t0 = ac.currentTime;
-    for (const [freq, at] of [[660, 0], [990, 0.09]]) {
+    for (const [freq, at] of down ? [[880, 0], [520, 0.11]] : [[660, 0], [990, 0.09]]) {
       const osc = ac.createOscillator();
       const gain = ac.createGain();
       osc.type = 'sine';
