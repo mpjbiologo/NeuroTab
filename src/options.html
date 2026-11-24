@@ -46,7 +46,7 @@
       <p class="hint look-note" id="lookNote" hidden>Você tem ajustes do Editor visual por cima do tema. <a href="#editor">Abrir o editor</a> · <button type="button" class="linkish" id="lookClear">Usar o tema puro</button></p>
       <div class="theme-pick" id="themePick" role="radiogroup" aria-label="Tema"></div>
       <h2 data-page="clean">Modo Clean</h2>
-      <p class="hint">Uma tela limpa: data, relógio grande, a barra do dia, a pesquisa e os atalhos. Widgets e barras ficam escondidos (nada se perde: desligue para voltar como estava). Atalho na nova aba: <kbd>Alt+Z</kbd>.</p>
+      <p class="hint">Uma tela limpa: data, relógio grande, a barra do dia, a pesquisa e os atalhos. Widgets e barras ficam escondidos (nada se perde: desligue para voltar como estava). Atalho na nova aba: <kbd>Alt+Z</kbd> (muda em Sistema → Teclado).</p>
       <div class="opt">
         <div><b>Usar o Modo Clean</b></div>
         <label class="sw"><input type="checkbox" data-k="clean.on" id="cleanOn"><span></span></label>
@@ -334,6 +334,25 @@
         <div><b>Blocos por linha no widget "Atalhos"</b><small>Formato, cores e tamanho: Aparência → Estilo dos atalhos.</small></div>
         <select data-k="columns" data-num id="cols"></select>
       </div>
+      <h2 data-page="paginas">Páginas</h2>
+      <p class="hint">Organize os widgets em várias páginas (ex.: Início, Trabalho, Estudos). Relógio, busca e atalhos são os mesmos em todas. Na nova aba: pontinhos sob o relógio, setas ao passar o mouse, deslizar para o lado no touchpad ou <b>Alt+1…9</b>. No modo de edição (🧩), cada widget tem ⇄ para mudar de página.</p>
+      <div id="pagesList" class="pages-list"></div>
+      <div class="opt">
+        <div><b>Indicador das páginas</b><small>Só aparece quando há mais de uma página.</small></div>
+        <select data-k="pagesNav.style"><option value="dots">Pontinhos (discreto)</option><option value="tabs">Abas com o nome</option><option value="arrows">Só as setas</option><option value="hidden">Escondido (teclado e gesto)</option></select>
+      </div>
+      <div class="opt">
+        <div><b>Ao abrir uma nova aba</b></div>
+        <select data-k="pagesNav.start"><option value="last">Continuar na última página usada</option><option value="first">Sempre na primeira página</option></select>
+      </div>
+      <div class="opt">
+        <div><b>Deslizar para trocar de página</b><small>Dois dedos para o lado no touchpad, ou o dedo na tela de toque.</small></div>
+        <label class="sw"><input type="checkbox" data-k="pagesNav.swipe"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Relógio em todas as páginas</b><small>Desligado: o relógio e a saudação aparecem só na primeira página e as outras ganham mais espaço.</small></div>
+        <label class="sw"><input type="checkbox" data-k="pagesNav.clockAll"><span></span></label>
+      </div>
       <h2 data-page="timer">Timer e despertador</h2>
       <div class="opt">
         <div><b>Som do timer</b><small>Os despertadores têm som próprio, escolhido em cada um.</small></div>
@@ -391,6 +410,14 @@
       <p class="hint">Cada acesso a um site existe por causa de um recurso. Os opcionais são pedidos só quando você usa o recurso e podem ser removidos aqui.</p>
       <div id="permList" class="perm-list"></div>
       <div id="permSites" class="perm-sites"></div>
+      <h2 data-page="teclado">Teclado</h2>
+      <p class="hint">Atalhos de teclado da nova aba. Clique em <b>Mudar</b> e pressione a combinação nova (Esc cancela, Backspace desliga). Se um atalho abre outro programa — por exemplo, <b>Alt+Z</b> abre o painel da NVIDIA e <b>Alt+R</b> o da AMD — escolha outra combinação aqui. Combinações sem Ctrl ou Alt só funcionam fora dos campos de texto.</p>
+      <div id="hkList"></div>
+      <p><button class="btn" id="hkResetAll">↺ Voltar todos ao padrão</button></p>
+      <h3 class="sub">Em qualquer aba</h3>
+      <p class="hint">Estes atalhos funcionam fora da NeuroTab e são do navegador. No Firefox, mude aqui mesmo; no Chrome e no Edge, só na página de atalhos do navegador.</p>
+      <div id="hkGlobal"></div>
+      <p><button class="btn" id="hkBrowserBtn">⌨ Abrir os atalhos do navegador</button></p>
       <h2 data-page="armazenamento">Armazenamento</h2>
       <p class="hint">Quanto cada parte da NeuroTab ocupa neste navegador, os vídeos que ela baixou e o que dá para limpar. Nada das suas notas é apagado por aqui.</p>
       <div class="stor-total" id="storTotal"></div>

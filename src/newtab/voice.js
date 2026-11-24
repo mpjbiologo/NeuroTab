@@ -1,5 +1,7 @@
 // NeuroTab — Assistente de voz: ouvir um comando, executar e responder (falando e na tela).
 import { SEARCH_ENGINES, hostOf } from '../lib/store.js';
+import { registerHotkey } from './keys.js';
+import { voicePage } from './pages.js';
 import * as Brain from '../lib/brain.js';
 import { isConfigured, ask as aiAsk, interpretCommand } from '../lib/ai.js';
 import { $, h, toast, startDictation, hasDictation, speak, miniMarkdown, beep } from '../lib/ui.js';
@@ -125,6 +127,7 @@ export function voiceApi(o = {}) {
         || S.data.links.find((l) => Brain.fold(hostOf(l.url)).includes(f));
     },
     tasksText: () => tasksSummary(S.items),
+    goPage: (txt) => voicePage(txt),
     // Finanças (#66): lança na hora e oferece desfazer.
     financeAdd: async (p) => {
       const fp = S.data.settings.finance;
@@ -182,15 +185,11 @@ export function setupVoice() {
   fab.addEventListener('click', () => openVoice());
   $('#voiceClose').addEventListener('click', () => stopVoice(true));
   $('#voice').addEventListener('click', (e) => { if (e.target.id === 'voice') stopVoice(true); });
-  document.addEventListener('keydown', (e) => {
-    if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 'm') { e.preventDefault(); V.conv ? stopVoice(true) : S.voiceSession ? stopVoice() : openVoice(); }
-  });
+  registerHotkey('voice', () => { V.conv ? stopVoice(true) : S.voiceSession ? stopVoice() : openVoice(); });
   onEscape({ layer: 'overlay', isOpen: () => !$('#voice').hidden, close: () => stopVoice(true) });
   // 💬 Modo conversa (#44): botão, Alt+C; o navegador não ouve com a aba escondida, então encerra.
   $('#chatFab')?.addEventListener('click', () => toggleChat());
-  document.addEventListener('keydown', (e) => {
-    if (e.altKey && !e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'c' && !e.target.closest?.('input,textarea,[contenteditable="true"]')) { e.preventDefault(); toggleChat(); }
-  });
+  registerHotkey('chat', () => toggleChat());
   document.addEventListener('visibilitychange', () => { if (document.hidden && V.conv) endConversation('hidden'); });
   chrome.runtime.onMessage.addListener((msg) => { if (msg?.type === 'startVoice' && document.visibilityState === 'visible') openVoice(); });
   if (location.hash === '#voice') { history.replaceState(null, '', location.pathname); setTimeout(openVoice, 300); }

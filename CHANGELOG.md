@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.9.2.1
+**Atalhos de teclado que você escolhe e várias páginas de widgets.**
+
+- ⌨️ **Configurações → Sistema → Teclado (#75):** todos os atalhos da nova aba numa lista — **Mudar** (pressione a combinação nova), **Desligar** e **Padrão**
+  - Avisa quando a combinação já é usada por outra ação, pelo navegador (Ctrl+T, Alt+←…) ou por programas conhecidos: **Alt+Z abre o painel da NVIDIA** e Alt+R o da AMD — troque aqui
+  - A tecla é lida pela posição física, então funciona no Mac e em teclados ABNT2
+  - Os atalhos que valem em qualquer aba (Alt+Shift+V, Alt+Shift+S…) aparecem também: no Firefox dá para mudar ali mesmo; no Chrome e no Edge, pelo botão que abre a página de atalhos do navegador
+- 📑 **Várias páginas na página inicial:** organize os widgets em páginas (ex.: Início, Trabalho, Estudos); relógio, busca e atalhos continuam os mesmos
+  - **Pontinhos discretos sob o relógio** (ou abas com o nome), setas que aparecem ao passar o mouse, **deslizar para o lado** no touchpad ou na tela, **Alt+1…9** e **Alt+[ / Alt+]**, e pela voz: "ir para a página Trabalho"
+  - No modo de edição (🧩): ＋ Página, renomear com emoji, reordenar, apagar (levando os widgets para a primeira) e **⇄ mover um widget para outra página**
+  - Configurações → Nova aba → **Páginas**: estilo do indicador, abrir sempre na primeira ou na última usada, deslizar e relógio em todas as páginas ou só na primeira
+  - Com uma página só, nada muda
+
 ## v0.9.2
 **Data Hub: cotações, indicadores e clima de várias fontes, sempre com a fonte e o horário.**
 

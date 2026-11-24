@@ -2,6 +2,7 @@
 // Esconde widgets, barra de atalhos e o relógio comum; mostra data, saudação, relógio grande, barra do dia,
 // a busca (a mesma barra universal, movida para cá) e os atalhos do grupo escolhido.
 import { $, h } from '../lib/ui.js';
+import { registerHotkey } from './keys.js';
 import { t, LOCALE } from '../lib/i18n.js';
 import { saveData } from '../lib/store.js';
 import { linkIconEl } from '../lib/tiles.js';
@@ -106,10 +107,5 @@ export function setupClean() {
   ctx.on('data', () => applyClean());
   bus.on('widgets.rendered', () => { if (conf().on) applyClean(); });
   $('#clQuick').addEventListener('click', () => { const o = $('#omni'); o.focus(); o.select(); });
-  document.addEventListener('keydown', (e) => {
-    if (e.altKey && !e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'z' && !e.target.closest?.('input,textarea,[contenteditable="true"]')) {
-      e.preventDefault();
-      toggleClean();
-    }
-  });
+  registerHotkey('clean', () => toggleClean()); // padrão Alt+Z (muda em Sistema → Teclado)
 }

@@ -29,7 +29,15 @@ async function getJson(url, ms = 12000) {
 
 const mem = { cache: null };
 async function loadCache() { return (mem.cache = (await chrome.storage.local.get(CACHE_KEY))[CACHE_KEY] || {}); }
-async function saveCache(c) { mem.cache = c; await chrome.storage.local.set({ [CACHE_KEY]: c }); }
+// Junta com o que outra aba gravou no meio: fica o valor mais novo de cada item.
+async function saveCache(c, gone = []) {
+  const cur = (await chrome.storage.local.get(CACHE_KEY))[CACHE_KEY] || {};
+  const out = { ...cur };
+  for (const [k, v] of Object.entries(c)) if (!out[k] || (v.fetchedAt || 0) >= (out[k].fetchedAt || 0)) out[k] = v;
+  for (const k of gone) delete out[k];
+  mem.cache = out;
+  await chrome.storage.local.set({ [CACHE_KEY]: out });
+}
 export const warmCache = () => loadCache().catch(() => ({}));
 
 // Último valor conhecido (síncrono, do cache em memória): para o cérebro e a voz sem gastar cota.
@@ -107,6 +115,7 @@ async function fetchQuotes(items, settings, { force = false, now = Date.now() } 
   const cache = await loadCache();
   let usage = await loadUsage();
   const out = new Map();
+  const gone = [];
   const open = b3Open(now);
   const byKind = {};
   for (const it of items) (byKind[it.kind] ||= []).push(it);
@@ -165,11 +174,11 @@ async function fetchQuotes(items, settings, { force = false, now = Date.now() } 
       const error = errors[k] || { code: 'nosource', message: 'Nenhuma fonte ligada para este dado.' };
       // Plano pago ou ativo inexistente: o valor antigo não serve (nunca mais vai atualizar).
       const keepOld = c && !['paid', 'notfound'].includes(error.code);
-      if (c && !keepOld) delete cache[k];
+      if (c && !keepOld) { delete cache[k]; gone.push(k); }
       out.set(k, keepOld ? { ...c.v, source: c.src, delay: SOURCES[c.src]?.delay || 0, stale: true, error } : { error });
     }
   }
-  await saveCache(cache);
+  await saveCache(cache, gone);
   await chrome.storage.local.set({ [USAGE_KEY]: mergeUsage(await loadUsage(), usage) });
   return out;
 }

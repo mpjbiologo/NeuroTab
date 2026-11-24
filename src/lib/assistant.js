@@ -236,6 +236,9 @@ export async function runCommand(raw, api, lang = 'pt', opts = {}) {
     return { reply: 'Anotado.' };
   }
 
+  // Páginas de widgets (#75): "ir para a página Trabalho", "próxima página", "página 2"
+  if (api.goPage && /^(ir para a |vai para a |abrir a |abre a |mostrar a |go to |ir a la |next |previous )?(proxima |seguinte |anterior )?(pagina|page|pagina)\b/.test(t)) return { reply: await api.goPage(t) };
+
   // Finanças (#66): "gastei 45 no mercado", "recebi 1200 reais de salário", "quanto gastei este mês?"
   if (api.financeAdd) {
     const fp = parseMoneyPhrase(text);

@@ -29,6 +29,7 @@ import { setupLook, refreshLook } from './options-look.js';
 import { setupMediaSave } from './options-media.js';
 import { setupStorage } from './options-storage.js';
 import { setupDatahub } from './options-datahub.js';
+import { setupKeysAndPages } from './options-keys.js';
 import { getKeys as getDataKeys, importKeys as importDataKeys, migrateBrapiToken } from './lib/datahub/keys.js';
 import { setupMenuOptions } from './options-menu.js';
 import { icon, startIconizer } from './lib/icons.js';
@@ -69,6 +70,7 @@ async function init() {
   setupMediaSave({ data: () => data, toast });
   setupStorage({ data: () => data });
   setupDatahub({ data: () => data, toast });
+  setupKeysAndPages({ data: () => data, toast });
   setupMenuOptions({ data: () => data, toast });
   setupDonation();
   setupVoiceOptions();

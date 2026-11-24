@@ -1,5 +1,6 @@
 // NeuroTab — Aparência da nova aba: tema, barra lateral, plano de fundo e slides de fotos (Bing/NASA/pasta).
 import { SEARCH_ENGINES } from '../lib/store.js';
+import { withKey } from './keys.js';
 import { $, $$, h } from '../lib/ui.js';
 import { photoList, photoUrl, preload } from '../lib/photos.js';
 import { t } from '../lib/i18n.js';
@@ -29,7 +30,8 @@ export function applySettings() {
   applyDockMode();
   heroEl.hidden = !s.showClock;
   omniEl.hidden = !s.showSearch;
-  $('#omni').placeholder = `Pesquisar atalhos, notas ou no ${(SEARCH_ENGINES[s.searchEngine] || SEARCH_ENGINES.google).name}…  (Ctrl+K)`;
+  $('#omni').placeholder = withKey(`Pesquisar atalhos, notas ou no ${(SEARCH_ENGINES[s.searchEngine] || SEARCH_ENGINES.google).name}…  (Ctrl+K)`, 'search', 'Ctrl+K');
+  $('#dockHandle').title = withKey('Mostrar atalhos (Ctrl+.)', 'dock', 'Ctrl+.');
   $('#addGroup').hidden = !s.showAddButtons;
   $('#panelAdd').hidden = !s.showAddButtons;
   if (lateral && s.dockPinned && s.dockMode === 'always') openPanel(S.activeId, true);
