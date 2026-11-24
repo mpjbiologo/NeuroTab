@@ -70,7 +70,10 @@ async function searchSelection(text, tab) {
   const { settings } = await loadData();
   const eng = SEARCH_ENGINES[settings.searchEngine] || SEARCH_ENGINES.google;
   const url = eng.url + encodeURIComponent(String(text).trim().slice(0, 300));
-  if (settings.searchNewTab !== false) await chrome.tabs.create({ url, index: (tab?.index ?? -2) + 1, openerTabId: tab?.id });
+  if (settings.searchNewTab !== false) {
+    // ao lado da aba de origem; se o navegador recusar a posição (janela diferente, aba fechada), no fim
+    await chrome.tabs.create({ url, index: (tab?.index ?? -2) + 1, openerTabId: tab?.id }).catch(() => chrome.tabs.create({ url }));
+  }
   else await chrome.tabs.update(tab.id, { url });
 }
 

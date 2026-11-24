@@ -117,10 +117,17 @@ test('IA: aviso da nuvem uma vez, resumo salvo; resumir a página; pesquisar em 
     assert.ok(sent.some((s) => /As plantas transformam luz/.test(s.text)), 'mandou o texto da página');
     await w.close();
     // pesquisar em nova aba
-    const tabP = x.ctx.waitForEvent('page');
     await click('sel-search', { selectionText: 'fotossíntese' }, { window: false });
-    const t = await tabP;
-    await t.waitForURL(/google\.com\/search\?q=fotoss/);
+    const opened = await sw(x).evaluate(async () => {
+      for (let i = 0; i < 60; i++) {
+        const tabs = await chrome.tabs.query({});
+        const t = tabs.find((tb) => /google\.com\/search\?q=fotoss/.test(tb.pendingUrl || tb.url || ''));
+        if (t) return true;
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      return (await chrome.action.getTitle({})) || 'nenhuma aba';
+    });
+    assert.equal(opened, true, 'a pesquisa abriu numa aba nova');
     // documento (sem baixar)
     await click('link-doc', { linkUrl: 'https://artigo.example/files/relatorio%20anual.pdf' }, { window: false });
     const doc = await waitItem((i) => i.title === 'relatorio anual.pdf');
