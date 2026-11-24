@@ -8,6 +8,10 @@ import { parseDuration, fmtDur, startTimer, startPomo, addAlarm, pausePomo, stop
 import { smartCalc } from './calc.js';
 import { hostOf, normalizeUrl } from './store.js';
 import { tIn } from './i18n.js';
+import { parseMoneyPhrase } from './finance/phrases.js';
+
+// Finanças (#66): "quanto gastei este mês?", "minhas finanças".
+const FIN_ASK = /^(quanto (eu )?(ja )?(gastei|recebi)|meus gastos|minhas financas|como (estao|andam) (minhas|as) financas|resumo (das|de) financas|how much (did|have) i (spend|spent)|my (spending|finances)|cuanto (he )?gaste|mis (gastos|finanzas))\b/;
 
 const strip = (s, re) => s.replace(re, '').trim();
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
@@ -230,6 +234,13 @@ export async function runCommand(raw, api, lang = 'pt', opts = {}) {
     if (!content) return { reply: 'O que você quer anotar?' };
     await api.capture({ type: L.idea.test(t) ? 'idea' : 'note', text: content, source: 'voice' });
     return { reply: 'Anotado.' };
+  }
+
+  // Finanças (#66): "gastei 45 no mercado", "recebi 1200 reais de salário", "quanto gastei este mês?"
+  if (api.financeAdd) {
+    const fp = parseMoneyPhrase(text);
+    if (fp) return api.financeAdd(fp);
+    if (FIN_ASK.test(t)) return { reply: await api.financeText() };
   }
 
   // Relógio

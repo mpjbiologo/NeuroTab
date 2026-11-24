@@ -36,6 +36,10 @@ O nome e o logo do Kora pertencem ao seu autor e não são usados como marca da 
 
 Leitura do texto das imagens no computador. Licença em `src/vendor/tesseract/LICENSE.txt`.
 
+## pdf.js — Mozilla (Apache-2.0)
+
+Leitura de extratos e faturas em PDF nas Finanças, no computador. Licença em `src/vendor/pdfjs/LICENSE.txt`.
+
 ## QR Code Generator for JavaScript — Kazuhiko Arase (MIT)
 
 Códigos QR da área de transferência e do pareamento. Aviso de licença no topo de `src/vendor/qrcode.js`.

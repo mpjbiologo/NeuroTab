@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="finance.css">
+<script src="theme-boot.js"></script>
+<title>NeuroTab — Finanças</title>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>💰 Finanças</h1>
+    <span class="tag" title="Os dados não sincronizam, não entram no backup comum e não vão para a IA sem você pedir.">🔒 Só neste computador</span>
+    <span class="spacer"></span>
+    <div class="month" id="monthNav" hidden>
+      <button class="btn icon" id="prevMonth" title="Mês anterior" aria-label="Mês anterior">‹</button>
+      <b id="monthLabel"></b>
+      <button class="btn icon" id="nextMonth" title="Próximo mês" aria-label="Próximo mês">›</button>
+    </div>
+    <button class="btn icon" id="eye" title="Mostrar ou esconder os valores (modo discreto)" aria-label="Modo discreto" aria-pressed="false" hidden>👁</button>
+    <button class="btn icon" id="lockBtn" title="Bloquear agora" aria-label="Bloquear" hidden>🔒</button>
+    <button class="btn primary" id="addTx" hidden>＋ Lançar</button>
+  </header>
+  <div id="banner"></div>
+  <nav class="tabs" id="tabs" role="tablist" hidden></nav>
+  <div id="view"></div>
+  <p class="small muted">A NeuroTab organiza as suas contas; não é consultoria financeira. Os valores são guardados em centavos, só neste navegador.</p>
+</main>
+<dialog id="dlg"></dialog>
+<script type="module" src="finance.js"></script>
+</body>
+</html>

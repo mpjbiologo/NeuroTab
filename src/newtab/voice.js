@@ -3,6 +3,7 @@ import { SEARCH_ENGINES, hostOf } from '../lib/store.js';
 import * as Brain from '../lib/brain.js';
 import { isConfigured, ask as aiAsk, interpretCommand } from '../lib/ai.js';
 import { $, h, toast, startDictation, hasDictation, speak, miniMarkdown, beep } from '../lib/ui.js';
+import { addFromPhrase, undoAdd, financeText } from '../lib/finance/quick-add.js';
 import { tasksSummary, runCommand, commandLang } from '../lib/assistant.js';
 import { t, tIn, LOCALE } from '../lib/i18n.js';
 import { setHTML } from '../lib/safe-html.js';
@@ -122,6 +123,14 @@ export function voiceApi(o = {}) {
         || S.data.links.find((l) => Brain.fold(hostOf(l.url)).includes(f));
     },
     tasksText: () => tasksSummary(S.items),
+    // Finanças (#66): lança na hora e oferece desfazer.
+    financeAdd: async (p) => {
+      const fp = S.data.settings.finance;
+      const r = await addFromPhrase(p, { source: 'voz', currency: fp.currency });
+      if (r.ok) toast(t(r.reply), t('Desfazer'), () => undoAdd(r.ids));
+      return { reply: r.reply };
+    },
+    financeText: () => financeText({ currency: S.data.settings.finance.currency, discreet: S.data.settings.finance.discreet }),
     items: () => S.items,
     routeTo: (name) => {
       const f = Brain.fold(name);
