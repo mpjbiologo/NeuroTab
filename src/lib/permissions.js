@@ -18,8 +18,15 @@ export const FEATURES = {
   },
   quotes: {
     label: 'Cotações e conversão de moedas',
-    why: 'Busca dólar, euro, bitcoin (AwesomeAPI) e ações da B3 (brapi.dev) para o widget Cotações e para converter moedas na busca.',
-    origins: ['https://economia.awesomeapi.com.br/*', 'https://brapi.dev/*'],
+    why: 'Busca dólar, euro, bitcoin (AwesomeAPI), ações e índices da B3 (brapi.dev) e SELIC, CDI e IPCA (dados abertos do Banco Central) para o widget Cotações e para converter moedas na busca. Envia só os códigos dos ativos.',
+    origins: ['https://economia.awesomeapi.com.br/*', 'https://brapi.dev/*', 'https://api.bcb.gov.br/*'],
+  },
+  hgbrasil: {
+    label: 'HG Brasil (cotações, clima e cidade pelo IP)',
+    why: 'Com a sua chave da HG Brasil: cotações de reserva, clima com chance de chuva, sol e lua (envia as coordenadas da cidade) e, só quando você clica, a sugestão da cidade pelo endereço IP.',
+    origins: ['https://api.hgbrasil.com/*'],
+    data: ['locationInfo'],
+    managed: true, // pedido em Configurações → Fontes de dados
   },
   traffic: {
     label: 'Endereços do widget Trânsito',

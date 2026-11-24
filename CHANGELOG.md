@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.9.2
+**Data Hub: cotações, indicadores e clima de várias fontes, sempre com a fonte e o horário.**
+
+- 📈 **Cotações viram uma lista de acompanhamento (#71):** ações e FIIs, Ibovespa, moedas, cripto, **SELIC, CDI e IPCA**, em grupos, com a variação do dia
+  - Cada valor mostra **de onde veio, a que horas e o atraso** ("BrAPI · 14:05 · atraso de ~30 min"); sem resposta, aparece o último valor marcado como **desatualizado** — nunca um valor inventado
+  - O que precisa de chave ou de plano pago aparece marcado (🔑 / 🔒), em vez de sumir
+  - Adicionar ativos digitando ("petr4", "mxrf11", "usd", "btc", "selic"), reordenar e escolher de quanto em quanto tempo atualizar, com a **estimativa de consumo do mês**
+- 🔌 **Configurações → Nova aba → Fontes de dados:** BrAPI, AwesomeAPI, Banco Central e HG Brasil, cada uma com o que o plano grátis cobre, **o passo a passo para conseguir a sua chave grátis**, botão **Testar** e o consumo do dia e do mês. Ordem das fontes por dado (a próxima é reserva) e limites próprios para quem tem plano pago
+  - **SELIC, CDI e IPCA** vêm dos dados abertos do Banco Central, de graça e sem chave
+  - As chaves são de cada pessoa e ficam só neste computador. **Correção:** o token da brapi, que antes sincronizava junto com as configurações, agora fica só no computador
+- 🌦️ **Clima com a HG Brasil (opcional):** chance de chuva, nascer e pôr do sol e fase da lua; o Open-Meteo continua o padrão e a reserva. **📍 Sugerir pela minha internet** acha a sua cidade pelo IP, só quando você clica
+- 🔔 **Alertas (desligados por padrão):** preço acima ou abaixo, variação do dia, chuva e temperatura de amanhã. Avisam uma vez quando o valor passa do limite; não são instantâneos
+- 🗣️ **Voz e IA:** "quanto está o dólar?", "qual a SELIC?", "como estão minhas ações?" e "vai chover amanhã em Itaúna?" respondem com a fonte e o horário; a IA recebe a lista com fonte e horário e não recomenda investimentos
+
 ## v0.9.1
 **Finanças pessoais: entradas e saídas, cartões, contas a pagar, orçamento e importação de extratos, tudo só no seu computador.**
 

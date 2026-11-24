@@ -30,6 +30,8 @@ test('backup completo: importar, exportar com chaves protegidas e restaurar', as
     assert.deepEqual(bk.data.settings.ai.keys, {});
 
     // apaga a chave e restaura: senha errada mostra erro, senha certa restaura
+    assert.equal((await x.storage(o, 'nt_datahub_keys')).brapi, 'BRAPI', 'o token saiu das configurações (0.9.2)');
+    await o.evaluate(() => chrome.storage.local.set({ nt_datahub_keys: {} }));
     await x.settings(o, { ai: { keys: {} }, brapiToken: '' });
     await o.evaluate(() => { location.hash = 'importar'; });
     await o.setInputFiles('#importFile', file);
@@ -42,7 +44,8 @@ test('backup completo: importar, exportar com chaves protegidas e restaurar', as
     await o.waitForFunction(() => /✓/.test(document.querySelector('#importMsg').textContent));
     const s = (await x.storage(o, 'nt_data')).settings;
     assert.equal(s.ai.keys.gemini, 'AIzaSyTESTE-chave-1234567890');
-    assert.equal(s.brapiToken, 'BRAPI');
+    assert.equal(s.brapiToken, '', 'não volta para as configurações (que sincronizam)');
+    assert.equal((await x.storage(o, 'nt_datahub_keys')).brapi, 'BRAPI');
 
     // backup comum (sem marcar) nunca leva chaves
     await o.reload();

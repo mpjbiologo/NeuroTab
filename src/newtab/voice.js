@@ -4,6 +4,8 @@ import * as Brain from '../lib/brain.js';
 import { isConfigured, ask as aiAsk, interpretCommand } from '../lib/ai.js';
 import { $, h, toast, startDictation, hasDictation, speak, miniMarkdown, beep } from '../lib/ui.js';
 import { addFromPhrase, undoAdd, financeText } from '../lib/finance/quick-add.js';
+import { getQuotes, getHgWeather } from '../lib/datahub/hub.js';
+import { spokenLine, itemKey } from '../lib/datahub/format.js';
 import { tasksSummary, runCommand, commandLang } from '../lib/assistant.js';
 import { t, tIn, LOCALE } from '../lib/i18n.js';
 import { setHTML } from '../lib/safe-html.js';
@@ -139,20 +141,36 @@ export function voiceApi(o = {}) {
       showRoute({ from: null, to: p, mode: 'driving' });
       return placesText('pt').showing(p.name);
     },
-    weatherText: async () => {
-      const w = S.data.settings.places?.[0];
+    // "vai chover amanhã em Itaúna?": cidade citada (das suas cidades) e hoje/amanhã. Fonte no fim.
+    weatherText: async (t = '') => {
+      const places = S.data.settings.places || [];
+      const f = Brain.fold(t);
+      const w = places.find((p) => p.name && f.includes(Brain.fold(p.name))) || places[0];
       const d = w && (await getWeather(w));
       if (!d) return 'Escolha sua cidade no relógio (📍) primeiro.';
-      return `Em ${w.name}, agora faz ${Math.round(d.current.temperature_2m)} graus, sensação de ${Math.round(d.current.apparent_temperature)}. Hoje: máxima de ${Math.round(d.daily.temperature_2m_max[0])} e mínima de ${Math.round(d.daily.temperature_2m_min[0])}, com ${d.daily.precipitation_probability_max[0] ?? 0}% de chance de chuva.`;
+      const k = /\b(amanha|tomorrow|manana)\b/.test(f) ? 1 : 0;
+      const rain = d.daily.precipitation_probability_max[k] ?? 0;
+      const hg = S.data.settings.datahub?.weather === 'hg' ? await getHgWeather(w, S.data.settings).catch(() => null) : null;
+      const src = hg ? 'HG Brasil' : 'Open-Meteo';
+      if (k === 1) {
+        const rp = hg?.days?.[1]?.rainProb ?? rain;
+        return `Amanhã em ${w.name}: máxima de ${Math.round(d.daily.temperature_2m_max[1])} e mínima de ${Math.round(d.daily.temperature_2m_min[1])} graus, com ${rp}% de chance de chuva${rp >= 60 ? ' — leve guarda-chuva' : ''}. (Fonte: ${src}.)`;
+      }
+      return `Em ${w.name}, agora faz ${Math.round(d.current.temperature_2m)} graus, sensação de ${Math.round(d.current.apparent_temperature)}. Hoje: máxima de ${Math.round(d.daily.temperature_2m_max[0])} e mínima de ${Math.round(d.daily.temperature_2m_min[0])}, com ${rain}% de chance de chuva. (Fonte: ${src}.)`;
     },
+    // Cotações pelo Data Hub (#71), sempre com fonte e horário.
     quotesText: async (t) => {
-      const c = (await chrome.storage.local.get('nt_cache_quotes')).nt_cache_quotes;
-      if (!c?.rows?.length) return 'Adicione o widget de cotações para eu saber os valores.';
-      let rows = c.rows.filter((r) => !r.err);
-      const want = /dolar|dollar/.test(t) ? 'USD' : /euro/.test(t) ? 'EUR' : /bitcoin/.test(t) ? 'BTC' : null;
-      if (want) rows = rows.filter((r) => r.name === want);
-      if (!rows.length) return 'Não tenho essa cotação no widget.';
-      return rows.slice(0, 4).map((r) => `${r.sub || r.name}: ${Number(r.price).toLocaleString('pt-BR', { style: 'currency', currency: r.cur || 'BRL' })}, ${r.pct >= 0 ? 'alta' : 'queda'} de ${Math.abs(r.pct || 0).toFixed(1).replace('.', ',')}%`).join('. ') + '.';
+      const items = S.data.settings.watch?.items || [];
+      if (!items.length) return 'A sua lista de cotações está vazia. Adicione ativos no widget Cotações.';
+      const f = Brain.fold(t || '');
+      const ALIAS = { dolar: 'USD', dollar: 'USD', euro: 'EUR', bitcoin: 'BTC', libra: 'GBP', selic: 'SELIC', 'juros basicos': 'SELIC', cdi: 'CDI', ipca: 'IPCA', inflac: 'IPCA', inflation: 'IPCA', ibovespa: 'IBOV', bolsa: 'IBOV' };
+      const want = new Set(Object.entries(ALIAS).filter(([w]) => f.includes(w)).map(([, s]) => s));
+      for (const it of items) if (f.includes(it.sym.toLowerCase().split('-')[0])) want.add(it.sym.split('-')[0]);
+      let pick = items.filter((it) => want.has(it.sym.split('-')[0]));
+      if (!pick.length && /\b(acoes|stocks?|acciones|carteira)\b/.test(f)) pick = items.filter((it) => it.kind === 'stock');
+      if (!pick.length) pick = items.slice(0, 5);
+      const got = await getQuotes(pick, S.data.settings).catch(() => new Map());
+      return pick.slice(0, 6).map((it) => spokenLine(it, got.get(itemKey(it)))).join('. ') + '.';
     },
   };
 }

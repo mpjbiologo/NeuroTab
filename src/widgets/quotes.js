@@ -1,92 +1,142 @@
-// Widget: cotações — moedas/cripto (AwesomeAPI) e ações da B3 (brapi.dev).
+// Widget: Cotações — lista de acompanhamento (0.9.2, #71): ações, FIIs, índices, moedas, cripto
+// e indicadores, pelo Data Hub. Cada valor vem com a fonte, o horário e o atraso.
 import { h } from '../lib/ui.js';
+import { LOCALE } from '../lib/i18n.js';
 import { hasFeature, requestFeature, FEATURES } from '../lib/permissions.js';
+import { getQuotes, cachedQuote, warmCache } from '../lib/datahub/hub.js';
+import { KINDS, KIND_LABEL, parseItem, itemKey, sanitizeDatahub } from '../lib/datahub/prefs.js';
+import { itemTitle, itemSub, priceText, changeText, provenance, ERROR_LABEL, spokenLine, timeLabel, sourceName } from '../lib/datahub/format.js';
+import { loadUsage, usageOf, limitsFor, estimateMonth } from '../lib/datahub/quota.js';
+import { getKeys } from '../lib/datahub/keys.js';
 
-const CACHE = 'nt_cache_quotes';
-const fmt = (v, cur = 'BRL') => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: cur, maximumFractionDigits: v > 1000 ? 0 : 2 });
+const optionsUrl = (hash) => chrome.runtime.getURL('src/options.html' + hash);
 
 export default {
   id: 'quotes',
   title: 'Cotações',
   icon: '📈',
-  description: 'Dólar, euro, bitcoin e ações da B3.',
+  description: 'Sua lista de acompanhamento: ações e FIIs, Ibovespa, moedas, cripto, SELIC e IPCA, com a fonte e o horário de cada valor.',
   defaultW: 4,
   mount(el, ctx) {
-    const body = h('div');
-    const stamp = h('p', { class: 'muted', style: { margin: '8px 0 0', fontSize: '11.5px' } });
-    ctx.actions.append(h('button', { title: 'Atualizar', onclick: () => load(true) }, '↻'), h('button', { title: 'Escolher ativos', onclick: () => config() }, '⚙'));
-    el.append(body, stamp);
+    const body = h('div', { class: 'watch' });
+    const foot = h('p', { class: 'watch-foot muted' });
+    let editing = false;
+    let last = new Map();
+    let seq = 0; // só a última busca desenha (evita uma resposta antiga por cima da nova)
+    ctx.actions.append(
+      h('button', { title: 'Atualizar', 'aria-label': 'Atualizar', onclick: () => load(true) }, '↻'),
+      h('button', { title: 'Editar a lista', 'aria-label': 'Editar a lista', onclick: () => { editing = !editing; editing ? edit() : load(); } }, '⚙'),
+    );
+    el.append(body, foot);
+    const watch = () => ctx.settings.watch;
 
-    function config() {
-      const cur = h('input', { type: 'text', value: ctx.settings.quoteCurrencies });
-      const stk = h('input', { type: 'text', value: ctx.settings.quoteStocks });
-      const tok = h('input', { type: 'text', value: ctx.settings.brapiToken, placeholder: 'opcional' });
-      body.replaceChildren(
-        h('p', { class: 'muted' }, 'Moedas (ex.: USD-BRL, EUR-BRL, BTC-BRL, GBP-BRL):'), cur,
-        h('p', { class: 'muted' }, 'Ações/FIIs da B3 (ex.: PETR4, VALE3, ITUB4, MGLU3):'), stk,
-        h('p', { class: 'muted' }, h('span', {}, 'Token da brapi.dev — sem ele, só PETR4, VALE3, ITUB4 e MGLU3. '), h('a', { href: 'https://brapi.dev/dashboard', target: '_blank' }, 'Criar grátis')), tok,
-        h('div', { class: 'toolbar' }, h('button', { class: 'btn primary', onclick: async () => {
-          await ctx.saveSettings({ quoteCurrencies: cur.value.toUpperCase().replace(/\s/g, ''), quoteStocks: stk.value.toUpperCase().replace(/\s/g, ''), brapiToken: tok.value.trim() });
-          load(true);
-        } }, 'Salvar'), h('button', { class: 'btn', onclick: () => load() }, 'Cancelar')));
-      stamp.textContent = '';
-    }
-
-    async function fetchAll() {
-      const out = [];
-      const curs = ctx.settings.quoteCurrencies.split(',').filter(Boolean);
-      if (curs.length) {
-        try {
-          const r = await (await fetch('https://economia.awesomeapi.com.br/json/last/' + curs.join(','))).json();
-          for (const c of curs) {
-            const q = r[c.replace('-', '')];
-            if (q) out.push({ name: q.code, sub: q.name.split('/')[0], price: +q.bid, cur: q.codein, pct: +q.pctChange });
-          }
-        } catch (e) { console.warn(e); }
-      }
-      const stocks = ctx.settings.quoteStocks.split(',').filter(Boolean);
-      if (stocks.length) {
-        try {
-          const headers = ctx.settings.brapiToken ? { Authorization: 'Bearer ' + ctx.settings.brapiToken } : {};
-          const r = await (await fetch('https://brapi.dev/api/quote/' + stocks.join(','), { headers })).json();
-          for (const q of r.results || []) {
-            const d = q.data || q;
-            if (d.regularMarketPrice != null) out.push({ name: q.symbol || d.symbol, sub: (d.shortName || '').slice(0, 18), price: d.regularMarketPrice, cur: d.currency || 'BRL', pct: d.regularMarketChangePercent });
-          }
-          if (r.error && !out.some((o) => stocks.includes(o.name))) out.push({ err: r.message || 'Ações: verifique o token da brapi.dev' });
-        } catch (e) { console.warn(e); }
-      }
-      return out;
-    }
-
-    async function load(force) {
-      // O acesso aos sites de cotação é pedido só quando a pessoa usa o widget.
+    async function load(force = false) {
+      if (editing) return;
       if (!(await hasFeature('quotes'))) {
-        body.replaceChildren(
-          h('p', { class: 'muted' }, FEATURES.quotes.why),
+        body.replaceChildren(h('p', { class: 'muted' }, FEATURES.quotes.why),
           h('button', { class: 'btn primary', type: 'button', onclick: async () => { if (await requestFeature('quotes')) load(true); } }, 'Permitir acesso às cotações'));
-        stamp.textContent = '';
+        foot.textContent = '';
         return;
       }
-      const key = ctx.settings.quoteCurrencies + '|' + ctx.settings.quoteStocks + '|' + !!ctx.settings.brapiToken;
-      let c = (await chrome.storage.local.get(CACHE))[CACHE];
-      if (force || !c || c.key !== key || Date.now() - c.at > 10 * 60e3) {
-        body.style.opacity = '.6';
-        const rows = await fetchAll();
-        body.style.opacity = '';
-        if (rows.length) { c = { key, at: Date.now(), rows }; await chrome.storage.local.set({ [CACHE]: c }); }
-      }
-      if (!c?.rows?.length) { body.replaceChildren(h('p', { class: 'muted' }, 'Não foi possível carregar as cotações.')); return; }
-      body.replaceChildren(...c.rows.map((q) => q.err
-        ? h('p', { class: 'muted' }, q.err)
-        : h('div', { class: 'q-row' },
-          h('span', { class: 'n' }, q.name, ' ', h('small', {}, q.sub)),
-          h('span', {}, fmt(q.price, q.cur || 'BRL')),
-          h('span', { class: q.pct >= 0 ? 'up' : 'down' }, `${q.pct >= 0 ? '▲' : '▼'} ${Math.abs(q.pct || 0).toFixed(2)}%`))));
-      stamp.textContent = 'Atualizado ' + new Date(c.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ' · valores com atraso';
+      const items = watch().items;
+      if (!items.length) { body.replaceChildren(h('p', { class: 'muted' }, 'Lista vazia. Toque em ⚙ para adicionar ativos.')); foot.textContent = ''; return; }
+      const my = ++seq;
+      body.style.opacity = '.6';
+      let got = null;
+      try { got = await getQuotes(items, ctx.settings, { force }); } catch (e) { console.warn('NeuroTab: cotações', e); }
+      if (my !== seq || editing) return;
+      if (got) last = got;
+      body.style.opacity = '';
+      render();
     }
+
+    function render() {
+      const items = watch().items;
+      const groups = KINDS.map((k) => [k, items.filter((i) => i.kind === k)]).filter(([, l]) => l.length);
+      const now = Date.now();
+      body.replaceChildren(...groups.flatMap(([k, list]) => [
+        groups.length > 1 ? h('div', { class: 'watch-group' }, KIND_LABEL[k]) : null,
+        ...list.map((it) => {
+          const v = last.get(itemKey(it)) || {};
+          const ch = changeText(it, v, LOCALE);
+          const err = v.error && v.price == null;
+          return h('div', { class: 'q-row' + (v.stale ? ' stale' : ''), 'data-item': itemKey(it), title: v.price != null ? provenance(v, now) : v.error?.message || '' },
+            h('span', { class: 'n' }, itemTitle(it, v), ' ', h('small', {}, itemSub(it, v))),
+            err
+              ? h('a', { class: 'watch-err small', href: optionsUrl('#fontes-dados'), target: '_blank', title: v.error.message }, ERROR_LABEL[v.error.code] || 'indisponível')
+              : [h('span', { class: 'p' }, priceText(it, v, LOCALE)), h('span', { class: ch.cls + ' c' }, ch.text)]);
+        }),
+      ]));
+      const vals = [...last.values()].filter((v) => v.price != null);
+      const srcs = [...new Set(vals.map((v) => v.source))].map(sourceName);
+      const latest = Math.max(0, ...vals.map((v) => v.at || 0));
+      foot.replaceChildren(
+        srcs.length ? `${srcs.join(', ')} · ${timeLabel(latest, now, LOCALE)}` : '',
+        vals.some((v) => v.stale) ? ' · alguns desatualizados' : '',
+        vals.some((v) => v.delay) ? ' · ações com atraso' : '');
+    }
+
+    async function edit() {
+      const items = [...watch().items];
+      const keys = await getKeys();
+      const usage = await loadUsage();
+      const dh = sanitizeDatahub(ctx.settings.datahub);
+      const kindSel = h('select', { 'aria-label': 'Tipo' }, h('option', { value: '' }, 'Detectar'), ...KINDS.map((k) => h('option', { value: k }, KIND_LABEL[k])));
+      const input = h('input', { type: 'text', class: 'watch-add', placeholder: 'PETR4, MXRF11, USD, BTC, IBOV, SELIC…', maxlength: 20, 'aria-label': 'Ativo' });
+      const msg = h('p', { class: 'small muted', role: 'status' });
+      const refresh = h('select', { 'aria-label': 'Atualizar ações a cada' }, ...[15, 30, 60, 120].map((m) => h('option', { value: m, selected: watch().refreshMin === m }, m < 60 ? `${m} min` : `${m / 60} h`)));
+      const list = h('ul', { class: 'watch-edit' });
+      const est = h('p', { class: 'small muted' });
+      const paintEst = () => {
+        const n = items.filter((i) => i.kind === 'stock' || i.kind === 'index').length;
+        const lim = limitsFor('brapi', dh.limits);
+        const month = estimateMonth({ brapiItems: n, refreshMin: +refresh.value, batch: lim.batch || 1 });
+        const used = usageOf(usage, 'brapi').month;
+        est.textContent = keys.brapi
+          ? `BrAPI: cerca de ${month.toLocaleString(LOCALE)} consultas por mês com ${n} ativo(s) (limite ${lim.month.toLocaleString(LOCALE)}; usadas ${used.toLocaleString(LOCALE)} este mês).`
+          : 'Sem o token grátis da BrAPI, só PETR4, VALE3, ITUB4 e MGLU3 aparecem. Cadastre em Fontes de dados.';
+        est.classList.toggle('warn', !!keys.brapi && month > lim.month);
+      };
+      const paint = () => {
+        list.replaceChildren(...items.map((it, i) => h('li', {},
+          h('span', {}, itemTitle(it), ' ', h('small', { class: 'muted' }, KIND_LABEL[it.kind])),
+          h('span', { class: 'spacer' }),
+          h('button', { class: 'btn sm', title: 'Subir', 'aria-label': 'Subir', disabled: i === 0, onclick: () => { [items[i - 1], items[i]] = [items[i], items[i - 1]]; paint(); } }, '↑'),
+          h('button', { class: 'btn sm', title: 'Remover', 'aria-label': 'Remover', onclick: () => { items.splice(i, 1); paint(); } }, '✕'))));
+        paintEst();
+      };
+      const add = () => {
+        const it = parseItem(input.value, kindSel.value);
+        if (!it) { msg.textContent = 'Não reconheci. Exemplos: PETR4, HGLG11, USD, EUR-USD, BTC, IBOV, SELIC, CDI, IPCA.'; return; }
+        if (items.some((x) => itemKey(x) === itemKey(it))) { msg.textContent = 'Já está na lista.'; return; }
+        items.push(it); input.value = ''; msg.textContent = `${itemTitle(it)} adicionado (${KIND_LABEL[it.kind]}).`; paint();
+      };
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
+      refresh.addEventListener('change', paintEst);
+      paint();
+      body.replaceChildren(
+        h('div', { class: 'row-input' }, kindSel, input, h('button', { class: 'btn', onclick: add }, 'Adicionar')), msg, list,
+        h('label', { class: 'small row' }, 'Atualizar ações e índices a cada ', refresh, ' (no pregão)'), est,
+        h('p', { class: 'small' }, h('a', { href: optionsUrl('#fontes-dados'), target: '_blank' }, '🔑 Fontes de dados e chaves')),
+        h('div', { class: 'toolbar' },
+          h('button', { class: 'btn primary', id: 'watchSave', onclick: async () => { await ctx.saveSettings({ watch: { items, refreshMin: +refresh.value } }); editing = false; load(true); } }, 'Salvar'),
+          h('button', { class: 'btn', onclick: () => { editing = false; load(); } }, 'Cancelar')));
+      foot.textContent = '';
+      input.focus();
+    }
+
+    warmCache();
     load();
-    const t = setInterval(load, 10 * 60e3);
-    return { destroy: () => clearInterval(t) };
+    ctx.every(5 * 60e3, () => load()); // o hub decide se busca de novo (validade e pregão)
+    ctx.on('data.changed', () => { if (!editing) load(); });
+    return { destroy() {} };
+  },
+
+  // O cérebro (IA) lê a lista com fonte e horário (último valor conhecido) — nunca para recomendar investimento.
+  brainContext(settings) {
+    const items = settings.watch?.items || [];
+    const lines = items.map((it) => [it, cachedQuote(it)]).filter(([, v]) => v?.price != null).map(([it, v]) => spokenLine(it, v));
+    if (!lines.length) return null;
+    return { title: 'Cotações e indicadores (lista de acompanhamento)', text: lines.join('\n') + '\nRegra: cite a fonte e o horário; separe o que veio da fonte do que você calculou; não recomende comprar nem vender.' };
   },
 };

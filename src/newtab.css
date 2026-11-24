@@ -348,6 +348,23 @@ body.editing .widget .wbody { pointer-events: none; opacity: .75; }
 .q-row:last-child { border-bottom: 0; }
 .q-row .n { flex: 1; font-weight: 600; } .q-row .n small { font-weight: 400; color: var(--muted); }
 .up { color: var(--ok); } .down { color: var(--bad); }
+/* Lista de acompanhamento (0.9.2, #71) */
+.watch-group { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); margin: 8px 0 0; }
+.watch-group:first-child { margin-top: 0; }
+.q-row .p { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.q-row .c { font-size: var(--fs-sm); min-width: 64px; text-align: right; white-space: nowrap; }
+.q-row.stale .p { opacity: .6; }
+.watch-err { color: var(--text-3); text-decoration: none; white-space: nowrap; }
+.watch-err:hover { color: var(--accent); }
+.watch-foot { margin: 8px 0 0; font-size: var(--fs-2xs); }
+.watch-edit { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; max-height: 220px; overflow: auto; }
+.watch-edit li { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); }
+.watch-edit .spacer, .watch .spacer { flex: 1; }
+.watch .warn { color: var(--warn); }
+.watch .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.watch .row-input select { width: auto; }
+.wx-extra { display: flex; gap: 10px; flex-wrap: wrap; font-size: var(--fs-xs); color: var(--text-3); margin-top: 6px; }
+
 
 /* Blocos de atalho: src/tiles.css (#59) */
 

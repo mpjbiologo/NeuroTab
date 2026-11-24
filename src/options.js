@@ -28,6 +28,8 @@ import { applyLook, themeOf, THEMES } from './lib/theme.js';
 import { setupLook, refreshLook } from './options-look.js';
 import { setupMediaSave } from './options-media.js';
 import { setupStorage } from './options-storage.js';
+import { setupDatahub } from './options-datahub.js';
+import { getKeys as getDataKeys, importKeys as importDataKeys, migrateBrapiToken } from './lib/datahub/keys.js';
 import { setupMenuOptions } from './options-menu.js';
 import { icon, startIconizer } from './lib/icons.js';
 import { configureSpeech, deviceLangFor, deviceStatus, deviceSupported, installDevice, currentEngine, speechAvailable, ENGINE_ERRORS, WHISPER_PRESETS, encodeWav, transcribeRequest } from './lib/speech-engine.js';
@@ -66,6 +68,7 @@ async function init() {
   setupLook({ data: () => data, toast, afterTheme: () => paintThemePicker() });
   setupMediaSave({ data: () => data, toast });
   setupStorage({ data: () => data });
+  setupDatahub({ data: () => data, toast });
   setupMenuOptions({ data: () => data, toast });
   setupDonation();
   setupVoiceOptions();
@@ -498,7 +501,9 @@ function setupBackup() {
           await saveItems([...items, ...parsed.brain.filter((i) => !ids.has(i.id))].sort((a, b) => b.createdAt - a.createdAt));
         }
       }
-      const nKeys = imported ? applySecrets(data.settings, imported, mode === 'replace') : 0;
+      let nKeys = imported ? applySecrets(data.settings, imported, mode === 'replace') : 0;
+      if (imported) nKeys += await importDataKeys(imported.dataKeys, mode === 'replace');
+      await migrateBrapiToken(data);
       await saveData(data);
       if (parsed.background && (mode === 'replace' || !current)) {
         msg.textContent = 'Otimizando plano de fundo…';
@@ -523,7 +528,9 @@ function setupBackup() {
     let secrets = null;
     if (incl.checked) {
       const s = collectSecrets(data.settings);
-      if (!Object.keys(s.aiKeys).length && !s.brapiToken) {
+      s.dataKeys = await getDataKeys(); // chaves das fontes de dados (0.9.2): BrAPI e HG Brasil
+      if (!s.brapiToken && s.dataKeys.brapi) s.brapiToken = s.dataKeys.brapi; // versões antigas leem daqui
+      if (!Object.keys(s.aiKeys).length && !s.brapiToken && !Object.keys(s.dataKeys).length) {
         alert('Não há chaves de API salvas para incluir.');
       } else {
         const p1 = $('#bkPwd').value;
