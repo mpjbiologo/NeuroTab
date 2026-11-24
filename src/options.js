@@ -15,6 +15,7 @@ import { SOURCES, addFiles, listLocal, clearLocal } from './lib/photos.js';
 import { initI18n, LOCALE, t } from './lib/i18n.js';
 import { greetingFor } from './lib/voice-session.js';
 import { createViz } from './lib/voice-viz.js';
+import { CLEAN_FONTS } from './lib/clean.js';
 import { aiConfig, requestPermission, isLocalAI } from './lib/ai.js';
 import { setupAiCentral, repaintAi } from './options-ai.js';
 import { embedConfig, indexItems, indexStatus, clearIndex } from './lib/semantic.js';
@@ -121,7 +122,16 @@ async function chooseTheme(id) {
 const getK = (k) => k.split('.').reduce((o, p) => o?.[p], data.settings);
 const setK = (k, v) => { const ps = k.split('.'); const last = ps.pop(); ps.reduce((o, p) => (o[p] ??= {}), data.settings)[last] = v; };
 
+/** Modo Clean: grupos para os atalhos e a prévia da fonte do relógio. */
+function fillClean() {
+  const g = $('#cleanGroup');
+  if (g) g.replaceChildren(new Option(t('O primeiro grupo'), ''), ...data.groups.map((x) => new Option(`${x.icon || ''} ${x.name}`.trim(), x.id)));
+  const pv = $('#cleanFontPv');
+  if (pv) { const f = CLEAN_FONTS[data.settings.clean?.font] || CLEAN_FONTS.playfair; pv.style.fontFamily = f.css; pv.style.fontWeight = f.weight; }
+}
+
 function fillSettings() {
+  fillClean();
   for (const el of $$('[data-k]')) {
     const v = getK(el.dataset.k);
     if (el.type === 'checkbox') el.checked = !!v;
@@ -141,6 +151,7 @@ function bindSettings() {
       setK(k, el.type === 'checkbox' ? el.checked : 'num' in el.dataset ? Number(el.value) : el.value);
       await saveData(data);
       if (k === 'lang') { location.reload(); return; }
+      if (k === 'clean.font') fillClean();
       toast('Salvo ✓');
     }, el.type === 'text' ? 500 : 0));
   }

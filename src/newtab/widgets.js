@@ -82,4 +82,5 @@ export function renderWidgets() {
   if (S.editing) paintModeButtons();
   if (free) renderFree();
   else renderGrid();
+  bus.emit('widgets.rendered'); // o Modo Clean leva a busca de volta para o lugar dele
 }

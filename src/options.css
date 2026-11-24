@@ -409,3 +409,6 @@ main { width: 100%; max-width: 1480px; }
 .stor-row .sw-dot { width: 10px; height: 10px; border-radius: 3px; }
 .stor-file { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
 .stor-file.gone { color: var(--text-3); }
+
+/* Modo Clean: prévia da fonte do relógio */
+.clean-font-pv { font-size: 30px; line-height: 1; min-width: 92px; text-align: center; }

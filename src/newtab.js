@@ -20,6 +20,7 @@ import { setupOmni } from './newtab/search.js';
 import { setupUpdates } from './newtab/updates.js';
 import { setupVoice } from './newtab/voice.js';
 import { setupModeFabs } from './newtab/modes.js';
+import { setupClean } from './newtab/clean.js';
 import { setupWake, updateWake } from './newtab/wake.js';
 import { setupWindowControls } from './newtab/wincontrols.js';
 import { setupImageReader } from './newtab/image-reader.js';
@@ -121,6 +122,7 @@ async function init() {
   setupUpdates();
   setupVoice();
   setupModeFabs();
+  setupClean();
   // Armazenamento (#68): limpeza automática (caches, áudios de reuniões antigos), no máximo 1×/dia
   setTimeout(() => import('./lib/storage-usage.js').then((m) => m.autoClean(S.data.settings)).catch(() => {}), 4000);
   setupWake();

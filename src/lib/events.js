@@ -21,6 +21,7 @@ export const EVENTS = {
   'route.requested': { payload: 'pedido do cérebro ou da voz para o widget Trânsito: trajeto { from, to, mode } ou trânsito ao vivo { live: true, to }', requires: [] },
   'widget.mounted': { payload: 'widget montado', requires: ['id'] },
   'widget.unmounted': { payload: 'widget desmontado', requires: ['id'] },
+  'widgets.rendered': { payload: 'nada: a grade ou o modo livre acabou de ser redesenhado (o Modo Clean recoloca a busca)' },
   'knowledge.source.added': { payload: 'fonte de conhecimento adicionada (v0.9)', requires: ['id'] },
   'study.review.due': { payload: 'revisão de estudo pendente (v0.9)', requires: ['id'] },
 };

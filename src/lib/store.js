@@ -3,6 +3,7 @@
 import { migrateIfNeeded, normalizeItems, CURRENT_SCHEMA } from './migrations.js';
 import { DEFAULT_LOOK, sanitizeLook, sanitizeTheme, MAX_THEMES } from './look.js';
 import { DEFAULT_TILES, sanitizeTiles, cleanIcon, SHAPES } from './tiles.js';
+import { DEFAULT_CLEAN, sanitizeClean } from './clean.js';
 import { THEMES as THEME_IDS } from './theme.js';
 import { DEFAULT_NET, sanitizeNet } from './net.js';
 import { DEFAULT_MEDIA_SAVE, sanitizeMediaSave } from './media.js';
@@ -78,6 +79,7 @@ export const DEFAULT_SETTINGS = {
   slideInterval: 5, // minutos
   tileRadius: 4,
   iconSource: 'browser', // de onde vêm os ícones dos atalhos: browser | google | duckduckgo (precisa da permissão)
+  clean: DEFAULT_CLEAN, // Modo Clean (0.9.0, #69)
   tiles: DEFAULT_TILES, // formato, tamanho e cores dos blocos de atalho (#59)
   look: DEFAULT_LOOK, // ajustes do editor visual por cima do tema (#58)
   customThemes: [], // [{ id, name, base, look }] temas salvos pela pessoa
@@ -163,6 +165,7 @@ export function mergeSettings(s = {}) {
     layouts: Array.isArray(s.layouts) ? s.layouts.map((l) => ({ ...l, widgets: normalizeWidgets(l.widgets) })) : [],
     media: { ...DEFAULT_MEDIA, ...(s.media || {}) },
     tiles: sanitizeTiles(s.tiles),
+    clean: sanitizeClean(s.clean),
     look: sanitizeLook(s.look),
     net: sanitizeNet(s.net),
     mediaSave: sanitizeMediaSave(s.mediaSave),
