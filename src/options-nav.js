@@ -8,7 +8,7 @@ import { t } from './lib/i18n.js';
 
 export const NAV = [
   { id: 'aparencia', icon: '🎨', label: 'Aparência', pages: ['tema', 'clean', 'editor', 'layout', 'estilo-atalhos', 'fundo', 'slides'] },
-  { id: 'novaaba', icon: '🏠', label: 'Nova aba', pages: ['pesquisa', 'atalhos', 'relogio', 'timer', 'financas', 'fontes-dados'] },
+  { id: 'novaaba', icon: '🏠', label: 'Nova aba', pages: ['pesquisa', 'atalhos', 'paginas', 'relogio', 'timer', 'financas', 'fontes-dados'] },
   { id: 'ia', icon: '🤖', label: 'Inteligência artificial', pages: ['ia', 'ia-tarefas', 'ia-organizar'] },
   { id: 'voz', icon: '🎙️', label: 'Voz', pages: ['voz', 'voz-leitura', 'voz-ativacao', 'voz-conversa', 'voz-comandos'] },
   { id: 'midia', icon: '🎞️', label: 'Mídia', pages: ['imagens', 'salvar-midia'] },
@@ -17,7 +17,7 @@ export const NAV = [
   { id: 'contas', icon: '☁️', label: 'Contas e sincronização', pages: ['contas', 'sync'] },
   { id: 'privacidade', icon: '🔒', label: 'Privacidade', pages: ['permissoes'] },
   { id: 'backup', icon: '💾', label: 'Backup', pages: ['importar', 'exportar'] },
-  { id: 'sistema', icon: '⚙️', label: 'Sistema', pages: ['armazenamento', 'atualizacoes', 'apps', 'creditos'] },
+  { id: 'sistema', icon: '⚙️', label: 'Sistema', pages: ['teclado', 'armazenamento', 'atualizacoes', 'apps', 'creditos'] },
   { id: 'apoie', icon: '❤', label: 'Apoie', pages: ['apoie'], heart: true },
 ];
 

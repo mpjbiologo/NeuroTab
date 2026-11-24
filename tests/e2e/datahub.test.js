@@ -96,6 +96,8 @@ test('Data Hub: lista com fonte e horário, token, plano pago, cota e alertas', 
     assert.match(await w.locator('[data-item="stock:ITUB4"]').textContent(), /plano pago/);
 
     // cota do mês esgotada → último valor marcado como desatualizado
+    await p.waitForFunction(() => !document.querySelector('.watch')?.style.opacity); // nenhuma busca em andamento
+    await p.waitForTimeout(500);
     await p.evaluate(async () => {
       const u = (await chrome.storage.local.get('nt_dh_usage')).nt_dh_usage || {};
       const d = new Date(); const pad = (n) => String(n).padStart(2, '0');
@@ -105,7 +107,8 @@ test('Data Hub: lista com fonte e horário, token, plano pago, cota e alertas', 
       for (const v of Object.values(c)) v.fetchedAt = Date.now() - 5 * 864e5;
       await chrome.storage.local.set({ nt_dh_usage: u, nt_cache_dh: c });
     });
-    await w.locator('button[title=Atualizar]').click();
+    await p.reload(); // sem busca em andamento gravando por cima
+    await w.locator('[data-item="stock:PETR4"]').waitFor();
     await w.locator('[data-item="stock:PETR4"].stale').waitFor();
     assert.match(await w.locator('[data-item="stock:PETR4"]').getAttribute('title'), /desatualizado/);
 

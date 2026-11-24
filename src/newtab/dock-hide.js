@@ -3,6 +3,7 @@
 // collapsed (fica só uma alça; clique ou toque abre). Em telas sem mouse, "auto" vira "collapsed".
 // A barra passa POR CIMA do conteúdo nos modos que escondem: os widgets não mudam de lugar ao abrir/fechar.
 import { $ } from '../lib/ui.js';
+import { registerHotkey } from './keys.js';
 import { S } from './state.js';
 import { dockPos, closePanel } from './rail.js';
 
@@ -120,9 +121,8 @@ export function setupDockHide() {
     hideDock(true);
   });
   // Ctrl+. abre a barra pelo teclado e põe o foco no primeiro grupo.
-  document.addEventListener('keydown', (e) => {
-    if (!(e.ctrlKey || e.metaKey) || e.key !== '.' || !hides()) return;
-    e.preventDefault();
+  registerHotkey('dock', () => {
+    if (!hides()) return;
     showDock();
     dock.querySelector('.rail-btn')?.focus();
   });

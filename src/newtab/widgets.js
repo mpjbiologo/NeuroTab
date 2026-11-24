@@ -7,6 +7,7 @@ import { createScope } from '../lib/widget-scope.js';
 import { windowButtons, restoreMax } from './wincontrols.js';
 import { ctx } from './context.js';
 import { paintModeButtons, removeWidget, renderFree, setWidget } from './free.js';
+import { pageMenu } from './pages.js';
 import { renderGrid } from './grid.js';
 
 /** Colunas da grade conforme a largura da área dos widgets (12, 6 ou 1). */
@@ -30,6 +31,7 @@ export function buildCard(w, idx) {
       h('button', { class: 'wgrid', title: 'Mais estreito', onclick: () => setWidget(idx, { w: Math.max(3, (w.w || 6) - 1) }) }, '−'),
       h('span', { class: 'wsize wgrid' }, `${w.w}/12`),
       h('button', { class: 'wgrid', title: 'Mais largo', onclick: () => setWidget(idx, { w: Math.min(12, (w.w || 6) + 1) }) }, '+'),
+      h('button', { class: 'wpage', title: 'Mover para outra página', onclick: (e) => pageMenu(idx, e.currentTarget) }, '⇄'),
       h('button', { title: 'Remover', onclick: () => removeWidget(idx) }, '✕'),
     ),
   );

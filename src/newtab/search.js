@@ -1,5 +1,6 @@
 // NeuroTab — Busca universal (Ctrl+K): atalhos, notas, web, calculadora e perguntas ao cérebro.
 import { openUrl } from './open.js';
+import { registerHotkey } from './keys.js';
 import { SEARCH_ENGINES, saveData, hostOf, normalizeUrl } from '../lib/store.js';
 import * as Brain from '../lib/brain.js';
 import { parseReminder, fmtDateTime } from '../lib/brain.js';
@@ -138,10 +139,8 @@ export function setupOmni() {
     } else if (e.key === 'Enter' && results[sel]) { e.preventDefault(); run(results[sel]); }
     else if (e.key === 'Escape') { e.preventDefault(); input.value = ''; box.hidden = true; input.blur(); }
   });
-  document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); input.focus(); input.select(); }
-    else if (e.key === '/' && !e.target.closest('input, textarea, select, [contenteditable]') && !document.querySelector('dialog[open]')) { e.preventDefault(); input.focus(); }
-  });
+  registerHotkey('search', () => { input.focus(); input.select(); });
+  registerHotkey('searchSlash', () => input.focus());
 }
 
 /** O que o Enter faz na barra de pesquisa (configuração searchEnter). */

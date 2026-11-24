@@ -1,5 +1,6 @@
 // NeuroTab — Botões dos modos de voz perto do microfone (0.8.3): 💬 conversa (#44) e 📋 reunião (#41).
 import { $, toast } from '../lib/ui.js';
+import { registerHotkey, withKey } from './keys.js';
 import { t } from '../lib/i18n.js';
 import { S } from './state.js';
 
@@ -42,12 +43,12 @@ export function paintModeFabs() {
   const conv = document.querySelector('#voice.chat-mode') && !$('#voice').hidden;
   chat.classList.toggle('on', !!conv);
   chat.setAttribute('aria-pressed', String(!!conv));
-  chat.title = conv ? t('Conversa ligada — clique para desligar (Alt+C)') : t('Modo conversa: o cérebro responde a tudo (Alt+C)');
+  chat.title = withKey(conv ? t('Conversa ligada — clique para desligar (Alt+C)') : t('Modo conversa: o cérebro responde a tudo (Alt+C)'), 'chat', 'Alt+C');
   const on = meetingLive();
   meet.classList.toggle('on', on);
   meet.classList.toggle('paused', live?.state === 'paused');
   meet.querySelector('.mf-time').textContent = on ? fmt(elapsed()) : '';
-  meet.title = on ? t('Reunião sendo gravada — clique para abrir') : t('Modo reunião: grava, transcreve e resume (Alt+R)');
+  meet.title = on ? t('Reunião sendo gravada — clique para abrir') : withKey(t('Modo reunião: grava, transcreve e resume (Alt+R)'), 'meeting', 'Alt+R');
 }
 
 export function setupModeFabs() {
@@ -57,12 +58,9 @@ export function setupModeFabs() {
   wrap.hidden = !show || !has;
   document.body.classList.toggle('has-mode-fabs', !wrap.hidden);
   $('#meetFab').addEventListener('click', () => openMeeting());
-  document.addEventListener('keydown', (e) => {
-    if (e.altKey && !e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'r' && !e.target.closest?.('input,textarea,[contenteditable="true"]')) {
-      e.preventDefault();
-      if (!has) { toast(t('Reconhecimento de voz indisponível neste navegador.')); return; }
-      openMeeting();
-    }
+  registerHotkey('meeting', () => {
+    if (!has) { toast(t('Reconhecimento de voz indisponível neste navegador.')); return; }
+    openMeeting();
   });
   const read = async () => {
     live = (await chrome.storage.local.get(MEETING_KEY))[MEETING_KEY] || null;

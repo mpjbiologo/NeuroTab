@@ -443,3 +443,10 @@ main { width: 100%; max-width: 1480px; }
 .small.warn, .dh-card .warn { color: var(--warn); }
 .dh-up { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 0 2px; font: inherit; }
 #dhWeather { min-width: 200px; }
+
+/* Teclado e Páginas (0.9.2.1, #75) */
+.hk-row kbd, #hkGlobal kbd { display: inline-block; padding: 1px 7px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-family: var(--font-mono, monospace); font-size: var(--fs-xs); color: var(--text); background: var(--tint-1); }
+kbd.off { color: var(--text-3); border-style: dashed; }
+.hk-warn { color: var(--warn) !important; }
+.btn.rec { border-color: var(--accent); color: var(--accent); }
+.pages-list { display: grid; gap: 2px; margin-bottom: 8px; }

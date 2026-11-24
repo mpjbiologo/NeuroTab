@@ -6,6 +6,8 @@ import { DEFAULT_TILES, sanitizeTiles, cleanIcon, SHAPES } from './tiles.js';
 import { DEFAULT_CLEAN, sanitizeClean } from './clean.js';
 import { DEFAULT_FINANCE, sanitizeFinancePrefs } from './finance/prefs.js';
 import { DEFAULT_DATAHUB, DEFAULT_WATCH, sanitizeDatahub, sanitizeWatch } from './datahub/prefs.js';
+import { sanitizeHotkeys } from './hotkeys.js';
+import { DEFAULT_PAGES_NAV, sanitizePages, sanitizePagesNav } from './pages.js';
 import { DEFAULT_MENU, sanitizeMenu } from './menu-actions.js';
 import { THEMES as THEME_IDS } from './theme.js';
 import { DEFAULT_NET, sanitizeNet } from './net.js';
@@ -105,6 +107,10 @@ export const DEFAULT_SETTINGS = {
   brapiToken: '', // (antigo) migrado para nt_datahub_keys na 0.9.2 — não sincroniza mais
   watch: DEFAULT_WATCH, // lista de acompanhamento do widget Cotações (0.9.2, #71)
   datahub: DEFAULT_DATAHUB, // fontes de dados: ligadas, ordem, limites, clima, alertas
+  hotkeys: {}, // atalhos de teclado da nova aba que a pessoa mudou (0.9.2.1, #75); '' = desligado
+  pages: [], // várias páginas de widgets (#75): [{ id, name, icon, widgets, mode, freeFixed }] — vazio = uma página só
+  page: '', // página aberta (os widgets dela estão em `widgets`)
+  pagesNav: DEFAULT_PAGES_NAV,
   shortcutsWidgetGroup: '',
   // IA e voz
   ai: DEFAULT_AI,
@@ -177,6 +183,9 @@ export function mergeSettings(s = {}) {
     finance: sanitizeFinancePrefs(s.finance),
     datahub: sanitizeDatahub(s.datahub),
     watch: sanitizeWatch(s.watch, s),
+    hotkeys: sanitizeHotkeys(s.hotkeys),
+    pagesNav: sanitizePagesNav(s.pagesNav),
+    ...sanitizePages(s.pages, s.page),
     menu: sanitizeMenu(s.menu),
     menuCloudOk: Array.isArray(s.menuCloudOk) ? s.menuCloudOk.filter((x) => typeof x === 'string').slice(0, 20) : [],
     look: sanitizeLook(s.look),
