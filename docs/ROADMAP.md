@@ -46,11 +46,13 @@ Primeiro a base, depois os recursos.
 - ✅ **0.8.2 — Voz que responde:** responder falando ao ser chamado e conversar até 1 minuto de silêncio (#40), com o visual futurista da voz (#39).
 - ✅ **0.8.3 — Reunião, conversa e armazenamento:** modo reunião (gravar, transcrever, resumo, pontos importantes e tarefas, botão 📋 perto do microfone) (#41) e modo conversa (microfone sempre ligado e o cérebro responde a tudo, botão 💬) (#44), mais a página de Armazenamento (espaço usado, pastas e limpeza) (#68).
 
-### [v0.9 — Conhecimento e captura](https://github.com/mpjbiologo/NeuroTab/milestone/5) · 4 atualizações (captura primeiro, conhecimento depois)
+### [v0.9 — Conhecimento e captura](https://github.com/mpjbiologo/NeuroTab/milestone/5) · 5 atualizações (captura primeiro, conhecimento depois)
 - ✅ **0.9.0 — Central do botão direito** (#55): o menu entende o contexto e manda o conteúdo ao lugar certo. Reúne salvar trecho como nota, tarefa ou lembrete (#56), captura de imagens e arquivos (#12) e recorte de tela para a biblioteca (#37), mais o Modo Clean (#69), a voz da saudação e as pesquisas em nova aba (#70).
 - **0.9.1 — Finanças pessoais** (#66): entradas e saídas, contas e cartões, contas a pagar, orçamento e importação de extratos e faturas (OFX, CSV e PDF), só no computador e com cofre opcional. O conector de Open Finance por agregador fica para a 1.x.
-- **0.9.2 — Fontes e documentos:** central de conhecimento com fontes e documentos (#9), adaptador opcional do Open Notebook (#10) e o que falta da #45 (pasta para imagens e áudio; avaliar outros sites, sem contornar DRM nem restrições).
-- **0.9.3 — NeuroPilot e Modo Estudante:** sugestões proativas locais (#8) e Modo Estudante (#11), já usando a central de IA da 0.8.0.
+- **0.9.2 — Data Hub** (#71): uma camada única de dados externos com cache, limites de uso e fonte e horário em cada dado. BrAPI e HG Brasil entram como fontes; o widget Cotações vira lista de acompanhamento (ações, FIIs, moedas, cripto, índices e SELIC/CDI/IPCA). O Open-Meteo continua o clima padrão.
+- **0.9.3 — Fontes e documentos:** central de conhecimento com fontes e documentos (#9), adaptador opcional do Open Notebook (#10) e o que falta da #45 (pasta para imagens e áudio; avaliar outros sites, sem contornar DRM nem restrições).
+- **0.9.4 — NeuroPilot e Modo Estudante:** sugestões proativas locais (#8) e Modo Estudante (#11), já usando a central de IA da 0.8.0.
+- **Proposta — Saúde da mulher e Modo feminino** (#73): ciclo, métodos, exames preventivos e fases da vida, só no computador, com cofre e modo discreto. A versão será definida.
 
 ### [v1.0 — Estável e completa](https://github.com/mpjbiologo/NeuroTab/milestone/6) · 1 a 2 atualizações
 - Painel de privacidade, permissões e fluxo de dados (#28). Já começou: as páginas *Permissões e sites* e *Apps externos* (0.7.11.1) são a base; falta o fluxo de dados por recurso (o que sai, para onde e quando).
@@ -59,6 +61,9 @@ Primeiro a base, depois os recursos.
 
 ### [1.x — Depois da 1.0](https://github.com/mpjbiologo/NeuroTab/milestone/7)
 Modo Investigação (#23), mapa de conhecimento (#22), automações visuais (#24), espaços de trabalho (#25), notificações de celular (#19), diálogo entre dois modelos de IA (#21), linha do tempo e métricas (#30, #31), widgets de terceiros (#32), versão desktop (#33), perfis independentes para computadores compartilhados (#47), modo múltiplos monitores com um perfil por monitor (#65, junto com #25 e #47, que pedem a mesma base de "configurações por contexto"), conector de Open Finance para as finanças (#66), central de entretenimento por voz (#48) e navegador para Android baseado em Chromium com atualizações pelo GitHub (#42).
+
+### [2.x — Plataforma](https://github.com/mpjbiologo/NeuroTab/milestone/8)
+A NeuroTab como plataforma: construtor de widgets próprios, privados ou publicados (#72), sobre a API de extensibilidade e o catálogo da #32.
 
 ## Regras do caminho
 
