@@ -75,15 +75,15 @@ export function applyClean() {
   // A barra de pesquisa universal (com resultados, notas e Ctrl+K) muda de lugar.
   const omni = $('#omniWrap');
   if (on) {
-    if (!homeOfOmni) homeOfOmni = { parent: omni.parentNode, next: omni.nextSibling };
+    if (!homeOfOmni) homeOfOmni = { parent: omni.parentNode, next: omni.nextSibling, ph: $('#omni').placeholder };
     $('#clOmniSlot').append(omni);
     omni.hidden = !c.search;
     $('#omni').placeholder = t('Buscar na web');
   } else if (homeOfOmni) {
     homeOfOmni.parent.insertBefore(omni, homeOfOmni.next);
+    $('#omni').placeholder = homeOfOmni.ph;
     homeOfOmni = null;
     omni.hidden = !S.data.settings.showSearch;
-    $('#omni').placeholder = t('Pesquisar atalhos, notas ou na web…  (Ctrl+K)');
   }
   $('#clQuick').hidden = !c.hint;
   clearInterval(tick);
