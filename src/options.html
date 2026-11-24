@@ -370,6 +370,23 @@
         <div><b>Avisar de e-mails de fatura</b><small>Usa só o assunto dos e-mails do widget E-mail ("fatura", "vencimento", "boleto"). Não lê o conteúdo.</small></div>
         <label class="sw"><input type="checkbox" data-k="finance.mailHint"><span></span></label>
       </div>
+      <h2 data-page="fontes-dados">Fontes de dados</h2>
+      <p class="hint">De onde vêm as cotações, os indicadores e o clima extra. Cada fonte tem um plano grátis; algumas pedem uma chave, que é <b>sua</b>: crie a sua conta grátis no site da fonte e cole a chave aqui. As chaves ficam só neste computador (não sincronizam) e só vão no backup se você marcar "incluir chaves". Uma extensão não guarda segredos com segurança total: use chaves criadas só para isto.</p>
+      <div id="dhSources" class="dh-sources"></div>
+      <h3 class="sub">Ordem das fontes</h3>
+      <p class="hint">Quando a primeira não responde (fora do ar, cota esgotada ou dado do plano pago), a próxima é usada. Os valores sempre mostram de qual fonte vieram, o horário e o atraso.</p>
+      <div id="dhOrder"></div>
+      <div class="opt">
+        <div><b>Clima</b><small>A HG Brasil acrescenta chance de chuva, nascer e pôr do sol e fase da lua (precisa da chave). O Open-Meteo continua como reserva.</small></div>
+        <select id="dhWeather"><option value="openmeteo">Open-Meteo</option><option value="hg">HG Brasil + Open-Meteo</option></select>
+      </div>
+      <h3 class="sub">🔔 Alertas</h3>
+      <div class="opt">
+        <div><b>Ligar os alertas</b><small>Preço, variação do dia, chuva e temperatura de amanhã. Conferidos a cada 30 minutos, dentro da cota de cada fonte: não são instantâneos. Avisam uma vez quando o valor passa do limite.</small></div>
+        <label class="sw"><input type="checkbox" id="dhAlertsOn"><span></span></label>
+      </div>
+      <div id="dhAlerts" class="dh-alerts"></div>
+      <div id="dhAlertAdd" class="row" style="gap:8px;margin-top:8px"></div>
       <h2 data-page="permissoes">Permissões e sites</h2>
       <p class="hint">Cada acesso a um site existe por causa de um recurso. Os opcionais são pedidos só quando você usa o recurso e podem ser removidos aqui.</p>
       <div id="permList" class="perm-list"></div>

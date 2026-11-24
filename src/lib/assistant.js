@@ -71,7 +71,7 @@ const LEX = {
     time: /^(que horas sao|que hora e|horas|hora)$/,
     date: /^(que dia e hoje|qual a data|data de hoje|que dia e)$/,
     weather: /(tempo|clima|previsao|temperatura|chover|chuva)/,
-    quotes: /(dolar|euro|bitcoin|cotac|bolsa|acoes)/,
+    quotes: /(dolar|euro|bitcoin|cotac|bolsa|acoes|selic|cdi|ipca|ibovespa|inflacao|juros basicos)/,
     tasks: /^(ler |leia |quais |o que )?(sao )?(minhas |as )?(tarefas|lembretes|pendencias|tenho (pra|para) hoje|agenda)( de hoje| pra hoje| para hoje)?$/,
     // Frases livres: "me diga aí, o que que eu tenho que fazer?", "o que tenho pra hoje", "quais são minhas pendências"
     agendaAsk: /\b(o que|oque)( que)? (eu )?(tenho|tem)( marcado| na agenda)? (pra |para )?(hoje|amanha|depois de amanha)\b|\b(minha )?agenda (de |pra |para )?(hoje|amanha|depois de amanha)\b|\b(meus )?compromissos( de| pra| para)? (hoje|amanha|depois de amanha)\b|\bminha agenda\b/,
@@ -112,7 +112,7 @@ const LEX = {
     time: /^(what time is it|what's the time|whats the time|what is the time|time)$/,
     date: /^(what day is (it )?today|what's the date|whats the date|what is the date|today's date|todays date|what day is it)$/,
     weather: /(weather|forecast|temperature|rain|raining|sunny)/,
-    quotes: /(dollar|euro|bitcoin|exchange rate|stock|quotes?)/,
+    quotes: /(dollar|euro|bitcoin|exchange rate|stock|quotes?|selic|cdi|ipca|ibovespa|inflation|interest rate)/,
     tasks: /^(read |what are )?(my )?(tasks|reminders|to ?dos|agenda)( for today| today)?$|^what do i have (to do )?today$/,
     agendaAsk: /\bwhat('?s| is| do i have)( on my (calendar|schedule|agenda))?( for)? (today|tomorrow|the day after tomorrow)\b|\bmy (calendar|schedule|meetings|appointments)( for)?( today| tomorrow)?\b/,
     tomorrow: /\btomorrow\b/,
@@ -152,7 +152,7 @@ const LEX = {
     time: /^(que hora es|la hora|hora)$/,
     date: /^(que dia es hoy|cual es la fecha|fecha de hoy|que fecha es hoy|que dia es)$/,
     weather: /(tiempo|clima|pronostico|temperatura|llover|lluvia)/,
-    quotes: /(dolar|euro|bitcoin|cotizacion|bolsa|acciones)/,
+    quotes: /(dolar|euro|bitcoin|cotizacion|bolsa|acciones|selic|cdi|ipca|ibovespa|inflacion)/,
     tasks: /^(leer |lee |cuales son |que )?(son )?(mis )?(tareas|recordatorios|pendientes|agenda|tengo (para )?hoy)( de hoy| para hoy)?$/,
     agendaAsk: /\bque tengo( agendado| en la agenda)? (para |pa )?(hoy|manana|pasado manana)\b|\bmi (agenda|calendario)( de| para)?( hoy| manana)?\b|\bmis (citas|compromisos)( de| para)?( hoy| manana)?\b/,
     tomorrow: /\bmanana\b/,
@@ -265,7 +265,7 @@ export async function runCommand(raw, api, lang = 'pt', opts = {}) {
     const placeReply = api.placesAnswer?.(text, lang);
     if (placeReply) return { reply: placeReply, translated: true };
   }
-  if (L.weather.test(t) && t.split(' ').length <= 7) return { reply: await api.weatherText() };
+  if (L.weather.test(t) && t.split(' ').length <= 9) return { reply: await api.weatherText(t) };
   if (L.quotes.test(t) && t.split(' ').length <= 6) return { reply: await api.quotesText(t) };
   // "o que tenho amanhã?", "minha agenda de hoje": compromissos da agenda + tarefas
   const dayAsk = L.agendaAsk?.test(t) && t.split(' ').length <= 14;

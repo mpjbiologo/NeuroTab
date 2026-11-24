@@ -89,7 +89,7 @@ export function dayIn(tz) {
 }
 
 /** Monta a previsão (agora + próximos dias) dentro de `el`. */
-export function renderForecast(el, d, place, { days = 4 } = {}) {
+export function renderForecast(el, d, place, { days = 4, extra = null } = {}) {
   const cur = d.current;
   const dayCells = d.daily.time.slice(1, 1 + days).map((t, i) => {
     const k = i + 1;
@@ -104,5 +104,6 @@ export function renderForecast(el, d, place, { days = 4 } = {}) {
         h('div', { class: 'wx-d' }, `${wxDesc(cur.weather_code)} · ${place.name}`),
         h('div', { class: 'wx-d' }, `Sensação ${Math.round(cur.apparent_temperature)}° · Umidade ${cur.relative_humidity_2m}% · Chuva hoje ${d.daily.precipitation_probability_max[0] ?? 0}%`))),
     h('div', { class: 'wx-days' }, ...dayCells),
+    extra ? h('div', { class: 'wx-extra', title: extra.title || '' }, ...extra.parts.map((x) => h('span', {}, x))) : null,
   );
 }

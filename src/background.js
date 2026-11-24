@@ -19,6 +19,10 @@ import { shareConfig, canReceive, cleanPayload, NATIVE_HOST } from './lib/clipbo
 import { checkMail, mailConfig, notificationsFor, MAIL_CFG_KEY, GMAIL_ORIGIN } from './lib/mail.js';
 import { saveMedia, summarizeMedia } from './lib/media-save.js';
 import { loadFinance } from './lib/finance/store.js';
+import { getQuotes } from './lib/datahub/hub.js';
+import { evaluateAlerts, alertText, tomorrowFrom, isWeatherAlert } from './lib/datahub/alerts.js';
+import { migrateBrapiToken } from './lib/datahub/keys.js';
+import { getWeather } from './lib/weather.js';
 import { billNotice } from './lib/finance/notices.js';
 import { today as finToday } from './lib/finance/model.js';
 import { downloadMedia, cancelDownload, revealDownload } from './lib/media-dl-run.js';
@@ -397,6 +401,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'pomo') return firePomo();
   if (alarm.name === 'update-check') return runUpdateCheck();
   if (alarm.name === 'daily') return purgeOldTrash();
+  if (alarm.name === 'dhalerts') return runDataAlerts().catch((e) => console.warn('NeuroTab: alertas de cotações e clima', e));
   if (alarm.name === 'finbills') return runFinBills().catch((e) => console.warn('NeuroTab: contas a pagar', e));
   if (!alarm.name.startsWith('rem-')) return;
   const id = alarm.name.slice(4);
@@ -463,6 +468,7 @@ chrome.notifications.onClicked.addListener(async (nid) => {
     return;
   }
   if (nid.startsWith('clock-') || nid === 'timer' || nid === 'pomo') { stopSound(); return; }
+  if (nid.startsWith('dhalert:')) { await chrome.tabs.create({ url: NEWTAB }); return; }
   if (nid === 'finbills') { await chrome.tabs.create({ url: chrome.runtime.getURL('src/finance.html#pagar') }); return; }
   const item = nid.startsWith('rem-') ? nid.slice(4) : nid.startsWith('media:') ? nid.slice(6) : '';
   await chrome.tabs.create({ url: NEWTAB + (item ? '#item=' + item : '') }); // aviso da agenda: abre a nova aba
@@ -489,6 +495,33 @@ async function runFinBills({ force = false } = {}) {
   return n;
 }
 globalThis.__nt.runFinBills = runFinBills;
+
+// ---------- Alertas de cotações e clima (0.9.2, #71) ----------
+// Desligados por padrão. A cada 30 min (o hub usa o cache e respeita a cota de cada fonte);
+// avisa uma vez quando o valor cruza o limite e de novo só depois que ele volta.
+async function runDataAlerts() {
+  const data = await loadData();
+  if (await migrateBrapiToken(data)) await saveData(data);
+  const dh = data.settings.datahub;
+  if (!dh?.alertsOn || !dh.alerts?.length) return [];
+  const items = [...new Set(dh.alerts.filter((a) => !isWeatherAlert(a) && a.item).map((a) => a.item))]
+    .map((k) => { const [kind, sym] = k.split(':'); return { kind, sym }; });
+  const quotes = items.length ? await getQuotes(items, data.settings) : new Map();
+  const place = data.settings.places?.[0];
+  const tomorrow = dh.alerts.some(isWeatherAlert) && place ? tomorrowFrom(await getWeather(place)) : null;
+  const r = evaluateAlerts(dh.alerts, quotes, tomorrow);
+  if (r.changed) {
+    const fresh = await loadData();
+    fresh.settings.datahub = { ...fresh.settings.datahub, alerts: fresh.settings.datahub.alerts.map((a) => r.alerts.find((x) => x.id === a.id) || a) };
+    await saveData(fresh);
+  }
+  for (const f of r.fired) {
+    const n = alertText(f, tomorrow);
+    chrome.notifications.create('dhalert:' + f.alert.id + ':' + Date.now(), { type: 'basic', iconUrl: chrome.runtime.getURL('icons/icon128.png'), title: t(n.title), message: n.message, priority: 1 });
+  }
+  return r.fired.map((f) => alertText(f, tomorrow));
+}
+globalThis.__nt.runDataAlerts = runDataAlerts;
 
 // ---------- Som (documento offscreen) ----------
 const OFF_URL = 'src/offscreen.html';
@@ -889,9 +922,11 @@ function setupPeriodic() {
   chrome.alarms.create('ntsync', { delayInMinutes: 1, periodInMinutes: 5 }); // sincronização entre aparelhos
   chrome.alarms.create('clipprune', { delayInMinutes: 10, periodInMinutes: 30 }); // prazo dos itens copiados
   chrome.alarms.create('finbills', { delayInMinutes: 2, periodInMinutes: 60 }); // contas a pagar (finanças, #66)
+  chrome.alarms.create('dhalerts', { delayInMinutes: 3, periodInMinutes: 30 }); // alertas de cotações e clima (#71); o hub respeita a cota
 }
 
 chrome.runtime.onInstalled.addListener(async (details) => {
+  loadData().then(async (d) => { if (await migrateBrapiToken(d)) await saveData(d); }).catch(() => {});
   rebuildMenus();
   syncAlarms();
   syncCalAlarms();

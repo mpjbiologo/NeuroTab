@@ -5,6 +5,7 @@ import { DEFAULT_LOOK, sanitizeLook, sanitizeTheme, MAX_THEMES } from './look.js
 import { DEFAULT_TILES, sanitizeTiles, cleanIcon, SHAPES } from './tiles.js';
 import { DEFAULT_CLEAN, sanitizeClean } from './clean.js';
 import { DEFAULT_FINANCE, sanitizeFinancePrefs } from './finance/prefs.js';
+import { DEFAULT_DATAHUB, DEFAULT_WATCH, sanitizeDatahub, sanitizeWatch } from './datahub/prefs.js';
 import { DEFAULT_MENU, sanitizeMenu } from './menu-actions.js';
 import { THEMES as THEME_IDS } from './theme.js';
 import { DEFAULT_NET, sanitizeNet } from './net.js';
@@ -101,7 +102,9 @@ export const DEFAULT_SETTINGS = {
   mapRoutes: [], // [{ id, from: placeId | 'here', to: placeId, mode, name }]
   quoteCurrencies: 'USD-BRL,EUR-BRL,BTC-BRL',
   quoteStocks: 'PETR4,VALE3,ITUB4',
-  brapiToken: '',
+  brapiToken: '', // (antigo) migrado para nt_datahub_keys na 0.9.2 — não sincroniza mais
+  watch: DEFAULT_WATCH, // lista de acompanhamento do widget Cotações (0.9.2, #71)
+  datahub: DEFAULT_DATAHUB, // fontes de dados: ligadas, ordem, limites, clima, alertas
   shortcutsWidgetGroup: '',
   // IA e voz
   ai: DEFAULT_AI,
@@ -172,6 +175,8 @@ export function mergeSettings(s = {}) {
     tiles: sanitizeTiles(s.tiles),
     clean: sanitizeClean(s.clean),
     finance: sanitizeFinancePrefs(s.finance),
+    datahub: sanitizeDatahub(s.datahub),
+    watch: sanitizeWatch(s.watch, s),
     menu: sanitizeMenu(s.menu),
     menuCloudOk: Array.isArray(s.menuCloudOk) ? s.menuCloudOk.filter((x) => typeof x === 'string').slice(0, 20) : [],
     look: sanitizeLook(s.look),
