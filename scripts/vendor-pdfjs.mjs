@@ -12,9 +12,8 @@ const OUT = join(ROOT, 'src/vendor/pdfjs');
 const pkg = dirname(require.resolve('pdfjs-dist/package.json'));
 mkdirSync(OUT, { recursive: true });
 for (const f of ['pdf.min.mjs', 'pdf.worker.min.mjs']) {
+  // Sem nenhuma alteração: assim a loja do Firefox reconhece a biblioteca pelo hash.
   copyFileSync(join(pkg, 'build', f), join(OUT, f));
-  const p = join(OUT, f);
-  writeFileSync(p, readFileSync(p, 'utf8').replace(/\n?\/\/# sourceMappingURL=\S+\s*$/, '\n'));
 }
 writeFileSync(join(OUT, 'LICENSE.txt'), `pdf.js (pdfjs-dist ${require('pdfjs-dist/package.json').version})
 https://github.com/mozilla/pdf.js — copiado sem alterações (scripts/vendor-pdfjs.mjs).

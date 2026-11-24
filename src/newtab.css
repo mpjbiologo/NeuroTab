@@ -478,6 +478,28 @@ details summary { cursor: pointer; }
 /* seleção e lixeira */
 .sel-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px; padding: 8px 10px; border-radius: var(--radius-md); background: color-mix(in oklch, var(--accent) 12%, transparent); border: 1px solid color-mix(in oklch, var(--accent) 30%, transparent); }
 .chip.danger { color: var(--bad); }
+
+/* Widget Finanças (0.9.1, #66) */
+.fin { display: grid; gap: 8px; }
+.fin-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.fin-kpi { display: grid; gap: 0; padding: 6px 8px; border-radius: var(--radius-sm); background: var(--tint-1); min-width: 0; }
+.fin-kpi span { font-size: var(--fs-2xs); color: var(--text-3); }
+.fin-kpi b { font-size: var(--fs-md); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fin .pos { color: var(--ok); }
+.fin .neg { color: var(--bad); }
+.fin .warn { color: var(--warn); }
+.fin-quick { width: 100%; }
+.fin-hint { margin: -4px 0 0; min-height: 1.2em; }
+.fin-bar { height: 6px; border-radius: var(--radius-pill); background: var(--tint-2); overflow: hidden; }
+.fin-bar > i { display: block; height: 100%; background: var(--accent); }
+.fin-bar.warn > i { background: var(--warn); }
+.fin-bar.over > i { background: var(--bad); }
+.fin-bills { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: var(--fs-sm); }
+.fin-bills li, .fin .row { display: flex; gap: 6px; align-items: center; }
+.fin .spacer { flex: 1; }
+.fin .money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fin-mail { margin: 0; }
+.fin-pass { flex: 1; min-width: 0; }
 .chip:disabled { opacity: .4; cursor: default; }
 .item.picked { background: color-mix(in oklch, var(--accent) 16%, transparent); }
 .sel-box { width: 17px; height: 17px; margin: 2px 0 0; flex: none; accent-color: var(--accent); }

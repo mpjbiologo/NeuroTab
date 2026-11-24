@@ -198,3 +198,28 @@ test('cofre: cifra, abre com a senha certa e recusa a errada', async () => {
   await assert.rejects(unlockVault(record, 'senha-ruim'), (e) => e.code === 'wrong_key');
   assert.equal(undoImport({ ...fin, tx: [{ ...fin.tx[0], importId: 'i1' }], imports: [{ id: 'i1' }] }, 'i1').tx.length, 0);
 });
+
+test('avisos: contas a pagar (uma vez por dia, discreto) e e-mails de fatura', async () => {
+  const { billNotice, billMails } = await import('../../src/lib/finance/notices.js');
+  const { parseQuick, parseMoneyPhrase } = await import('../../src/lib/finance/phrases.js');
+  const fin = sanitizeFinance({ bills: [{ id: 'a', name: 'Luz', amount: 18000, day: 10, remind: 3, start: '2026-11-01' }, { id: 'b', name: 'Água', amount: 5000, day: 8, start: '2026-11-01' }] });
+  const n = billNotice(fin, { now: '2026-11-09' });
+  assert.equal(n.title, '💸 Contas atrasadas');
+  assert.match(n.message, /Água atrasada 1 d · R\$ 50,00\nLuz vence amanhã · R\$ 180,00/);
+  assert.ok(!billNotice(fin, { now: '2026-11-09', discreet: true }).message.includes('R$'));
+  const sent = Object.fromEntries(n.keys.map((k) => [k, '2026-11-09']));
+  assert.equal(billNotice(fin, { now: '2026-11-09', sent }), null);
+  assert.ok(billNotice(fin, { now: '2026-11-10', sent }));
+  assert.equal(billNotice(fin, { now: '2026-11-01' }), null, 'fora da antecedência');
+  const now = Date.parse('2026-11-20');
+  const cache = { byAccount: { x: { entries: [{ subject: 'Sua fatura chegou', at: now - 864e5 }, { subject: 'Promoção', at: now }, { subject: 'Boleto de outubro', at: now - 40 * 864e5 }] } } };
+  assert.deepEqual(billMails(cache, { now }).map((e) => e.subject), ['Sua fatura chegou']);
+  assert.deepEqual(billMails(null), []);
+  assert.equal(parseQuick('45 mercado').amount, 4500);
+  assert.equal(parseQuick('+1200 salário').kind, 'entrada');
+  assert.equal(parseQuick('mercado'), null);
+  assert.ok(parseMoneyPhrase('gastei 45 no mercado'));
+  assert.ok(parseMoneyPhrase('recebi 1200 reais de salário'));
+  assert.equal(parseMoneyPhrase('recebi 3 e-mails hoje'), null, 'sem pista de dinheiro não lança');
+  assert.equal(parseMoneyPhrase('comprei 2 pães'), null);
+});

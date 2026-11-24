@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.9.1
+**Finanças pessoais: entradas e saídas, cartões, contas a pagar, orçamento e importação de extratos, tudo só no seu computador.**
+
+- 💰 **Widget Finanças (#66):** entradas, saídas e saldo do mês, **lançamento rápido** ("45 mercado", "+1200 salário", "300 tênis 3x no nubank") com categoria sugerida, barra do orçamento e as próximas contas a pagar
+- 📊 **Página Finanças:** resumo com gastos por categoria e 12 meses de entradas e saídas; lançamentos com busca, filtros, edição e ações em vários de uma vez; exportar CSV e OFX
+  - **Contas e cartões:** saldo de cada conta; cartões com fechamento, vencimento, limite usado e faturas (aberta, fechada, vencida, paga). A compra cai na fatura certa e o **pagamento da fatura** não conta o gasto duas vezes
+  - **Parcelas:** o valor total vira parcelas que somam exatamente o total, cada uma na sua fatura
+  - **Contas a pagar:** mensais, anuais ou semanais, com **lembrete por notificação** dentro da antecedência de cada uma e "✓ Paga", que já cria o lançamento
+  - **Orçamento** por categoria, com aviso em 80% e ao passar do limite, e a média dos últimos 3 meses
+  - **Categorias que aprendem:** corrigiu a categoria de "Mercearia do Zé"? Os próximos lançamentos parecidos vão para ela
+- 📥 **Importar extratos e faturas:** **OFX**, **CSV** (Nubank, Inter, C6, planilhas — com débito e crédito separados) e **PDF**
+  - Prévia antes de salvar, com **duplicados marcados** (pelo identificador do banco ou por valor, data e descrição) e categorias editáveis
+  - O leitor de PDF acha "data, descrição, valor" em qualquer banco; você **ensina** o resto (sinais, posição da data, linhas a ignorar) e ele lembra para o mesmo banco. PDF com senha (a senha não é guardada) e PDF escaneado (lido no computador)
+  - **Desfazer importação** apaga tudo o que veio daquele arquivo
+- 🔐 **Privacidade:** tudo fica só neste computador — não sincroniza, não entra no backup comum e não vai para a IA
+  - **Cofre opcional com senha** (AES-256): bloqueia sozinho depois de alguns minutos sem uso; **modo discreto** esconde os valores (••••) até tocar no 👁
+  - Backup próprio das finanças (cifrado, com o cofre ligado) e "apagar tudo"
+- 🗣️ **Voz e Captura rápida:** "gastei 45 no mercado", "recebi 1200 reais de salário" e "quanto gastei este mês?"; na Captura rápida aparece o botão **💰 Lançar nas finanças**
+- ✉️ **E-mail:** um e-mail com "fatura", "vencimento" ou "boleto" no assunto vira um aviso no widget (só o assunto, nunca o conteúdo)
+- ⚙️ Configurações → Nova aba → **Finanças** (moeda, discreto, bloqueio, lembretes); a página Armazenamento mostra o espaço das Finanças
+
 ## v0.9.0
 **Botão direito inteligente, recorte de tela, Modo Clean e a voz certa desde a primeira fala.**
 

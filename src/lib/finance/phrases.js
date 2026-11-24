@@ -47,3 +47,27 @@ export function matchVia(fin, via) {
   const acc = fin.accounts.find((a) => norm(a.name).includes(v));
   return acc ? { account: acc.id } : {};
 }
+
+// Lançamento rápido do widget: "45 mercado", "45,90 uber no nubank", "+1200 salário",
+// "300 tênis 3x" ou uma frase completa ("gastei 45 no mercado").
+export function parseQuick(text) {
+  const s = String(text || '').trim();
+  if (!s) return null;
+  const full = parseFinancePhrase(s);
+  if (full) return full;
+  const m = s.match(/^([+-])?\s*(?:r\$\s*)?(\d[\d.,]*)\s*(.*)$/i);
+  if (!m) return null;
+  const r = parseFinancePhrase(`${m[1] === '+' ? 'recebi' : 'gastei'} ${m[2]} ${m[3]}`);
+  return r;
+}
+
+// Para a voz: só vira lançamento se for claramente dinheiro. "gastei/paguei" bastam;
+// "comprei/recebi/ganhei" precisam de uma pista de valor ("reais", "R$", "45,90").
+export function parseMoneyPhrase(text) {
+  const p = parseFinancePhrase(text);
+  if (!p) return null;
+  const s = String(text).toLowerCase();
+  const strongVerb = /^\s*(gastei|paguei|gastamos|pagamos|torrei|spent|paid|gast[ée]|pagu[ée])\b/.test(s);
+  const cue = /r\$|\breais\b|\breal\b|\bcontos?\b|\bpila\b|d[óo]lar|dollars?|bucks|euros?|pesos|\d+,\d{2}\b|\d+\.\d{2}\b/.test(s);
+  return strongVerb || cue ? p : null;
+}

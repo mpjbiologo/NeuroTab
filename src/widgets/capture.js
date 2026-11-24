@@ -4,6 +4,9 @@ import { parseReminder, fmtDateTime } from '../lib/brain.js';
 import { saveCapture, validateImage } from '../lib/captures.js';
 import { extractUrls, platformOf, PLATFORMS } from '../lib/media-links.js';
 import { t } from '../lib/i18n.js';
+import { parseMoneyPhrase } from '../lib/finance/phrases.js';
+import { addFromPhrase, undoAdd } from '../lib/finance/quick-add.js';
+import { fmtMoney } from '../lib/finance/money.js';
 
 export default {
   id: 'capture',
@@ -38,10 +41,25 @@ export default {
       updateHint();
       ctx.toast(r.status === 'processado' ? 'Salvo no cérebro com resumo 🎬' : r.existed ? 'Já estava salvo — atualizado 🎬' : 'Salvo no cérebro 🎬 (resumo pendente: abra o item para ver o motivo)');
     } }, '🎬 ', t('Salvar com resumo'));
+    // "gastei 45 no mercado": oferece lançar nas Finanças (#66) em vez de virar nota.
+    const finBtn = h('button', { class: 'chip fin-offer', type: 'button', hidden: true, onclick: async () => {
+      const p = parseMoneyPhrase(ta.value.trim());
+      if (!p) return;
+      finBtn.disabled = true;
+      const r = await addFromPhrase(p, { source: 'captura', currency: ctx.settings.finance.currency }).catch((e) => ({ ok: false, reply: e.message }));
+      finBtn.disabled = false;
+      if (!r.ok) { ctx.toast(t(r.reply)); return; }
+      ta.value = '';
+      updateHint();
+      ctx.toast('💰 ' + t(r.reply), t('Desfazer'), () => undoAdd(r.ids));
+    } }, '💰 ', t('Lançar nas finanças'));
     const updateHint = () => {
       const ts = detected();
       const mu = mediaUrl();
       mediaBtn.hidden = !mu;
+      const fp = !mu && parseMoneyPhrase(ta.value.trim());
+      finBtn.hidden = !fp;
+      if (fp) { hint.textContent = `💰 ${fp.kind === 'entrada' ? t('Entrada') : t('Saída')} ${fmtMoney(fp.amount, { currency: ctx.settings.finance.currency })}${fp.installments > 1 ? ` (${fp.installments}x)` : ''}${fp.desc ? ' · ' + fp.desc : ''}`; return; }
       if (mu) { hint.textContent = `🎬 ${PLATFORMS[platformOf(mu)].label}: ${t('salve com título, resumo, pontos-chave e categoria.')}`; return; }
       hint.textContent = ts ? `⏰ Lembrete: ${fmtDateTime(ts)}` : ctx.aiReady() ? '✨ A IA vai dar título, tags e detectar lembretes.' : '';
     };
@@ -108,7 +126,7 @@ export default {
       pasteBox.hidden = false;
     });
 
-    el.append(ta, pasteBox, h('div', { class: 'toolbar' }, ...chips, clockBtn, when, h('span', { class: 'grow' }), mediaBtn, mic, save), hint);
+    el.append(ta, pasteBox, h('div', { class: 'toolbar' }, ...chips, clockBtn, when, h('span', { class: 'grow' }), mediaBtn, finBtn, mic, save), hint);
     updateHint();
     return { destroy: clearPaste };
   },

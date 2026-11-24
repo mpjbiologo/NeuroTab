@@ -48,7 +48,7 @@ Primeiro a base, depois os recursos.
 
 ### [v0.9 — Conhecimento e captura](https://github.com/mpjbiologo/NeuroTab/milestone/5) · 5 atualizações (captura primeiro, conhecimento depois)
 - ✅ **0.9.0 — Central do botão direito** (#55): o menu entende o contexto e manda o conteúdo ao lugar certo. Reúne salvar trecho como nota, tarefa ou lembrete (#56), captura de imagens e arquivos (#12) e recorte de tela para a biblioteca (#37), mais o Modo Clean (#69), a voz da saudação e as pesquisas em nova aba (#70).
-- **0.9.1 — Finanças pessoais** (#66): entradas e saídas, contas e cartões, contas a pagar, orçamento e importação de extratos e faturas (OFX, CSV e PDF), só no computador e com cofre opcional. O conector de Open Finance por agregador fica para a 1.x.
+- ✅ **0.9.1 — Finanças pessoais** (#66): entradas e saídas, contas e cartões, contas a pagar, orçamento e importação de extratos e faturas (OFX, CSV e PDF), só no computador e com cofre opcional. O conector de Open Finance por agregador fica para a 1.x.
 - **0.9.2 — Data Hub** (#71): uma camada única de dados externos com cache, limites de uso e fonte e horário em cada dado. BrAPI e HG Brasil entram como fontes; o widget Cotações vira lista de acompanhamento (ações, FIIs, moedas, cripto, índices e SELIC/CDI/IPCA). O Open-Meteo continua o clima padrão.
 - **0.9.3 — Fontes e documentos:** central de conhecimento com fontes e documentos (#9), adaptador opcional do Open Notebook (#10) e o que falta da #45 (pasta para imagens e áudio; avaliar outros sites, sem contornar DRM nem restrições).
 - **0.9.4 — NeuroPilot e Modo Estudante:** sugestões proativas locais (#8) e Modo Estudante (#11), já usando a central de IA da 0.8.0.

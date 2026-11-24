@@ -18,6 +18,9 @@ import { addClip, clipConfig, pruneClips, CLIP_CFG_KEY, CLIP_KEY } from './lib/c
 import { shareConfig, canReceive, cleanPayload, NATIVE_HOST } from './lib/clipboard-share.js';
 import { checkMail, mailConfig, notificationsFor, MAIL_CFG_KEY, GMAIL_ORIGIN } from './lib/mail.js';
 import { saveMedia, summarizeMedia } from './lib/media-save.js';
+import { loadFinance } from './lib/finance/store.js';
+import { billNotice } from './lib/finance/notices.js';
+import { today as finToday } from './lib/finance/model.js';
 import { downloadMedia, cancelDownload, revealDownload } from './lib/media-dl-run.js';
 import { sanitizeMediaDl, canDownload } from './lib/media-download.js';
 import { NET_KEY, sanitizeNet, sanitizeStore, serverBase, originOf, measureLatency, median, SAMPLES_MAX } from './lib/net.js';
@@ -394,6 +397,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'pomo') return firePomo();
   if (alarm.name === 'update-check') return runUpdateCheck();
   if (alarm.name === 'daily') return purgeOldTrash();
+  if (alarm.name === 'finbills') return runFinBills().catch((e) => console.warn('NeuroTab: contas a pagar', e));
   if (!alarm.name.startsWith('rem-')) return;
   const id = alarm.name.slice(4);
   const it = (await loadItems()).find((x) => x.id === id);
@@ -459,9 +463,32 @@ chrome.notifications.onClicked.addListener(async (nid) => {
     return;
   }
   if (nid.startsWith('clock-') || nid === 'timer' || nid === 'pomo') { stopSound(); return; }
+  if (nid === 'finbills') { await chrome.tabs.create({ url: chrome.runtime.getURL('src/finance.html#pagar') }); return; }
   const item = nid.startsWith('rem-') ? nid.slice(4) : nid.startsWith('media:') ? nid.slice(6) : '';
   await chrome.tabs.create({ url: NEWTAB + (item ? '#item=' + item : '') }); // aviso da agenda: abre a nova aba
 });
+
+// ---------- Finanças: contas a pagar (0.9.1, #66) ----------
+// Uma vez por hora, depois da hora escolhida, avisa as contas dentro da antecedência de cada uma
+// (cada ocorrência no máximo uma vez por dia). Com o cofre bloqueado, espera: não dá para ler.
+const FIN_SENT = 'nt_fin_sent';
+async function runFinBills({ force = false } = {}) {
+  const p = (await loadData()).settings.finance;
+  if (!p?.remind) return null;
+  if (!force && new Date().getHours() < p.remindHour) return null;
+  const st = await loadFinance();
+  if (st.state !== 'open' || st.fresh) return null;
+  const now = finToday();
+  const sent = (await chrome.storage.local.get(FIN_SENT))[FIN_SENT] || {};
+  const n = billNotice(st.fin, { now, discreet: p.discreet, sent, currency: p.currency });
+  if (!n) return null;
+  for (const k of n.keys) sent[k] = now;
+  for (const [k, v] of Object.entries(sent)) if (Date.parse(now) - Date.parse(v) > 40 * 864e5) delete sent[k];
+  await chrome.storage.local.set({ [FIN_SENT]: sent });
+  chrome.notifications.create('finbills', { type: 'basic', iconUrl: chrome.runtime.getURL('icons/icon128.png'), title: t(n.title), message: n.message.slice(0, 250), priority: 1 });
+  return n;
+}
+globalThis.__nt.runFinBills = runFinBills;
 
 // ---------- Som (documento offscreen) ----------
 const OFF_URL = 'src/offscreen.html';
@@ -861,6 +888,7 @@ function setupPeriodic() {
   chrome.alarms.create('calsync', { delayInMinutes: 5, periodInMinutes: 6 * 60 }); // avisos das próximas 48 h
   chrome.alarms.create('ntsync', { delayInMinutes: 1, periodInMinutes: 5 }); // sincronização entre aparelhos
   chrome.alarms.create('clipprune', { delayInMinutes: 10, periodInMinutes: 30 }); // prazo dos itens copiados
+  chrome.alarms.create('finbills', { delayInMinutes: 2, periodInMinutes: 60 }); // contas a pagar (finanças, #66)
 }
 
 chrome.runtime.onInstalled.addListener(async (details) => {

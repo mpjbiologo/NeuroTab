@@ -339,6 +339,37 @@
         <div><b>Som do timer</b><small>Os despertadores têm som próprio, escolhido em cada um.</small></div>
         <div class="keybox"><select data-k="timerSound" id="timerSound"></select><button class="btn" id="testTimerSound" title="Ouvir">🔊</button></div>
       </div>
+      <h2 data-page="financas">Finanças</h2>
+      <p class="hint">O widget e a página <b>Finanças</b>: entradas e saídas, contas e cartões, contas a pagar, orçamento e importação de extratos. Os dados ficam só neste computador: não sincronizam, não entram no backup comum e não vão para a IA sem você pedir. O cofre com senha, o backup próprio e "apagar tudo" ficam na página, em <i>Dados e segurança</i>.</p>
+      <div class="row" style="gap:8px;margin-bottom:8px"><a class="btn" id="openFinance" href="finance.html" target="_blank">💰 Abrir as Finanças</a><a class="btn" href="finance.html#dados" target="_blank">🔐 Cofre e dados</a></div>
+      <div class="opt">
+        <div><b>Moeda</b><small>Como os valores aparecem.</small></div>
+        <select data-k="finance.currency"><option value="BRL">BRL</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="ARS">ARS</option><option value="JPY">JPY</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="CHF">CHF</option><option value="CNY">CNY</option><option value="BTC">BTC</option></select>
+      </div>
+      <div class="opt">
+        <div><b>Modo discreto</b><small>Esconde os valores (••••) no widget e na página até tocar no 👁.</small></div>
+        <label class="sw"><input type="checkbox" data-k="finance.discreet"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Bloquear o cofre depois de</b><small>Só vale com o cofre ligado.</small></div>
+        <select data-k="finance.lockMin" data-num><option value="5">5 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">1 hora</option><option value="0">Só ao fechar o navegador</option></select>
+      </div>
+      <div class="opt">
+        <div><b>Lembrar das contas a pagar</b><small>Notificação dentro da antecedência de cada conta. Com o cofre bloqueado, o aviso espera você abrir.</small></div>
+        <label class="sw"><input type="checkbox" data-k="finance.remind"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>A partir de que horas</b></div>
+        <select data-k="finance.remindHour" data-num><option value="6">6h</option><option value="7">7h</option><option value="8">8h</option><option value="9">9h</option><option value="10">10h</option><option value="11">11h</option><option value="12">12h</option><option value="13">13h</option><option value="14">14h</option><option value="15">15h</option><option value="16">16h</option><option value="17">17h</option><option value="18">18h</option><option value="19">19h</option><option value="20">20h</option><option value="21">21h</option><option value="22">22h</option></select>
+      </div>
+      <div class="opt">
+        <div><b>Contas a pagar no widget</b></div>
+        <select data-k="finance.widgetBills" data-num><option value="0">Nenhuma</option><option value="3">3</option><option value="5">5</option><option value="8">8</option></select>
+      </div>
+      <div class="opt">
+        <div><b>Avisar de e-mails de fatura</b><small>Usa só o assunto dos e-mails do widget E-mail ("fatura", "vencimento", "boleto"). Não lê o conteúdo.</small></div>
+        <label class="sw"><input type="checkbox" data-k="finance.mailHint"><span></span></label>
+      </div>
       <h2 data-page="permissoes">Permissões e sites</h2>
       <p class="hint">Cada acesso a um site existe por causa de um recurso. Os opcionais são pedidos só quando você usa o recurso e podem ser removidos aqui.</p>
       <div id="permList" class="perm-list"></div>

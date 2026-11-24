@@ -6,6 +6,7 @@ import { openDB } from './idb.js';
 export const CATEGORIES = [
   { id: 'notes', icon: '🧠', label: 'Notas, tarefas e cérebro', where: 'Dados da extensão', hint: 'Só pela lixeira ou pelo backup.' },
   { id: 'settings', icon: '⚙️', label: 'Configurações, atalhos e widgets', where: 'Dados da extensão', hint: 'Hábitos, agenda, cotações e o resto dos widgets.' },
+  { id: 'finance', icon: '💰', label: 'Finanças', where: 'Dados da extensão', hint: 'Só neste computador. Backup e "apagar tudo" ficam na página Finanças.' },
   { id: 'trash', icon: '🗑️', label: 'Lixeira', where: 'Dados da extensão', clear: 'trash' },
   { id: 'caches', icon: '♻️', label: 'Caches (notícias, citações, clima, agenda, recomendações)', where: 'Dados da extensão', clear: 'caches', hint: 'Baixados de novo quando precisar.' },
   { id: 'history', icon: '🕘', label: 'Históricos (calculadora, área de transferência)', where: 'Dados da extensão', clear: 'history' },
@@ -24,6 +25,7 @@ const HISTORY_KEYS = new Set(['nt_calc_history', 'nt_clipboard']);
 export function classifyKey(key) {
   if (key === 'nt_brain' || key === 'nt_meta') return 'notes';
   if (key === 'nt_trash') return 'trash';
+  if (key === 'nt_finance' || key === 'nt_fin_sent') return 'finance';
   if (key === 'nt_migration_backup') return 'backup';
   if (HISTORY_KEYS.has(key)) return 'history';
   if (CACHE_RE.test(key)) return 'caches';
