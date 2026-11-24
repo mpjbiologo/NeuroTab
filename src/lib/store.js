@@ -4,6 +4,7 @@ import { migrateIfNeeded, normalizeItems, CURRENT_SCHEMA } from './migrations.js
 import { DEFAULT_LOOK, sanitizeLook, sanitizeTheme, MAX_THEMES } from './look.js';
 import { DEFAULT_TILES, sanitizeTiles, cleanIcon, SHAPES } from './tiles.js';
 import { DEFAULT_CLEAN, sanitizeClean } from './clean.js';
+import { DEFAULT_FINANCE, sanitizeFinancePrefs } from './finance/prefs.js';
 import { DEFAULT_MENU, sanitizeMenu } from './menu-actions.js';
 import { THEMES as THEME_IDS } from './theme.js';
 import { DEFAULT_NET, sanitizeNet } from './net.js';
@@ -81,6 +82,7 @@ export const DEFAULT_SETTINGS = {
   tileRadius: 4,
   iconSource: 'browser', // de onde vêm os ícones dos atalhos: browser | google | duckduckgo (precisa da permissão)
   clean: DEFAULT_CLEAN, // Modo Clean (0.9.0, #69)
+  finance: DEFAULT_FINANCE, // Finanças (0.9.1, #66): só as preferências; os dados ficam em nt_finance, neste computador
   menu: DEFAULT_MENU, // botão direito (0.9.0, #55): { order, hidden, fav }
   menuCloudOk: [], // serviços de IA na internet que a pessoa liberou para as ações do botão direito
   tiles: DEFAULT_TILES, // formato, tamanho e cores dos blocos de atalho (#59)
@@ -169,6 +171,7 @@ export function mergeSettings(s = {}) {
     media: { ...DEFAULT_MEDIA, ...(s.media || {}) },
     tiles: sanitizeTiles(s.tiles),
     clean: sanitizeClean(s.clean),
+    finance: sanitizeFinancePrefs(s.finance),
     menu: sanitizeMenu(s.menu),
     menuCloudOk: Array.isArray(s.menuCloudOk) ? s.menuCloudOk.filter((x) => typeof x === 'string').slice(0, 20) : [],
     look: sanitizeLook(s.look),
