@@ -123,8 +123,13 @@ test('importar .ics, aviso antes do compromisso e "o que tenho hoje" com a agend
     assert.ok(delta > 0 && delta <= 61e3, 'aviso em até 1 min: ' + delta);
 
     // pergunta rápida
-    const r = await p.evaluate(async () => (await import('/src/lib/assistant.js')).runCommand('o que tenho pra hoje', { items: () => [] }, 'pt'));
-    assert.match(r.reply, /Agenda de hoje: \d\d:\d\d Ligar para o banco/);
+    // (perto da meia-noite, "daqui a 3 min" já é amanhã: pergunta pelo dia certo)
+    const r = await p.evaluate(async () => {
+      const today = new Date().getDate() === new Date(Date.now() + 3 * 60e3).getDate();
+      const res = await (await import('/src/lib/assistant.js')).runCommand(today ? 'o que tenho pra hoje' : 'o que tenho amanhã', { items: () => [], tasksText: () => '' }, 'pt');
+      return { ...res, today };
+    });
+    assert.match(r.reply, r.today ? /Agenda de hoje: \d\d:\d\d Ligar para o banco/ : /Agenda de amanhã: \d\d:\d\d Ligar para o banco/);
     assert.deepEqual(x.errors, []);
   } finally {
     await x.close();
