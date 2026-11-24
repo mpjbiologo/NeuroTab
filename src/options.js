@@ -617,13 +617,22 @@ function setupVoiceOptions() {
     sel.replaceChildren(new Option('Automática (melhor disponível)', ''), ...list.map((v) => new Option(`${v.name}${v.localService ? '' : ' ☁'}`, v.voiceURI)));
     sel.value = list.some((v) => v.voiceURI === data.settings.ttsVoice) ? data.settings.ttsVoice : '';
   };
+  const gsel = $('#greetVoice');
+  const fillGreet = () => {
+    const lang = data.settings.voiceLang || LOCALE;
+    const list = voicesFor(lang).sort((a, b) => (/natural|online|neural/i.test(b.name) - /natural|online|neural/i.test(a.name)) || a.name.localeCompare(b.name));
+    gsel.replaceChildren(new Option('Igual às respostas', ''), ...list.map((v) => new Option(`${v.name}${v.localService ? '' : ' ☁'}`, v.voiceURI)));
+    gsel.value = list.some((v) => v.voiceURI === data.settings.voiceGreetVoice) ? data.settings.voiceGreetVoice : '';
+  };
+  gsel.addEventListener('change', async () => { data.settings.voiceGreetVoice = gsel.value; await saveData(data); toast('Voz salva ✓'); });
   fill();
-  speechSynthesis.addEventListener?.('voiceschanged', fill);
-  $('[data-k="voiceLang"]').addEventListener('change', () => setTimeout(fill, 100));
+  fillGreet();
+  speechSynthesis.addEventListener?.('voiceschanged', () => { fill(); fillGreet(); });
+  $('[data-k="voiceLang"]').addEventListener('change', () => setTimeout(() => { fill(); fillGreet(); }, 100));
   sel.addEventListener('change', async () => { data.settings.ttsVoice = sel.value; await saveData(data); toast('Voz salva ✓'); });
   $('#testVoice').onclick = () => speak('Olá! Eu sou a NeuroTab. Posso anotar ideias, criar lembretes e responder perguntas sobre as suas notas.', data.settings);
   // Conversa e visual da voz (0.8.2): ouvir a saudação e prévia do visual passando pelos estados.
-  $('#testGreeting').onclick = () => speak(greetingFor({ ...data.settings, voiceGreeting: $('#voiceGreeting').value }, data.settings.voiceLang || LOCALE), { ...data.settings, voiceLang: data.settings.voiceLang || LOCALE });
+  $('#testGreeting').onclick = () => speak(greetingFor({ ...data.settings, voiceGreeting: $('#voiceGreeting').value }, data.settings.voiceLang || LOCALE), { ...data.settings, voiceLang: data.settings.voiceLang || LOCALE, ttsVoice: data.settings.voiceGreetVoice || data.settings.ttsVoice });
   const pv = $('#vizPreview');
   if (pv) {
     const reduced = !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;

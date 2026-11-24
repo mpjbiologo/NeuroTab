@@ -68,6 +68,7 @@ export const DEFAULT_SETTINGS = {
   showContextMenu: true,
   showAddButtons: true,
   openInNewTab: false,
+  searchNewTab: true, // pesquisas na web abrem em nova aba (#70)
   bgEnabled: true,
   theme: 'futurista', // futurista | sobria | calorosa (src/theme.css)
   bgColor: '#141418',
@@ -113,6 +114,7 @@ export const DEFAULT_SETTINGS = {
   voiceConversation: true, // chamado pela palavra de ativação, continua ouvindo até o silêncio
   voiceGreet: true, // responde falando ao ser chamado
   voiceGreeting: '', // frase própria com {nome}; vazia = padrão do idioma
+  voiceGreetVoice: '', // voz da saudação (#70); vazia = a mesma das respostas
   voiceGreetAlways: false, // cumprimenta mesmo quando o pedido vem junto com a palavra de ativação
   voiceSilenceSecs: 60, // encerra a conversa após X segundos sem ninguém falar
   voiceConvButton: false, // o botão 🎙 / Alt+M também abre a conversa (senão, um pedido só)

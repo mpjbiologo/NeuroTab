@@ -225,6 +225,10 @@
           <option value="task">Salvar como tarefa</option>
         </select>
       </div>
+      <div class="opt">
+        <div><b>Pesquisas abrem em nova aba</b><small>Na barra de pesquisa, por voz ("pesquisar…") e quando a IA pesquisa na web. A NeuroTab continua aberta.</small></div>
+        <label class="sw"><input type="checkbox" data-k="searchNewTab"><span></span></label>
+      </div>
       <h2 data-page="atalhos">Atalhos</h2>
       <div class="opt">
         <div><b>Abrir atalhos em nova aba</b></div>
@@ -575,6 +579,10 @@
       <div class="opt">
         <div><b>Frase ao ser chamado</b><small>Use {nome} para o seu nome (o mesmo da saudação, em Aparência → Layout). Em branco: "Olá, {nome}, em que posso ajudar?" no idioma da voz.</small></div>
         <div class="keybox"><input type="text" class="txt" data-k="voiceGreeting" id="voiceGreeting" placeholder="Olá, {nome}, em que posso ajudar?" maxlength="160"><button class="btn" id="testGreeting">▶ Ouvir</button></div>
+      </div>
+      <div class="opt">
+        <div><b>Voz da saudação</b><small>A mesma das respostas (Leitura em voz alta) ou outra só para a saudação.</small></div>
+        <select id="greetVoice" class="wide-sel"></select>
       </div>
       <div class="opt">
         <div><b>Cumprimentar mesmo com o pedido junto</b><small>Desligado: "NeuroTab, anotar comprar café" anota direto, sem a saudação.</small></div>

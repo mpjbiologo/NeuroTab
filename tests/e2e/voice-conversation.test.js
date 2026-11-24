@@ -148,3 +148,41 @@ test('visual: microfone falso do Chromium move as ondas e é liberado ao fechar'
     await x.close();
   }
 });
+
+/** Vozes que só "chegam" 500 ms depois de a página abrir, como no navegador de verdade. */
+const lateVoices = (p) => p.evaluate(() => {
+  const voices = [{ name: 'Robô', voiceURI: 'v-robo', lang: 'pt-BR', localService: true }, { name: 'Boa', voiceURI: 'v-boa', lang: 'pt-BR', localService: true }];
+  let ready = false;
+  setTimeout(() => { ready = true; }, 500);
+  window.__used = [];
+  Object.assign(window.speechSynthesis, {
+    getVoices: () => (ready ? voices : []),
+    speak(u) { window.__used.push([u.text, u.voice?.voiceURI || 'padrão do sistema']); setTimeout(() => u.onend?.(), 50); },
+  });
+});
+async function greetOnce(p) {
+  await p.bringToFront();
+  await p.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await p.waitForTimeout(400);
+  await p.evaluate(() => window.__lastSR.say('neuro tab'));
+  await p.waitForFunction(() => window.__used?.length > 0, null, { timeout: 5000 });
+  return p.evaluate(() => window.__used[0]);
+}
+
+test('voz da saudação (#70): espera as vozes carregarem e usa a escolhida (ou a própria da saudação)', async () => {
+  const x = await launch({ voice: true });
+  try {
+    const p = await x.open('src/newtab.html');
+    await x.settings(p, { wakeWord: true, userName: 'Marcos', ttsVoice: 'v-boa' });
+    await lateVoices(p);
+    assert.deepEqual(await greetOnce(p), ['Olá, Marcos, em que posso ajudar?', 'v-boa']);
+    await p.keyboard.press('Escape');
+    // voz própria para a saudação
+    await x.settings(p, { wakeWord: true, userName: 'Marcos', ttsVoice: 'v-boa', voiceGreetVoice: 'v-robo' });
+    await lateVoices(p);
+    assert.deepEqual(await greetOnce(p), ['Olá, Marcos, em que posso ajudar?', 'v-robo']);
+    assert.deepEqual(x.errors, []);
+  } finally {
+    await x.close();
+  }
+});
