@@ -3,6 +3,8 @@
 import { migrateIfNeeded, normalizeItems, CURRENT_SCHEMA } from './migrations.js';
 import { DEFAULT_LOOK, sanitizeLook, sanitizeTheme, MAX_THEMES } from './look.js';
 import { DEFAULT_TILES, sanitizeTiles, cleanIcon, SHAPES } from './tiles.js';
+import { DEFAULT_CLEAN, sanitizeClean } from './clean.js';
+import { DEFAULT_MENU, sanitizeMenu } from './menu-actions.js';
 import { THEMES as THEME_IDS } from './theme.js';
 import { DEFAULT_NET, sanitizeNet } from './net.js';
 import { DEFAULT_MEDIA_SAVE, sanitizeMediaSave } from './media.js';
@@ -68,6 +70,7 @@ export const DEFAULT_SETTINGS = {
   showContextMenu: true,
   showAddButtons: true,
   openInNewTab: false,
+  searchNewTab: true, // pesquisas na web abrem em nova aba (#70)
   bgEnabled: true,
   theme: 'futurista', // futurista | sobria | calorosa (src/theme.css)
   bgColor: '#141418',
@@ -77,6 +80,9 @@ export const DEFAULT_SETTINGS = {
   slideInterval: 5, // minutos
   tileRadius: 4,
   iconSource: 'browser', // de onde vêm os ícones dos atalhos: browser | google | duckduckgo (precisa da permissão)
+  clean: DEFAULT_CLEAN, // Modo Clean (0.9.0, #69)
+  menu: DEFAULT_MENU, // botão direito (0.9.0, #55): { order, hidden, fav }
+  menuCloudOk: [], // serviços de IA na internet que a pessoa liberou para as ações do botão direito
   tiles: DEFAULT_TILES, // formato, tamanho e cores dos blocos de atalho (#59)
   look: DEFAULT_LOOK, // ajustes do editor visual por cima do tema (#58)
   customThemes: [], // [{ id, name, base, look }] temas salvos pela pessoa
@@ -113,6 +119,7 @@ export const DEFAULT_SETTINGS = {
   voiceConversation: true, // chamado pela palavra de ativação, continua ouvindo até o silêncio
   voiceGreet: true, // responde falando ao ser chamado
   voiceGreeting: '', // frase própria com {nome}; vazia = padrão do idioma
+  voiceGreetVoice: '', // voz da saudação (#70); vazia = a mesma das respostas
   voiceGreetAlways: false, // cumprimenta mesmo quando o pedido vem junto com a palavra de ativação
   voiceSilenceSecs: 60, // encerra a conversa após X segundos sem ninguém falar
   voiceConvButton: false, // o botão 🎙 / Alt+M também abre a conversa (senão, um pedido só)
@@ -161,6 +168,9 @@ export function mergeSettings(s = {}) {
     layouts: Array.isArray(s.layouts) ? s.layouts.map((l) => ({ ...l, widgets: normalizeWidgets(l.widgets) })) : [],
     media: { ...DEFAULT_MEDIA, ...(s.media || {}) },
     tiles: sanitizeTiles(s.tiles),
+    clean: sanitizeClean(s.clean),
+    menu: sanitizeMenu(s.menu),
+    menuCloudOk: Array.isArray(s.menuCloudOk) ? s.menuCloudOk.filter((x) => typeof x === 'string').slice(0, 20) : [],
     look: sanitizeLook(s.look),
     net: sanitizeNet(s.net),
     mediaSave: sanitizeMediaSave(s.mediaSave),

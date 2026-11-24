@@ -1,4 +1,5 @@
 // NeuroTab — Busca universal (Ctrl+K): atalhos, notas, web, calculadora e perguntas ao cérebro.
+import { openUrl } from './open.js';
 import { SEARCH_ENGINES, saveData, hostOf, normalizeUrl } from '../lib/store.js';
 import * as Brain from '../lib/brain.js';
 import { parseReminder, fmtDateTime } from '../lib/brain.js';
@@ -49,7 +50,7 @@ export function setupOmni() {
     const eng = SEARCH_ENGINES[S.data.settings.searchEngine] || SEARCH_ENGINES.google;
     results = [];
     const sections = [];
-    if (links.length) sections.push(['Atalhos', links.map((l) => ({ icon: h('img', { src: ctx.faviconFor(l), alt: '' }), label: l.title, sub: hostOf(l.url), action: () => { location.href = l.url; } }))]);
+    if (links.length) sections.push(['Atalhos', links.map((l) => ({ icon: h('img', { src: ctx.faviconFor(l), alt: '' }), label: l.title, sub: hostOf(l.url), action: () => openUrl(l.url) }))]);
     const copied = q.length >= 2 ? searchClips(clips.filter((c) => c.kind !== 'image'), q).slice(0, 4) : [];
     if (copied.length) sections.push(['Área de transferência', copied.map((c) => ({
       icon: CLIP_KINDS[c.kind]?.icon || '📋', label: c.text.replace(/\s+/g, ' ').slice(0, 90), sub: [c.source?.url ? clipHost(c.source.url) : '', Brain.relTime(c.updatedAt)].filter(Boolean).join(' · '),
@@ -68,7 +69,7 @@ export function setupOmni() {
       }).catch(() => { calcItem.label = `${q} = ?`; });
     }
     if (/^(https?:\/\/|www\.)|^[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(q) && !/\s/.test(q)) acts.push({ icon: '↗', label: `Abrir ${q}`, action: () => { location.href = normalizeUrl(q); } });
-    const web = { kind: 'web', icon: '🔎', label: `Pesquisar "${q}" no ${eng.name}`, action: () => { location.href = eng.url + encodeURIComponent(q); } };
+    const web = { kind: 'web', icon: '🔎', label: `Pesquisar "${q}" no ${eng.name}`, action: () => openUrl(eng.url + encodeURIComponent(q), { search: true }) };
     const ask = { kind: 'ask', icon: '🤖', label: `Perguntar ao cérebro: "${q}"`, action: () => askBrain(q) };
     const note = { kind: 'note', icon: '📝', label: 'Salvar como nota', sub: 'Shift+Enter', action: () => saveAs('note', q) };
     const task = { kind: 'task', icon: '☑️', label: 'Salvar como tarefa', action: () => saveAs('task', q) };

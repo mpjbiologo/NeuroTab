@@ -155,8 +155,32 @@ export function voicesFor(lang = 'pt-BR') {
  * opts: string (idioma) ou settings ({ voiceLang, ttsVoice, ttsRate, ttsPitch }). Retorna Promise ao terminar.
  * hooks (opcional): { onStart, onWord } — para o visual da voz pulsar a cada palavra (#39).
  */
+/**
+ * Lista de vozes pronta. Logo depois de abrir a aba o navegador ainda não carregou as vozes: falar nesse
+ * instante usa a voz padrão do sistema (robótica), não a escolhida (#70). Espera até `ms`.
+ */
+export function voicesReady(ms = 1500) {
+  if (!('speechSynthesis' in window)) return Promise.resolve(false);
+  if (speechSynthesis.getVoices().length) return Promise.resolve(true);
+  return new Promise((res) => {
+    let done = false;
+    const end = (ok) => { if (done) return; done = true; clearInterval(poll); speechSynthesis.removeEventListener?.('voiceschanged', on); res(ok); };
+    const on = () => { if (speechSynthesis.getVoices().length) end(true); };
+    speechSynthesis.addEventListener?.('voiceschanged', on);
+    const poll = setInterval(on, 100);
+    setTimeout(() => end(speechSynthesis.getVoices().length > 0), ms);
+  });
+}
+
+let voicesWaited = false;
 export function speak(text, opts = 'pt-BR', hooks = {}) {
   if (!('speechSynthesis' in window)) return Promise.resolve();
+  // Espera as vozes uma vez só por página (onde não há vozes instaladas, não atrasa toda fala).
+  if (!speechSynthesis.getVoices().length && !voicesWaited) { voicesWaited = true; return voicesReady().then(() => speakNow(text, opts, hooks)); }
+  return speakNow(text, opts, hooks);
+}
+
+function speakNow(text, opts, hooks) {
   const o = typeof opts === 'string' ? { voiceLang: opts } : opts || {};
   const lang = o.voiceLang || LOCALE;
   speechSynthesis.cancel();

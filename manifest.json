@@ -3,7 +3,7 @@
   "name": "__MSG_extName__",
   "short_name": "NeuroTab",
   "description": "__MSG_extDescription__",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "default_locale": "pt_BR",
   "homepage_url": "https://github.com/mpjbiologo/NeuroTab",
   "icons": {
@@ -82,6 +82,12 @@
         "default": "Alt+Shift+N"
       },
       "description": "Anotar ou salvar a página atual"
+    },
+    "snip": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Recortar uma área da tela para a biblioteca de imagens"
     },
     "voice-command": {
       "suggested_key": {

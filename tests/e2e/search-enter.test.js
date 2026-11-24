@@ -5,13 +5,14 @@ import { launch } from './helpers.js';
 
 const PAGE = { status: 200, contentType: 'text/html', body: '<title>ok</title>ok' };
 
-async function setup(x, enter) {
+async function setup(x, enter, extra = {}) {
   await x.ctx.route('https://www.google.com/**', (r) => r.fulfill(PAGE));
   await x.ctx.route('https://gatos.example/**', (r) => r.fulfill(PAGE));
   const p = await x.open('src/newtab.html');
   const data = await x.storage(p, 'nt_data');
   data.links.unshift({ id: 'lg', groupId: data.groups[0].id, title: 'Gatos fofos', url: 'https://gatos.example/', color: '', favicon: '' });
   if (enter) data.settings.searchEnter = enter;
+  Object.assign(data.settings, extra);
   await x.seed(p, { nt_data: data });
   return p;
 }
@@ -28,6 +29,13 @@ test('padrão: Enter pesquisa na internet, mesmo com um atalho na lista; as seta
     let p = await setup(x);
     await type(p, 'gatos');
     assert.match(await p.textContent('.omni-item.sel'), /Pesquisar "gatos" no Google.*Enter/);
+    // a pesquisa abre em nova aba (#70) e a NeuroTab continua aberta
+    const [tab] = await Promise.all([x.ctx.waitForEvent('page'), p.keyboard.press('Enter')]);
+    await tab.waitForURL(/google\.com\/search\?q=gatos/);
+    assert.match(p.url(), /newtab\.html/);
+    // com a opção desligada, na mesma aba
+    p = await setup(x, '', { searchNewTab: false });
+    await type(p, 'gatos');
     await p.keyboard.press('Enter');
     await p.waitForURL(/google\.com\/search\?q=gatos/);
 
@@ -46,7 +54,7 @@ test('padrão: Enter pesquisa na internet, mesmo com um atalho na lista; as seta
 test('"Abrir o primeiro resultado" abre o atalho; sem resultado, pesquisa', async () => {
   const x = await launch();
   try {
-    let p = await setup(x, 'first');
+    let p = await setup(x, 'first', { searchNewTab: false });
     await type(p, 'gatos');
     await p.keyboard.press('Enter');
     await p.waitForURL('https://gatos.example/');

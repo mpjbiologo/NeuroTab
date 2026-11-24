@@ -47,7 +47,7 @@ Primeiro a base, depois os recursos.
 - ✅ **0.8.3 — Reunião, conversa e armazenamento:** modo reunião (gravar, transcrever, resumo, pontos importantes e tarefas, botão 📋 perto do microfone) (#41) e modo conversa (microfone sempre ligado e o cérebro responde a tudo, botão 💬) (#44), mais a página de Armazenamento (espaço usado, pastas e limpeza) (#68).
 
 ### [v0.9 — Conhecimento e captura](https://github.com/mpjbiologo/NeuroTab/milestone/5) · 4 atualizações (captura primeiro, conhecimento depois)
-- **0.9.0 — Central do botão direito** (#55): o menu entende o contexto e manda o conteúdo ao lugar certo. Reúne salvar trecho como nota, tarefa ou lembrete (#56), captura de imagens e arquivos (#12) e recorte de tela para a biblioteca (#37).
+- ✅ **0.9.0 — Central do botão direito** (#55): o menu entende o contexto e manda o conteúdo ao lugar certo. Reúne salvar trecho como nota, tarefa ou lembrete (#56), captura de imagens e arquivos (#12) e recorte de tela para a biblioteca (#37), mais o Modo Clean (#69), a voz da saudação e as pesquisas em nova aba (#70).
 - **0.9.1 — Finanças pessoais** (#66): entradas e saídas, contas e cartões, contas a pagar, orçamento e importação de extratos e faturas (OFX, CSV e PDF), só no computador e com cofre opcional. O conector de Open Finance por agregador fica para a 1.x.
 - **0.9.2 — Fontes e documentos:** central de conhecimento com fontes e documentos (#9), adaptador opcional do Open Notebook (#10) e o que falta da #45 (pasta para imagens e áudio; avaliar outros sites, sem contornar DRM nem restrições).
 - **0.9.3 — NeuroPilot e Modo Estudante:** sugestões proativas locais (#8) e Modo Estudante (#11), já usando a central de IA da 0.8.0.

@@ -127,3 +127,11 @@ function flash(msg) {
   clearTimeout(t);
   t = setTimeout(() => { $('#msg').textContent = ''; }, 2500);
 }
+
+// ✂️ Recortar área / página inteira (0.9.0, #37): o fundo tira a foto e mostra a camada de seleção na página.
+for (const [id, full] of [['snip', false], ['snipFull', true]]) {
+  document.getElementById(id)?.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'snip', full }).catch(() => {});
+    setTimeout(() => window.close(), 150);
+  });
+}

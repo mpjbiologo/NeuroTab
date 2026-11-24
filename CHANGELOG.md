@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.9.0
+**Botão direito inteligente, recorte de tela, Modo Clean e a voz certa desde a primeira fala.**
+
+- 🖱️ **Central do botão direito (#55, #56, #12):** o menu "NeuroTab" mostra só o que serve para onde você clicou
+  - **Texto:** salvar como nota (com comentário e #etiquetas, que servem de projeto), criar tarefa, criar lembrete (a data do texto já vem sugerida), juntar a uma nota existente, extrair dados (telefone, e-mail, datas, preços — sem IA), pesquisar em nova aba e traçar rota
+  - **IA:** resumir, explicar e traduzir o trecho, e **resumir a página**; mostra se roda 🔒 no seu computador ou ☁ na internet e pede confirmação na primeira vez
+  - **Imagem:** salvar na biblioteca, analisar, extrair o texto e salvar com anotação. **Link:** salvar, salvar com resumo e salvar **documentos (PDF, Word, planilhas…)** sem baixar
+  - Tudo passa por uma **janelinha de revisão** antes de salvar; endereço, título e data da origem vão junto
+  - **Configurações → Captura → Menu do botão direito:** ⭐ favoritar, ocultar e reordenar as ações, com prévia
+- ✂️ **Recorte de tela (#37):** pelo botão direito, por **Alt+Shift+S** ou pelo popup: escolha uma área e salve na biblioteca, copie ou salve com anotação. **Página inteira:** rola e junta tudo numa imagem só
+- 🧼 **Modo Clean (#69):** tela limpa com data, saudação, relógio grande, barra do dia, pesquisa e atalhos com ícone e nome ou **só ícones**. Liga em Aparência → Modo Clean ou com **Alt+Z**; fonte do relógio personalizável (Playfair Display e outras), desfoque do fundo e mais. Nada do layout normal se perde
+- 🗣️ **Voz da saudação (#70):** a primeira fala depois de abrir a aba agora usa a voz escolhida (antes caía na voz robótica do sistema); dá para escolher uma voz só para a saudação
+- 🔎 **Pesquisas em nova aba (#70):** a barra de pesquisa, a voz e a IA abrem a pesquisa numa aba nova e a NeuroTab continua aberta (dá para desligar em Configurações → Pesquisa)
+
 ## v0.8.3
 **Modo conversa, modo reunião e uma página para ver e limpar o espaço da NeuroTab.**
 

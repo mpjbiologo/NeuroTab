@@ -45,6 +45,94 @@
       <p class="hint">O tema vale para a nova aba, estas configurações e o botão da extensão.</p>
       <p class="hint look-note" id="lookNote" hidden>Você tem ajustes do Editor visual por cima do tema. <a href="#editor">Abrir o editor</a> · <button type="button" class="linkish" id="lookClear">Usar o tema puro</button></p>
       <div class="theme-pick" id="themePick" role="radiogroup" aria-label="Tema"></div>
+      <h2 data-page="clean">Modo Clean</h2>
+      <p class="hint">Uma tela limpa: data, relógio grande, a barra do dia, a pesquisa e os atalhos. Widgets e barras ficam escondidos (nada se perde: desligue para voltar como estava). Atalho na nova aba: <kbd>Alt+Z</kbd>.</p>
+      <div class="opt">
+        <div><b>Usar o Modo Clean</b></div>
+        <label class="sw"><input type="checkbox" data-k="clean.on" id="cleanOn"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Atalhos</b></div>
+        <select data-k="clean.links">
+          <option value="icon_text">Ícone e nome</option>
+          <option value="icon">Só ícones</option>
+          <option value="none">Esconder</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Grupo dos atalhos</b></div>
+        <select data-k="clean.group" id="cleanGroup"></select>
+      </div>
+      <div class="opt">
+        <div><b>Quantos atalhos</b></div>
+        <select data-k="clean.count" data-num>
+          <option value="8">8</option>
+          <option value="12">12</option>
+          <option value="16">16</option>
+          <option value="0">Todos do grupo</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Colunas dos atalhos</b><small>Com "Só ícones", os ícones se ajeitam sozinhos.</small></div>
+        <select data-k="clean.cols" data-num>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Fonte do relógio</b></div>
+        <div class="keybox"><select data-k="clean.font" id="cleanFont">
+          <option value="playfair">Playfair Display (com serifa, embutida)</option>
+          <option value="fraunces">Fraunces (com serifa, embutida)</option>
+          <option value="georgia">Georgia (com serifa, do sistema)</option>
+          <option value="serif">Com serifa do sistema</option>
+          <option value="inter">Inter (sem serifa, embutida)</option>
+          <option value="grotesk">Space Grotesk (sem serifa, embutida)</option>
+          <option value="system">Sem serifa do sistema</option>
+          <option value="mono">Monoespaçada</option>
+        </select><span class="clean-font-pv" id="cleanFontPv" aria-hidden="true">19:31</span></div>
+      </div>
+      <div class="opt">
+        <div><b>Relógio de 12 horas</b></div>
+        <label class="sw"><input type="checkbox" data-k="clean.h12"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Mostrar os segundos</b></div>
+        <label class="sw"><input type="checkbox" data-k="clean.seconds"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Mostrar a data</b></div>
+        <label class="sw"><input type="checkbox" data-k="clean.date"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Mostrar a saudação</b><small>Com o seu nome, de Aparência → Layout.</small></div>
+        <label class="sw"><input type="checkbox" data-k="clean.greet"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Barra do dia</b><small>A linha embaixo do relógio: a parte colorida mostra quanto do dia já passou.</small></div>
+        <label class="sw"><input type="checkbox" data-k="clean.dayBar"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Mostrar a pesquisa</b></div>
+        <label class="sw"><input type="checkbox" data-k="clean.search"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Dica "Busca rápida Ctrl K"</b></div>
+        <label class="sw"><input type="checkbox" data-k="clean.hint"><span></span></label>
+      </div>
+      <div class="opt">
+        <div><b>Desfoque do fundo</b></div>
+        <select data-k="clean.blur">
+          <option value="none">Nenhum</option>
+          <option value="soft">Leve</option>
+          <option value="strong">Forte</option>
+        </select>
+      </div>
+      <div class="opt">
+        <div><b>Escurecer o fundo</b></div>
+        <input type="range" min="0" max="70" step="5" data-k="clean.dim" data-num>
+      </div>
       <h2 data-page="layout">Layout</h2>
       <div class="opt">
         <div><b>Posição da barra de atalhos</b><small>Os grupos ficam na barra; os atalhos abrem num painel ao passar o mouse.</small></div>
@@ -224,6 +312,10 @@
           <option value="note">Salvar como nota</option>
           <option value="task">Salvar como tarefa</option>
         </select>
+      </div>
+      <div class="opt">
+        <div><b>Pesquisas abrem em nova aba</b><small>Na barra de pesquisa, por voz ("pesquisar…") e quando a IA pesquisa na web. A NeuroTab continua aberta.</small></div>
+        <label class="sw"><input type="checkbox" data-k="searchNewTab"><span></span></label>
       </div>
       <h2 data-page="atalhos">Atalhos</h2>
       <div class="opt">
@@ -577,6 +669,10 @@
         <div class="keybox"><input type="text" class="txt" data-k="voiceGreeting" id="voiceGreeting" placeholder="Olá, {nome}, em que posso ajudar?" maxlength="160"><button class="btn" id="testGreeting">▶ Ouvir</button></div>
       </div>
       <div class="opt">
+        <div><b>Voz da saudação</b><small>A mesma das respostas (Leitura em voz alta) ou outra só para a saudação.</small></div>
+        <select id="greetVoice" class="wide-sel"></select>
+      </div>
+      <div class="opt">
         <div><b>Cumprimentar mesmo com o pedido junto</b><small>Desligado: "NeuroTab, anotar comprar café" anota direto, sem a saudação.</small></div>
         <label class="sw"><input type="checkbox" data-k="voiceGreetAlways"><span></span></label>
       </div>
@@ -769,6 +865,25 @@
     </section>
 
     <section id="tab-notas" class="card" hidden>
+      <h2 data-page="botao-direito">Menu do botão direito</h2>
+      <p class="hint">O menu "NeuroTab" mostra só o que serve para onde você clicou (texto, link, imagem ou página). As ⭐ favoritas ficam direto no menu; as de IA em "🤖 IA"; o resto em "Mais". Tarefas, lembretes e notas sempre passam por uma janelinha de revisão antes de salvar.</p>
+      <div class="opt">
+        <div><b>Menu "NeuroTab" no botão direito</b></div>
+        <label class="sw"><input type="checkbox" data-k="showContextMenu"><span></span></label>
+      </div>
+      <div class="menu-acts" id="menuActs" role="list"></div>
+      <div class="row" style="gap:8px;margin:8px 0 14px"><button class="btn" id="menuReset">Restaurar o padrão</button></div>
+      <h3 class="sub">Prévia</h3>
+      <div class="row" style="gap:6px" id="menuCtx" role="group" aria-label="Onde clicou">
+        <button class="chip" data-ctx="selection" aria-pressed="true">Texto selecionado</button>
+        <button class="chip" data-ctx="link" aria-pressed="false">Link</button>
+        <button class="chip" data-ctx="image" aria-pressed="false">Imagem</button>
+        <button class="chip" data-ctx="page" aria-pressed="false">Página</button>
+      </div>
+      <div class="menu-pv" id="menuPv" aria-live="polite"></div>
+      <h3 class="sub">Atalhos de teclado</h3>
+      <div id="menuKeys" class="small"></div>
+      <p class="hint">Outras ações podem ganhar atalho na página de atalhos do navegador. <button class="btn" id="menuKeysBtn">⌨ Abrir os atalhos do navegador</button></p>
       <h2 data-page="keep">Importar do Google Keep</h2>
       <p>O Google só libera a API do Keep para contas empresariais (Workspace). Para contas pessoais, a importação é feita pelo <b>Google Takeout</b>:</p>
       <ol>

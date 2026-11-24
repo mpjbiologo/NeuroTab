@@ -70,6 +70,7 @@ Mudar ou remover algo desta tabela é **mudança de contrato**: atualize este do
 | `task.created` | O item novo é uma tarefa | item (`id`) |
 | `task.completed` | Uma tarefa foi marcada como concluída | item (`id`) |
 | `widget.mounted`, `widget.unmounted` | Ciclo de vida dos widgets | `{ id, idx }` |
+| `widgets.rendered` | A grade ou o modo livre acabou de ser redesenhado (o Modo Clean recoloca a busca) | — |
 | `route.requested` | O cérebro ou a voz pediu um trajeto; o widget Trânsito mostra, maximizado | `{ from, to, mode }` |
 | `knowledge.source.added`, `study.review.due` | Reservados para a v0.9 | `{ id, … }` |
 

@@ -18,6 +18,7 @@ import { greetingFor, isGoodbye, silenceClock, silenceMs, FAREWELL, STATE_LABEL 
 import { createViz, openMeter, vizStyle } from '../lib/voice-viz.js';
 import { newHistory, addTurn, historyMessages, conversationNote, isSaveThat, modeRequest } from '../lib/chat-history.js';
 import { openMeeting, meetingLive, paintModeFabs } from './modes.js';
+import { openUrl } from './open.js';
 
 // Tela de voz: estado atual, visual (canvas) e microfone do visual; conversa em andamento (#39, #40).
 const V = { viz: null, meter: null, meterP: null, conv: null };
@@ -111,7 +112,8 @@ export function voiceApi(o = {}) {
       return placesText(lang).showing(a.trip.to.name);
     },
     interpret: (text) => interpretCommand(S.data.settings, text),
-    open: (url) => { location.href = url; },
+    // Pesquisa (endereço do buscador) abre em nova aba (#70); site/atalho segue a opção dos atalhos.
+    open: (url) => openUrl(url, { search: url.startsWith(eng.url) }),
     searchUrl: (q) => eng.url + encodeURIComponent(q),
     findLink: (name) => {
       const f = Brain.fold(name).replace(/\s+/g, '');
@@ -359,7 +361,8 @@ async function converse(conv, { greet, first }) {
       const g = greetingFor(s, voiceCode());
       $('#voiceReply').textContent = g;
       setState('greeting');
-      await speak(g, { ...s, voiceLang: voiceCode() }, { onWord: () => V.viz?.pulse(), onStart: () => V.viz?.pulse() });
+      // Voz da saudação (#70): a escolhida para ela, ou a mesma das respostas.
+      await speak(g, { ...s, voiceLang: voiceCode(), ttsVoice: s.voiceGreetVoice || s.ttsVoice }, { onWord: () => V.viz?.pulse(), onStart: () => V.viz?.pulse() });
     }
     if (first && conv.open) await turn(conv, first);
     let empty = 0;
