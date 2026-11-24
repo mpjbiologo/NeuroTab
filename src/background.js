@@ -1,5 +1,7 @@
 // NeuroTab — service worker: menus do botão direito, lembretes e notificações.
-import { DATA_KEY, BRAIN_KEY, loadData, saveData, uid, hostOf, inspectFavicon } from './lib/store.js';
+import { DATA_KEY, BRAIN_KEY, loadData, saveData, uid, hostOf, inspectFavicon, SEARCH_ENGINES } from './lib/store.js';
+import { menuPlan } from './lib/menu-actions.js';
+import { startSnip as runSnip } from './lib/snip-run.js';
 import { loadItems, addItem, updateItem, displayTitle, purgeOldTrash } from './lib/brain.js';
 import { enrich, isConfigured } from './lib/ai.js';
 import { K as CK, loadAlarms, saveAlarms, nextOccurrence, getTimer, getPomo, nextPhase, phaseMinutes } from './lib/clock.js';
@@ -37,22 +39,42 @@ async function rebuildMenus() {
   const data = await loadData();
   setLang(data.settings.lang);
   if (!data.settings.showContextMenu) return;
-  const all = ['page', 'link', 'selection', 'image'];
-  chrome.contextMenus.create({ id: 'nt-root', title: 'NeuroTab', contexts: all });
-  chrome.contextMenus.create({ id: 'nt-clip', parentId: 'nt-root', title: t('✂️ Salvar trecho no cérebro'), contexts: ['selection'] });
-  chrome.contextMenus.create({ id: 'nt-page', parentId: 'nt-root', title: t('🔖 Salvar página no cérebro (ler depois)'), contexts: ['page'] });
-  chrome.contextMenus.create({ id: 'nt-media', parentId: 'nt-root', title: t('🎬 Salvar no cérebro com resumo'), contexts: ['page'] });
-  chrome.contextMenus.create({ id: 'nt-media-link', parentId: 'nt-root', title: t('🎬 Salvar link no cérebro com resumo'), contexts: ['link'] });
-  chrome.contextMenus.create({ id: 'nt-media-dl', parentId: 'nt-root', title: t('⬇ Baixar o vídeo (e salvar no cérebro)'), contexts: ['page', 'video'], documentUrlPatterns: DL_PAGES });
-  chrome.contextMenus.create({ id: 'nt-link', parentId: 'nt-root', title: t('🔗 Salvar link no cérebro'), contexts: ['link'] });
-  chrome.contextMenus.create({ id: 'nt-image', parentId: 'nt-root', title: t('🖼️ Salvar imagem na biblioteca'), contexts: ['image'] });
-  chrome.contextMenus.create({ id: 'nt-analyze', parentId: 'nt-root', title: t('🔍 Analisar imagem'), contexts: ['image'] });
-  chrome.contextMenus.create({ id: 'nt-route', parentId: 'nt-root', title: t('🧭 Traçar rota até "%s"'), contexts: ['selection'] });
-  chrome.contextMenus.create({ id: 'nt-add', parentId: 'nt-root', title: t('➕ Adicionar aos atalhos'), contexts: ['page', 'link'] });
-  for (const g of data.groups) {
-    chrome.contextMenus.create({ id: 'nt-g-' + g.id, parentId: 'nt-add', title: `${g.icon} ${g.name}`, contexts: ['page', 'link'] });
+  // Central do botão direito (0.9.0): favoritas no topo, IA e "Mais" em submenus, conforme as Configurações.
+  for (const m of menuPlan(data.settings.menu, data.groups, t)) {
+    const { dl, ...o } = m;
+    if (dl) o.documentUrlPatterns = DL_PAGES;
+    try { chrome.contextMenus.create(o, () => void chrome.runtime.lastError); } catch (e) { console.warn('NeuroTab: item do menu', o.id, e); }
   }
 }
+
+async function startSnip(tab, opts) {
+  const r = await runSnip(tab, { ...opts, openReview });
+  if (r.copyFailed) await openReview({ kind: 'image', captureId: r.id, url: tab.url || '', pageTitle: tab.title || '' });
+  return r;
+}
+
+/** Abre a janelinha de revisão (src/capture.html) com o que foi clicado. */
+async function openReview(payload) {
+  const key = 'cap-' + uid();
+  await chrome.storage.session.set({ [key]: payload });
+  await chrome.windows.create({ url: chrome.runtime.getURL('src/capture.html#' + key), type: 'popup', width: 540, height: 680, focused: true });
+}
+
+/** Texto da página (para "Resumir a página"); só com o clique da pessoa (activeTab). */
+async function pageText(tab) {
+  const [r] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: () => (document.querySelector('article, main') || document.body)?.innerText?.slice(0, 40000) || '' });
+  return String(r?.result || '').trim();
+}
+
+async function searchSelection(text, tab) {
+  const { settings } = await loadData();
+  const eng = SEARCH_ENGINES[settings.searchEngine] || SEARCH_ENGINES.google;
+  const url = eng.url + encodeURIComponent(String(text).trim().slice(0, 300));
+  if (settings.searchNewTab !== false) await chrome.tabs.create({ url, index: (tab?.index ?? -2) + 1, openerTabId: tab?.id });
+  else await chrome.tabs.update(tab.id, { url });
+}
+
+const fileName = (u) => { try { return decodeURIComponent(new URL(u).pathname.split('/').pop() || u); } catch { return u; } };
 
 export async function addShortcut({ url, title, groupId }) {
   if (!url || !/^(https?|file|ftp):/i.test(url)) return false;
@@ -175,7 +197,9 @@ async function mediaSaved({ item, existed, pending }) {
   if (pending) console.info('NeuroTab: mídia pendente', m.error);
 }
 
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+const QUIET_ACTIONS = new Set(['sel-note', 'sel-task', 'sel-remind', 'sel-join', 'sel-extract', 'ai-summary', 'ai-explain', 'ai-translate', 'page-note', 'page-summary', 'sel-search', 'sel-route', 'img-note', 'img-analyze', 'img-ocr', 'snip', 'snip-full']);
+
+async function onMenuClick(info, tab) {
   const id = String(info.menuItemId);
   let ok = true;
   let failure = '';
@@ -187,42 +211,86 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         title: isLink ? info.selectionText || hostOf(info.linkUrl) : tab?.title,
         groupId: id.slice(5),
       });
-    } else if (id === 'nt-clip') {
-      await captureAndEnrich({ type: 'clip', text: info.selectionText, url: info.pageUrl, pageTitle: tab?.title, source: 'context' });
-    } else if (id === 'nt-page') {
-      await captureAndEnrich({ type: 'page', title: tab?.title, url: info.pageUrl, pageTitle: tab?.title, source: 'context' });
-    } else if (id === 'nt-media') {
-      const saved = await saveMedia({ tab });
-      await mediaSaved(saved);
-      autoDownload(saved, tab?.id).catch(() => {});
-    } else if (id === 'nt-media-dl') {
-      const saved = await saveMedia({ tab });
-      await mediaSaved(saved);
-      const r = await downloadMedia(saved.item.id, { tabId: tab?.id });
-      if (!r.ok) { ok = false; failure = r.need === 'ponte' ? t('Este vídeo precisa da NeuroTab Ponte. Abra o item no cérebro e clique em Baixar vídeo.') : t(r.error || ''); }
-      else notifyDownloaded(saved.item);
-    } else if (id === 'nt-media-link') {
-      const saved = await saveMedia({ url: info.linkUrl });
-      await mediaSaved(saved);
-      autoDownload(saved).catch(() => {});
-    } else if (id === 'nt-link') {
-      await captureAndEnrich({ type: 'page', title: info.selectionText || '', url: info.linkUrl, source: 'context' });
-    } else if (id === 'nt-image') {
-      await captureImage(info, tab);
-    } else if (id === 'nt-analyze') {
-      // Salva na biblioteca e abre a janela de análise (texto lido no computador; IA só com autorização).
-      const rec = await captureImage(info, tab, { then: 'analyze' });
-      if (rec) await openAnalyzer(rec.id);
-    } else if (id === 'nt-route') {
-      await openRouteTo(info.selectionText || '');
+    } else {
+      const sel = info.selectionText || '';
+      const where = { url: info.pageUrl || tab?.url || '', pageTitle: tab?.title || '' };
+      switch (id.slice(3)) {
+        // Imagem primeiro: o pedido de permissão do site precisa vir antes de qualquer espera.
+        case 'img-save': await captureImage(info, tab); break;
+        case 'img-analyze':
+        case 'img-ocr': {
+          // Salva na biblioteca e abre a janela de análise (texto lido no computador; IA só com autorização).
+          const rec = await captureImage(info, tab, { then: 'analyze' });
+          if (rec) await openAnalyzer(rec.id);
+          break;
+        }
+        case 'img-note': {
+          const rec = await captureImage(info, tab);
+          if (rec) await openReview({ kind: 'image', captureId: rec.id, ...where });
+          break;
+        }
+        case 'sel-note': await openReview({ kind: 'note', text: sel, ...where }); break;
+        case 'sel-task': await openReview({ kind: 'task', text: sel, ...where }); break;
+        case 'sel-remind': await openReview({ kind: 'remind', text: sel, ...where }); break;
+        case 'sel-join': await openReview({ kind: 'join', text: sel, ...where }); break;
+        case 'sel-extract': await openReview({ kind: 'extract', text: sel, ...where }); break;
+        case 'ai-summary': await openReview({ kind: 'ai', ai: 'summary', text: sel, ...where }); break;
+        case 'ai-explain': await openReview({ kind: 'ai', ai: 'explain', text: sel, ...where }); break;
+        case 'ai-translate': await openReview({ kind: 'ai', ai: 'translate', text: sel, ...where }); break;
+        case 'page-note': await openReview({ kind: 'page', text: '', ...where }); break;
+        case 'page-summary': {
+          let text = '';
+          try { text = await pageText(tab); } catch { /* página protegida */ }
+          if (!text) { ok = false; failure = t('Não deu para ler esta página (o navegador não deixa extensões entrarem aqui).'); break; }
+          await openReview({ kind: 'ai', ai: 'page', text, ...where });
+          break;
+        }
+        case 'sel-search': await searchSelection(sel, tab); break;
+        case 'sel-route': await openRouteTo(sel); break;
+        case 'page-save': await captureAndEnrich({ type: 'page', title: tab?.title, url: info.pageUrl, pageTitle: tab?.title, source: 'context' }); break;
+        case 'link-save': await captureAndEnrich({ type: 'page', title: info.selectionText || '', url: info.linkUrl, source: 'context' }); break;
+        case 'link-doc': {
+          const name = fileName(info.linkUrl);
+          const ext = (name.match(/\.([a-z0-9]{2,5})$/i)?.[1] || '').toUpperCase();
+          await captureAndEnrich({ type: 'page', title: name, url: info.linkUrl, pageTitle: tab?.title || '', text: `📄 ${ext || t('Documento')} · ${t('encontrado em')} ${tab?.title || hostOf(info.pageUrl || '')}`, tags: [t('documento')], source: 'context' });
+          break;
+        }
+        case 'page-media': {
+          const saved = await saveMedia({ tab });
+          await mediaSaved(saved);
+          autoDownload(saved, tab?.id).catch(() => {});
+          break;
+        }
+        case 'media-dl': {
+          const saved = await saveMedia({ tab });
+          await mediaSaved(saved);
+          const r = await downloadMedia(saved.item.id, { tabId: tab?.id });
+          if (!r.ok) { ok = false; failure = r.need === 'ponte' ? t('Este vídeo precisa da NeuroTab Ponte. Abra o item no cérebro e clique em Baixar vídeo.') : t(r.error || ''); }
+          else notifyDownloaded(saved.item);
+          break;
+        }
+        case 'link-media': {
+          const saved = await saveMedia({ url: info.linkUrl });
+          await mediaSaved(saved);
+          autoDownload(saved).catch(() => {});
+          break;
+        }
+        case 'snip': await startSnip(tab, { full: false }); break;
+        case 'snip-full': await startSnip(tab, { full: true }); break;
+        default: return;
+      }
     }
   } catch (e) {
     console.error('NeuroTab: falha na captura', e);
     ok = false;
     failure = e?.message || String(e);
   }
-  flashBadge(tab?.id, ok, failure);
-});
+  // Ações que abrem uma janela (revisão, análise, recorte, pesquisa) já dão o retorno lá; o ✓ no ícone é para o resto.
+  if (!ok || !QUIET_ACTIONS.has(id.slice(3))) flashBadge(tab?.id, ok, failure);
+}
+chrome.contextMenus.onClicked.addListener(onMenuClick);
+// Para os testes de ponta a ponta (o Playwright não clica no menu do navegador).
+globalThis.__nt = { onMenuClick, startSnip, rebuildMenus };
 
 // ---------- Lembretes ----------
 async function syncAlarms() {
@@ -649,6 +717,12 @@ function scheduleDispatch() {
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   if (sender.id !== chrome.runtime.id || sender.tab?.url?.startsWith('http')) return;
   if (msg?.type === 'clipshare:poll') { pollShares({ only: msg.only || null }).then((got) => reply({ got: got.length }), (e) => reply({ error: e.message })); return true; }
+  if (msg?.type === 'snip') {
+    // botão ✂️ do popup (o clique no ícone deu o activeTab da aba atual)
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }).then(([tab]) => startSnip(tab, { full: !!msg.full }))
+      .then((r) => reply(r), (e) => { reply({ ok: false, error: e.message }); });
+    return true;
+  }
   if (msg?.type === 'clipshare:sync') { Promise.all([syncPonte(), syncShareAlarm()]).then(() => reply({ ok: true })); return true; }
 });
 
@@ -814,11 +888,17 @@ chrome.runtime.onStartup.addListener(async () => {
 });
 
 // Comando de teclado global: abrir a NeuroTab ouvindo um comando de voz.
-chrome.commands.onCommand.addListener(async (cmd) => {
+chrome.commands.onCommand.addListener(async (cmd, tab) => {
+  if (cmd === 'snip') {
+    // ✂️ Recortar área (Alt+Shift+S): o atalho dá o activeTab da aba atual.
+    const target = tab || (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
+    try { await startSnip(target, { full: false }); } catch (e) { flashBadge(target?.id, false, e.message); }
+    return;
+  }
   if (cmd !== 'voice-command') return;
   const url = chrome.runtime.getURL('src/newtab.html');
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab?.url?.startsWith(url) || tab?.url === 'chrome://newtab/' || tab?.url === 'edge://newtab/') {
+  const [cur] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (cur?.url?.startsWith(url) || cur?.url === 'chrome://newtab/' || cur?.url === 'edge://newtab/') {
     chrome.runtime.sendMessage({ type: 'startVoice' }).catch(() => {});
   } else {
     chrome.tabs.create({ url: url + '#voice' });

@@ -865,6 +865,25 @@
     </section>
 
     <section id="tab-notas" class="card" hidden>
+      <h2 data-page="botao-direito">Menu do botão direito</h2>
+      <p class="hint">O menu "NeuroTab" mostra só o que serve para onde você clicou (texto, link, imagem ou página). As ⭐ favoritas ficam direto no menu; as de IA em "🤖 IA"; o resto em "Mais". Tarefas, lembretes e notas sempre passam por uma janelinha de revisão antes de salvar.</p>
+      <div class="opt">
+        <div><b>Menu "NeuroTab" no botão direito</b></div>
+        <label class="sw"><input type="checkbox" data-k="showContextMenu"><span></span></label>
+      </div>
+      <div class="menu-acts" id="menuActs" role="list"></div>
+      <div class="row" style="gap:8px;margin:8px 0 14px"><button class="btn" id="menuReset">Restaurar o padrão</button></div>
+      <h3 class="sub">Prévia</h3>
+      <div class="row" style="gap:6px" id="menuCtx" role="group" aria-label="Onde clicou">
+        <button class="chip" data-ctx="selection" aria-pressed="true">Texto selecionado</button>
+        <button class="chip" data-ctx="link" aria-pressed="false">Link</button>
+        <button class="chip" data-ctx="image" aria-pressed="false">Imagem</button>
+        <button class="chip" data-ctx="page" aria-pressed="false">Página</button>
+      </div>
+      <div class="menu-pv" id="menuPv" aria-live="polite"></div>
+      <h3 class="sub">Atalhos de teclado</h3>
+      <div id="menuKeys" class="small"></div>
+      <p class="hint">Outras ações podem ganhar atalho na página de atalhos do navegador. <button class="btn" id="menuKeysBtn">⌨ Abrir os atalhos do navegador</button></p>
       <h2 data-page="keep">Importar do Google Keep</h2>
       <p>O Google só libera a API do Keep para contas empresariais (Workspace). Para contas pessoais, a importação é feita pelo <b>Google Takeout</b>:</p>
       <ol>

@@ -28,6 +28,7 @@ import { applyLook, themeOf, THEMES } from './lib/theme.js';
 import { setupLook, refreshLook } from './options-look.js';
 import { setupMediaSave } from './options-media.js';
 import { setupStorage } from './options-storage.js';
+import { setupMenuOptions } from './options-menu.js';
 import { icon, startIconizer } from './lib/icons.js';
 import { configureSpeech, deviceLangFor, deviceStatus, deviceSupported, installDevice, currentEngine, speechAvailable, ENGINE_ERRORS, WHISPER_PRESETS, encodeWav, transcribeRequest } from './lib/speech-engine.js';
 
@@ -65,6 +66,7 @@ async function init() {
   setupLook({ data: () => data, toast, afterTheme: () => paintThemePicker() });
   setupMediaSave({ data: () => data, toast });
   setupStorage({ data: () => data });
+  setupMenuOptions({ data: () => data, toast });
   setupDonation();
   setupVoiceOptions();
   setupPhotos();

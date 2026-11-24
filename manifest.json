@@ -83,6 +83,12 @@
       },
       "description": "Anotar ou salvar a página atual"
     },
+    "snip": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Recortar uma área da tela para a biblioteca de imagens"
+    },
     "voice-command": {
       "suggested_key": {
         "default": "Alt+Shift+V"
