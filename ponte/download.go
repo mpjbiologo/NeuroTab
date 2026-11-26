@@ -1,7 +1,9 @@
 package main
 
 // Baixar vídeos salvos na Mídia (0.7.11): a extensão pede, a Ponte roda o yt-dlp (com o ffmpeg para juntar áudio
-// e vídeo) e grava na pasta Downloads. Só Instagram, TikTok e X; YouTube é recusado aqui também (política das lojas).
+// e vídeo) e grava na pasta Downloads. Instagram, TikTok, X e, desde a 0.9.3.1, os outros sites de
+// src/lib/media-sites.js (a lista é a mesma); "audio": true baixa só o áudio. YouTube é recusado aqui também
+// (política das lojas), e serviços com DRM nunca entram na lista.
 //
 //   {"type":"dl","op":"tools"}                       → onde estão o yt-dlp e o ffmpeg, e as versões
 //   {"type":"dl","op":"install","payload":{"what":["yt-dlp","ffmpeg"]}} → baixa as versões oficiais (confere o SHA-256)
@@ -45,6 +47,8 @@ type dlReq struct {
 	Open    bool     `json:"open"`
 	What    []string `json:"what"`
 	Paths   []string `json:"paths"`
+	Audio   bool     `json:"audio"`  // só o áudio (0.9.3.1)
+	Format  string   `json:"format"` // mp3 | m4a | original (converter precisa do ffmpeg)
 }
 
 type dlTool struct {
@@ -80,7 +84,13 @@ var errYouTube = errors.New("o YouTube não permite baixar vídeos por extensõe
 
 // ---------- endereços e caminhos ----------
 
-var dlSites = []string{"instagram.com", "tiktok.com", "x.com", "twitter.com"}
+// Mesma lista de src/lib/media-sites.js (DL_SITES): sites que entregam o vídeo sem DRM.
+var dlSites = []string{
+	"instagram.com", "instagr.am", "tiktok.com", "x.com", "twitter.com",
+	"reddit.com", "redd.it", "facebook.com", "fb.watch", "threads.net", "threads.com", "bsky.app",
+	"vimeo.com", "dailymotion.com", "dai.ly", "twitch.tv", "kwai.com", "pinterest.com", "pin.it",
+	"linkedin.com", "rumble.com", "soundcloud.com",
+}
 
 func isYouTube(host string) bool {
 	for _, s := range []string{"youtube.com", "youtu.be", "youtube-nocookie.com", "googlevideo.com"} {
@@ -109,7 +119,7 @@ func allowedURL(raw string) (string, string, error) {
 			return u.String(), "", nil
 		}
 	}
-	return "", "site", errors.New("só dá para baixar vídeos do Instagram, do TikTok e do X")
+	return "", "site", errors.New("este site não está na lista de sites compatíveis")
 }
 
 var badChars = regexp.MustCompile(`[<>:"/\\|?*\x00-\x1f#%]+`)
@@ -441,11 +451,18 @@ func ytdlpArgs(q dlReq, outDir, ffmpeg, cookieFile string) []string {
 		"--newline", "--progress", "--no-playlist", "--no-mtime", "--no-overwrites", "--ignore-config",
 		"--progress-template", "download:NTP %(progress._percent_str)s|%(progress._total_bytes_str)s|%(progress._total_bytes_estimate_str)s",
 		"--print", "after_move:NTF %(filepath)s",
-		"-f", formatFor(q.Quality, ffmpeg != ""),
-		"-o", filepath.Join(outDir, safeName(q.Name)+".%(ext)s"),
 	}
-	if ffmpeg != "" {
-		args = append(args, "--merge-output-format", "mp4", "--ffmpeg-location", ffmpeg)
+	if q.Audio {
+		// só o áudio; sem faixa só de áudio (alguns posts), o menor arquivo com áudio basta
+		args = append(args, "-f", "ba/b", "-o", filepath.Join(outDir, safeName(q.Name)+".%(ext)s"))
+		if ffmpeg != "" && (q.Format == "mp3" || q.Format == "m4a") {
+			args = append(args, "-x", "--audio-format", q.Format, "--audio-quality", "0", "--ffmpeg-location", ffmpeg)
+		}
+	} else {
+		args = append(args, "-f", formatFor(q.Quality, ffmpeg != ""), "-o", filepath.Join(outDir, safeName(q.Name)+".%(ext)s"))
+		if ffmpeg != "" {
+			args = append(args, "--merge-output-format", "mp4", "--ffmpeg-location", ffmpeg)
+		}
 	}
 	if cookieFile != "" {
 		args = append(args, "--cookies", cookieFile)

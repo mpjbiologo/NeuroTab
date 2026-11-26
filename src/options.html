@@ -889,7 +889,11 @@
         <button type="button" class="btn" id="mediaExport">Exportar…</button>
       </div>
       <h3 id="baixar-videos">⬇ Baixar vídeos</h3>
-      <p>Na janela de um item 🎬 Mídia do cérebro, clique em <b>⬇ Baixar vídeo</b>, ou use o botão direito na página do post → <b>NeuroTab → ⬇ Baixar o vídeo</b>. Funciona com <b>Instagram, TikTok e X</b>. O vídeo vai para a pasta <b>Downloads</b> do computador.</p>
+      <p>Na janela de um item 🎬 Mídia do cérebro, clique em <b>⬇ Baixar vídeo</b>, <b>🎧 Só o áudio</b> ou <b>🖼 Fotos do post</b>, ou use o botão direito na página do post → <b>NeuroTab → ⬇ Baixar o vídeo</b>. Funciona com <b>Instagram, TikTok, X</b> e os outros <a href="#sites-midia">sites compatíveis</a>. Os arquivos vão para a pasta <b>Downloads</b> do computador.</p>
+      <div class="opt">
+        <div><b>🎞️ Biblioteca de mídias</b><small>Imagens, posts e vídeos salvos e o que foi baixado, numa tela só, com busca e filtros.</small></div>
+        <a class="btn" href="media.html" target="_blank">Abrir</a>
+      </div>
       <p class="hint">O navegador baixa sozinho quando o site entrega o vídeo inteiro (X, TikTok e parte do Instagram). Quando o vídeo vem com o áudio separado, a <b>NeuroTab Ponte</b> baixa com o <a href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">yt-dlp</a> e junta tudo com o <a href="https://ffmpeg.org" target="_blank" rel="noopener">ffmpeg</a>. O YouTube não permite baixar vídeos por extensões, então ele fica de fora. Baixe só para uso pessoal e respeite os direitos de quem criou.</p>
       <div class="opt">
         <div><b>Baixar o vídeo junto ao salvar</b><small>Ao salvar um post com vídeo, já baixa. Só funciona com as permissões abaixo já dadas.</small></div>
@@ -913,9 +917,26 @@
         </select>
       </div>
       <div class="opt">
-        <div><b>Pasta dentro de Downloads</b><small>Ex.: <code>NeuroTab</code> ou <code>NeuroTab/Vídeos</code>.</small></div>
+        <div><b>Pasta dos vídeos</b><small>Dentro de Downloads. Ex.: <code>NeuroTab</code> ou <code>NeuroTab/Vídeos</code>.</small></div>
         <input type="text" data-k="mediaDl.folder" maxlength="120" placeholder="NeuroTab">
       </div>
+      <div class="opt">
+        <div><b>Pasta das imagens</b><small>Fotos dos posts e imagens da biblioteca salvas no computador. Dentro de Downloads.</small></div>
+        <input type="text" data-k="mediaDl.imageFolder" maxlength="120" placeholder="NeuroTab/Imagens">
+      </div>
+      <div class="opt">
+        <div><b>Pasta dos áudios</b><small>"Só o áudio" de vídeos, podcasts e músicas liberadas. Dentro de Downloads.</small></div>
+        <input type="text" data-k="mediaDl.audioFolder" maxlength="120" placeholder="NeuroTab/Áudios">
+      </div>
+      <div class="opt">
+        <div><b>Formato do áudio</b><small>MP3 e M4A são convertidos pelo ffmpeg na Ponte; sem ele, fica o original do site.</small></div>
+        <select data-k="mediaDl.audioFormat">
+          <option value="mp3">MP3 (toca em tudo)</option>
+          <option value="m4a">M4A (AAC, menor)</option>
+          <option value="original">Original do site (sem converter)</option>
+        </select>
+      </div>
+      <p class="hint">Por segurança, o navegador só grava dentro da pasta <b>Downloads</b>. Para outro lugar, ligue "Perguntar onde salvar" abaixo (vídeos pelo navegador) ou mude a pasta de downloads do próprio navegador. Nome repetido não apaga nada: o arquivo novo ganha um número.</p>
       <div class="opt">
         <div><b>Uma pasta por categoria</b><small>Ex.: <code>Downloads/NeuroTab/ia</code>.</small></div>
         <label class="sw"><input type="checkbox" data-k="mediaDl.byCategory"><span></span></label>
@@ -936,6 +957,9 @@
         <div><b>NeuroTab Ponte, yt-dlp e ffmpeg</b><small>A Ponte procura o yt-dlp e o ffmpeg no computador. Se não tiver, ela baixa as versões oficiais e confere a assinatura (SHA-256) antes de usar. No macOS e no Linux, instale o ffmpeg pelo Homebrew (<code>brew install ffmpeg</code>) ou pelo gerenciador de pacotes (<code>sudo apt install ffmpeg</code>).</small></div>
         <div id="dlTools" class="dl-tools"><button type="button" class="btn" id="dlCheck">Verificar</button></div>
       </div>
+      <h3 id="sites-midia">🌐 Sites compatíveis</h3>
+      <p class="hint">Só o que o site entrega sem proteção. A NeuroTab <b>não</b> baixa do YouTube (regra das lojas de extensões) nem de serviços com DRM (Netflix, Spotify, Disney+, Globoplay…), não fura paywall e não usa login de outra pessoa. Baixe só para uso pessoal e respeite os direitos de quem criou. Links diretos para arquivos (<code>.mp4</code>, <code>.mp3</code>, <code>.jpg</code>…) em qualquer site também funcionam, pelo navegador.</p>
+      <div id="dlSites" class="dl-sites"></div>
       <p class="hint">🎙️ Transcrever o áudio de vídeos sem legenda chega com a central de IA da v0.8, que terá um modelo próprio para transcrição.</p>
     </section>
 

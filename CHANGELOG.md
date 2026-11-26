@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.9.3.1
+**Biblioteca de mídias: imagens, posts e vídeos numa tela só, com mais sites, fotos e só o áudio.**
+
+- 🎞️ **Biblioteca de mídias** (nova página): imagens da biblioteca, posts e vídeos salvos e o que já foi baixado, com abas **Tudo · Imagens · Posts e vídeos · No computador**, busca por título, legenda, resumo ou site e filtro por categoria
+  - Salve imagens da biblioteca no computador, uma ou várias de uma vez; baixe vídeo, áudio ou fotos de cada post; mostre na pasta; mande para a lixeira com confirmação
+  - Abre pelo widget Biblioteca de imagens (🎞️ Biblioteca completa), pela janela de um item Mídia e por Configurações → Mídia
+- 🖼 **Fotos do post:** baixe as fotos (e carrosséis) do **Instagram, TikTok e X** pelo próprio navegador, na resolução original, sem instalar nada — ideia adaptada do [Kora](https://github.com/Joaovitor12j/kora) (Joao V Santos, MIT)
+- 🎧 **Só o áudio:** de vídeos e do SoundCloud, pela NeuroTab Ponte, em **MP3**, **M4A** ou no formato original do site
+- 🌐 **Mais sites:** além de Instagram, TikTok e X, vídeos do **Reddit, Facebook, Threads, Bluesky, Vimeo, Dailymotion, Twitch, Kwai, Pinterest, LinkedIn e Rumble** (pela Ponte), e links diretos para arquivos (.mp4, .mp3, .jpg…) em qualquer site, pelo navegador
+  - Tabela dos sites compatíveis em Configurações → Mídia. **YouTube continua de fora** (regra das lojas) e serviços com **DRM** (Netflix, Spotify, Globoplay…) são recusados com aviso claro
+- 📁 **Uma pasta para cada tipo:** vídeos, imagens e áudios, cada um na sua pasta dentro de Downloads (com subpasta por categoria, se quiser). Nome repetido não apaga nada: o arquivo novo ganha um número
+- 📄 Levantamento técnico dos sites e métodos em `docs/dev/MIDIA-SITES.md`; política de privacidade atualizada (e com as seções de Cotações e Finanças também em inglês e espanhol)
+- 🔌 **Atualize a NeuroTab Ponte** (botão ⬇ em Configurações → Mídia → Baixar vídeos) para ter os sites novos e o áudio
+
 ## v0.9.3
 **Fontes e documentos: saiba de onde veio cada coisa que você guardou.**
 

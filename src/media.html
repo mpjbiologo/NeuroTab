@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="media.css">
+<script src="theme-boot.js"></script>
+<title>NeuroTab — Biblioteca de mídias</title>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>🎞️ Biblioteca de mídias</h1>
+    <span class="spacer"></span>
+    <input id="q" type="search" placeholder="Buscar por título, legenda, resumo ou site…" aria-label="Buscar">
+    <select id="cat" title="Categoria" aria-label="Categoria"></select>
+  </header>
+  <nav class="tabs" id="tabs" role="tablist">
+    <button role="tab" data-tab="tudo">Tudo</button>
+    <button role="tab" data-tab="imagens">🖼 Imagens</button>
+    <button role="tab" data-tab="posts">🎬 Posts e vídeos</button>
+    <button role="tab" data-tab="arquivos">💾 No computador</button>
+  </nav>
+  <div class="bar" id="bar">
+    <span id="count" class="muted small" role="status"></span>
+    <span class="spacer"></span>
+    <span id="folders" class="small muted"></span>
+    <button class="btn sm" id="saveSel" hidden>⬇ Salvar as selecionadas</button>
+    <button class="btn sm" id="selAll" hidden>Selecionar todas</button>
+  </div>
+  <div id="grid" class="grid" aria-live="polite"></div>
+  <p class="small muted">As imagens ficam guardadas neste navegador; vídeos, áudios e fotos baixados ficam na pasta Downloads do computador. A NeuroTab não baixa nada do YouTube nem conteúdo protegido (DRM).</p>
+</main>
+<script type="module" src="media-page.js"></script>
+</body>
+</html>

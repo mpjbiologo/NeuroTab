@@ -22,7 +22,8 @@ export default {
     const refresh = h('button', { class: 'chip', type: 'button' }, '↻ Atualizar');
     let urls = [];
     let destroyed = false;
-    el.append(h('div', { class: 'nt-image-toolbar' }, status, refresh), list);
+    const full = h('a', { class: 'chip', href: chrome.runtime.getURL('src/media.html#imagens'), target: '_blank', title: 'Imagens, posts e vídeos salvos e o que foi baixado, numa tela só' }, '🎞️ Biblioteca completa');
+    el.append(h('div', { class: 'nt-image-toolbar' }, status, full, refresh), list);
 
     async function load() {
       urls.forEach((url) => URL.revokeObjectURL(url));
