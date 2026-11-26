@@ -38,6 +38,35 @@ Ela nasceu para quem sente falta de um bom Speed Dial, mas quer mais: um lugar p
 
 
 ━━━━━━━━━━━━━━━━━━━━
+📚 FONTES E DOCUMENTOS
+━━━━━━━━━━━━━━━━━━━━
+
+• Páginas e mídias salvas viram fontes, e você cadastra livros, artigos, artigos científicos, PDFs e arquivos
+• Cada fonte guarda autores, data, editora, projeto e DOI/ISBN, além do link de origem
+• Trechos e notas se ligam à fonte sozinhos, pelo mesmo link
+• Filtros por tipo e projeto e busca pelo autor, pelo DOI ou pelo texto
+• Escolha um PDF e ele já chega com título, autor, data e texto para a busca (o arquivo não é copiado)
+
+
+━━━━━━━━━━━━━━━━━━━━
+🎬 VÍDEOS E POSTS COM RESUMO
+━━━━━━━━━━━━━━━━━━━━
+
+• Salve posts do Instagram, TikTok e X, vídeos do YouTube e artigos no seu cérebro
+• A sua IA resume, separa os pontos-chave e classifica por categoria
+• Baixe os vídeos dos posts salvos (Instagram, TikTok e X) para o computador
+
+
+━━━━━━━━━━━━━━━━━━━━
+📋 ÁREA DE TRANSFERÊNCIA ATÉ NO CELULAR
+━━━━━━━━━━━━━━━━━━━━
+
+• Histórico do que você copia, com proteção automática para senhas, códigos e cartões
+• O celular vê e envia pelo Wi-Fi de casa (programa opcional NeuroTab Ponte), pelo ntfy (cifrado), pelo Telegram ou pela sua nuvem
+• QR code na tela para passar um texto para o celular sem nada sair do computador
+
+
+━━━━━━━━━━━━━━━━━━━━
 ⏰ LEMBRETES EM LINGUAGEM NATURAL
 ━━━━━━━━━━━━━━━━━━━━
 
@@ -87,6 +116,23 @@ Você escolhe o provedor e usa a sua própria chave. As chamadas vão direto do 
 
 
 ━━━━━━━━━━━━━━━━━━━━
+📅 AGENDA E SINCRONIZAÇÃO (OPCIONAIS)
+━━━━━━━━━━━━━━━━━━━━
+
+• Conecte a sua conta Google e veja, crie e edite compromissos do Google Agenda na nova aba; Outlook e iCloud por link
+• Sincronização das notas, atalhos e configurações entre computadores, numa pasta oculta do seu Google Drive. Com senha, nem o Google lê
+
+
+━━━━━━━━━━━━━━━━━━━━
+💰 FINANÇAS
+━━━━━━━━━━━━━━━━━━━━
+
+• Contas, cartões, contas a pagar e orçamentos
+• Importe extratos e faturas (OFX, CSV e PDF), lidos no seu próprio computador
+• Cofre com senha (AES-256) para os dados financeiros
+
+
+━━━━━━━━━━━━━━━━━━━━
 🌤 RELÓGIO, CLIMA E FUSOS HORÁRIOS
 ━━━━━━━━━━━━━━━━━━━━
 
@@ -118,14 +164,14 @@ Você escolhe o provedor e usa a sua própria chave. As chamadas vão direto do 
 • Mais visitados e abas fechadas recentemente
 • Slides de fundo com fotos do seu computador, a foto do dia do Bing ou a imagem astronômica do dia da NASA
 
-Redimensione cada widget arrastando o canto, organize em grade ou ative o modo livre e posicione tudo onde quiser na tela. Salve layouts diferentes e troque quando quiser.
+Redimensione cada widget arrastando o canto, organize em grade, deixe o modo Automático arrumar tudo em linhas simétricas que ocupam a tela toda, ou ative o modo livre e posicione tudo onde quiser. Salve layouts diferentes e troque quando quiser.
 
 
 ━━━━━━━━━━━━━━━━━━━━
 🔒 PRIVACIDADE DE VERDADE
 ━━━━━━━━━━━━━━━━━━━━
 
-• Sem conta, sem login e sem servidor: seus atalhos, notas, tarefas, fotos e configurações ficam no armazenamento local do navegador
+• Sem conta NeuroTab e sem servidor nosso: seus atalhos, notas, tarefas, fotos e configurações ficam no armazenamento local do navegador. O login no Google é opcional, só para a agenda e a sincronização
 • Sem analytics, sem rastreamento e sem anúncios
 • Nada é vendido nem compartilhado
 • Dados só saem do computador quando você usa um recurso que precisa deles (por exemplo, a cidade do clima vai para o Open-Meteo, e o texto de uma pergunta vai para o provedor de IA que você configurou)
