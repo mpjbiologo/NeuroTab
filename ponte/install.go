@@ -185,12 +185,15 @@ func runInstaller(args []string) int {
 	home, _ := os.UserHomeDir()
 	var extra []string
 	remove := false
+	firewallOnly := false
 	for _, a := range args {
 		switch {
 		case a == "--uninstall" || a == "desinstalar":
 			remove = true
 		case strings.HasPrefix(a, "--extension-id="):
 			extra = append(extra, strings.TrimPrefix(a, "--extension-id="))
+		case a == "--firewall":
+			firewallOnly = true
 		case a == "--version":
 			fmt.Println(version)
 			return 0
@@ -201,6 +204,13 @@ func runInstaller(args []string) int {
 		uninstall(home, runCmd)
 		fmt.Println("✓ NeuroTab Ponte removida deste computador.")
 		return 0
+	}
+	if firewallOnly {
+		if runtime.GOOS != "windows" {
+			fmt.Println("O firewall só precisa de ajuste no Windows.")
+			return 0
+		}
+		return map[bool]int{true: 0, false: 1}[allowFirewall(filepath.Join(appDir(home), "neurotab-ponte.exe"))]
 	}
 	self, _ := os.Executable()
 	done, err := install(home, self, extra, runCmd)
@@ -216,9 +226,32 @@ func runInstaller(args []string) int {
 	fmt.Println("Agora, na NeuroTab: widget Área de transferência → 📤 → ligue \"Rede local\" e salve.")
 	fmt.Println("O navegador abre a Ponte sozinho quando precisar. Para remover: rode este programa com --uninstall.")
 	if runtime.GOOS == "windows" {
-		fmt.Println("\nNa primeira vez que o celular conectar, o Windows pode pedir para liberar o acesso: permita em \"Redes privadas\".")
+		fmt.Println("\nPara o celular conseguir abrir a página, a Ponte precisa estar liberada no Firewall do Windows.")
+		fmt.Println("O Windows vai pedir confirmação (Sim) — é só para redes privadas, nas portas 41414 a 41423.")
+		allowFirewall(filepath.Join(appDir(home), "neurotab-ponte.exe"))
 	}
 	return 0
+}
+
+// allowFirewall cria a regra do Firewall do Windows com permissão de administrador (o Windows pergunta).
+func allowFirewall(exe string) bool {
+	script := filepath.Join(filepath.Dir(exe), "liberar-firewall.cmd")
+	if err := os.WriteFile(script, []byte(firewallScript(exe)), 0o644); err != nil {
+		fmt.Println("✗ Não consegui preparar a liberação do firewall:", err)
+		return false
+	}
+	ps := "Start-Process -FilePath '" + strings.ReplaceAll(script, "'", "''") + "' -Verb RunAs -Wait -WindowStyle Hidden"
+	if err := runCmd("powershell", "-NoProfile", "-NonInteractive", "-Command", ps); err != nil {
+		fmt.Println("✗ A liberação no firewall foi cancelada. Para tentar de novo: abra o programa com --firewall")
+		fmt.Println("  ou rode como administrador o arquivo", script)
+		return false
+	}
+	if runCmd("netsh", "advfirewall", "firewall", "show", "rule", "name=NeuroTab Ponte") != nil {
+		fmt.Println("✗ Não confirmei a regra do firewall. Rode como administrador o arquivo", script)
+		return false
+	}
+	fmt.Println("✓ Liberada no Firewall do Windows (redes privadas). Se o Wi-Fi estiver como \"Rede pública\", mude para \"Privada\".")
+	return true
 }
 
 func pauseOnWindows(clicked bool) {

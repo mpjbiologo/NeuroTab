@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.9.2.2
+**Página organizada sozinha e celular conectando de primeira pela rede local.**
+
+- ✨ **Layout automático:** no modo de edição (🧩), o novo botão **✨ Automático** (ao lado de Grade e Livre) arruma os widgets em **linhas completas e simétricas** — 12 · 6+6 · 8+4 · 4+4+4 · 3+3+3+3 — com **a mesma altura em cada linha** e sem buracos
+  - Mantém a ordem (arraste para trocar) e as larguras que você escolheu servem de preferência: os botões − e + continuam valendo. Não sobra um widget sozinho e estreito na última linha
+  - Voltar para **Grade** devolve as larguras e alturas que você tinha; cada página e cada layout salvo guarda o seu modo
+- ✨ **Organizar no modo livre** (antes "🧲 Reorganizar"): relógio e busca centralizados no topo e os widgets embaixo, em linhas simétricas e alinhadas. Dá para mover tudo de novo depois
+- 📱 **QR da rede local (NeuroTab Ponte) corrigido:** o QR mostrava o endereço de uma VPN ou de um adaptador virtual (ex.: **Cloudflare WARP 172.16.0.2**, Hyper-V/WSL, Docker, VirtualBox), que o celular não alcança
+  - A Ponte agora **ordena os endereços**: Wi-Fi e Ethernet primeiro; VPN e adaptadores virtuais por último, marcados. O QR leva **um endereço só**, o recomendado, com o link para copiar
+  - **"Não abriu? Escolha outro endereço"** troca o QR na hora, e **"Ainda não abre? Confira"** lista o que costuma bloquear (rede de convidados, VPN, isolamento do roteador)
+  - **Windows:** a instalação agora pede (Sim/Não) para **liberar a Ponte no Firewall** em redes privadas, nas portas 41414–41423, e apaga o bloqueio antigo criado quando o aviso do Windows foi cancelado. Se o Wi-Fi estiver como **Rede pública**, a tela do QR avisa. Para refazer: abra a Ponte de novo ou rode com `--firewall`
+  - Atualize a Ponte (botão ⬇️ na tela 📤) para ter a ordem certa e o firewall; com a Ponte antiga, a extensão já prefere o endereço 192.168.x
+
 ## v0.9.2.1
 **Atalhos de teclado que você escolhe e várias páginas de widgets.**
 

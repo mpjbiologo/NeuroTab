@@ -51,6 +51,7 @@ Primeiro a base, depois os recursos.
 - ✅ **0.9.1 — Finanças pessoais** (#66): entradas e saídas, contas e cartões, contas a pagar, orçamento e importação de extratos e faturas (OFX, CSV e PDF), só no computador e com cofre opcional. O conector de Open Finance por agregador fica para a 1.x (#74).
 - ✅ **0.9.2 — Data Hub** (#71): uma camada única de dados externos com cache, limites de uso e fonte e horário em cada dado. BrAPI, Banco Central e HG Brasil (com a chave de cada pessoa) entram como fontes; o widget Cotações vira lista de acompanhamento (ações, FIIs, moedas, cripto, índices e SELIC/CDI/IPCA), com alertas opcionais. O Open-Meteo continua o clima padrão.
 - ✅ **0.9.2.1 — Teclado e páginas** (#75): atalhos de teclado editáveis (Sistema → Teclado) e várias páginas de widgets na página inicial.
+- ✅ **0.9.2.2 — Layout automático e QR da rede local:** modo ✨ Automático (linhas completas e simétricas), ✨ Organizar no modo livre, e o QR da Ponte apontando para o Wi-Fi certo (sem VPN e adaptadores virtuais), com liberação do Firewall do Windows.
 - **0.9.3 — Fontes e documentos:** central de conhecimento com fontes e documentos (#9), adaptador opcional do Open Notebook (#10) e o que falta da #45 (pasta para imagens e áudio; avaliar outros sites, sem contornar DRM nem restrições).
 - **0.9.4 — NeuroPilot e Modo Estudante:** sugestões proativas locais (#8) e Modo Estudante (#11), já usando a central de IA da 0.8.0.
 

@@ -181,23 +181,3 @@ func listen(port int) (net.Listener, int, error) {
 	}
 	return nil, 0, last
 }
-
-// lanURLs devolve os endereços desta máquina na rede local (IPv4 privados).
-func lanURLs(port int) []string {
-	var out []string
-	ifs, _ := net.Interfaces()
-	for _, i := range ifs {
-		if i.Flags&net.FlagUp == 0 || i.Flags&net.FlagLoopback != 0 {
-			continue
-		}
-		addrs, _ := i.Addrs()
-		for _, a := range addrs {
-			ipn, ok := a.(*net.IPNet)
-			if !ok || ipn.IP.To4() == nil || !ipn.IP.IsPrivate() {
-				continue
-			}
-			out = append(out, fmt.Sprintf("http://%s:%d", ipn.IP.String(), port))
-		}
-	}
-	return out
-}

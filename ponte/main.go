@@ -83,7 +83,12 @@ func runNative(in *os.File, out *os.File) error {
 	}
 	srv := &http.Server{Handler: hub.routes(), ReadHeaderTimeout: 10 * time.Second}
 	go func() { _ = srv.Serve(l) }()
-	_ = w.send(Msg{Type: "ready", URLs: lanURLs(real), Port: real, Version: version})
+	addrs := lanAddrs(real)
+	urls := make([]string, 0, len(addrs))
+	for _, a := range addrs {
+		urls = append(urls, a.URL)
+	}
+	_ = w.send(Msg{Type: "ready", URLs: urls, Addrs: addrs, Port: real, Version: version})
 	for {
 		m, err := readMsg(r)
 		if err != nil { // navegador fechou a conexão

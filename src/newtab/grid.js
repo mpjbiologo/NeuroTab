@@ -4,7 +4,8 @@ import { WIDGETS } from '../widgets/index.js';
 import { S } from './state.js';
 import { applyWidgetSize, saveWidgets, setupResize } from './free.js';
 import { clearDropMarks } from './rail.js';
-import { buildCard, layoutCols, mountCard, renderWidgets } from './widgets.js';
+import { buildCard, isAuto, layoutCols, mountCard, renderWidgets } from './widgets.js';
+import { autoRows } from '../lib/layout-geometry.js';
 
 // =====================================================================
 // GRADE
@@ -17,6 +18,10 @@ export function renderGrid() {
   S.gridCols = layoutCols();
   box.style.gridTemplateColumns = `repeat(${S.gridCols}, minmax(0, 1fr))`;
   const list = S.data.settings.widgets;
+  // Automático (0.9.2.2): linhas completas e simétricas, calculadas na hora (as larguras salvas não mudam).
+  const auto = isAuto();
+  box.classList.toggle('auto-layout', auto);
+  S.autoSpans = auto ? Object.fromEntries(autoRows(list, S.gridCols).flat().map((c) => [c.idx, c.span])) : null;
   list.forEach((w, idx) => addGridCard(w, idx));
   if (!list.length) {
     box.append(h('p', { class: 'muted', style: { gridColumn: '1 / -1', textAlign: 'center' } }, 'Nenhum widget. Clique em 🧩 na barra para adicionar.'));

@@ -242,3 +242,18 @@ test('a página do celular usa a mesma criptografia da extensão (cópia idênti
   const b = readFileSync(new URL('../../docs/cola/sync-crypto.js', import.meta.url), 'utf8');
   assert.equal(b, a, 'rode: cp src/lib/sync-crypto.js docs/cola/sync-crypto.js');
 });
+
+test('rede local: o QR usa o Wi-Fi, não a VPN nem o adaptador virtual (0.9.2.2)', async () => {
+  const { lanTargets } = await import('../../src/lib/clipboard-share.js');
+  // Ponte antiga: só urls, na ordem das placas de rede
+  const old = lanTargets({ urls: ['http://172.16.0.2:41414', 'http://192.168.1.2:41414'] }, 'abc');
+  assert.equal(old[0].url, 'http://192.168.1.2:41414/#t=abc');
+  assert.equal(old[0].best, true);
+  assert.equal(old[1].virtual, true);
+  // Ponte nova: endereços já ordenados, com o nome da placa e o perfil da rede
+  const now = lanTargets({ addrs: [{ url: 'http://192.168.1.2:41414', ip: '192.168.1.2', iface: 'Wi-Fi', publicNet: true }, { url: 'http://172.16.0.2:41414', ip: '172.16.0.2', iface: 'CloudflareWARP', virtual: true }] }, 'a b');
+  assert.deepEqual(now.map((a) => a.iface), ['Wi-Fi', 'CloudflareWARP']);
+  assert.equal(now[0].url, 'http://192.168.1.2:41414/#t=a%20b');
+  assert.equal(now[0].publicNet, true);
+  assert.deepEqual(lanTargets({}, 'x'), []);
+});

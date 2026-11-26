@@ -15,6 +15,8 @@ export const layoutCols = () => gridColsFor($('#widgets').clientWidth || innerWi
 
 // ---------- Modo de layout ----------
 export const isFree = () => S.data.settings.layoutMode === 'free' && innerWidth >= 700;
+/** Automático (0.9.2.2): grade com linhas completas e simétricas, sem ajuste manual. */
+export const isAuto = () => S.data.settings.layoutMode === 'auto';
 /** JSON com as chaves em ordem: o armazenamento do navegador devolve os objetos com as chaves reordenadas. */
 const stable = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x));
 export const layoutSig = (s = S.data.settings) => stable([s.widgets, s.freeFixed, s.layoutMode]);
@@ -81,6 +83,7 @@ export function renderWidgets() {
   S.widgetsSig = layoutSig();
   const free = isFree();
   document.body.classList.toggle('free', free);
+  document.body.classList.toggle('auto-layout', !free && isAuto());
   if (S.editing) paintModeButtons();
   if (free) renderFree();
   else renderGrid();

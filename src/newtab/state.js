@@ -12,6 +12,7 @@ export const S = {
   mounted: [], // widgets montados: [{ id, destroy }]
   widgetsSig: '',
   gridCols: 12,
+  autoSpans: null, // larguras do modo Automático, por índice do widget
   zTop: 10,
   voiceSession: null, // reconhecimento de voz em andamento
 };

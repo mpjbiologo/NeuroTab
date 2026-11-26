@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -215,3 +216,46 @@ func TestInstallLinux(t *testing.T) {
 }
 
 func mustJSON(v any) []byte { b, _ := json.Marshal(v); return b }
+
+func TestRankAddrs(t *testing.T) {
+	ip := func(s string) net.IP { return net.ParseIP(s) }
+	cands := []addrCand{
+		{IP: ip("172.16.0.2"), Iface: "CloudflareWARP", HW: false},
+		{IP: ip("172.24.80.1"), Iface: "vEthernet (WSL)", HW: true},
+		{IP: ip("192.168.1.2"), Iface: "Wi-Fi", HW: true},
+		{IP: ip("192.168.56.1"), Iface: "VirtualBox Host-Only Network", HW: true},
+		{IP: ip("8.8.8.8"), Iface: "Wi-Fi", HW: true},
+		{IP: ip("192.168.1.2"), Iface: "Wi-Fi", HW: true},
+	}
+	got := rankAddrs(cands, 41414, "172.16.0.2")
+	if len(got) != 4 {
+		t.Fatalf("esperava 4 endereços privados sem repetir, veio %d: %+v", len(got), got)
+	}
+	if got[0].URL != "http://192.168.1.2:41414" || got[0].Virtual {
+		t.Fatalf("o Wi-Fi tem de vir primeiro: %+v", got)
+	}
+	for _, a := range got[1:] {
+		if !a.Virtual {
+			t.Fatalf("%s devia ser marcado como virtual", a.Iface)
+		}
+	}
+	eth := rankAddrs([]addrCand{{IP: ip("10.0.0.5"), Iface: "eth0", HW: true}, {IP: ip("172.17.0.1"), Iface: "docker0", HW: true}}, 1, "")
+	if eth[0].Iface != "eth0" {
+		t.Fatalf("Ethernet antes do Docker: %+v", eth)
+	}
+}
+
+func TestProfilesAndFirewall(t *testing.T) {
+	p := parseProfiles("Wi-Fi|Public\r\nEthernet|Private\r\n")
+	a := []LanAddr{{Iface: "Wi-Fi"}, {Iface: "Ethernet"}}
+	markPublic(a, p)
+	if !a[0].PublicNet || a[1].PublicNet {
+		t.Fatalf("perfil da rede: %+v", a)
+	}
+	s := firewallScript(`C:\Users\M\AppData\Local\NeuroTab\neurotab-ponte.exe`)
+	for _, want := range []string{`program="C:\Users\M\AppData\Local\NeuroTab\neurotab-ponte.exe"`, "profile=private,domain", "localport=41414-41423", "delete rule name=all"} {
+		if !strings.Contains(s, want) {
+			t.Fatalf("faltou %q em:\n%s", want, s)
+		}
+	}
+}

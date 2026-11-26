@@ -7,7 +7,7 @@ import { S, heroEl, omniEl } from './state.js';
 import { renderGrid } from './grid.js';
 import { renderLayoutPicker } from './layouts.js';
 import { buildCard, isFree, layoutSig, mountCard, renderWidgets } from './widgets.js';
-import { spanFor, overlapsAny, firstFreeSpot, nearestFreePosition, snapAxis } from '../lib/layout-geometry.js';
+import { spanFor, overlapsAny, firstFreeSpot, nearestFreePosition, snapAxis, autoRows, arrangeRects, gridColsFor } from '../lib/layout-geometry.js';
 
 // =====================================================================
 // LIVRE — widgets em qualquer lugar da tela
@@ -338,32 +338,55 @@ export async function setLayoutMode(mode) {
   s.layoutMode = mode;
   await saveWidgets();
   renderWidgets();
-  toast(mode === 'free' ? 'Modo livre: arraste pelo título para qualquer lugar ✨' : 'Modo grade');
+  toast(mode === 'free' ? 'Modo livre: arraste pelo título para qualquer lugar ✨' : mode === 'auto' ? 'Automático: os widgets se organizam sozinhos, em linhas simétricas ✨' : 'Modo grade');
 }
 
+/**
+ * Organiza o modo livre em linhas simétricas (0.9.2.2): relógio e busca centralizados no topo,
+ * widgets em colunas iguais e com a mesma altura em cada linha. Dá para mover de novo depois.
+ */
 export async function rearrangeFree() {
-  if (!confirm('Reorganizar todos os widgets em grade (você pode mover de novo depois)?')) return;
+  if (!confirm('Organizar todos os widgets em linhas simétricas (você pode mover de novo depois)?')) return;
+  const box = $('#widgets');
+  const W = box.clientWidth;
+  if (!W) return;
   const s = S.data.settings;
-  s.layoutMode = 'grid';
-  document.body.classList.remove('free');
-  renderGrid();
-  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-  captureGridPositions();
-  s.layoutMode = 'free';
+  s.freeFixed = s.freeFixed || {};
+  const gap = 16;
+  let top = 0;
+  for (const [key, f] of Object.entries(FIXED)) {
+    if (!f.show()) continue;
+    const frame = $(`.free-item[data-fixed="${key}"]`, box);
+    const fw = key === '_hero' ? Math.min(0.4, 520 / W) : Math.min(0.56, 720 / W);
+    s.freeFixed[key] = { ...(s.freeFixed[key] || {}), fx: (1 - fw) / 2, fy: top, fw };
+    top += (frame?.offsetHeight || (key === '_hero' ? 150 : 56)) + gap;
+  }
+  if (top) top += 8;
+  const heights = s.widgets.map((w, idx) => $(`.free-item[data-idx="${idx}"]`, box)?.offsetHeight || w.fh || 320);
+  const cols = gridColsFor(W) === 1 ? 1 : 12;
+  const rows = autoRows(s.widgets, cols);
+  for (const r of arrangeRects({ rows, W, cols, gap, heights, top })) {
+    Object.assign(s.widgets[r.idx], { fx: r.x / W, fy: r.y, fw: r.w / W, fh: r.h });
+  }
   await saveWidgets();
   renderWidgets();
+  toast('Widgets organizados ✨');
 }
 
 export function paintModeButtons() {
-  const free = S.data.settings.layoutMode === 'free';
-  $('#modeGrid').classList.toggle('sel', !free);
+  const mode = S.data.settings.layoutMode;
+  const free = mode === 'free';
+  $('#modeGrid').classList.toggle('sel', mode !== 'free' && mode !== 'auto');
+  $('#modeAuto').classList.toggle('sel', mode === 'auto');
   $('#modeFree').classList.toggle('sel', free);
   $('#rearrange').hidden = !free;
 }
 
 export function applyWidgetSize(card, w) {
-  card.style.gridColumn = `span ${spanFor(w.w || 6, S.gridCols)}`;
-  if (w.hpx && S.gridCols > 1) { card.style.height = w.hpx + 'px'; card.style.maxHeight = 'none'; card.classList.add('fixed-h'); }
+  const auto = S.autoSpans?.[card.dataset.idx];
+  card.style.gridColumn = `span ${auto || spanFor(w.w || 6, S.gridCols)}`;
+  if (auto) { card.style.height = ''; card.style.maxHeight = ''; card.classList.remove('fixed-h'); }
+  else if (w.hpx && S.gridCols > 1) { card.style.height = w.hpx + 'px'; card.style.maxHeight = 'none'; card.classList.add('fixed-h'); }
   else { card.style.height = ''; card.style.maxHeight = ''; card.classList.remove('fixed-h'); }
   const ws = card.querySelector('.wsize');
   if (ws) ws.textContent = `${w.w}/12`;

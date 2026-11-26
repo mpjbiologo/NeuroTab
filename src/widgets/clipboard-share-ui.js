@@ -4,7 +4,7 @@ import { t } from '../lib/i18n.js';
 import { qrSvg } from '../lib/pix.js';
 import { requestAccess } from '../lib/permissions.js';
 import { clipConfig, setClipConfig } from '../lib/clipboard.js';
-import { shareConfig, newTopic, newShareKey, newToken, ntfyPairLink, SHARE_STATE_KEY } from '../lib/clipboard-share.js';
+import { shareConfig, newTopic, newShareKey, newToken, ntfyPairLink, lanTargets, SHARE_STATE_KEY } from '../lib/clipboard-share.js';
 import { telegramTransport } from '../lib/clipboard-transports.js';
 import { syncConfig } from '../lib/sync.js';
 
@@ -41,6 +41,50 @@ export function qrDialog(title, text, note = '') {
     h('div', { class: 'actions' }, h('button', { class: 'btn primary', value: 'ok' }, 'Fechar'))));
   document.body.append(dlg);
   dlg.addEventListener('close', () => dlg.remove());
+  dlg.showModal();
+}
+
+/**
+ * QR da rede local (0.9.2.2): um endereço só no QR (o melhor), os outros para escolher
+ * se não abrir, e o que conferir quando o celular não alcança o computador.
+ */
+export function lanQrDialog(targets) {
+  let cur = targets[0];
+  const img = h('div', { class: 'clip-qr-img' });
+  const link = h('code', { class: 'lan-link' });
+  const warn = h('p', { class: 'lan-warn', hidden: true });
+  const copy = h('button', { class: 'btn', type: 'button', onclick: async () => {
+    try { await navigator.clipboard.writeText(cur.url); copy.textContent = `✓ ${t('Copiado')}`; } catch { /* sem permissão */ }
+  } }, `📋 ${t('Copiar link')}`);
+  const label = (a) => `${a.iface || a.ip}${a.iface ? ` · ${a.ip}` : ''}${a.best ? ` — ${t('recomendado')}` : a.virtual ? ` — ${t('VPN ou adaptador virtual')}` : ''}`;
+  const pick = h('div', { class: 'lan-pick', role: 'radiogroup', 'aria-label': t('Endereço') });
+  const paint = () => {
+    img.innerHTML = qrSvg(cur.url, { size: 260, margin: 2 });
+    link.textContent = cur.url.replace(/#.*/, '');
+    warn.hidden = !(cur.virtual || cur.publicNet);
+    warn.textContent = cur.publicNet
+      ? `⚠️ ${t('O Windows marcou esta rede como Pública e o firewall bloqueia o celular. Mude o Wi-Fi para Rede privada (Configurações → Rede e Internet → Wi-Fi → Propriedades).')}`
+      : `⚠️ ${t('Este endereço é de uma VPN ou de um adaptador virtual: o celular provavelmente não alcança. Prefira o do Wi-Fi ou da Ethernet.')}`;
+    pick.querySelectorAll('button').forEach((b, i) => b.classList.toggle('sel', targets[i] === cur));
+  };
+  targets.forEach((a) => pick.append(h('button', { type: 'button', class: 'btn lan-opt', onclick: () => { cur = a; paint(); } }, label(a))));
+  const dlg = h('dialog', { class: 'dlg clip-qr lan-qr' }, h('form', { method: 'dialog' },
+    h('h2', {}, t('Abrir no celular')),
+    img,
+    h('p', { class: 'muted' }, t('Aponte a câmera do celular. Ele precisa estar no mesmo Wi-Fi deste computador.')),
+    h('div', { class: 'share-row' }, link, copy),
+    warn,
+    targets.length > 1 ? h('details', {}, h('summary', {}, t('Não abriu? Escolha outro endereço')), pick) : null,
+    h('details', {}, h('summary', {}, t('Ainda não abre? Confira')),
+      h('ul', { class: 'lan-tips' },
+        h('li', {}, t('Celular e computador no mesmo Wi-Fi (não na rede de convidados) e com os dados móveis desligados no teste.')),
+        h('li', {}, t('Windows: abra de novo o programa da Ponte e responda Sim para liberar no firewall; o Wi-Fi precisa estar como Rede privada.')),
+        h('li', {}, t('VPN no computador (Cloudflare WARP, empresa…): permita o acesso à rede local ou desligue enquanto usa.')),
+        h('li', {}, t('Alguns roteadores isolam os aparelhos (isolamento de AP / clientes): desligue essa opção no roteador.')))),
+    h('div', { class: 'actions' }, h('button', { class: 'btn primary', value: 'ok' }, t('Fechar')))));
+  document.body.append(dlg);
+  dlg.addEventListener('close', () => dlg.remove());
+  paint();
   dlg.showModal();
 }
 
@@ -112,7 +156,7 @@ export async function openShareDialog(ctx) {
 
   const dl = ponteDownloads();
   const lanSt = st.lan || {};
-  const lanUrls = (lanSt.urls || []).map((u) => `${u}/#t=${encodeURIComponent(lanToken)}`);
+  const lanList = lanTargets(lanSt, lanToken);
 
   const card = (icon, title, toggle, body, status) => h('section', { class: 'share-card' },
     h('label', { class: 'clip-opt' }, toggle || h('span', { class: 'share-dot' }), h('span', {}, h('b', {}, `${icon} ${t(title)}`))),
@@ -157,13 +201,13 @@ export async function openShareDialog(ctx) {
         h('details', {}, h('summary', {}, 'Outros sistemas'), ...Object.keys(dl.all).filter((k) => k !== dl.mine).map((k) => h('a', { href: dl.url(k), rel: 'noopener' }, dl.all[k].label)))),
         ponteSafetyNote(),
       h('details', {}, h('summary', {}, 'Como instalar'),
-        h('p', {}, h('b', {}, 'Windows: '), 'abra o arquivo baixado. Se aparecer "O Windows protegeu o computador", clique em "Mais informações" → "Executar assim mesmo". Quando o celular conectar pela primeira vez, permita o acesso em redes privadas.'),
+        h('p', {}, h('b', {}, 'Windows: '), 'abra o arquivo baixado. Se aparecer "O Windows protegeu o computador", clique em "Mais informações" → "Executar assim mesmo". No fim, responda Sim para liberar a Ponte no firewall (redes privadas): sem isso o celular não abre a página.'),
         h('p', {}, h('b', {}, 'macOS: '), 'no Terminal: ', h('code', {}, 'chmod +x ~/Downloads/neurotab-ponte-macos-* && xattr -d com.apple.quarantine ~/Downloads/neurotab-ponte-macos-*; ~/Downloads/neurotab-ponte-macos-*')),
         h('p', {}, h('b', {}, 'Linux: '), h('code', {}, 'chmod +x neurotab-ponte-linux-* && ./neurotab-ponte-linux-*')),
         h('p', { class: 'muted' }, 'Depois de instalar, ligue esta opção e salve. O navegador abre a Ponte sozinho quando precisar.')),
       h('label', {}, 'Porta', lanPort),
-      lanUrls.length
-        ? h('button', { class: 'btn primary', type: 'button', onclick: () => qrDialog(t('Abrir no celular'), lanUrls[0], `${t('O celular precisa estar no mesmo Wi-Fi.')} ${lanUrls.join(' · ')}`) }, '📱 Abrir no celular')
+      lanList.length
+        ? h('button', { class: 'btn primary', type: 'button', onclick: () => lanQrDialog(lanList) }, '📱 Abrir no celular')
         : null,
     ], lanSt.status === 'on' ? `✓ ${t('Ponte ligada')}${lanSt.version ? ' · v' + lanSt.version : ''}` : statusLine(lanSt)),
     say,

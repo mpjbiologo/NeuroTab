@@ -55,3 +55,38 @@ test('encaixe nas guias: menor distância dentro do limite', () => {
   assert.equal(snapAxis([100], [120]), null);
   assert.deepEqual(snapAxis([100], [120], 30), { d: 20, at: 120 });
 });
+
+test('layout automático: linhas completas e simétricas, na ordem', async () => {
+  const { autoRows } = await import('../../src/lib/layout-geometry.js');
+  const spans = (items, cols) => autoRows(items.map((w) => ({ w })), cols).map((r) => r.map((c) => c.span));
+  const idxs = (items, cols) => autoRows(items.map((w) => ({ w })), cols).flat().map((c) => c.idx);
+  for (const rows of [spans([6, 6, 6, 6]), spans([4, 4, 4, 6, 6]), spans([12, 3, 3, 3, 3])]) {
+    for (const r of rows) assert.equal(r.reduce((a, b) => a + b, 0), 12, 'cada linha soma 12');
+  }
+  assert.deepEqual(spans([6, 6, 6, 6]), [[6, 6], [6, 6]]);
+  assert.deepEqual(spans([5, 7]), [[6, 6]], 'parecidos viram metade e metade');
+  assert.deepEqual(spans([8, 3]), [[8, 4]]);
+  assert.deepEqual(spans([3, 4, 5]), [[4, 4, 4]]);
+  assert.deepEqual(spans([3, 3, 3, 3, 3, 3]), [[3, 3, 3, 3], [6, 6]]);
+  assert.deepEqual(spans([4, 4, 4, 4]), [[6, 6], [6, 6]], 'não sobra um sozinho embaixo');
+  assert.deepEqual(idxs([4, 4, 4, 4, 9, 2]), [0, 1, 2, 3, 4, 5], 'ordem mantida');
+  assert.deepEqual(spans([4, 8, 6], 6), [[6], [6], [6]], 'em 6 colunas: largo ocupa a linha toda');
+  assert.deepEqual(spans([4, 4, 4], 6), [[3, 3], [6]]);
+  for (const r of spans([4, 4, 8, 4], 6)) assert.equal(r.reduce((a, b) => a + b, 0), 6);
+  assert.deepEqual(spans([4, 8], 1), [[1], [1]]);
+});
+
+test('layout automático no modo livre: mesma altura por linha, sem sobreposição', async () => {
+  const { autoRows, arrangeRects } = await import('../../src/lib/layout-geometry.js');
+  const rows = autoRows([{ w: 6 }, { w: 6 }, { w: 4 }, { w: 4 }, { w: 4 }]);
+  const rects = arrangeRects({ rows, W: 1200, gap: 16, heights: [300, 420, 900, 100, 250], top: 200 });
+  assert.equal(rects.length, 5);
+  assert.equal(rects[0].h, rects[1].h);
+  assert.equal(rects[0].h, 420);
+  assert.equal(rects[2].h, 520, 'limitada à altura máxima');
+  assert.equal(rects[0].y, 200);
+  assert.equal(rects[2].y, 200 + 420 + 16);
+  assert.equal(rects[1].x + rects[1].w, 1200, 'encosta na borda direita');
+  const box = rects.map((r) => R(r.x, r.y, r.w, r.h));
+  box.forEach((b, i) => assert.equal(overlapsAny(b, box.filter((_, j) => j !== i), 8), false));
+});
