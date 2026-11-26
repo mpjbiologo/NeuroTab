@@ -2243,6 +2243,8 @@ export default {
     "Em Wi-Fi público, rede de convidados ou de empresa, a rede local costuma ser bloqueada. O ntfy funciona em qualquer rede, cifrado.": "En Wi-Fi público, de invitados o de empresa, la red local suele estar bloqueada. ntfy funciona en cualquier red, cifrado.",
     "Usar ntfy em vez disso": "Usar ntfy en su lugar",
     "🔔 ntfy ligado. Pareie o celular pelo QR e clique em Salvar.": "🔔 ntfy activado. Empareja el celular con el QR y haz clic en Guardar.",
+    // Rede local espelhada (0.9.2.4)
+    "O celular vê a área de transferência deste computador (os 30 itens mais recentes; o que parece senha nunca é guardado)": "El celular ve el portapapeles de esta computadora (los 30 elementos más recientes; lo que parece contraseña nunca se guarda)",
   },
   patterns: [
     ["Gasto de {0} lançado em {1}.", "Gasto de {0} registrado en {1}."],

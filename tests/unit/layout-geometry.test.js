@@ -90,3 +90,14 @@ test('layout automático no modo livre: mesma altura por linha, sem sobreposiç�
   const box = rects.map((r) => R(r.x, r.y, r.w, r.h));
   box.forEach((b, i) => assert.equal(overlapsAny(b, box.filter((_, j) => j !== i), 8), false));
 });
+
+test('layout automático em tela larga: mais widgets por linha, linhas ainda completas (0.9.2.4)', async () => {
+  const { autoRows, autoScale } = await import('../../src/lib/layout-geometry.js');
+  assert.equal(autoScale(1200), 1);
+  assert.ok(autoScale(1920) < 0.7);
+  const items = [6, 6, 6, 6, 6, 6].map((w) => ({ w }));
+  assert.deepEqual(autoRows(items, 12).map((r) => r.length), [2, 2, 2]);
+  const wide = autoRows(items, 12, { scale: autoScale(1920) });
+  assert.deepEqual(wide.map((r) => r.length), [3, 3], 'na tela larga cabem 3 por linha');
+  for (const r of wide) assert.equal(r.reduce((a, c) => a + c.span, 0), 12);
+});

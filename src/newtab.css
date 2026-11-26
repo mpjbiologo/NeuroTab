@@ -225,13 +225,15 @@ body.free.editing .widgets { min-height: calc(100vh - var(--edit-bar-h, 64px) - 
   box-shadow: var(--shadow-card);
   display: flex; flex-direction: column; max-height: 520px;
 }
+/* Rolar dentro de um widget rola só o widget: ao chegar ao fim, a página não continua (0.9.2.4) */
+.widget, .widget * { overscroll-behavior: contain; }
 /* Estilos de widget do editor de aparência (#58) */
 [data-wstyle="solid"] .widget { background: var(--surface-solid); backdrop-filter: none; }
 [data-wstyle="outline"] .widget { background: color-mix(in oklch, var(--surface-solid) 14%, transparent); backdrop-filter: blur(4px); box-shadow: none; border-color: var(--border-strong); }
 [data-wstyle="minimal"] .widget { background: color-mix(in oklch, var(--surface-solid) 34%, transparent); backdrop-filter: blur(8px); border-color: transparent; box-shadow: none; }
 [data-wstyle="minimal"] .widget > header { color: var(--text-2); }
 /* Automático (0.9.2.2): linhas na ordem, completas, com a mesma altura em cada linha */
-.widgets.auto-layout { grid-auto-flow: row; align-items: stretch; }
+.widgets.auto-layout { grid-auto-flow: row; align-items: stretch; width: 100%; } /* usa a tela toda (0.9.2.4) */
 .widgets.auto-layout > .widget { height: auto; }
 body.auto-layout .widget > .grip, body.auto-layout .wgrid.wsize { display: none; }
 .widget.size-s { grid-column: span 4; }

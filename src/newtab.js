@@ -8,6 +8,7 @@ import { configureSpeech } from './lib/speech-engine.js';
 import { startIconizer } from './lib/icons.js';
 import { initWindowManager } from './lib/window-manager.js';
 import { S, bus } from './newtab/state.js';
+import { autoScale } from './lib/layout-geometry.js';
 import { brainEvents } from './lib/events.js';
 import { applyBackground, applySettings } from './newtab/appearance.js';
 import { openItemDialog } from './newtab/editor.js';
@@ -119,6 +120,7 @@ async function init() {
       if (freeNow !== document.body.classList.contains('free')) renderWidgets();
       else if (freeNow) repositionFree();
       else if (layoutCols() !== S.gridCols) renderWidgets();
+      else if (S.autoSpans && Math.abs(autoScale($('#widgets').clientWidth) - S.autoScale) > 0.04) renderWidgets(); // automático: refaz as linhas na nova largura
     }, 150);
   });
   setupUpdates();

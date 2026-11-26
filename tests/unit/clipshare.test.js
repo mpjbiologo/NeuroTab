@@ -257,3 +257,22 @@ test('rede local: o QR usa o Wi-Fi, não a VPN nem o adaptador virtual (0.9.2.2)
   assert.equal(now[0].publicNet, true);
   assert.deepEqual(lanTargets({}, 'x'), []);
 });
+
+test('rede local: o celular vê a área de transferência do computador (0.9.2.4)', async () => {
+  const { lanMirrorItems, shareConfig } = await import('../../src/lib/clipboard-share.js');
+  const share = shareConfig({ share: { enabled: true, lan: { on: true, token: 't' } } });
+  assert.equal(share.lan.mirror, true, 'ligado por padrão');
+  assert.equal(share.what, 'manual', 'mesmo com "só o que eu mandar" nos outros caminhos');
+  const clips = [
+    { id: 'a', kind: 'text', text: 'antigo', updatedAt: 1 },
+    { id: 'b', kind: 'text', text: 'novo', updatedAt: 3 },
+    { id: 'c', kind: 'text', text: 'do celular', origin: 'remote', updatedAt: 4 },
+    { id: 'd', kind: 'image', image: { data: 'data:image/png;base64,AA', size: 900_000 }, updatedAt: 2 },
+    { id: 'e', kind: 'image', image: { data: 'data:image/png;base64,AA', size: 1000 }, updatedAt: 5 },
+  ];
+  assert.deepEqual(lanMirrorItems(clips, share).map((x) => x.id), ['a', 'b', 'e'], 'mais antigo primeiro, sem os de outros aparelhos, imagem grande fora');
+  assert.deepEqual(lanMirrorItems(clips, share, 2).map((x) => x.id), ['b', 'e']);
+  assert.deepEqual(lanMirrorItems(clips, { ...share, lan: { ...share.lan, mirror: false } }), []);
+  assert.deepEqual(lanMirrorItems(clips, { ...share, direction: 'receive' }), []);
+  assert.deepEqual(lanMirrorItems(clips, { ...share, enabled: false }), []);
+});
