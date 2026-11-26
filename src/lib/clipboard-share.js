@@ -110,3 +110,22 @@ export async function shareItem(item, cfg) {
   for (const t of shareTargets()) if (on.has(t.id)) out.push(await t.send(item).then(() => t.id, () => null));
   return out.filter(Boolean);
 }
+
+/**
+ * Endereços da Ponte para o celular (0.9.2.2), o melhor primeiro. A Ponte nova manda `addrs` já
+ * ordenados (Wi-Fi/Ethernet antes de VPN e adaptadores virtuais); a antiga só `urls`, então
+ * ordenamos pelo IP: 192.168.x, depois 10.x, por último 172.16–31 (Docker, WSL, Cloudflare WARP…).
+ * Devolve [{ url, ip, iface, virtual, publicNet, best }] com o token no `#`.
+ */
+export function lanTargets(st = {}, token = '') {
+  const withTok = (u) => `${String(u).replace(/\/+$/, '')}/#t=${encodeURIComponent(token)}`;
+  const ipOf = (u) => { try { return new URL(u).hostname; } catch { return ''; } };
+  let list = Array.isArray(st.addrs) && st.addrs.length
+    ? st.addrs.filter((a) => a && a.url).map((a) => ({ url: a.url, ip: a.ip || ipOf(a.url), iface: a.iface || '', virtual: !!a.virtual, publicNet: !!a.publicNet }))
+    : (st.urls || []).map((u) => ({ url: u, ip: ipOf(u), iface: '', virtual: /^172\.(1[6-9]|2\d|3[01])\./.test(ipOf(u)), publicNet: false }));
+  if (!(Array.isArray(st.addrs) && st.addrs.length)) {
+    const rank = (ip) => (ip.startsWith('192.168.') ? 0 : ip.startsWith('10.') ? 1 : 2);
+    list = list.map((x, i) => ({ x, i })).sort((a, b) => rank(a.x.ip) - rank(b.x.ip) || a.i - b.i).map((o) => o.x);
+  }
+  return list.map((a, i) => ({ ...a, url: withTok(a.url), best: i === 0 }));
+}

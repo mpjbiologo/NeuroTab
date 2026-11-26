@@ -159,3 +159,49 @@ test('montar e desmontar os widgets várias vezes não acumula assinaturas (#6)'
     await x.close();
   }
 });
+
+test('automático: linhas completas e simétricas; Organizar no modo livre alinha tudo (0.9.2.2)', async () => {
+  const x = await launch({ viewport: { width: 1600, height: 950 } });
+  try {
+    const p = await x.open('src/newtab.html');
+    await x.settings(p, { widgets: [{ id: 'capture', w: 5 }, { id: 'reminders', w: 7 }, { id: 'calc', w: 4 }, { id: 'clock', w: 3 }, { id: 'focus', w: 4 }, { id: 'quotes', w: 9 }] });
+    await p.click('#editLayout');
+    await p.click('#modeAuto');
+    await p.waitForTimeout(600);
+    await p.screenshot({ path: 'test-results/auto-layout.png' });
+    const rows = await p.$$eval('#widgets .widget', (els) => {
+      const by = {};
+      for (const e of els) { const r = e.getBoundingClientRect(); (by[Math.round(r.top)] ||= []).push({ l: r.left, r: r.right, h: Math.round(r.height) }); }
+      const box = document.querySelector('#widgets').getBoundingClientRect();
+      return Object.values(by).map((row) => ({ left: Math.min(...row.map((c) => c.l)) - box.left, right: box.right - Math.max(...row.map((c) => c.r)), hs: [...new Set(row.map((c) => c.h))], n: row.length }));
+    });
+    assert.ok(rows.length >= 2, JSON.stringify(rows));
+    for (const r of rows) {
+      assert.ok(Math.abs(r.left) < 2 && Math.abs(r.right) < 2, `linha ocupa a largura toda: ${JSON.stringify(r)}`);
+      assert.equal(r.hs.length, 1, `mesma altura na linha: ${JSON.stringify(r)}`);
+    }
+    await p.click('#doneEdit');
+    let s = (await x.storage(p, 'nt_data')).settings;
+    assert.equal(s.layoutMode, 'auto');
+    assert.equal(s.widgets.find((w) => w.id === 'capture').w, 5, 'as larguras salvas não mudam');
+
+    // Modo livre: ✨ Organizar
+    await p.click('#editLayout');
+    await p.click('#modeFree');
+    await p.waitForTimeout(500);
+    await p.click('#rearrange');
+    await p.waitForTimeout(700);
+    await p.screenshot({ path: 'test-results/free-arranged.png' });
+    const items = await p.$$eval('.free-item', (els) => els.map((e) => { const r = e.getBoundingClientRect(); return { id: e.dataset.id || e.dataset.fixed, l: r.left, t: r.top, r: r.right, b: r.bottom, h: r.height }; }));
+    for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+      const a = items[i]; const b = items[j];
+      assert.ok(!(a.l < b.r - 1 && b.l < a.r - 1 && a.t < b.b - 1 && b.t < a.b - 1), `${a.id} × ${b.id}`);
+    }
+    const hero = items.find((i) => i.id === '_hero');
+    const ws = items.filter((i) => !i.id.startsWith('_'));
+    assert.ok(ws.every((w) => w.t >= hero.b), 'widgets embaixo do relógio');
+    s = (await x.storage(p, 'nt_data')).settings;
+    const sameRow = s.widgets.filter((w) => w.fy === s.widgets[0].fy);
+    assert.ok(sameRow.length >= 2 && new Set(sameRow.map((w) => w.fh)).size === 1, JSON.stringify(s.widgets));
+  } finally { await x.close(); }
+});

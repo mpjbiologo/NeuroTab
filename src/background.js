@@ -740,7 +740,7 @@ async function syncPonte() {
   const allowed = await chrome.permissions.contains({ permissions: ['nativeMessaging'] }).catch(() => false);
   if (!(share.enabled && share.lan.on && allowed && share.lan.token)) {
     if (ponte) { ponte.disconnect(); ponte = null; }
-    await patchState('lan', { status: 'off', urls: [] });
+    await patchState('lan', { status: 'off', urls: [], addrs: [] });
     return;
   }
   if (ponte) return;
@@ -751,14 +751,14 @@ async function syncPonte() {
     return;
   }
   ponte.onMessage.addListener(async (m) => {
-    if (m?.type === 'ready') await patchState('lan', { status: 'on', urls: (m.urls || []).slice(0, 8), port: m.port, version: m.version || '', error: '' });
+    if (m?.type === 'ready') await patchState('lan', { status: 'on', urls: (m.urls || []).slice(0, 8), addrs: (m.addrs || []).slice(0, 8), port: m.port, version: m.version || '', error: '' });
     if (m?.type === 'incoming' && canReceive(shareConfig(await clipConfig()))) await receivePayload(cleanPayload(m.payload), 'Rede local');
     if (m?.type === 'error') await patchState('lan', { error: String(m.message || '') });
   });
   ponte.onDisconnect.addListener(async () => {
     const err = chrome.runtime.lastError?.message || '';
     ponte = null;
-    await patchState('lan', { status: 'off', urls: [], error: /not found|no such native|not registered/i.test(err) ? 'A NeuroTab Ponte não está instalada neste computador.' : err || 'A Ponte foi fechada.' });
+    await patchState('lan', { status: 'off', urls: [], addrs: [], error: /not found|no such native|not registered/i.test(err) ? 'A NeuroTab Ponte não está instalada neste computador.' : err || 'A Ponte foi fechada.' });
   });
   const who = await shareMe(share);
   ponte.postMessage({ type: 'hello', token: share.lan.token, port: share.lan.port, name: who.name, deviceId: who.id });

@@ -154,7 +154,7 @@ export const DEFAULT_SETTINGS = {
   // Relógio
   timerSound: 'sino',
   // Layouts salvos
-  layoutMode: 'grid', // grid | free
+  layoutMode: 'grid', // grid | auto (linhas simétricas, 0.9.2.2) | free
   freeFixed: {}, // posições do relógio e da busca no modo livre
   layouts: [], // [{ id, name, widgets, mode, freeFixed }]
   activeLayout: '',

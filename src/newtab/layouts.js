@@ -48,6 +48,7 @@ export function setupLayouts() {
     toast(`Layout "${l.name}" salvo`);
   });
   $('#modeGrid').addEventListener('click', () => setLayoutMode('grid'));
+  $('#modeAuto').addEventListener('click', () => setLayoutMode('auto'));
   $('#modeFree').addEventListener('click', () => setLayoutMode('free'));
   $('#rearrange').addEventListener('click', rearrangeFree);
   $('#layoutDel').addEventListener('click', async () => {

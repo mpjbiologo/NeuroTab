@@ -32,7 +32,7 @@ export function sanitizePages(pages, page) {
   const list = (Array.isArray(pages) ? pages : []).filter((p) => p && typeof p === 'object' && p.id).slice(0, MAX_PAGES).map((p, i) => ({
     id: str(p.id, 40), name: str(p.name, 30) || `Página ${i + 1}`, icon: str(p.icon, 8),
     widgets: Array.isArray(p.widgets) ? p.widgets.filter((w) => w && w.id).map((w) => ({ ...w })) : [],
-    mode: p.mode === 'free' ? 'free' : 'grid', freeFixed: p.freeFixed && typeof p.freeFixed === 'object' ? p.freeFixed : {},
+    mode: ['free', 'auto'].includes(p.mode) ? p.mode : 'grid', freeFixed: p.freeFixed && typeof p.freeFixed === 'object' ? p.freeFixed : {},
   }));
   const ids = new Set();
   const uniq = list.filter((p) => (ids.has(p.id) ? false : ids.add(p.id)));
@@ -44,7 +44,7 @@ export const hasPages = (s) => Array.isArray(s.pages) && s.pages.length > 1;
 export const pageIndex = (s) => Math.max(0, (s.pages || []).findIndex((p) => p.id === s.page));
 export const currentPage = (s) => (hasPages(s) ? s.pages[pageIndex(s)] : null);
 
-const snapshot = (s) => ({ widgets: structuredClone(s.widgets || []), mode: s.layoutMode === 'free' ? 'free' : 'grid', freeFixed: structuredClone(s.freeFixed || {}) });
+const snapshot = (s) => ({ widgets: structuredClone(s.widgets || []), mode: ['free', 'auto'].includes(s.layoutMode) ? s.layoutMode : 'grid', freeFixed: structuredClone(s.freeFixed || {}) });
 
 // Guarda a página aberta no registro dela (antes de trocar, criar ou mover).
 export function storeLive(s) {

@@ -22,6 +22,7 @@ type Msg struct {
 	DeviceID string          `json:"deviceId,omitempty"`
 	Payload  json.RawMessage `json:"payload,omitempty"`
 	URLs     []string        `json:"urls,omitempty"`
+	Addrs    []LanAddr       `json:"addrs,omitempty"`
 	Version  string          `json:"version,omitempty"`
 	Message  string          `json:"message,omitempty"`
 }

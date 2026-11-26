@@ -38,6 +38,23 @@ test('tela 📤: regras e ntfy com pareamento por QR; QR de um item', async () =
     await card.locator('.clip-item button[title="Mostrar QR para o celular"]').click();
     await p.locator('dialog.clip-qr[open] svg').waitFor();
     await p.locator('dialog.clip-qr[open] button[value="ok"]').click();
+    // rede local (0.9.2.2): o QR leva o Wi-Fi recomendado; a VPN fica como alternativa marcada
+    await p.evaluate(() => chrome.storage.local.set({ nt_clipshare_state: { lan: { status: 'on', urls: ['http://172.16.0.2:41414', 'http://192.168.1.2:41414'], addrs: [
+      { url: 'http://192.168.1.2:41414', ip: '192.168.1.2', iface: 'Wi-Fi', publicNet: true },
+      { url: 'http://172.16.0.2:41414', ip: '172.16.0.2', iface: 'CloudflareWARP', virtual: true }] } } }));
+    await card.locator('..').locator('button[title="Compartilhar com outros aparelhos"]').click();
+    await p.locator('dialog.share-dlg[open] button:has-text("Abrir no celular")').last().click();
+    const lanDlg = p.locator('dialog.lan-qr[open]');
+    await lanDlg.locator('.clip-qr-img svg').waitFor();
+    if (process.env.NT_SHOTS) await p.screenshot({ path: 'test-results/lan-qr.png' });
+    assert.equal(await lanDlg.locator('.lan-link').textContent(), 'http://192.168.1.2:41414/');
+    assert.match(await lanDlg.locator('.lan-warn').textContent(), /Pública|Public/);
+    await lanDlg.locator('summary').first().click();
+    await lanDlg.locator('.lan-opt:has-text("CloudflareWARP")').click();
+    assert.equal(await lanDlg.locator('.lan-link').textContent(), 'http://172.16.0.2:41414/');
+    await lanDlg.locator('button[value="ok"]').click();
+    await p.locator('dialog.share-dlg[open] button[value="cancel"]').click();
+    await p.evaluate(() => chrome.storage.local.remove('nt_clipshare_state'));
     // tela de compartilhar
     await card.locator('..').locator('button[title="Compartilhar com outros aparelhos"]').click();
     const dlg = p.locator('dialog.share-dlg[open]');
@@ -87,6 +104,7 @@ test('rede local de verdade: extensão ↔ Ponte ↔ página do celular, nos doi
     for (let i = 0; i < 50 && (st = (await x.storage(p, 'nt_clipshare_state'))?.lan)?.status !== 'on'; i++) await p.waitForTimeout(200);
     assert.equal(st?.status, 'on', 'a Ponte ligou: ' + JSON.stringify(st));
     const real = st.port;
+    assert.ok(Array.isArray(st.addrs) && st.addrs.length === st.urls.length && (!st.urls.length || st.addrs[0].url === st.urls[0]), 'endereços com o nome da placa, na mesma ordem: ' + JSON.stringify(st));
 
     // o celular abre a página pelo endereço do QR
     const phone = await x.ctx.newPage();
