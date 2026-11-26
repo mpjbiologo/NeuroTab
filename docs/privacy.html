@@ -18,7 +18,7 @@
 <body>
 <p><a href="./">← NeuroTab</a></p>
 <h1>Política de privacidade</h1>
-<p class="muted">Última atualização: 24 de novembro de 2026 · versão 0.9.2</p>
+<p class="muted">Última atualização: 26 de novembro de 2026 · versão 0.9.3</p>
 <nav><a href="#pt">Português</a><a href="#en">English</a><a href="#es">Español</a></nav>
 
 <section id="pt">
@@ -49,6 +49,8 @@
 <tr><td>Conta Google (opcional)</td><td>Google (accounts.google.com, googleapis.com)</td><td>O login é feito na página do Google. A NeuroTab recebe seu nome, e-mail e foto, para mostrar qual conta está conectada, e um acesso temporário, guardado só no navegador</td></tr>
 <tr><td>Agenda da conta Google (opcional)</td><td>Google Agenda (googleapis.com), com a sua conta</td><td>A NeuroTab lê a lista das suas agendas e os eventos das agendas que você escolher, para mostrar no widget Agenda, e cria, edita ou exclui eventos só quando você faz isso no widget (escopos calendar.events e calendar.calendarlist.readonly). Os eventos ficam guardados só no navegador e não são enviados a nenhum outro lugar</td></tr>
 <tr><td>Sincronização (opcional)</td><td>Seu Google Drive, numa pasta oculta só da NeuroTab (escopo drive.appdata)</td><td>As categorias que você escolher (notas, atalhos, configurações, agenda, hábitos). <b>Com senha</b>, tudo é criptografado no seu computador antes do envio e nem o Google consegue ler. <b>Sem senha</b>, o conteúdo fica legível na sua conta. Chaves de API e imagens não são sincronizadas. A NeuroTab não tem acesso aos outros arquivos do seu Drive</td></tr>
+<tr><td>Testar os modelos de IA (só quando você pede)</td><td>Os servidores de IA que você cadastrou</td><td>Uma chamada mínima por modelo ("Responda apenas: OK", ou o texto "ok" para modelos de embeddings), com a sua chave. O resultado de cada teste fica só neste navegador, sem a chave</td></tr>
+<tr><td>Fontes a partir de arquivos</td><td>Nenhum: fica no computador</td><td>O arquivo é lido no navegador e <b>não é copiado</b>. Ficam o nome, o tamanho, o tipo, a data e, quando dá, o texto (até 60 mil caracteres), que viajam como as outras notas: na sincronização, se ligada, e no backup</td></tr>
 <tr><td>Aviso de atualização</td><td>GitHub (api.github.com)</td><td>Apenas a consulta da versão mais recente</td></tr>
 <tr><td>Ícones dos sites (só no Firefox)</td><td>DuckDuckGo (icons.duckduckgo.com)</td><td>O domínio dos seus atalhos, para mostrar o ícone</td></tr>
 </table>
@@ -66,7 +68,7 @@
 <li><b>Minha nuvem:</b> um arquivo na pasta oculta da NeuroTab no seu Google Drive, criptografado com a sua senha de sincronização. A página do celular (mpjbiologo.github.io/NeuroTab/cola/) entra com a sua conta e lê esse arquivo direto do Google, no seu celular.</li>
 <li><b>ntfy:</b> as mensagens passam pelo servidor ntfy que você escolher (ntfy.sh ou um próprio), criptografadas com uma chave que só vai no QR de pareamento; o servidor não consegue ler, a menos que você ligue a opção de texto aberto.</li>
 <li><b>Telegram:</b> as mensagens vão para uma conversa sua com o seu próprio bot e passam pelos servidores do Telegram, que podem ler o conteúdo.</li>
-<li><b>Rede local:</b> o programa opcional NeuroTab Ponte, no seu computador, abre uma página para o celular no mesmo Wi-Fi, protegida por um código de acesso; nada sai da sua rede.</li>
+<li><b>Rede local:</b> o programa opcional NeuroTab Ponte, no seu computador, abre uma página para o celular no mesmo Wi-Fi, protegida por um código de acesso; nada sai da sua rede. Com a rede local ligada, a página do celular mostra os <b>30 itens mais recentes</b> da área de transferência deste computador (além do que você mandar); dá para desligar em "O celular vê a área de transferência deste computador". No Windows, a instalação da Ponte pede sua confirmação para criar uma regra no Firewall que libera só a Ponte, só em redes privadas e de domínio, nas portas 41414 a 41423.</li>
 </ul>
 <h3>Ícones dos atalhos</h3>
 <p>Por padrão, os ícones vêm do próprio navegador. Se você escolher "Google — alta resolução" ou "DuckDuckGo" em Aparência → Estilo dos atalhos, o endereço de cada site dos seus atalhos é enviado a esse serviço para buscar o ícone; nada mais.</p>
@@ -120,6 +122,8 @@
 <tr><td>Google account (optional)</td><td>Google (accounts.google.com, googleapis.com)</td><td>Sign-in happens on Google's page. NeuroTab receives your name, email and photo, to show which account is connected, and temporary access, stored only in the browser</td></tr>
 <tr><td>Google account calendar (optional)</td><td>Google Calendar (googleapis.com), with your account</td><td>NeuroTab reads the list of your calendars and the events of the calendars you choose, to show them in the Calendar widget, and creates, edits or deletes events only when you do so in the widget (calendar.events and calendar.calendarlist.readonly scopes). Events are stored only in the browser and are not sent anywhere else</td></tr>
 <tr><td>Sync (optional)</td><td>Your Google Drive, in a hidden NeuroTab-only folder (drive.appdata scope)</td><td>The categories you choose (notes, shortcuts, settings, calendar, habits). <b>With a password</b>, everything is encrypted on your computer before sending and not even Google can read it. <b>Without a password</b>, the content is readable in your account. API keys and images are not synced. NeuroTab has no access to your other Drive files</td></tr>
+<tr><td>Testing AI models (only when you ask)</td><td>The AI servers you added</td><td>One minimal call per model ("Reply only: OK", or the text "ok" for embedding models), with your key. Each result stays only in this browser, without the key</td></tr>
+<tr><td>Sources from files</td><td>None: stays on your computer</td><td>The file is read in the browser and <b>is not copied</b>. Its name, size, type, date and, when possible, its text (up to 60,000 characters) are kept and travel like your other notes: in sync, if on, and in backups</td></tr>
 <tr><td>Update notice</td><td>GitHub</td><td>Only the latest-version lookup</td></tr>
 <tr><td>Site icons (Firefox only)</td><td>DuckDuckGo</td><td>The domain of your shortcuts, to show the icon</td></tr>
 </table>
@@ -137,7 +141,7 @@
 <li><b>My cloud:</b> a file in NeuroTab's hidden folder in your Google Drive, encrypted with your sync password. The phone page (mpjbiologo.github.io/NeuroTab/cola/) signs in with your account and reads that file directly from Google, on your phone.</li>
 <li><b>ntfy:</b> messages go through the ntfy server you choose (ntfy.sh or your own), encrypted with a key that only goes in the pairing QR; the server can't read them unless you turn on plain text.</li>
 <li><b>Telegram:</b> messages go to a chat with your own bot and pass through Telegram's servers, which can read the content.</li>
-<li><b>Local network:</b> the optional NeuroTab Ponte program on your computer opens a page for the phone on the same Wi-Fi, protected by an access code; nothing leaves your network.</li>
+<li><b>Local network:</b> the optional NeuroTab Ponte program on your computer opens a page for the phone on the same Wi-Fi, protected by an access code; nothing leaves your network. With the local network on, the phone page shows the <b>30 most recent items</b> of this computer's clipboard (besides what you send); you can turn this off in "The phone sees this computer's clipboard". On Windows, installing the Ponte asks for your confirmation to create a Firewall rule that allows only the Ponte, only on private and domain networks, on ports 41414 to 41423.</li>
 </ul>
 <h3>Shortcut icons</h3>
 <p>By default, icons come from the browser itself. If you choose "Google — high resolution" or "DuckDuckGo" in Appearance → Shortcut style, the address of each of your shortcut sites is sent to that service to fetch its icon; nothing else.</p>
@@ -181,6 +185,8 @@
 <tr><td>Cuenta de Google (opcional)</td><td>Google (accounts.google.com, googleapis.com)</td><td>El inicio de sesión ocurre en la página de Google. NeuroTab recibe tu nombre, correo y foto, para mostrar qué cuenta está conectada, y un acceso temporal, guardado solo en el navegador</td></tr>
 <tr><td>Agenda de la cuenta de Google (opcional)</td><td>Google Calendar (googleapis.com), con tu cuenta</td><td>NeuroTab lee la lista de tus agendas y los eventos de las agendas que elijas, para mostrarlos en el widget Agenda, y crea, edita o borra eventos solo cuando lo haces en el widget (alcances calendar.events y calendar.calendarlist.readonly). Los eventos se guardan solo en el navegador y no se envían a ningún otro lugar</td></tr>
 <tr><td>Sincronización (opcional)</td><td>Tu Google Drive, en una carpeta oculta solo de NeuroTab (alcance drive.appdata)</td><td>Las categorías que elijas (notas, atajos, configuración, agenda, hábitos). <b>Con contraseña</b>, todo se cifra en tu computadora antes del envío y ni Google puede leerlo. <b>Sin contraseña</b>, el contenido queda legible en tu cuenta. Las claves de API y las imágenes no se sincronizan. NeuroTab no tiene acceso a los demás archivos de tu Drive</td></tr>
+<tr><td>Probar los modelos de IA (solo cuando lo pides)</td><td>Los servidores de IA que añadiste</td><td>Una llamada mínima por modelo ("Responde solo: OK", o el texto "ok" para modelos de embeddings), con tu clave. El resultado de cada prueba queda solo en este navegador, sin la clave</td></tr>
+<tr><td>Fuentes desde archivos</td><td>Ninguno: queda en tu ordenador</td><td>El archivo se lee en el navegador y <b>no se copia</b>. Quedan el nombre, el tamaño, el tipo, la fecha y, cuando se puede, el texto (hasta 60.000 caracteres), que viajan como tus otras notas: en la sincronización, si está activada, y en la copia de seguridad</td></tr>
 <tr><td>Aviso de actualización</td><td>GitHub</td><td>Solo la consulta de la última versión</td></tr>
 <tr><td>Iconos de sitios (solo Firefox)</td><td>DuckDuckGo</td><td>El dominio de tus accesos directos, para mostrar el icono</td></tr>
 </table>
@@ -198,7 +204,7 @@
 <li><b>Mi nube:</b> un archivo en la carpeta oculta de NeuroTab en tu Google Drive, cifrado con tu contraseña de sincronización. La página del celular (mpjbiologo.github.io/NeuroTab/cola/) entra con tu cuenta y lee ese archivo directo de Google, en tu celular.</li>
 <li><b>ntfy:</b> los mensajes pasan por el servidor ntfy que elijas (ntfy.sh o uno propio), cifrados con una clave que solo va en el QR de emparejamiento; el servidor no puede leerlos, salvo que actives el texto abierto.</li>
 <li><b>Telegram:</b> los mensajes van a una conversación con tu propio bot y pasan por los servidores de Telegram, que pueden leer el contenido.</li>
-<li><b>Red local:</b> el programa opcional NeuroTab Ponte, en tu computadora, abre una página para el celular en el mismo Wi-Fi, protegida por un código de acceso; nada sale de tu red.</li>
+<li><b>Red local:</b> el programa opcional NeuroTab Ponte, en tu computadora, abre una página para el celular en el mismo Wi-Fi, protegida por un código de acceso; nada sale de tu red. Con la red local activada, la página del celular muestra los <b>30 elementos más recientes</b> del portapapeles de esta computadora (además de lo que envíes); puedes desactivarlo en "El celular ve el portapapeles de esta computadora". En Windows, la instalación de la Ponte pide tu confirmación para crear una regla en el Firewall que permite solo la Ponte, solo en redes privadas y de dominio, en los puertos 41414 a 41423.</li>
 </ul>
 <h3>Iconos de los accesos</h3>
 <p>Por defecto, los iconos vienen del propio navegador. Si eliges "Google — alta resolución" o "DuckDuckGo" en Apariencia → Estilo de los accesos, la dirección de cada sitio de tus accesos se envía a ese servicio para buscar el icono; nada más.</p>
