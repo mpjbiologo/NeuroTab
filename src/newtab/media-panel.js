@@ -8,7 +8,9 @@ import { modelChip } from '../lib/ai-ui.js';
 import { PLATFORMS } from '../lib/media-links.js';
 import { sanitizeMediaSave, noteMarkdown, notePath, CONTENT_LABEL } from '../lib/media.js';
 import { S } from './state.js';
-import { sanitizeMediaDl, canDownload, DL_ORIGINS, DL_ERRORS, DL_STATE_KEY } from '../lib/media-download.js';
+import { sanitizeMediaDl, canDownload, canDownloadAudio, canDownloadPhotos, originsFor, dlKey, DL_ERRORS, DL_STATE_KEY } from '../lib/media-download.js';
+import { dlSiteOf } from '../lib/media-sites.js';
+import { startMediaDownload, revealMedia, cancelMedia } from '../lib/media-dl-client.js';
 import { requestAccess } from '../lib/permissions.js';
 
 export function mediaPanel(box, it, close) {
@@ -58,7 +60,9 @@ export function mediaPanel(box, it, close) {
     m.caption ? h('details', {}, h('summary', {}, t('Legenda original')), h('p', { class: 'im-text' }, m.caption)) : null,
     m.content ? h('details', {}, h('summary', {}, t(CONTENT_LABEL[m.contentType] || 'Conteúdo')), h('p', { class: 'im-text' }, m.content)) : null,
     h('div', { class: 'toolbar' }, btn, chip.el, h('a', { class: 'chip', href: it.url, target: '_blank', rel: 'noopener' }, '↗ ', t('Abrir original')), exp),
-    canDownload(it) ? downloadBox(it) : m.platform === 'youtube' ? h('small', { class: 'muted' }, '⬇ ', t('O YouTube não permite baixar vídeos por extensões.')) : null].filter(Boolean));
+    canDownload(it) ? downloadBox(it) : m.platform === 'youtube' ? h('small', { class: 'muted' }, '⬇ ', t('O YouTube não permite baixar vídeos por extensões.')) : dlSiteOf(it.url || '').code === 'drm' ? h('small', { class: 'muted' }, '⬇ ', t(DL_ERRORS.drm)) : null,
+    canDownloadAudio(it) || canDownloadPhotos(it) ? extraBox(it) : null,
+    h('a', { class: 'chip im-lib', href: chrome.runtime.getURL('src/media.html#posts'), target: '_blank' }, '🎞️ ', t('Biblioteca de mídias'))].filter(Boolean));
   box.hidden = false;
 }
 
@@ -107,12 +111,12 @@ function downloadBox(it) {
     const c = cfg();
     // permissões pedidas aqui, no clique (o service worker não pode perguntar)
     if (!via && c.engine !== 'ponte') {
-      const ok = await requestAccess({ permissions: ['downloads'], origins: DL_ORIGINS[it.media.platform] || [] });
+      const ok = await requestAccess({ permissions: ['downloads'], origins: originsFor(it.url || '') });
       if (!ok && c.engine === 'browser') { toast('Sem a permissão de downloads, não dá para baixar.'); return; }
     }
     if (via === 'ponte' || c.engine === 'ponte') {
       const perms = ['nativeMessaging', ...(c.cookies ? ['cookies'] : [])];
-      if (!(await requestAccess({ permissions: perms, origins: c.cookies ? DL_ORIGINS[it.media.platform] || [] : [] }))) { toast('Sem a permissão, a NeuroTab Ponte não pode baixar.'); paint(); return; }
+      if (!(await requestAccess({ permissions: perms, origins: c.cookies ? originsFor(it.url || '') : [] }))) { toast('Sem a permissão, a NeuroTab Ponte não pode baixar.'); paint(); return; }
     }
     paint({ state: 'running', stage: 'find', pct: 0 });
     watch();
@@ -133,5 +137,53 @@ function downloadBox(it) {
 
   paint();
   chrome.storage.session.get(DL_STATE_KEY).then((r) => { const st = r?.[DL_STATE_KEY]?.[it.id]; if (st?.state === 'running' && Date.now() - st.at < 60000) { paint(st); watch(); } }).catch(() => {});
+  return wrap;
+}
+
+// ---------- Só o áudio e as fotos do post (0.9.3.1) ----------
+const EXTRA = { audio: ['🎧', 'Só o áudio', 'Áudio baixado'], photos: ['🖼', 'Fotos do post', 'Fotos baixadas'] };
+
+function extraBox(it) {
+  const wrap = h('div', { class: 'im-dl im-extra' });
+  const can = { audio: canDownloadAudio(it), photos: canDownloadPhotos(it) };
+  let note = null;
+  let busy = '';
+  const paint = (st = null) => {
+    const kids = [];
+    for (const what of ['audio', 'photos']) {
+      if (!can[what]) continue;
+      const [ic, label, doneLabel] = EXTRA[what];
+      const rec = it.media?.[what];
+      if (busy === what) {
+        kids.push(h('small', {}, ic, ' ', st?.stage === 'find' || !st ? t('Procurando…') : `${t('Baixando')} ${Math.round(st.pct || 0)}%${st.via === 'ponte' ? ' · Ponte' : ''}`),
+          h('button', { type: 'button', class: 'chip', onclick: () => cancelMedia(dlKey(it.id, what)) }, t('Cancelar')));
+      } else if (rec) {
+        kids.push(h('button', { type: 'button', class: 'chip', title: t('Mostrar na pasta'), onclick: async () => { const r = await revealMedia(it.id, what); if (r?.error) toast(t(r.error)); } }, '📁 ', t(doneLabel), what === 'photos' && rec.count ? ` (${rec.count})` : ''),
+          h('button', { type: 'button', class: 'chip', title: t('Baixar de novo'), onclick: () => start(what) }, '↻'));
+      } else kids.push(h('button', { type: 'button', class: 'chip', disabled: !!busy, onclick: () => start(what) }, `${ic} `, t(label)));
+    }
+    if (note) kids.push(note);
+    wrap.replaceChildren(...kids);
+  };
+  const on = (ch, area) => { if (busy && area === 'session' && ch[DL_STATE_KEY]) { const st = ch[DL_STATE_KEY].newValue?.[dlKey(it.id, busy)]; if (st?.state === 'running') paint(st); } };
+  async function start(what, via = null) {
+    busy = what;
+    note = null;
+    paint();
+    chrome.storage.onChanged.addListener(on);
+    const r = await startMediaDownload(it, what, S.data.settings.mediaDl, { via });
+    chrome.storage.onChanged.removeListener(on);
+    busy = '';
+    if (r?.ok) { it.media[what] = r.download; toast(`${EXTRA[what][0]} ${t(EXTRA[what][2])}`); paint(); return; }
+    if (r?.need === 'ponte') {
+      note = h('div', { class: 'im-dl-note' }, h('small', {}, t('Só o áudio é separado pela NeuroTab Ponte, com o yt-dlp.')), h('button', { type: 'button', class: 'chip', onclick: () => start(what, 'ponte') }, '🔌 ', t('Baixar pela Ponte')));
+    } else {
+      const code = r?.code;
+      note = h('div', { class: 'im-dl-note' }, h('small', { class: code === 'canceled' ? 'muted' : 'warn' }, t(r?.error || DL_ERRORS[code] || 'Não deu para baixar.')),
+        ['notools', 'missing', 'old', 'login', 'noffmpeg'].includes(code) ? h('a', { class: 'chip', href: OPTIONS_MEDIA(), target: '_blank' }, '⚙️ ', t('Configurar')) : null);
+    }
+    paint();
+  }
+  paint();
   return wrap;
 }

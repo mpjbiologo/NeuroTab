@@ -264,3 +264,37 @@ func TestStatERemove(t *testing.T) {
 		t.Error("o arquivo devia ter sido apagado")
 	}
 }
+
+func TestMoreSitesAndAudio(t *testing.T) {
+	for _, u := range []string{"https://www.reddit.com/r/a/comments/1/x/", "https://vimeo.com/123", "https://soundcloud.com/a/b", "https://clips.twitch.tv/abc", "https://bsky.app/profile/a/post/1"} {
+		if _, _, err := allowedURL(u); err != nil {
+			t.Errorf("%s: %v", u, err)
+		}
+	}
+	for _, u := range []string{"https://www.netflix.com/watch/1", "https://open.spotify.com/track/1", "https://music.youtube.com/watch?v=1"} {
+		if _, _, err := allowedURL(u); err == nil {
+			t.Errorf("%s devia ser recusado", u)
+		}
+	}
+	has := func(args []string, want ...string) bool {
+		j := strings.Join(args, " ")
+		for _, w := range want {
+			if !strings.Contains(j, w) {
+				return false
+			}
+		}
+		return true
+	}
+	a := ytdlpArgs(dlReq{URL: "https://vimeo.com/1", Name: "aula", Audio: true, Format: "mp3"}, "/d", "/bin/ffmpeg", "")
+	if !has(a, "-f ba/b", "-x --audio-format mp3", "--ffmpeg-location /bin/ffmpeg") || has(a, "--merge-output-format") {
+		t.Errorf("áudio com ffmpeg: %v", a)
+	}
+	b := ytdlpArgs(dlReq{URL: "https://vimeo.com/1", Name: "aula", Audio: true, Format: "mp3"}, "/d", "", "")
+	if !has(b, "-f ba/b") || has(b, "-x") {
+		t.Errorf("áudio sem ffmpeg baixa o original: %v", b)
+	}
+	c := ytdlpArgs(dlReq{URL: "https://vimeo.com/1", Name: "aula", Audio: true, Format: "original"}, "/d", "/bin/ffmpeg", "")
+	if has(c, "-x") {
+		t.Errorf("original não converte: %v", c)
+	}
+}

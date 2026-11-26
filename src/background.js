@@ -29,6 +29,7 @@ import { downloadMedia, cancelDownload, revealDownload } from './lib/media-dl-ru
 import { sanitizeMediaDl, canDownload } from './lib/media-download.js';
 import { NET_KEY, sanitizeNet, sanitizeStore, serverBase, originOf, measureLatency, median, SAMPLES_MAX } from './lib/net.js';
 import { dispatchShares, pollShares, receivePayload, patchState, me as shareMe } from './lib/clipboard-sync.js';
+import { sitePatterns } from './lib/media-sites.js';
 
 // Janela de análise aberta com uma imagem temporária: quando ela fecha (a conexão cai), o fundo apaga a
 // imagem se ninguém a guardou. Mais confiável que apagar de dentro da janela, que pode fechar antes de terminar.
@@ -182,7 +183,7 @@ async function flashBadge(tabId, ok, detail = '') {
 
 /** Aviso depois de salvar uma mídia: resumida, já existia ou esperando (autorização da IA / permissão do site). */
 // Baixar vídeos da Mídia (0.7.11): só nestes sites (YouTube nunca).
-const DL_PAGES = ['https://www.instagram.com/*', 'https://www.tiktok.com/*', 'https://x.com/*', 'https://twitter.com/*'];
+const DL_PAGES = sitePatterns(); // 0.9.3.1: Instagram, TikTok, X e os outros sites compatíveis (media-sites.js)
 
 function notifyDownloaded(item) {
   chrome.notifications.create('media-dl:' + item.id, { type: 'basic', iconUrl: chrome.runtime.getURL('icons/icon128.png'), title: t('⬇ Vídeo baixado'), message: (item.title || item.url || '').slice(0, 200) });
@@ -888,12 +889,12 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     return true;
   }
   if (msg?.type === 'media:download' && typeof msg.id === 'string') {
-    downloadMedia(msg.id, { via: msg.via === 'ponte' ? 'ponte' : null, tabId: Number.isInteger(msg.tabId) ? msg.tabId : null }).then(reply, (e) => reply({ error: e.message }));
+    downloadMedia(msg.id, { via: msg.via === 'ponte' ? 'ponte' : null, tabId: Number.isInteger(msg.tabId) ? msg.tabId : null, what: ['audio', 'photos'].includes(msg.what) ? msg.what : 'video' }).then(reply, (e) => reply({ error: e.message }));
     return true;
   }
-  if (msg?.type === 'media:download-cancel') { reply({ ok: cancelDownload(String(msg.id || '')) }); return; }
+  if (msg?.type === 'media:download-cancel') { reply({ ok: cancelDownload(String(msg.key || msg.id || '')) }); return; }
   if (msg?.type === 'media:reveal') {
-    revealDownload(String(msg.id || ''), { open: !!msg.open }).then(reply, (e) => reply({ error: e.message }));
+    revealDownload(String(msg.id || ''), { open: !!msg.open, what: ['audio', 'photos'].includes(msg.what) ? msg.what : 'video' }).then(reply, (e) => reply({ error: e.message }));
     return true;
   }
   if (msg?.type === 'media:summarize') {

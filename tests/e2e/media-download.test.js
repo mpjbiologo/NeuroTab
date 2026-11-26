@@ -112,6 +112,7 @@ f=$(echo "$out" | sed 's/%(ext)s/mp4/')
 echo "NTP  40.0%|  2.00MiB|NA"
 echo "NTP 100.0%|  2.00MiB|NA"
 printf '%s' "$url" > "$f"
+echo "$@" > "$f.args"
 if [ -n "$cookies" ]; then cp "$cookies" "$f.cookies"; fi
 echo "NTF $f"
 `, { mode: 0o755 });
@@ -141,6 +142,13 @@ echo "NTF $f"
     assert.equal(readFileSync(it.media.download.file, 'utf8'), 'https://www.instagram.com/reel/ABC123/');
     assert.match(readFileSync(it.media.download.file + '.cookies', 'utf8'), /#HttpOnly_\.instagram\.com\tTRUE\t\/\tTRUE\t\d+\tsessionid\tsegredo123/);
     assert.deepEqual(readdirSync(join(dl, 'NeuroTab')).filter((f) => f.endsWith('.mp4')).length, 1);
+    // só o áudio (0.9.3.1): pela Ponte, na pasta dos áudios, com "-f ba/b"
+    await panel.locator('button:has-text("Só o áudio")').click();
+    await panel.locator('text=Áudio baixado').waitFor({ timeout: 30000 });
+    const au = (await x.storage(p, 'nt_brain')).find((i) => i.id === saved.id).media.audio;
+    assert.equal(au.via, 'ponte');
+    assert.ok(au.file.startsWith(join(dl, 'NeuroTab', 'Áudios')), au.file);
+    assert.match(readFileSync(au.file + '.args', 'utf8'), /-f ba\/b/);
     await page.close();
 
     // Configurações → Mídia: a Ponte acha o yt-dlp

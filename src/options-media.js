@@ -5,6 +5,7 @@ import { loadItems } from './lib/brain.js';
 import { categoriesToText, categoriesFromText, DEFAULT_CATEGORIES, sanitizeMediaSave, noteMarkdown, notePath } from './lib/media.js';
 import { MEDIA_ORIGINS } from './lib/media-save.js';
 import { sanitizeMediaDl, DL_ORIGINS, DL_ERRORS } from './lib/media-download.js';
+import { DL_SITES } from './lib/media-sites.js';
 import { ponteDl } from './lib/media-dl-run.js';
 import { NATIVE_HOST } from './lib/clipboard-share.js';
 import { ponteAllowed, askPonte } from './lib/net-ponte.js';
@@ -84,7 +85,18 @@ async function exportObsidian() {
 // ---------- Baixar vídeos (0.7.11) ----------
 const DL_ALL_ORIGINS = [...new Set(Object.values(DL_ORIGINS).flat())];
 
+/** Tabela dos sites compatíveis (0.9.3.1), a partir de media-sites.js. */
+function paintSites() {
+  const box = $('#dlSites');
+  if (!box) return;
+  const yes = (b) => (b ? '✓' : '—');
+  box.replaceChildren(h('table', { class: 'dl-sites-t' },
+    h('tr', {}, h('th', {}, t('Site')), h('th', {}, t('Vídeo')), h('th', {}, t('Só o áudio')), h('th', {}, t('Fotos')), h('th', {}, t('Sem a Ponte'))),
+    ...Object.values(DL_SITES).map((s) => h('tr', {}, h('td', {}, t(s.label)), h('td', {}, yes(s.video)), h('td', {}, yes(s.audio)), h('td', {}, yes(s.photos)), h('td', {}, s.browser ? t('quase sempre') : t('não'))))));
+}
+
 function setupMediaDl() {
+  paintSites();
   const cfg = () => sanitizeMediaDl(api.data().settings.mediaDl);
   const want = () => ({ permissions: ['downloads', ...(cfg().cookies ? ['cookies'] : [])], origins: DL_ALL_ORIGINS });
   const paint = async () => {

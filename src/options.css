@@ -337,6 +337,9 @@ main { width: 100%; max-width: 1480px; }
 /* Baixar vídeos (0.7.11) */
 .dl-tools { display: grid; gap: 8px; }
 .dl-tool { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dl-sites-t { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); margin: 4px 0 10px; }
+.dl-sites-t th, .dl-sites-t td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+.dl-sites-t td:not(:first-child), .dl-sites-t th:not(:first-child) { text-align: center; }
 .dl-tool small { color: var(--text-2); }
 
 /* Sistema → Apps externos */
