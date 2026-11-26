@@ -14,6 +14,7 @@ export const S = {
   widgetsSig: '',
   gridCols: 12,
   autoSpans: null, // larguras do modo Automático, por índice do widget
+  autoScale: 1, // escala das larguras no Automático (telas largas cabem mais por linha)
   zTop: 10,
   voiceSession: null, // reconhecimento de voz em andamento
 };

@@ -103,7 +103,9 @@ test('rede local de verdade: extensão ↔ Ponte ↔ página do celular, nos doi
     const card = await clipWidget(x, p);
     const port = 47600 + Math.floor(Math.random() * 300);
     const token = S.newToken();
-    await x.seed(p, { nt_clipboard_cfg: { retention: 'session', protect: true, max: 200, maxImages: 30, paused: false, ignore: [], share: { enabled: true, what: 'all', name: 'Notebook', images: 'small', direction: 'both', lan: { on: true, port, token } } } }, { reload: false });
+    // copiado ANTES de a Ponte ligar, e com "só o que eu mandar": o celular vê mesmo assim (0.9.2.4)
+    await paste(card, 'Copiado antes da Ponte');
+    await x.seed(p, { nt_clipboard_cfg: { retention: 'session', protect: true, max: 200, maxImages: 30, paused: false, ignore: [], share: { enabled: true, what: 'manual', name: 'Notebook', images: 'small', direction: 'both', lan: { on: true, port, token } } } }, { reload: false });
     let st;
     for (let i = 0; i < 50 && (st = (await x.storage(p, 'nt_clipshare_state'))?.lan)?.status !== 'on'; i++) await p.waitForTimeout(200);
     assert.equal(st?.status, 'on', 'a Ponte ligou: ' + JSON.stringify(st));
@@ -113,7 +115,7 @@ test('rede local de verdade: extensão ↔ Ponte ↔ página do celular, nos doi
     // o celular abre a página pelo endereço do QR
     const phone = await x.ctx.newPage();
     await phone.goto(`http://127.0.0.1:${real}/#t=${encodeURIComponent(token)}`);
-    await phone.locator('text=Nada por aqui ainda.').waitFor();
+    await phone.locator('.card:has-text("Copiado antes da Ponte")').waitFor({ timeout: 8000 });
     assert.equal(await phone.locator('#pc').textContent(), 'Notebook');
     // token errado: recusado
     const bad = await x.ctx.request.get(`http://127.0.0.1:${real}/api/items`, { headers: { 'X-NT-Token': 'errado' } });

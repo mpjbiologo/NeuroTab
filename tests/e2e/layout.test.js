@@ -205,3 +205,33 @@ test('automático: linhas completas e simétricas; Organizar no modo livre alinh
     assert.ok(sameRow.length >= 2 && new Set(sameRow.map((w) => w.fh)).size === 1, JSON.stringify(s.widgets));
   } finally { await x.close(); }
 });
+
+test('rolar dentro de um widget rola só ele; fora dele, a página (0.9.2.4)', async () => {
+  const x = await launch({ viewport: { width: 1280, height: 700 } });
+  try {
+    const p = await x.open('src/newtab.html');
+    await x.settings(p, { widgets: ['capture', 'reminders', 'calc', 'clock', 'focus', 'quotes', 'habits', 'brain'].map((id) => ({ id, w: 6 })) });
+    await p.waitForTimeout(500);
+    // um widget com conteúdo comprido (rolável)
+    const box = await p.evaluate(() => {
+      const b = document.querySelector('#widgets .widget .wbody');
+      b.style.maxHeight = '200px';
+      b.append(Object.assign(document.createElement('div'), { id: 'longo', style: 'height:1500px' }));
+      b.scrollIntoView({ block: 'center' });
+      const r = b.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    });
+    const y0 = await p.evaluate(() => scrollY);
+    await p.mouse.move(box.x, box.y);
+    for (let i = 0; i < 25; i++) { await p.mouse.wheel(0, 400); await p.waitForTimeout(30); }
+    await p.waitForTimeout(400);
+    const after = await p.evaluate(() => ({ y: scrollY, inner: document.querySelector('#longo').parentElement.scrollTop }));
+    assert.ok(after.inner > 1000, 'o widget rolou até o fim: ' + JSON.stringify(after));
+    assert.equal(after.y, y0, 'a página não rolou junto');
+    // fora de widget, a roda rola a página
+    await p.mouse.move(5, 350);
+    await p.mouse.wheel(0, 300);
+    await p.waitForTimeout(400);
+    assert.notEqual(await p.evaluate(() => scrollY), y0);
+  } finally { await x.close(); }
+});

@@ -53,6 +53,7 @@ Primeiro a base, depois os recursos.
 - ✅ **0.9.2.1 — Teclado e páginas** (#75): atalhos de teclado editáveis (Sistema → Teclado) e várias páginas de widgets na página inicial.
 - ✅ **0.9.2.2 — Layout automático e QR da rede local:** modo ✨ Automático (linhas completas e simétricas), ✨ Organizar no modo livre, e o QR da Ponte apontando para o Wi-Fi certo (sem VPN e adaptadores virtuais), com liberação do Firewall do Windows.
 - ✅ **0.9.2.3 — Teste por modelo** (#76): cada modelo de IA testado com uma chamada mínima e o estado ao lado (Conectado, Não autorizado, Limite excedido…); "Usar ntfy em vez disso" quando a rede local não abre.
+- ✅ **0.9.2.4 — Ajustes:** Automático ocupando a tela toda, celular vendo a área de transferência do computador pela rede local, e a roda do mouse rolando só o widget.
 - **0.9.3 — Fontes e documentos:** central de conhecimento com fontes e documentos (#9) e o que falta da #45 (pasta para imagens e áudio; avaliar outros sites, sem contornar DRM nem restrições).
 - **0.9.4 — NeuroPilot:** sugestões proativas locais, sem IA (#8).
 - **0.9.5 — Modo Estudante:** projetos de estudo, flashcards e questionários ligados às fontes (#11), já usando a central de IA da 0.8.0.

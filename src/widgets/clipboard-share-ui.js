@@ -130,6 +130,7 @@ export async function openShareDialog(ctx) {
   // 🏠 rede local
   const lan = h('input', { type: 'checkbox', checked: sh.lan.on });
   const lanPort = h('input', { type: 'number', min: 1024, max: 65535, value: sh.lan.port });
+  const lanMirror = h('input', { type: 'checkbox', checked: sh.lan.mirror !== false });
   let lanToken = sh.lan.token || newToken();
 
   const pairNtfy = () => {
@@ -220,6 +221,7 @@ export async function openShareDialog(ctx) {
         h('p', {}, h('b', {}, 'macOS: '), 'no Terminal: ', h('code', {}, 'chmod +x ~/Downloads/neurotab-ponte-macos-* && xattr -d com.apple.quarantine ~/Downloads/neurotab-ponte-macos-*; ~/Downloads/neurotab-ponte-macos-*')),
         h('p', {}, h('b', {}, 'Linux: '), h('code', {}, 'chmod +x neurotab-ponte-linux-* && ./neurotab-ponte-linux-*')),
         h('p', { class: 'muted' }, 'Depois de instalar, ligue esta opção e salve. O navegador abre a Ponte sozinho quando precisar.')),
+      h('label', { class: 'clip-opt' }, lanMirror, h('span', {}, h('small', {}, 'O celular vê a área de transferência deste computador (os 30 itens mais recentes; o que parece senha nunca é guardado)'))),
       h('label', {}, 'Porta', lanPort),
       lanList.length
         ? h('button', { class: 'btn primary', type: 'button', onclick: () => lanQrDialog(lanList, { onUseNtfy: useNtfy }) }, '📱 Abrir no celular')
@@ -241,7 +243,7 @@ export async function openShareDialog(ctx) {
           cloud: { on: cloud.checked && sync.enabled },
           ntfy: { on: ntfy.checked, server: (ntfyServer.value || 'https://ntfy.sh').trim(), topic: ntfyTopic, key: ntfyKey, plain: ntfyPlain.checked },
           telegram: { on: tg.checked && !!tgChat, token: tgToken.value.trim(), chatId: tgChat, bot: tgBot },
-          lan: { on: lan.checked, port: Math.min(65535, Math.max(1024, +lanPort.value || 41414)), token: lanToken },
+          lan: { on: lan.checked, port: Math.min(65535, Math.max(1024, +lanPort.value || 41414)), token: lanToken, mirror: lanMirror.checked },
         };
         if (tg.checked && !tgChat) say.textContent = t('Telegram: falta conectar o bot (botão Conectar).');
         await setClipConfig({ share });

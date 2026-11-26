@@ -7,7 +7,7 @@ import { S, heroEl, omniEl } from './state.js';
 import { renderGrid } from './grid.js';
 import { renderLayoutPicker } from './layouts.js';
 import { buildCard, isFree, layoutSig, mountCard, renderWidgets } from './widgets.js';
-import { spanFor, overlapsAny, firstFreeSpot, nearestFreePosition, snapAxis, autoRows, arrangeRects, gridColsFor } from '../lib/layout-geometry.js';
+import { spanFor, overlapsAny, firstFreeSpot, nearestFreePosition, snapAxis, autoRows, autoScale, arrangeRects, gridColsFor } from '../lib/layout-geometry.js';
 
 // =====================================================================
 // LIVRE — widgets em qualquer lugar da tela
@@ -364,7 +364,7 @@ export async function rearrangeFree() {
   if (top) top += 8;
   const heights = s.widgets.map((w, idx) => $(`.free-item[data-idx="${idx}"]`, box)?.offsetHeight || w.fh || 320);
   const cols = gridColsFor(W) === 1 ? 1 : 12;
-  const rows = autoRows(s.widgets, cols);
+  const rows = autoRows(s.widgets, cols, { scale: autoScale(W) });
   for (const r of arrangeRects({ rows, W, cols, gap, heights, top })) {
     Object.assign(s.widgets[r.idx], { fx: r.x / W, fy: r.y, fw: r.w / W, fh: r.h });
   }

@@ -104,12 +104,14 @@ function rowSpans12(prefs) {
  * Divide os widgets em linhas que ocupam a largura toda, com larguras simétricas
  * (12 · 6+6 · 8+4 · 4+4+4 · 3+3+3+3). Mantém a ordem; evita sobrar um widget sozinho na última linha.
  * `items`: [{ w }] (largura preferida em 12 avos). Devolve [[{ idx, span }]] com `span` em colunas de `cols`.
+ * `scale` (0.9.2.4): em telas largas (< 1) os widgets ficam proporcionalmente mais estreitos, então cabem
+ * mais por linha e a página ocupa a tela toda, não só o centro. Use `autoScale(largura)`.
  */
-export function autoRows(items, cols = 12) {
+export function autoRows(items, cols = 12, { scale = 1 } = {}) {
   if (cols <= 1) return items.map((_, idx) => [{ idx, span: 1 }]);
   const unit = cols === 12 ? 12 : 6;
   const pref = (w) => {
-    const v = Math.max(3, Math.min(12, Math.round(w || 6)));
+    const v = Math.max(3, Math.min(12, Math.round((w || 6) * (cols === 12 ? scale : 1))));
     return unit === 12 ? v : v >= 7 ? 6 : 3;
   };
   const max = unit === 12 ? MAX_PER_ROW : 2;
@@ -131,6 +133,12 @@ export function autoRows(items, cols = 12) {
     const spans = unit === 12 ? rowSpans12(r.map((x) => x.p)) : r.length === 1 ? [6] : [3, 3];
     return r.map((x, i) => ({ idx: x.idx, span: spans[i] }));
   });
+}
+
+/** Escala das larguras do automático: 1 até 1240 px; acima disso, mais widgets por linha. */
+export const AUTO_BASE_W = 1240;
+export function autoScale(width) {
+  return width > AUTO_BASE_W ? Math.max(0.5, AUTO_BASE_W / width) : 1;
 }
 
 /**

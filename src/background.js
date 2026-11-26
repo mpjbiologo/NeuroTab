@@ -14,8 +14,8 @@ import { findAddress } from './lib/address.js';
 import { discardTempCapture } from './lib/captures.js';
 import { loadCalendar, eventsBetween, refreshFeeds, CAL_KEY, CAL_CACHE_KEY, GOOGLE_REFRESH_MIN } from './lib/calendar.js';
 import { syncNow, syncConfig, WATCHED_KEYS } from './lib/sync.js';
-import { addClip, clipConfig, pruneClips, CLIP_CFG_KEY, CLIP_KEY } from './lib/clipboard.js';
-import { shareConfig, canReceive, cleanPayload, NATIVE_HOST } from './lib/clipboard-share.js';
+import { addClip, clipConfig, loadClips, pruneClips, CLIP_CFG_KEY, CLIP_KEY } from './lib/clipboard.js';
+import { shareConfig, canReceive, cleanPayload, lanMirrorItems, toPayload, NATIVE_HOST } from './lib/clipboard-share.js';
 import { checkMail, mailConfig, notificationsFor, MAIL_CFG_KEY, GMAIL_ORIGIN } from './lib/mail.js';
 import { saveMedia, summarizeMedia } from './lib/media-save.js';
 import { loadFinance } from './lib/finance/store.js';
@@ -733,7 +733,28 @@ async function syncClipboard({ injectOpenTabs = false } = {}) {
 
 // ---------- Compartilhar com outros aparelhos (0.7.7.2) ----------
 let ponte = null; // conexão com a NeuroTab Ponte (rede local)
-const lanTransport = { images: true, async send(p) { if (!ponte) throw new Error('A Ponte não está conectada.'); ponte.postMessage({ type: 'item', payload: p }); return {}; } };
+let lanSent = new Set(); // ids já entregues à Ponte nesta conexão (ela guarda só na memória)
+const lanTransport = { images: true, async send(p) {
+  if (!ponte) throw new Error('A Ponte não está conectada.');
+  if (lanSent.has(p.id)) return {};
+  ponte.postMessage({ type: 'item', payload: p });
+  lanSent.add(p.id);
+  return {};
+} };
+
+/** O celular vê a área de transferência deste computador (0.9.2.4): manda à Ponte o que ela ainda não tem. */
+async function mirrorLan() {
+  if (!ponte) return;
+  const share = shareConfig(await clipConfig());
+  const items = lanMirrorItems(await loadClips(), share);
+  if (!items.length) return;
+  const who = await shareMe(share);
+  for (const it of items) {
+    if (lanSent.has(it.id)) continue;
+    ponte.postMessage({ type: 'item', payload: toPayload(it, who) });
+    lanSent.add(it.id);
+  }
+}
 
 async function syncPonte() {
   const share = shareConfig(await clipConfig());
@@ -746,12 +767,17 @@ async function syncPonte() {
   if (ponte) return;
   try {
     ponte = chrome.runtime.connectNative(NATIVE_HOST);
+    lanSent = new Set();
   } catch (e) {
     await patchState('lan', { status: 'off', error: String(e.message || e) });
     return;
   }
   ponte.onMessage.addListener(async (m) => {
-    if (m?.type === 'ready') await patchState('lan', { status: 'on', urls: (m.urls || []).slice(0, 8), addrs: (m.addrs || []).slice(0, 8), port: m.port, version: m.version || '', error: '' });
+    if (m?.type === 'ready') {
+      await patchState('lan', { status: 'on', urls: (m.urls || []).slice(0, 8), addrs: (m.addrs || []).slice(0, 8), port: m.port, version: m.version || '', error: '' });
+      await mirrorLan().catch((e) => console.warn('NeuroTab: rede local', e));
+    }
+    if (m?.type === 'incoming') { const id = m.payload?.id; if (id) lanSent.add(String(id)); }
     if (m?.type === 'incoming' && canReceive(shareConfig(await clipConfig()))) await receivePayload(cleanPayload(m.payload), 'Rede local');
     if (m?.type === 'error') await patchState('lan', { error: String(m.message || '') });
   });
@@ -774,7 +800,10 @@ async function syncShareAlarm() {
 let dispatchTimer = null;
 function scheduleDispatch() {
   clearTimeout(dispatchTimer);
-  dispatchTimer = setTimeout(() => dispatchShares({ lan: ponte ? lanTransport : null }).catch((e) => console.warn('NeuroTab: compartilhar', e)), 400);
+  dispatchTimer = setTimeout(() => {
+    dispatchShares({ lan: ponte ? lanTransport : null }).catch((e) => console.warn('NeuroTab: compartilhar', e));
+    mirrorLan().catch((e) => console.warn('NeuroTab: rede local', e));
+  }, 400);
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
@@ -813,7 +842,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     const before = changes[CLIP_CFG_KEY].oldValue || {};
     const after = changes[CLIP_CFG_KEY].newValue || {};
     syncClipboard({ injectOpenTabs: after.sites && !before.sites }).catch(() => {});
-    if (JSON.stringify(before.share || {}) !== JSON.stringify(after.share || {})) { syncPonte().catch(() => {}); syncShareAlarm().catch(() => {}); }
+    if (JSON.stringify(before.share || {}) !== JSON.stringify(after.share || {})) { syncPonte().then(() => mirrorLan()).catch(() => {}); syncShareAlarm().catch(() => {}); }
   }
   if (changes[CLIP_KEY]) scheduleDispatch();
 });

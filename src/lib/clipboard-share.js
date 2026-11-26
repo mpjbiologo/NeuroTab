@@ -20,7 +20,7 @@ export const SHARE_DEFAULT = {
   cloud: { on: false },
   ntfy: { on: false, server: 'https://ntfy.sh', topic: '', key: '', plain: false },
   telegram: { on: false, token: '', chatId: '', bot: '' },
-  lan: { on: false, port: 41414, token: '' },
+  lan: { on: false, port: 41414, token: '', mirror: true }, // mirror: o celular vê a área de transferência (0.9.2.4)
 };
 export const SMALL_IMAGE = 300 * 1024; // bytes
 export const CLOUD_FILE = 'nt-clipboard.json';
@@ -50,6 +50,26 @@ export function shouldShare(item, share) {
   if (share.what === 'all') return true;
   if (share.what === 'pinned') return !!item.pinned;
   return false;
+}
+
+/**
+ * Rede local (0.9.2.4): o celular vê a área de transferência deste computador, não só o que foi
+ * marcado para compartilhar. Devolve os itens mais recentes (do mais antigo para o mais novo),
+ * sem os que vieram de outros aparelhos e respeitando a regra de imagens e o "só receber".
+ */
+export const LAN_MIRROR = 30;
+export function lanMirrorItems(clips, share, limit = LAN_MIRROR) {
+  if (!share.enabled || !share.lan.on || share.lan.mirror === false || share.direction === 'receive') return [];
+  const ok = (it) => {
+    if (!it || it.origin === 'remote') return false;
+    if (it.kind === 'image') {
+      if (!it.image?.data || share.images === 'no') return false;
+      if (share.images === 'small' && (it.image.size || 0) > SMALL_IMAGE) return false;
+      return true;
+    }
+    return typeof it.text === 'string' && it.text.trim() !== '';
+  };
+  return [...clips].filter(ok).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).slice(0, limit).reverse();
 }
 export const canReceive = (share) => share.enabled && share.direction !== 'send' && anyTransport(share);
 

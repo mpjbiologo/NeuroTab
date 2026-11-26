@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.2.4
+**Ajustes pedidos depois da 0.9.2.3.**
+
+- ✨ **Automático ocupa a tela toda:** antes ficava preso no centro (no máximo 1240 px), sobrando espaço nas laterais. Agora usa a largura inteira e, em telas largas, cabem **mais widgets por linha** (ex.: 3 em vez de 2 numa tela Full HD) — as linhas continuam completas e simétricas, e se refazem ao redimensionar a janela. O **✨ Organizar** do modo livre segue a mesma regra
+- 📱 **O celular vê a área de transferência do computador:** pela rede local (NeuroTab Ponte), a página do celular só recebia o que fosse marcado para compartilhar — e nada do que foi copiado antes de a Ponte abrir. Agora ela mostra os **30 itens mais recentes** deste computador, ao abrir e ao vivo, mesmo com "só o que eu mandar" nos outros caminhos
+  - Opção nova na tela 📤 → Rede local: **"O celular vê a área de transferência deste computador"** (ligada por padrão). O que parece senha nunca é guardado, os itens vindos de outros aparelhos não voltam, e a regra de imagens vale
+  - Funciona com a Ponte que você já tem; não precisa baixar de novo
+- 🖱️ **Roda do mouse dentro de um widget rola só o widget:** ao chegar ao fim da lista, a página não continua rolando junto. Fora dos widgets, a roda rola a página normalmente
+
 ## v0.9.2.3
 **Saiba quais modelos de IA funcionam de verdade com a sua chave.**
 
