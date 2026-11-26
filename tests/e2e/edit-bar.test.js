@@ -51,8 +51,13 @@ test('modo grade: com muitos widgets e a página rolada até o fim, a barra cont
     await x.seed(p, { nt_data: data });
     await p.click('#editLayout');
     await p.waitForSelector('#editBar:not([hidden])');
-    await p.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await p.waitForTimeout(200);
+    // os widgets terminam de carregar (e crescer) antes de medir: rola até o fim até a altura parar de mudar
+    for (let i = 0, last = -1; i < 20; i++) {
+      const hgt = await p.evaluate(() => { window.scrollTo(0, document.documentElement.scrollHeight); return document.documentElement.scrollHeight; });
+      if (hgt === last) break;
+      last = hgt;
+      await p.waitForTimeout(250);
+    }
     assert.deepEqual(await onTop(p, '#addWidget'), { hit: true, inView: true });
     const gap = await p.evaluate(() => {
       const cards = [...document.querySelectorAll('#widgets > *')];

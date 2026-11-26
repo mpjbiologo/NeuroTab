@@ -69,7 +69,7 @@ export function requestPermission(cfg) {
 }
 
 // No Firefox, sem o consentimento de dados nada é enviado ao provedor.
-async function ensureDataConsent() {
+export async function ensureDataConsent() {
   if (!(await hasData('websiteContent'))) throw new Error('No Firefox, autorize o envio de conteúdo à IA: Configurações → IA e voz → Salvar.');
 }
 

@@ -46,14 +46,17 @@ Primeiro a base, depois os recursos.
 - ✅ **0.8.2 — Voz que responde:** responder falando ao ser chamado e conversar até 1 minuto de silêncio (#40), com o visual futurista da voz (#39).
 - ✅ **0.8.3 — Reunião, conversa e armazenamento:** modo reunião (gravar, transcrever, resumo, pontos importantes e tarefas, botão 📋 perto do microfone) (#41) e modo conversa (microfone sempre ligado e o cérebro responde a tudo, botão 💬) (#44), mais a página de Armazenamento (espaço usado, pastas e limpeza) (#68).
 
-### [v0.9 — Conhecimento e captura](https://github.com/mpjbiologo/NeuroTab/milestone/5) · 5 atualizações (captura primeiro, conhecimento depois)
+### [v0.9 — Conhecimento e captura](https://github.com/mpjbiologo/NeuroTab/milestone/5) · captura primeiro, conhecimento depois
 - ✅ **0.9.0 — Central do botão direito** (#55): o menu entende o contexto e manda o conteúdo ao lugar certo. Reúne salvar trecho como nota, tarefa ou lembrete (#56), captura de imagens e arquivos (#12) e recorte de tela para a biblioteca (#37), mais o Modo Clean (#69), a voz da saudação e as pesquisas em nova aba (#70).
 - ✅ **0.9.1 — Finanças pessoais** (#66): entradas e saídas, contas e cartões, contas a pagar, orçamento e importação de extratos e faturas (OFX, CSV e PDF), só no computador e com cofre opcional. O conector de Open Finance por agregador fica para a 1.x (#74).
 - ✅ **0.9.2 — Data Hub** (#71): uma camada única de dados externos com cache, limites de uso e fonte e horário em cada dado. BrAPI, Banco Central e HG Brasil (com a chave de cada pessoa) entram como fontes; o widget Cotações vira lista de acompanhamento (ações, FIIs, moedas, cripto, índices e SELIC/CDI/IPCA), com alertas opcionais. O Open-Meteo continua o clima padrão.
 - ✅ **0.9.2.1 — Teclado e páginas** (#75): atalhos de teclado editáveis (Sistema → Teclado) e várias páginas de widgets na página inicial.
 - ✅ **0.9.2.2 — Layout automático e QR da rede local:** modo ✨ Automático (linhas completas e simétricas), ✨ Organizar no modo livre, e o QR da Ponte apontando para o Wi-Fi certo (sem VPN e adaptadores virtuais), com liberação do Firewall do Windows.
-- **0.9.3 — Fontes e documentos:** central de conhecimento com fontes e documentos (#9), adaptador opcional do Open Notebook (#10) e o que falta da #45 (pasta para imagens e áudio; avaliar outros sites, sem contornar DRM nem restrições).
-- **0.9.4 — NeuroPilot e Modo Estudante:** sugestões proativas locais (#8) e Modo Estudante (#11), já usando a central de IA da 0.8.0.
+- ✅ **0.9.2.3 — Teste por modelo** (#76): cada modelo de IA testado com uma chamada mínima e o estado ao lado (Conectado, Não autorizado, Limite excedido…); "Usar ntfy em vez disso" quando a rede local não abre.
+- **0.9.3 — Fontes e documentos:** central de conhecimento com fontes e documentos (#9) e o que falta da #45 (pasta para imagens e áudio; avaliar outros sites, sem contornar DRM nem restrições).
+- **0.9.4 — NeuroPilot:** sugestões proativas locais, sem IA (#8).
+- **0.9.5 — Modo Estudante:** projetos de estudo, flashcards e questionários ligados às fontes (#11), já usando a central de IA da 0.8.0.
+- **0.9.6 — Open Notebook:** adaptador opcional para uma instância própria (#10), sobre a camada de fontes da 0.9.3.
 
 ### [v1.0 — Estável e completa](https://github.com/mpjbiologo/NeuroTab/milestone/6) · 1 a 2 atualizações
 - Painel de privacidade, permissões e fluxo de dados (#28). Já começou: as páginas *Permissões e sites* e *Apps externos* (0.7.11.1) são a base; falta o fluxo de dados por recurso (o que sai, para onde e quando).

@@ -10,6 +10,7 @@ export const S = {
   drag: null, // { type: 'link' | 'group' | 'widget', id } enquanto algo é arrastado
   editing: false,
   mounted: [], // widgets montados: [{ id, destroy }]
+  barObserver: null, // acompanha a altura da barra de organizar
   widgetsSig: '',
   gridCols: 12,
   autoSpans: null, // larguras do modo Automático, por índice do widget

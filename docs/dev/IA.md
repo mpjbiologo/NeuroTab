@@ -78,6 +78,17 @@ Ela aparece sozinha em Configurações → IA → Modelo por tarefa.
 - "Usar no NeuroTab" usa `addOllamaModel` (`ai/config.js`): cria o servidor Ollama se faltar, cadastra o modelo com as capacidades do catálogo e, se pedido, vira o Padrão ou a regra das tarefas da finalidade.
 - O diagnóstico fica em `storage.local` → `nt_advisor` (`{ at, detected, sources, manual }`), nunca sincroniza nem vai para o backup.
 
+## Teste por modelo (0.9.2.3, #76)
+
+`src/lib/ai/model-probe.js`, usado no editor de servidor (Configurações → IA → Editar):
+
+- **Chamada mínima:** gerar texto com `maxTokens: 16` ("Responda apenas: OK"); modelos só de embeddings testam com `embed(['ok'])`. A Anthropic não tem embeddings → Incompatível.
+- **Estados:** Conectado · Não autorizado (`auth`) · Indisponível (`missing`, `server`) · Limite excedido (`limit`) · Incompatível (`unsupported`) · Erro de conexão (`offline`, tempo-limite de 20 s) · Inconclusivo (qualquer outra falha: nunca vira falso sucesso nem falsa falha) · Não testado. `invalid` (HTTP 200 sem o texto esperado) conta como Conectado: o acesso existe.
+- **Controle:** `probeMany` roda 2 de cada vez, para de começar testes novos ao primeiro "limite excedido" ou no botão Parar teste; os que faltaram voltam como Não testado com o motivo.
+- **Só quando a pessoa pede:** ▶ por modelo, Testar todos (respeita o filtro), Testar marcados. Nada roda sozinho.
+- **Guardado:** `nt_ai_probe` no `storage.local` — `{ [serverId]: { [modelId]: { status, at, ms, detail, code } } }`, sem a chave (as mensagens já passam por `redact`). Não sincroniza nem vai para o backup. Apagado junto com o servidor.
+- **Interface:** filtro Todos / Conectados / Com problema / Não testados, resumo com o horário do último teste, detalhes técnicos ao clicar no estado, Marcar só os conectados, e o estado em cada modelo no cartão do servidor.
+
 ## Permissões
 
 Nenhuma nova. Cada servidor pede a origem dele ao ser salvo (`requestPermission`). Servidor por `http` na rede de casa (ex.: Ollama em outro computador) não pede `http://*/*`: o próprio servidor libera a extensão por CORS (`OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*"`).
