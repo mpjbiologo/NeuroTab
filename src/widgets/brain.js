@@ -7,14 +7,17 @@ import {
   trashItems, loadTrash, restoreFromTrash, purgeTrash, TRASH_DAYS,
 } from '../lib/brain.js';
 import { hostOf } from '../lib/store.js';
+import { SOURCE_KINDS, sourceMeta, linkedItems, listSources, projectsOf, uncitedLinks, isSource } from '../lib/sources.js';
+import { pickSourceFile } from '../lib/source-files.js';
 
 const FILTERS = [
-  ['all', 'Tudo'], ['note', '📝 Notas'], ['task', '☑️ Tarefas'], ['clip', '✂️ Trechos'], ['page', '🔖 Páginas'], ['idea', '💡 Ideias'], ['image', '🖼️ Imagens'], ['media', '🎬 Mídia'], ['pinned', '📌'], ['trash', '🗑'],
+  ['all', 'Tudo'], ['sources', '📚 Fontes'], ['note', '📝 Notas'], ['task', '☑️ Tarefas'], ['clip', '✂️ Trechos'], ['page', '🔖 Páginas'], ['idea', '💡 Ideias'], ['image', '🖼️ Imagens'], ['media', '🎬 Mídia'], ['pinned', '📌'], ['trash', '🗑'],
 ];
 
-export function itemRow(it, ctx, { checkbox = false, select = null, semantic = false } = {}) {
+export function itemRow(it, ctx, { checkbox = false, select = null, semantic = false, sources = null } = {}) {
   const tags = (it.tags || []).slice(0, 4).map((t) => h('span', { class: 'tag' }, '#' + t));
-  const meta = [h('span', {}, it.deletedAt ? `apagado ${relTime(it.deletedAt)}` : relTime(it.createdAt))];
+  const when = h('span', {}, it.deletedAt ? `apagado ${relTime(it.deletedAt)}` : relTime(it.createdAt));
+  const meta = [when];
   if (semantic) meta.unshift(h('span', { class: 'sem-hit', title: 'Encontrado pelo significado' }, '✨'));
   if (it.url) meta.push(h('span', {}, '· ' + hostOf(it.url)));
   if (it.remindAt && !it.done && !it.deletedAt) {
@@ -33,6 +36,19 @@ export function itemRow(it, ctx, { checkbox = false, select = null, semantic = f
   if (it.type === 'media') {
     if (it.media?.category) meta.push(h('span', { class: 'tag cat' }, it.media.category));
     else meta.push(h('span', { class: 'when' }, '⏳ ' + t('resumo pendente')));
+  }
+  if (sources && isSource(it)) {
+    // Fonte (0.9.3): tipo, autor, ano, projeto e quantos trechos/notas estão ligados
+    const m = sourceMeta(it);
+    if (!select && !checkbox && !it.pinned) lead = h('span', { class: 'ic', title: t(SOURCE_KINDS[m.kind].label) }, SOURCE_KINDS[m.kind].icon);
+    when.textContent = '· ' + when.textContent;
+    meta.unshift(h('span', { class: 'src-kind' }, t(SOURCE_KINDS[m.kind].label)));
+    if (m.author) meta.splice(1, 0, h('span', {}, '· ' + m.author));
+    if (m.published) meta.splice(m.author ? 2 : 1, 0, h('span', {}, '· ' + m.published.slice(0, 4)));
+    if (m.project) meta.push(h('span', { class: 'tag proj', title: t('Projeto') }, '📁 ' + m.project));
+    const n = linkedItems(it, sources).length;
+    if (n) meta.push(h('span', { class: 'tag', title: t('Trechos e notas ligados') }, `🔗 ${n}`));
+    if (it.src?.file) meta.push(h('span', { title: it.src.file.name }, '· 📎'));
   }
   return h('div', {
     class: 'item' + (it.done ? ' done' : '') + (select?.has(it.id) ? ' picked' : ''),
@@ -58,6 +74,8 @@ export default {
     let selecting = false;
     let trash = [];
     let sem = null; // { key, list, semIds } — resultado da busca por significado
+    let srcKind = '';
+    let srcProject = '';
     let semTimer;
     const picked = new Set();
     const select = {
@@ -68,6 +86,28 @@ export default {
     const search = h('input', { type: 'search', placeholder: 'Buscar no cérebro…' });
     const chips = FILTERS.map(([k, label]) => h('button', { class: 'chip' + (k === filter ? ' sel' : ''), type: 'button', title: k === 'trash' ? `Lixeira (${TRASH_DAYS} dias)` : k === 'pinned' ? 'Fixados' : null, onclick: () => setFilter(k) }, label));
     const bar = h('div', { class: 'sel-bar', hidden: true });
+    // Fontes (0.9.3): filtros por tipo e projeto, nova fonte e fonte a partir de um arquivo
+    const kindSel = h('select', { class: 'small', title: t('Tipo de fonte'), onchange: () => { srcKind = kindSel.value; sem = null; render(); askSemantic(); } },
+      new Option(t('Todos os tipos'), ''), ...Object.entries(SOURCE_KINDS).map(([k, x]) => new Option(`${x.icon} ${t(x.label)}`, k)));
+    const projSel = h('select', { class: 'small', title: t('Projeto'), onchange: () => { srcProject = projSel.value; sem = null; render(); askSemantic(); } });
+    const srcBar = h('div', { class: 'toolbar src-bar', hidden: true },
+      kindSel, projSel, h('span', { class: 'grow' }),
+      h('button', { class: 'chip', type: 'button', title: t('Cadastrar uma fonte: link, livro, artigo…'), onclick: () => ctx.newItem({ type: 'source', src: { kind: 'link', project: srcProject && srcProject !== '-' ? srcProject : '' } }) }, `＋ ${t('Nova fonte')}`),
+      h('button', { class: 'chip', type: 'button', title: t('PDF, texto, áudio, vídeo… Guarda os dados e, quando dá, o texto para a busca. O arquivo não é copiado.'), onclick: async () => {
+        try {
+          const preset = await pickSourceFile();
+          if (!preset) return;
+          const { note, ...p } = preset;
+          if (note) ctx.toast(note);
+          ctx.newItem({ ...p, src: { ...p.src, project: srcProject && srcProject !== '-' ? srcProject : '' } });
+        } catch (e) { ctx.toast(e.message); }
+      } }, `📎 ${t('De um arquivo')}`));
+    const paintProjects = () => {
+      const ps = projectsOf(ctx.items);
+      if (srcProject && srcProject !== '-' && !ps.includes(srcProject)) srcProject = '';
+      projSel.replaceChildren(new Option(t('Todos os projetos'), ''), ...ps.map((p) => new Option('📁 ' + p, p)), new Option(t('Sem projeto'), '-'));
+      projSel.value = srcProject;
+    };
     const list = h('div', { class: 'items' });
     const selBtn = h('button', { title: 'Selecionar vários', onclick: () => { selecting = !selecting; picked.clear(); render(); } }, '☑');
     ctx.actions.append(selBtn, h('button', { title: 'Nova nota', onclick: () => ctx.newItem({}) }, '＋'));
@@ -78,7 +118,7 @@ export default {
       clearTimeout(semTimer);
       const query = q.trim();
       if (!ctx.semanticOn() || filter === 'trash' || query.length < 3) return;
-      const key = filter + '|' + query;
+      const key = filter + srcKind + srcProject + '|' + query;
       if (sem?.key === key) return;
       semTimer = setTimeout(async () => {
         try {
@@ -96,6 +136,9 @@ export default {
       limit = 25;
       picked.clear();
       chips.forEach((c, i) => c.classList.toggle('sel', FILTERS[i][0] === k));
+      srcBar.hidden = k !== 'sources';
+      search.placeholder = t(k === 'sources' ? 'Buscar nas fontes (título, autor, projeto, DOI…)' : 'Buscar no cérebro…');
+      if (k === 'sources') paintProjects();
       if (k === 'trash') loadTrash().then((t) => { trash = t; render(); });
       else { render(); askSemantic(); }
     }
@@ -103,16 +146,18 @@ export default {
     function base() {
       let arr = filter === 'trash' ? trash : ctx.items;
       if (filter === 'pinned') arr = arr.filter((i) => i.pinned);
+      else if (filter === 'sources') arr = listSources(arr, { kind: srcKind, project: srcProject });
       else if (filter !== 'all' && filter !== 'trash') arr = arr.filter((i) => i.type === filter);
       return arr;
     }
 
     function visible() {
       const arr = base();
-      if (q.trim() && sem?.key === filter + '|' + q.trim()) {
+      if (q.trim() && sem?.key === filter + srcKind + srcProject + '|' + q.trim()) {
         const live = new Map(arr.map((i) => [i.id, i]));
         return sem.list.map((i) => live.get(i.id)).filter(Boolean);
       }
+      if (filter === 'sources') return q.trim() ? listSources(arr, { q }) : arr;
       return q.trim() ? searchItems(arr, q, 500) : [...arr].sort((a, b) => filter === 'trash' ? b.deletedAt - a.deletedAt : (b.pinned - a.pinned) || (b.createdAt - a.createdAt));
     }
 
@@ -173,18 +218,35 @@ export default {
         list.append(h('p', { class: 'muted' }, filter === 'trash' ? 'A lixeira está vazia.' : ctx.items.length
           ? 'Nada encontrado.'
           : h('span', { class: 'empty' }, '🧠 Tudo que você salvar aparece aqui: notas, trechos e páginas.')));
+        if (filter === 'sources' && !q.trim()) {
+          list.replaceChildren(h('p', { class: 'muted' }, t('📚 Páginas e mídias salvas aparecem aqui como fontes. Cadastre também livros, artigos, PDFs e arquivos em ＋ Nova fonte.')), ...uncitedBox());
+        }
         return;
       }
-      arr.slice(0, limit).forEach((it) => list.append(itemRow(it, ctx, { select: selecting || filter === 'trash' ? select : null, semantic: !!sem?.semIds.has(it.id) && sem.key === filter + '|' + q.trim() })));
+      arr.slice(0, limit).forEach((it) => list.append(itemRow(it, ctx, { select: selecting || filter === 'trash' ? select : null, semantic: !!sem?.semIds.has(it.id) && sem.key === filter + srcKind + srcProject + '|' + q.trim(), sources: filter === 'sources' ? ctx.items : null })));
       if (arr.length > limit) list.append(h('button', { class: 'btn more', onclick: () => { limit += 50; render(); } }, `Ver mais (${arr.length - limit})`));
+      if (filter === 'sources' && !q.trim()) list.append(...uncitedBox());
     }
 
-    el.append(search, h('div', { class: 'toolbar' }, ...chips), bar, list);
+    /** Links citados em trechos e notas sem fonte cadastrada: um clique vira fonte. */
+    function uncitedBox() {
+      const links = uncitedLinks(ctx.items);
+      if (!links.length) return [];
+      return [h('details', { class: 'src-uncited' },
+        h('summary', {}, `🔗 ${t('Links citados sem fonte')} (${links.length})`),
+        ...links.map((l) => h('div', { class: 'item' },
+          h('span', { class: 'ic' }, '🔗'),
+          h('div', { class: 'body' }, h('div', { class: 'tt' }, l.title || hostOf(l.url)), h('div', { class: 'mt' }, h('span', {}, hostOf(l.url)), h('span', {}, `· ${l.count} ${t('item(ns)')}`))),
+          h('button', { class: 'chip', type: 'button', onclick: () => ctx.newItem({ type: 'source', url: l.url, title: l.title, src: { kind: 'link' } }) }, `＋ ${t('Fonte')}`))))];
+    }
+
+    el.append(search, h('div', { class: 'toolbar' }, ...chips), srcBar, bar, list);
     render();
     const off = ctx.on('brain', async () => {
       if (filter === 'trash') trash = await loadTrash();
       for (const id of [...picked]) if (!(filter === 'trash' ? trash : ctx.items).some((i) => i.id === id)) picked.delete(id);
       sem = null;
+      if (filter === 'sources') paintProjects();
       render();
       askSemantic();
     });

@@ -155,6 +155,23 @@
         <label>Lembrete<input name="remindAt" type="datetime-local"></label>
       </div>
       <label>Link de origem<input name="url" placeholder="https://"></label>
+      <fieldset id="itemSrc" class="item-src" hidden>
+        <legend>📚 Fonte</legend>
+        <div class="row">
+          <label>Tipo<select name="srcKind"></select></label>
+          <label class="grow">Autor(es)<input name="srcAuthor" maxlength="300"></label>
+          <label>Publicado em<input name="srcPublished" placeholder="2024 ou 2024-05-17" maxlength="10" size="12"></label>
+        </div>
+        <div class="row">
+          <label class="grow">Editora, revista ou site<input name="srcPublisher" maxlength="300"></label>
+          <label class="grow">Projeto<input name="srcProject" list="srcProjects" maxlength="80"></label>
+          <label>DOI, ISBN…<input name="srcIdent" maxlength="120" size="16"></label>
+        </div>
+        <datalist id="srcProjects"></datalist>
+        <p id="itemSrcFile" class="meta" hidden></p>
+        <div id="itemSrcLinked" class="src-linked" hidden></div>
+      </fieldset>
+      <label id="itemSrcPick" hidden>Fonte deste item<select name="sourceId"></select></label>
       <p id="itemMeta" class="meta"></p>
       <div id="itemMedia" class="item-media" hidden></div>
       <p><button type="button" class="chip" id="itemImage" hidden>🖼️ Abrir imagem</button></p>

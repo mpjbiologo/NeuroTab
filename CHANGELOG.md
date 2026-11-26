@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.9.3
+**Fontes e documentos: saiba de onde veio cada coisa que você guardou.**
+
+- 📚 **Aba Fontes no Meu cérebro:** páginas e mídias salvas aparecem como fontes, junto com o que você cadastrar — livro, artigo, artigo científico, vídeo, post, áudio, PDF, documento ou arquivo
+  - Cada fonte guarda **tipo, autores, data de publicação, editora/revista, projeto e DOI/ISBN**, além do link de origem e da data em que foi salva
+  - **Filtros por tipo e por projeto**, e busca sem IA por título, autor, projeto, DOI e texto. Com a busca por significado ligada, ela também vale aqui
+  - Trechos e notas **se ligam sozinhos** à fonte pelo mesmo link (🔗 mostra quantos); nos outros itens dá para escolher a fonte em "Fonte deste item"
+  - **Links citados sem fonte:** os links que aparecem em trechos e notas viram fonte com um clique
+  - Cadastrar um link que já tem fonte abre a que já existe, sem duplicar
+- 📎 **Fonte a partir de um arquivo:** PDF (com título, autor, data e texto lidos do próprio PDF), texto, Markdown, CSV, HTML, áudio, vídeo… O **arquivo não é copiado**: ficam os dados e, quando dá, o texto para a busca
+- 🗑 **Apagar uma fonte pede confirmação**, avisa quantos trechos e notas ligados continuam no cérebro e manda para a lixeira (30 dias)
+- 💾 Fontes entram na **sincronização e no backup** com todos os metadados (os arquivos em si ficam de fora — veja `docs/dev/FONTES.md`)
+- 🔎 A busca geral do cérebro também passou a ler autor, projeto, editora e DOI
+
 ## v0.9.2.4
 **Ajustes pedidos depois da 0.9.2.3.**
 

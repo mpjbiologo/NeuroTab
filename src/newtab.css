@@ -1076,6 +1076,19 @@ input[type=checkbox], input[type=radio], input[type=range], progress { accent-co
 .net-dlg .bad:empty { display: none; }
 
 /* Item "Mídia" (#67) */
+/* Fontes (0.9.3) */
+.item-src { display: grid; gap: 6px; padding: 8px 12px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--tint-1); margin: 4px 0; }
+.item-src legend { padding: 0 6px; font-size: var(--fs-sm); color: var(--text-2); }
+.item-src .row { flex-wrap: wrap; }
+.src-linked { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.src-bar { gap: 6px; align-items: center; }
+.src-bar { flex-wrap: wrap; }
+.src-bar select { flex: 0 1 210px; width: auto; min-width: 0; }
+.src-kind { color: var(--accent); }
+.tag.proj { opacity: .9; }
+.src-uncited { margin-top: 8px; }
+.src-uncited summary { cursor: pointer; font-size: var(--fs-sm); color: var(--text-2); padding: 4px 0; }
+.src-uncited .item .chip { align-self: center; }
 .item-media { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--tint-1); }
 .im-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: var(--fs-sm); }
 .im-plat { font-weight: 600; }
