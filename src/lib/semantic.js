@@ -3,7 +3,7 @@
 // A busca combina palavras (searchItems) e significado (similaridade de cosseno).
 import { openDB } from './idb.js';
 import { aiConfig, isConfigured, complete, parseJson } from './ai.js';
-import { displayTitle, searchItems } from './brain.js';
+import { displayTitle, searchItems, srcText } from './brain.js';
 import { hasData } from './permissions.js';
 import { EMBED_DEFAULTS } from './ai/catalog.js';
 import { adapterFor } from './ai/providers/index.js';
@@ -54,7 +54,7 @@ function dot(a, b) {
 
 // ---------- Texto e hash de cada item ----------
 export function itemText(it) {
-  return [displayTitle(it), it.summary, (it.tags || []).map((t) => '#' + t).join(' '), it.text || it.url || '']
+  return [displayTitle(it), it.summary, srcText(it), (it.tags || []).map((t) => '#' + t).join(' '), it.text || it.url || '']
     .filter(Boolean).join('\n').slice(0, 2000);
 }
 

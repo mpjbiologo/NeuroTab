@@ -11,6 +11,7 @@ export const TYPES = {
   idea: { label: 'Ideia', icon: '💡' },
   image: { label: 'Imagem', icon: '🖼️' }, // texto lido de uma imagem da biblioteca (captureId)
   media: { label: 'Mídia', icon: '🎬' }, // post, vídeo ou artigo salvo com resumo (#67): campos em item.media
+  source: { label: 'Fonte', icon: '📚' }, // livro, PDF, artigo, arquivo… (0.9.3, #9): metadados em item.src
 };
 
 export async function loadItems() {
@@ -44,6 +45,8 @@ export function makeItem(p = {}) {
     enriched: !!p.enriched,
     ...(p.captureId ? { captureId: p.captureId } : {}),
     ...(p.media && typeof p.media === 'object' ? { media: p.media } : {}),
+    ...(p.src && typeof p.src === 'object' ? { src: p.src } : {}), // metadados de fonte (sources.js)
+    ...(p.sourceId ? { sourceId: String(p.sourceId) } : {}), // trecho/nota ligado a uma fonte
   };
 }
 
@@ -133,6 +136,13 @@ export function terms(q) {
   return fold(q).split(/[^a-z0-9#@.-]+/).filter((t) => t.length > 1 && !STOP.has(t));
 }
 
+/** Metadados de fonte (autor, projeto, editora, DOI/ISBN, arquivo) que entram na busca. */
+export function srcText(it) {
+  const s = it?.src;
+  if (!s || typeof s !== 'object') return it?.media?.author || '';
+  return [s.author, s.publisher, s.project, s.ident, s.published, s.file?.name, it.media?.author].filter(Boolean).join(' ');
+}
+
 export function searchItems(items, query, limit = 20) {
   const ts = terms(query);
   if (!ts.length) return items.slice(0, limit);
@@ -140,7 +150,7 @@ export function searchItems(items, query, limit = 20) {
   return items
     .map((it) => {
       const title = fold(displayTitle(it));
-      const hay = fold([it.text, it.summary, it.pageTitle, it.url].join(' '));
+      const hay = fold([it.text, it.summary, it.pageTitle, it.url, srcText(it)].join(' '));
       const tags = fold((it.tags || []).join(' '));
       let score = 0;
       for (const t of ts) {

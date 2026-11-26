@@ -54,7 +54,10 @@ Primeiro a base, depois os recursos.
 - ✅ **0.9.2.2 — Layout automático e QR da rede local:** modo ✨ Automático (linhas completas e simétricas), ✨ Organizar no modo livre, e o QR da Ponte apontando para o Wi-Fi certo (sem VPN e adaptadores virtuais), com liberação do Firewall do Windows.
 - ✅ **0.9.2.3 — Teste por modelo** (#76): cada modelo de IA testado com uma chamada mínima e o estado ao lado (Conectado, Não autorizado, Limite excedido…); "Usar ntfy em vez disso" quando a rede local não abre.
 - ✅ **0.9.2.4 — Ajustes:** Automático ocupando a tela toda, celular vendo a área de transferência do computador pela rede local, e a roda do mouse rolando só o widget.
-- **0.9.3 — Fontes e documentos:** central de conhecimento com fontes e documentos (#9) e o que falta da #45 (pasta para imagens e áudio; avaliar outros sites, sem contornar DRM nem restrições).
+- ✅ **0.9.3 — Fontes e documentos** (#9): fonte como item próprio (título, tipo, URL de origem, data, projeto, anotações), aba Fontes no Meu cérebro, busca sem IA, busca por significado opcional e reconstruível, backup com os metadados.
+- **0.9.3.1 — Biblioteca de mídias** (resto da #45): imagens, posts salvos e arquivos baixados numa tela só; pasta de destino; outros sites de áudio e vídeo (Kora), sem contornar DRM nem restrições.
+- **0.9.3.2 — Mídias nos seus aparelhos** (#80): mídias pelos caminhos da área de transferência (rede local com o arquivo inteiro, nuvem e ntfy cifrados, Telegram), aba Mídias na página do celular, do celular para o PC.
+- **0.9.3.3 — Canais compartilhados** (#81): área de transferência, mídias e fontes com outras pessoas, convite por QR, cifrado; vídeos de redes sociais vão como link e resumo por padrão.
 - **0.9.4 — NeuroPilot:** sugestões proativas locais, sem IA (#8).
 - **0.9.5 — Modo Estudante:** projetos de estudo, flashcards e questionários ligados às fontes (#11), já usando a central de IA da 0.8.0.
 - **0.9.6 — Open Notebook:** adaptador opcional para uma instância própria (#10), sobre a camada de fontes da 0.9.3.
