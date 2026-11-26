@@ -48,7 +48,7 @@ export function qrDialog(title, text, note = '') {
  * QR da rede local (0.9.2.2): um endereço só no QR (o melhor), os outros para escolher
  * se não abrir, e o que conferir quando o celular não alcança o computador.
  */
-export function lanQrDialog(targets) {
+export function lanQrDialog(targets, { onUseNtfy = null } = {}) {
   let cur = targets[0];
   const img = h('div', { class: 'clip-qr-img' });
   const link = h('code', { class: 'lan-link' });
@@ -81,6 +81,9 @@ export function lanQrDialog(targets) {
         h('li', {}, t('Windows: abra de novo o programa da Ponte e responda Sim para liberar no firewall; o Wi-Fi precisa estar como Rede privada.')),
         h('li', {}, t('VPN no computador (Cloudflare WARP, empresa…): permita o acesso à rede local ou desligue enquanto usa.')),
         h('li', {}, t('Alguns roteadores isolam os aparelhos (isolamento de AP / clientes): desligue essa opção no roteador.')))),
+    onUseNtfy ? h('div', { class: 'lan-alt' },
+      h('small', { class: 'muted' }, t('Em Wi-Fi público, rede de convidados ou de empresa, a rede local costuma ser bloqueada. O ntfy funciona em qualquer rede, cifrado.')),
+      h('button', { class: 'btn', type: 'button', onclick: () => { dlg.close(); onUseNtfy(); } }, `🔔 ${t('Usar ntfy em vez disso')}`)) : null,
     h('div', { class: 'actions' }, h('button', { class: 'btn primary', value: 'ok' }, t('Fechar')))));
   document.body.append(dlg);
   dlg.addEventListener('close', () => dlg.remove());
@@ -129,6 +132,21 @@ export async function openShareDialog(ctx) {
   const lanPort = h('input', { type: 'number', min: 1024, max: 65535, value: sh.lan.port });
   let lanToken = sh.lan.token || newToken();
 
+  const pairNtfy = () => {
+    if (!ntfyTopic) { ntfyTopic = newTopic(); ntfyKey = newShareKey(); }
+    qrDialog(t('Parear o celular'), ntfyPairLink({ name: name.value, ntfy: { server: ntfyServer.value || 'https://ntfy.sh', topic: ntfyTopic, key: ntfyKey } }), t('Aponte a câmera do celular. Salve a página nos favoritos ou na tela inicial.'));
+  };
+  /** Rede local bloqueada: liga o ntfy e já mostra o QR de pareamento (0.9.2.3). */
+  const useNtfy = async () => {
+    let origin;
+    try { origin = new URL(ntfyServer.value || 'https://ntfy.sh').origin; } catch { return void (say.textContent = t('Endereço do servidor ntfy inválido.')); }
+    if (!(await requestAccess({ origins: [`${origin}/*`] }))) { say.textContent = t('Sem acesso ao servidor do ntfy, esse caminho não funciona.'); return; }
+    enabled.checked = true;
+    ntfy.checked = true;
+    ntfy.closest('.share-card')?.scrollIntoView({ block: 'center' });
+    say.textContent = t('🔔 ntfy ligado. Pareie o celular pelo QR e clique em Salvar.');
+    pairNtfy();
+  };
   ntfy.addEventListener('change', async () => {
     if (!ntfy.checked) return;
     let origin;
@@ -182,10 +200,7 @@ export async function openShareDialog(ctx) {
       h('label', {}, 'Servidor', ntfyServer),
       h('label', { class: 'clip-opt' }, ntfyPlain, h('span', {}, h('small', {}, 'Mostrar o texto aberto nas notificações do app ntfy (menos privado: o servidor passa a ler)'))),
       h('div', { class: 'share-row' },
-        h('button', { class: 'btn', type: 'button', onclick: () => {
-          if (!ntfyTopic) { ntfyTopic = newTopic(); ntfyKey = newShareKey(); }
-          qrDialog(t('Parear o celular'), ntfyPairLink({ name: name.value, ntfy: { server: ntfyServer.value || 'https://ntfy.sh', topic: ntfyTopic, key: ntfyKey } }), t('Aponte a câmera do celular. Salve a página nos favoritos ou na tela inicial.'));
-        } }, '📱 Parear celular'),
+        h('button', { class: 'btn', type: 'button', onclick: pairNtfy }, '📱 Parear celular'),
         h('button', { class: 'btn', type: 'button', onclick: () => { ntfyTopic = newTopic(); ntfyKey = newShareKey(); say.textContent = t('Canal novo criado: pareie os aparelhos de novo.'); } }, 'Gerar canal novo')),
     ], statusLine(st.ntfy)),
     card('✈️', 'Telegram', tg, [
@@ -207,7 +222,7 @@ export async function openShareDialog(ctx) {
         h('p', { class: 'muted' }, 'Depois de instalar, ligue esta opção e salve. O navegador abre a Ponte sozinho quando precisar.')),
       h('label', {}, 'Porta', lanPort),
       lanList.length
-        ? h('button', { class: 'btn primary', type: 'button', onclick: () => lanQrDialog(lanList) }, '📱 Abrir no celular')
+        ? h('button', { class: 'btn primary', type: 'button', onclick: () => lanQrDialog(lanList, { onUseNtfy: useNtfy }) }, '📱 Abrir no celular')
         : null,
     ], lanSt.status === 'on' ? `✓ ${t('Ponte ligada')}${lanSt.version ? ' · v' + lanSt.version : ''}` : statusLine(lanSt)),
     say,

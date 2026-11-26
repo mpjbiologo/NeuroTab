@@ -914,6 +914,7 @@ input[type=checkbox], input[type=radio], input[type=range], progress { accent-co
 .lan-qr .lan-opt { justify-content: flex-start; text-align: left; }
 .lan-qr .lan-opt.sel { border-color: var(--accent); color: var(--text); }
 .lan-qr .lan-tips { margin: 6px 0 0; padding-left: 18px; font-size: var(--fs-sm); color: var(--text-2); }
+.lan-qr .lan-alt { display: grid; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); justify-items: start; }
 
 /* ---------- E-mail (#20) ---------- */
 .mail-w { display: flex; flex-direction: column; gap: 8px; min-height: 0; }

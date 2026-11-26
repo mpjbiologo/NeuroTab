@@ -52,7 +52,11 @@ test('tela 📤: regras e ntfy com pareamento por QR; QR de um item', async () =
     await lanDlg.locator('summary').first().click();
     await lanDlg.locator('.lan-opt:has-text("CloudflareWARP")').click();
     assert.equal(await lanDlg.locator('.lan-link').textContent(), 'http://172.16.0.2:41414/');
-    await lanDlg.locator('button[value="ok"]').click();
+    // rede bloqueada: "Usar ntfy em vez disso" liga o ntfy e abre o QR de pareamento
+    await lanDlg.locator('button:has-text("Usar ntfy em vez disso")').click();
+    await p.locator('dialog.clip-qr:not(.lan-qr)[open] .clip-qr-img svg').waitFor();
+    await p.locator('dialog.clip-qr:not(.lan-qr)[open] button[value="ok"]').click();
+    assert.equal(await p.locator('dialog.share-dlg[open] .share-card:has-text("ntfy") input[type="checkbox"]').first().isChecked(), true);
     await p.locator('dialog.share-dlg[open] button[value="cancel"]').click();
     await p.evaluate(() => chrome.storage.local.remove('nt_clipshare_state'));
     // tela de compartilhar

@@ -146,3 +146,58 @@ test('Central de IA: configuração antiga migra sozinha e a aba IA mostra o ser
     await x.close();
   }
 });
+
+test('teste por modelo (#76): estado ao lado de cada um, filtro, detalhes e marcar só os conectados', async () => {
+  const x = await launch({});
+  try {
+    await x.ctx.addInitScript(() => { if (globalThis.chrome?.permissions) { chrome.permissions.contains = async () => true; chrome.permissions.request = async () => true; } });
+    const hits = [];
+    await x.ctx.route('http://localhost:11434/**', async (r) => {
+      const u = new URL(r.request().url());
+      const body = JSON.parse(r.request().postData() || '{}');
+      if (u.pathname === '/v1/models') return r.fulfill({ json: { data: [{ id: 'llama3.2' }, { id: 'velho' }, { id: 'nomic-embed-text' }, { id: 'zz-cheio' }] }, headers: cors });
+      if (u.pathname === '/api/show') return r.fulfill({ json: { capabilities: body.model === 'nomic-embed-text' ? ['embedding'] : ['completion'] }, headers: cors });
+      hits.push([u.pathname, body.model, body.max_tokens]);
+      if (body.model === 'velho') return r.fulfill({ status: 404, json: { error: { message: 'model "velho" not found' } }, headers: cors });
+      if (body.model === 'zz-cheio') return r.fulfill({ status: 429, json: { error: { message: 'rate limit' } }, headers: cors });
+      if (u.pathname === '/v1/embeddings') return r.fulfill({ json: { data: [{ index: 0, embedding: [0.1, 0.2] }] }, headers: cors });
+      return r.fulfill({ json: { choices: [{ message: { content: 'OK' } }] }, headers: cors });
+    });
+    const o = await x.open('src/options.html#ia');
+    await o.locator('#page-ia').waitFor();
+    await o.click('#aiAdd');
+    const dlg = o.locator('dialog.ai-dlg');
+    await dlg.locator('select').first().selectOption('ollama');
+    await dlg.locator('button:has-text("Carregar modelos")').click();
+    const row = (m) => dlg.locator('.ai-mrow', { hasText: m });
+    await row('velho').waitFor();
+    assert.match(await row('llama3.2').locator('.ai-probe').textContent(), /Não testado/);
+    // um por vez, depois todos
+    await row('llama3.2').locator('.ai-probe-go').click();
+    await row('llama3.2').locator('.ai-probe.probe-ok').waitFor();
+    await dlg.locator('button:has-text("Testar todos")').click();
+    await dlg.locator('.msg:has-text("limite")').waitFor({ timeout: 15000 }); // "zz-cheio" (último) avisa limite: os testes param
+    assert.match(await row('zz-cheio').locator('.ai-probe').textContent(), /Limite excedido/);
+    assert.match(await row('velho').locator('.ai-probe').textContent(), /Indisponível/);
+    assert.match(await row('nomic-embed-text').locator('.ai-probe').textContent(), /Conectado/);
+    assert.ok(hits.some(([p, m]) => p === '/v1/embeddings' && m === 'nomic-embed-text'), 'modelo de embeddings testado com embeddings');
+    assert.ok(hits.filter(([p]) => p === '/v1/chat/completions').every(([, , mt]) => mt <= 16), 'chamada mínima');
+    if (process.env.NT_SHOTS) { await row('velho').locator('.ai-probe').click(); await o.screenshot({ path: 'test-results/probe.png' }); await row('velho').locator('.ai-probe').click(); }
+    // detalhes técnicos
+    await row('velho').locator('.ai-probe').click();
+    assert.match(await dlg.locator('.ai-probe-detail').textContent(), /HTTP 404/);
+    // filtro
+    await dlg.locator('select[title="Mostrar"]').selectOption('ok');
+    assert.equal(await dlg.locator('.ai-mrow', { hasText: 'velho' }).count(), 0);
+    await dlg.locator('select[title="Mostrar"]').selectOption('all');
+    // marcar só os conectados e salvar
+    await dlg.locator('button:has-text("Marcar só os conectados")').click();
+    assert.equal(await row('llama3.2').locator('.ai-mon input').isChecked(), true);
+    assert.equal(await row('velho').locator('.ai-mon input').isChecked(), false);
+    await dlg.locator('button[value="ok"]').click();
+    await o.locator('.ai-server[data-id="ollama"] .chip-s.probe-ok').first().waitFor();
+    const probes = await x.storage(o, 'nt_ai_probe');
+    assert.equal(probes.ollama.velho.status, 'missing');
+    assert.ok(!JSON.stringify(probes).match(/key|Bearer/i), 'sem chave nos resultados');
+  } finally { await x.close(); }
+});

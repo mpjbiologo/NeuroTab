@@ -3,7 +3,8 @@
 import { h, toast as uiToast } from './lib/ui.js';
 import { t } from './lib/i18n.js';
 import { saveData } from './lib/store.js';
-import { requestPermission, listServerModels, testServer, aiOf } from './lib/ai.js';
+import { requestPermission, listServerModels, testServer, aiOf, ensureDataConsent } from './lib/ai.js';
+import { probeModel, probeMany, probeGroup, probeSummary, loadProbes, saveProbes, forgetProbes, PROBE_STATUS, PROBE_HINT, PROBE_KEY } from './lib/ai/model-probe.js';
 import { PROVIDERS, SHORT, WHERE, whereOf, guessCaps, EMBED_DEFAULTS } from './lib/ai/catalog.js';
 import { sanitizeAi, newServerId, serverById, exportAi, importAi, modelCaps, defaultModelFor, removeServer as removeServerCfg } from './lib/ai/config.js';
 import { TASKS, EXTERNAL_TASKS } from './lib/ai/tasks.js';
@@ -15,6 +16,9 @@ const $ = (s) => document.querySelector(s);
 const D = () => api.data();
 const toast = (m) => (api.toast || uiToast)(m);
 const status = new Map(); // id do servidor → { ok, text }
+let probeCache = {}; // resultados do teste por modelo (#76): { [serverId]: { [modelId]: r } }
+const hhmm = (ts) => (ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
+const probeTitle = (r) => r ? `${t(PROBE_STATUS[r.status].label)}${r.at ? ' · ' + hhmm(r.at) : ''}${r.ms ? ` · ${r.ms} ms` : ''}\n${t(PROBE_HINT[r.status])}${r.detail ? '\n' + r.detail : ''}` : t('Não testado');
 
 async function commit(ai) {
   const d = D();
@@ -63,7 +67,10 @@ function serverCard(s) {
       st ? h('small', { class: st.ok ? 'ok' : 'err', title: st.text }, st.ok ? '● ' : '✕ ', st.short || st.text) : !s.on ? h('small', { class: 'muted' }, t('desligado')) : null),
     PROVIDERS[s.type].editableBase ? h('small', { class: 'muted ai-base' }, s.base) : null,
     !PROVIDERS[s.type].noKey && !ai.keys?.[s.id] ? h('small', { class: 'err' }, '⚠️ ', t('Falta a chave de API.')) : null,
-    h('div', { class: 'ai-models' }, ...(s.models.length ? s.models.map((m) => h('span', { class: 'chip-s', title: t('👁 lê imagens · 🔎 embeddings (busca por significado)') }, m.id, capIcons(m))) : [h('small', { class: 'muted' }, t('Nenhum modelo escolhido ainda. Clique em Editar → Carregar modelos.'))])),
+    h('div', { class: 'ai-models' }, ...(s.models.length ? s.models.map((m) => {
+      const r = probeCache[s.id]?.[m.id];
+      return h('span', { class: 'chip-s' + (r ? ' probe-' + PROBE_STATUS[r.status].cls : ''), title: (r ? probeTitle(r) + '\n\n' : '') + t('👁 lê imagens · 🔎 embeddings (busca por significado)') }, r ? PROBE_STATUS[r.status].icon + ' ' : '', m.id, capIcons(m));
+    }) : [h('small', { class: 'muted' }, t('Nenhum modelo escolhido ainda. Clique em Editar → Carregar modelos.'))])),
     h('div', { class: 'ai-actions' },
       h('button', { type: 'button', class: 'btn', onclick: () => test(s.id) }, t('Testar')),
       h('button', { type: 'button', class: 'btn', onclick: () => editServer(s.id) }, t('Editar')),
@@ -99,6 +106,8 @@ async function removeServer(id) {
   const s = serverById(ai, id);
   if (!confirm(t('Remover o servidor') + ` ${s.name}?` + (PROVIDERS[s.type].noKey ? '' : '\n\n' + t('A chave dele será apagada deste navegador.')))) return;
   status.delete(id);
+  delete probeCache[id];
+  await forgetProbes(id).catch(() => {});
   await commit(removeServerCfg(ai, id));
   toast('Servidor removido');
 }
@@ -120,6 +129,17 @@ function editServer(id = null) {
   const manual = h('input', { type: 'text', class: 'txt', placeholder: t('Outro modelo (nome exato)') });
   const list = h('div', { class: 'ai-mlist' });
   const msg = h('p', { class: 'msg', role: 'status' });
+  // Teste individual dos modelos (#76)
+  let probes = {};
+  let draftId = old?.id || newServerId(ai, type.value);
+  const testing = new Set();
+  let cancelled = false;
+  let running = false;
+  const open = new Set(); // modelos com os detalhes abertos
+  const show2 = h('select', { class: 'txt', title: t('Mostrar') }, ...[['all', 'Todos'], ['ok', 'Conectados'], ['bad', 'Com problema'], ['untested', 'Não testados']].map(([v, l]) => new Option(t(l), v)));
+  const summary = h('small', { class: 'muted ai-probe-sum', role: 'status' });
+  const stopBtn = h('button', { type: 'button', class: 'btn', hidden: true, onclick: () => { cancelled = true; } }, t('Parar teste'));
+  const capsFor = (m) => { const r = rows.get(m); const g = guessCaps(type.value, m); return { text: g.text, embed: r?.caps?.embed ?? g.embed }; };
   /** id do modelo → { on, vision, embed, manual } */
   const rows = new Map((old?.models || []).map((m) => [m.id, { on: true, caps: { ...m.caps }, manual: m.manual }]));
 
@@ -137,22 +157,35 @@ function editServer(id = null) {
   };
   const paintList = () => {
     const q = filter.value.trim().toLowerCase();
-    const ids = [...rows.keys()].filter((m) => !q || m.toLowerCase().includes(q)).slice(0, 300);
+    const ids = [...rows.keys()].filter((m) => (!q || m.toLowerCase().includes(q)) && (show2.value === 'all' || probeGroup(probes[m]) === show2.value)).slice(0, 300);
+    paintSummary();
     list.replaceChildren(...(ids.length ? ids.map((m) => {
       const r = rows.get(m);
       const g = guessCaps(type.value, m);
       const vis = r.caps?.vision ?? g.vision;
       const emb = r.caps?.embed ?? g.embed;
       const box = (checked, title, label, k) => h('label', { class: 'ai-cap', title: t(title) }, h('input', { type: 'checkbox', checked: !!checked, onchange: (e) => { r.caps = { ...r.caps, [k]: e.target.checked }; r.manual = true; } }), label);
-      return h('div', { class: 'ai-mrow' },
-        h('label', { class: 'ai-mon' }, h('input', { type: 'checkbox', checked: r.on, onchange: (e) => { r.on = e.target.checked; } }), h('span', {}, m)),
-        box(vis, 'Lê imagens', '👁', 'vision'),
-        box(emb, 'Gera embeddings (busca por significado)', '🔎', 'embed'));
+      const pr = testing.has(m) ? { status: 'untested', testing: true } : probes[m];
+      const st = PROBE_STATUS[pr?.status || 'untested'];
+      const badge = h('button', { type: 'button', class: `ai-probe probe-${pr?.testing ? 'muted' : st.cls}`, title: probeTitle(probes[m]), 'aria-expanded': String(open.has(m)), onclick: () => { if (open.has(m)) open.delete(m); else open.add(m); paintList(); } },
+        pr?.testing ? `… ${t('testando')}` : `${st.icon} ${t(st.label)}`);
+      const again = h('button', { type: 'button', class: 'btn ai-probe-go', title: t('Testar este modelo'), disabled: running || testing.has(m), onclick: () => runProbe([m]) }, '▶');
+      const r0 = probes[m];
+      return h('div', { class: 'ai-mrow-wrap' },
+        h('div', { class: 'ai-mrow' },
+          h('label', { class: 'ai-mon' }, h('input', { type: 'checkbox', checked: r.on, onchange: (e) => { r.on = e.target.checked; } }), h('span', {}, m)),
+          box(vis, 'Lê imagens', '👁', 'vision'),
+          box(emb, 'Gera embeddings (busca por significado)', '🔎', 'embed'),
+          badge, again),
+        open.has(m) ? h('div', { class: 'ai-probe-detail' },
+          h('div', {}, t(PROBE_HINT[r0?.status || 'untested'])),
+          r0?.at ? h('div', { class: 'muted' }, `${t('Último teste')}: ${new Date(r0.at).toLocaleString()}${r0.ms ? ` · ${r0.ms} ms` : ''}`) : null,
+          r0?.detail ? h('code', {}, r0.detail) : null) : null);
     }) : [h('small', { class: 'muted' }, t('Clique em "Carregar modelos" ou escreva o nome de um modelo.'))]));
   };
   const draft = () => {
     const p = PROVIDERS[type.value];
-    const sid = old?.id || newServerId(ai, type.value);
+    const sid = draftId;
     return {
       id: sid,
       type: type.value,
@@ -165,6 +198,40 @@ function editServer(id = null) {
     };
   };
   const say = (txt, cls = '') => { msg.className = 'msg ' + cls; msg.textContent = t(txt); };
+  function paintSummary() {
+    const sm = probeSummary(probes, [...rows.keys()]);
+    if (!rows.size) { summary.textContent = ''; return; }
+    summary.textContent = running
+      ? `${t('Testando…')} ${testing.size ? `(${testing.size} ${t('agora')})` : ''}`
+      : `● ${sm.ok} ${t('conectados')} · ✕ ${sm.bad} ${t('com problema')} · ○ ${sm.untested} ${t('não testados')}${sm.last ? ` · ${t('último teste')} ${hhmm(sm.last)}` : ''}`;
+  }
+  /** Testa os modelos pedidos (chamada mínima, 2 de cada vez, para ao ver limite de uso). */
+  function runProbe(models) {
+    if (running || !models.length) return;
+    const s = draft();
+    if (!s.base) return say('Informe o endereço da API.', 'err');
+    if (!PROVIDERS[s.type].noKey && !key.value.trim()) return say('Cole a chave de API.', 'err');
+    // pedido de acesso direto no clique, sem await antes (Firefox)
+    requestPermission(s).then(async (ok) => {
+      if (!ok) return say('Permissão negada pelo navegador.', 'err');
+      try { await ensureDataConsent(); } catch (e) { return say(e.message, 'err'); }
+      running = true; cancelled = false; stopBtn.hidden = false;
+      say(models.length > 1 ? `${t('Testando')} ${models.length} ${t('modelos, 2 de cada vez…')}` : `${t('Testando')} ${models[0]}…`);
+      const c = { type: s.type, base: s.base, key: key.value.trim() };
+      await probeMany(models, async (m) => { testing.add(m); paintList(); const r = await probeModel(c, m, { caps: capsFor(m) }); testing.delete(m); return r; }, {
+        concurrency: 2,
+        isCancelled: () => cancelled,
+        onResult: (m, r) => { if (r.status !== 'untested' || !probes[m]) probes[m] = r; paintList(); },
+      });
+      running = false; stopBtn.hidden = true;
+      await saveProbes(draftId, probes).catch(() => {});
+      probeCache[draftId] = { ...probes };
+      const sm = probeSummary(probes, models);
+      const stoppedByLimit = models.some((m) => probes[m]?.status === 'limit');
+      say(cancelled ? 'Teste parado.' : stoppedByLimit ? '⏳ O provedor avisou limite de uso: os testes pararam. Espere um pouco e teste os restantes.' : `✓ ${sm.ok} ${t('conectados')} · ${sm.bad} ${t('com problema')}`, sm.bad || stoppedByLimit ? '' : 'ok');
+      paintList();
+    }, (err) => say(err.message, 'err'));
+  }
   const load = async () => {
     const s = draft();
     if (!s.base) return say('Informe o endereço da API.', 'err');
@@ -191,7 +258,9 @@ function editServer(id = null) {
   };
   manual.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addManual(); } });
   filter.addEventListener('input', paintList);
-  type.addEventListener('change', () => { rows.clear(); paintType(); });
+  show2.addEventListener('change', paintList);
+  loadProbes(draftId).then((r) => { probes = { ...r, ...probes }; paintList(); });
+  type.addEventListener('change', () => { rows.clear(); probes = {}; draftId = newServerId(ai, type.value); paintType(); });
 
   const dlg = h('dialog', { class: 'dlg ai-dlg' }, h('form', { method: 'dialog' },
     h('h2', {}, old ? t('Editar servidor') : t('Adicionar servidor')),
@@ -200,7 +269,13 @@ function editServer(id = null) {
     baseRow,
     keyRow,
     h('h3', {}, t('Modelos')),
-    h('div', { class: 'toolbar' }, h('button', { type: 'button', class: 'btn', onclick: load }, t('Carregar modelos')), filter),
+    h('div', { class: 'toolbar' }, h('button', { type: 'button', class: 'btn', onclick: load }, t('Carregar modelos')), filter, show2),
+    h('div', { class: 'toolbar ai-probe-bar' },
+      h('button', { type: 'button', class: 'btn', title: t('Uma chamada mínima por modelo, 2 de cada vez'), onclick: () => runProbe([...rows.keys()].filter((m) => show2.value === 'all' || probeGroup(probes[m]) === show2.value).filter((m) => !filter.value.trim() || m.toLowerCase().includes(filter.value.trim().toLowerCase()))) }, t('Testar todos')),
+      h('button', { type: 'button', class: 'btn', onclick: () => runProbe([...rows].filter(([, r]) => r.on).map(([m]) => m)) }, t('Testar marcados')),
+      h('button', { type: 'button', class: 'btn', title: t('Marca só os modelos que passaram no teste'), onclick: () => { let n = 0; for (const [m, r] of rows) { r.on = probes[m]?.status === 'ok'; n += r.on; } paintList(); say(`${n} ${t('modelos conectados marcados.')}`, n ? 'ok' : ''); } }, t('Marcar só os conectados')),
+      stopBtn),
+    summary,
     list,
     h('div', { class: 'toolbar' }, manual, h('button', { type: 'button', class: 'btn', onclick: addManual }, t('Adicionar'))),
     h('small', { class: 'muted' }, t('👁 lê imagens · 🔎 gera embeddings (busca por significado). Quando o servidor informa, já vem marcado; corrija se precisar.')),
@@ -336,6 +411,7 @@ export function setupAiCentral(a) {
     }
   });
   paintAll();
+  chrome.storage.local.get(PROBE_KEY).then((r) => { probeCache = r?.[PROBE_KEY] || {}; paintServers(); }).catch(() => {});
 }
 
 export const repaintAi = () => api && paintAll();

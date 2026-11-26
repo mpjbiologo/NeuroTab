@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.9.2.3
+**Saiba quais modelos de IA funcionam de verdade com a sua chave.**
+
+- 🧪 **Teste por modelo (#76):** em Configurações → IA → Editar servidor, cada modelo mostra o estado ao lado: **Conectado**, **Não autorizado**, **Indisponível**, **Limite excedido**, **Incompatível**, **Erro de conexão**, **Inconclusivo** ou **Não testado**
+  - Aparecer na lista do provedor não basta: cada modelo recebe **uma chamada mínima** (texto curtíssimo, ou embeddings para modelos de busca por significado), com tempo-limite
+  - **▶** testa um, **Testar todos** e **Testar marcados** testam vários — **2 de cada vez**, parando sozinho se o provedor avisar limite de uso (o que faltou fica "Não testado", com o motivo) — e **Parar teste** interrompe
+  - Filtro **Conectados / Com problema / Não testados**, resumo com o **horário do último teste**, **detalhes técnicos** (código HTTP e mensagem) ao clicar no estado e **Marcar só os conectados**
+  - O cartão do servidor mostra o estado de cada modelo escolhido. Nada é testado sozinho; os resultados ficam só neste navegador e nunca guardam a chave
+- 🔔 **Rede local bloqueada? Use o ntfy:** a tela do QR da rede local ganhou **"Usar ntfy em vez disso"**, que liga o ntfy e já mostra o QR de pareamento — funciona em Wi-Fi público, rede de convidados e de empresa
+- 🧩 A barra de organizar acompanha a própria altura quando muda (os widgets nunca ficam atrás dela)
+
 ## v0.9.2.2
 **Página organizada sozinha e celular conectando de primeira pela rede local.**
 

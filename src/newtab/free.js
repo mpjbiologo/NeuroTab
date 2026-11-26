@@ -453,8 +453,14 @@ export function setEditing(on) {
   S.editing = on;
   document.body.classList.toggle('editing', on);
   $('#editBar').hidden = !on;
-  // Folga embaixo do conteúdo do tamanho real da barra (ela quebra em duas linhas em telas estreitas).
-  if (on) requestAnimationFrame(() => document.body.style.setProperty('--edit-bar-h', $('#editBar').offsetHeight + 'px'));
+  // Folga embaixo do conteúdo do tamanho real da barra (ela quebra em duas linhas em telas estreitas
+  // e muda de altura quando os botões mudam): acompanha cada mudança de tamanho.
+  if (on) {
+    const bar = $('#editBar');
+    const fit = () => { if (!bar.hidden) document.body.style.setProperty('--edit-bar-h', bar.offsetHeight + 'px'); };
+    requestAnimationFrame(fit);
+    if (!S.barObserver && 'ResizeObserver' in window) { S.barObserver = new ResizeObserver(fit); S.barObserver.observe(bar); }
+  }
   $('#editLayout').classList.toggle('on', on);
   $$('.widget:not(.free-item)').forEach((w) => { w.draggable = on; });
   if (on) { renderLayoutPicker(); paintModeButtons(); }
