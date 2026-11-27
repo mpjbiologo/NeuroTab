@@ -21,19 +21,39 @@
   .txt { white-space: pre-wrap; word-break: break-word; max-height: 9.5em; overflow: auto; }
   img { max-width: 100%; border-radius: 10px; }
   .meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; }
+  nav.tabs { display: flex; gap: 6px; }
+  nav.tabs button { flex: 1; appearance: none; border: 1px solid var(--line); background: transparent; color: var(--muted); padding: 9px; border-radius: 12px; font: inherit; font-weight: 600; }
+  nav.tabs button.on { background: #222a48; color: var(--text); }
+  video, audio { width: 100%; border-radius: 10px; margin-top: 6px; background: #000; }
+  audio { background: none; }
+  .ttl { font-weight: 700; word-break: break-word; }
+  .sum { color: var(--muted); font-size: 14px; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .file { margin-top: 8px; }
+  .bar { height: 6px; background: #10162b; border-radius: 6px; overflow: hidden; margin-top: 8px; display: none; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+  [hidden] { display: none !important; }
   #st { position: fixed; left: 16px; right: 16px; bottom: 16px; max-width: 608px; margin: auto; padding: 10px; border-radius: 12px; background: #222a48; text-align: center; display: none; }
 </style>
 </head>
 <body>
 <header><b>📋 NeuroTab · <span id="pc">Rede local</span></b><span class="muted" id="live"></span></header>
 <main>
-  <section class="card">
+  <nav class="tabs"><button id="tabT" class="on">📋 Texto</button><button id="tabM">📎 Mídias</button></nav>
+  <section class="card" id="composeT">
     <textarea id="box" placeholder="Escreva ou cole aqui…"></textarea>
     <div class="row">
       <button class="btn primary" id="send">📤 Enviar para o computador</button>
       <button class="btn" id="pick">🖼️ Imagem</button>
       <input type="file" id="file" accept="image/*" hidden>
     </div>
+  </section>
+  <section class="card" id="composeM" hidden>
+    <div class="muted">Fotos, vídeos e áudios vão inteiros para a pasta <b>Downloads/NeuroTab/Do celular</b> do computador (até 500 MB cada).</div>
+    <div class="row">
+      <button class="btn primary" id="pickM">📤 Enviar foto, vídeo ou áudio</button>
+      <input type="file" id="fileM" accept="image/*,video/*,audio/*" multiple hidden>
+    </div>
+    <div class="bar" id="bar"><i></i></div>
   </section>
   <div id="list"></div>
   <p class="muted" style="text-align:center">Funciona só neste Wi-Fi, enquanto o navegador estiver aberto no computador.</p>
@@ -69,11 +89,45 @@
     say(ok ? 'Copiado ✓' : 'Toque e segure no texto para copiar.');
   }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  var tab = localStorage.getItem('nt_ponte_tab') || 'T', last = [];
+  function setTab(t) {
+    tab = t; localStorage.setItem('nt_ponte_tab', t);
+    $('tabT').className = t === 'T' ? 'on' : ''; $('tabM').className = t === 'M' ? 'on' : '';
+    $('composeT').hidden = t !== 'T'; $('composeM').hidden = t !== 'M';
+    render(last);
+  }
+  function fileUrl(f, dl) { return '/api/file/' + encodeURIComponent(f.id) + '?t=' + encodeURIComponent(token) + (dl ? '&dl=1' : ''); }
+  function size(n) { return n > 1048576 ? (n / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+  function mediaCard(p) {
+    var c = el('article', 'card'), m = p.media || {};
+    c.appendChild(el('div', 'ttl', (m.platform && m.platform !== 'web' ? '🎬 ' : '📎 ') + (m.title || p.text || 'Mídia')));
+    if (m.summary) c.appendChild(el('div', 'sum', m.summary));
+    (p.files || []).forEach(function (f) {
+      var box = el('div', 'file'), mt = String(f.mime || '');
+      if (/^image\//.test(mt)) { var img = el('img'); img.loading = 'lazy'; img.alt = f.name || ''; img.src = fileUrl(f); box.appendChild(img); }
+      else if (/^video\//.test(mt)) { var v = el('video'); v.controls = true; v.preload = 'metadata'; v.setAttribute('playsinline', ''); v.src = fileUrl(f); box.appendChild(v); }
+      else if (/^audio\//.test(mt)) { var a = el('audio'); a.controls = true; a.preload = 'none'; a.src = fileUrl(f); box.appendChild(a); }
+      var row = el('div', 'meta');
+      row.appendChild(el('small', 'muted', (f.name || '') + (f.size ? ' · ' + size(f.size) : '')));
+      var dl = el('a', 'btn', '⬇️'); dl.href = fileUrl(f, true); dl.setAttribute('download', f.name || ''); row.appendChild(dl);
+      box.appendChild(row);
+      c.appendChild(box);
+    });
+    var meta = el('div', 'meta');
+    var who = p.from && p.from.id === me ? 'este celular' : (p.from && p.from.name) || '';
+    meta.appendChild(el('small', 'muted', who + ' · ' + new Date(p.at).toLocaleString([], { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })));
+    if (m.url && /^https?:\/\//.test(m.url)) { var o = el('a', 'btn', '🔗 Original'); o.href = m.url; o.target = '_blank'; o.rel = 'noopener noreferrer'; meta.appendChild(o); }
+    c.appendChild(meta);
+    return c;
+  }
   function render(items) {
+    last = items;
     var list = $('list');
     list.innerHTML = '';
-    if (!items.length) { list.appendChild(el('p', 'card muted', 'Nada por aqui ainda.')); return; }
+    items = items.filter(function (p) { return (p.kind === 'media') === (tab === 'M'); });
+    if (!items.length) { list.appendChild(el('p', 'card muted', tab === 'M' ? 'Nenhuma mídia ainda. As mais recentes do computador aparecem aqui sozinhas.' : 'Nada por aqui ainda.')); return; }
     items.forEach(function (p) {
+      if (p.kind === 'media') { list.appendChild(mediaCard(p)); return; }
       var c = el('article', 'card');
       if (p.image && p.image.data && /^data:image\//.test(p.image.data)) { var img = el('img'); img.src = p.image.data; img.alt = ''; c.appendChild(img); }
       if (p.text) c.appendChild(el('div', 'txt', p.text));
@@ -106,6 +160,27 @@
     img.src = url;
     this.value = '';
   };
+  $('tabT').onclick = function () { setTab('T'); };
+  $('tabM').onclick = function () { setTab('M'); };
+  $('pickM').onclick = function () { $('fileM').click(); };
+  function upload(files, i) {
+    if (i >= files.length) { $('bar').style.display = 'none'; say('Enviado ✓'); load(); return; }
+    var f = files[i], x = new XMLHttpRequest(), bar = $('bar');
+    if (f.size > 500 * 1048576) { say('⚠️ ' + f.name + ': grande demais (até 500 MB)', 5000); upload(files, i + 1); return; }
+    bar.style.display = 'block'; bar.firstChild.style.width = '0';
+    x.open('POST', '/api/upload');
+    x.setRequestHeader('X-NT-Token', token);
+    x.setRequestHeader('X-NT-Name', encodeURIComponent(f.name || 'arquivo'));
+    x.setRequestHeader('X-NT-From-Id', encodeURIComponent(me));
+    x.setRequestHeader('X-NT-From-Name', encodeURIComponent(localStorage.getItem('nt_ponte_name') || 'Celular'));
+    x.setRequestHeader('Content-Type', f.type || 'application/octet-stream');
+    x.upload.onprogress = function (e) { if (e.lengthComputable) { bar.firstChild.style.width = Math.round(e.loaded / e.total * 100) + '%'; say((files.length > 1 ? (i + 1) + '/' + files.length + ' · ' : '') + Math.round(e.loaded / e.total * 100) + '%', 4000); } };
+    x.onload = function () { if (x.status === 200) upload(files, i + 1); else { say('⚠️ ' + (x.responseText || ('Erro ' + x.status)), 6000); bar.style.display = 'none'; } };
+    x.onerror = function () { say('⚠️ Sem conexão com o computador.', 6000); bar.style.display = 'none'; };
+    x.send(f);
+  }
+  $('fileM').onchange = function () { var fs = Array.prototype.slice.call(this.files); this.value = ''; if (fs.length) upload(fs, 0); };
+  setTab(tab);
   load();
   try {
     var es = new EventSource('/api/events?t=' + encodeURIComponent(token));

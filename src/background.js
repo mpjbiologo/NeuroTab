@@ -28,7 +28,9 @@ import { today as finToday } from './lib/finance/model.js';
 import { downloadMedia, cancelDownload, revealDownload } from './lib/media-dl-run.js';
 import { sanitizeMediaDl, canDownload } from './lib/media-download.js';
 import { NET_KEY, sanitizeNet, sanitizeStore, serverBase, originOf, measureLatency, median, SAMPLES_MAX } from './lib/net.js';
-import { dispatchShares, pollShares, receivePayload, patchState, me as shareMe } from './lib/clipboard-sync.js';
+import { dispatchShares, pollShares, receivePayload, patchState, me as shareMe, setMediaReceiver } from './lib/clipboard-sync.js';
+import { lanMediaMessages, shareMedia, receiveMedia, cleanupCloudMedia, inbox as mediaInbox, inboxBytes, patchInbox, removeInbox } from './lib/media-share-run.js';
+import { ponteDl } from './lib/media-dl-run.js';
 import { sitePatterns } from './lib/media-sites.js';
 
 // Janela de análise aberta com uma imagem temporária: quando ela fecha (a conexão cai), o fundo apaga a
@@ -393,7 +395,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'clipprune') return pruneClips().catch(() => {});
   if (alarm.name === 'mail') return runMailCheck().catch((e) => console.warn('NeuroTab: e-mail', e));
   if (alarm.name === 'netmon') return runNetMonitor().catch((e) => console.warn('NeuroTab: rede', e));
-  if (alarm.name === 'clipshare') return Promise.all([pollShares(), syncPonte()]).catch(() => {});
+  if (alarm.name === 'clipshare') return Promise.all([pollShares(), syncPonte(), cleanupCloudMedia()]).catch(() => {});
   if (alarm.name.startsWith('cal-')) return fireCalAlarm(alarm.name);
   if (alarm.name === 'calfeeds') return refreshFeeds().then(syncCalAlarms).catch(() => {});
   if (alarm.name === 'calsync') return syncCalAlarms();
@@ -757,6 +759,27 @@ async function mirrorLan() {
   }
 }
 
+/** As 20 mídias mais recentes (e as mandadas com 📤) aparecem sozinhas no celular da rede local (0.9.3.2). */
+let lanMediaSent = new Set();
+let mirroringMedia = null;
+function mirrorLanMedia() {
+  if (!mirroringMedia) mirroringMedia = (async () => {
+    if (!ponte) return;
+    const share = shareConfig(await clipConfig());
+    if (!share.lan.mirror || share.direction === 'receive') return;
+    for (const { sig, msgs } of await lanMediaMessages(share, lanMediaSent)) {
+      if (!ponte) return;
+      for (const m of msgs) ponte.postMessage(m);
+      lanMediaSent.add(sig);
+    }
+  })().catch((e) => console.warn('NeuroTab: mídias na rede local', e)).finally(() => { mirroringMedia = null; });
+  return mirroringMedia;
+}
+let mediaMirrorTimer = null;
+function scheduleMediaMirror() { clearTimeout(mediaMirrorTimer); mediaMirrorTimer = setTimeout(() => mirrorLanMedia(), 1500); }
+
+setMediaReceiver((p, via) => receiveMedia(p, via));
+
 async function syncPonte() {
   const share = shareConfig(await clipConfig());
   const allowed = await chrome.permissions.contains({ permissions: ['nativeMessaging'] }).catch(() => false);
@@ -769,6 +792,7 @@ async function syncPonte() {
   try {
     ponte = chrome.runtime.connectNative(NATIVE_HOST);
     lanSent = new Set();
+    lanMediaSent = new Set();
   } catch (e) {
     await patchState('lan', { status: 'off', error: String(e.message || e) });
     return;
@@ -777,8 +801,14 @@ async function syncPonte() {
     if (m?.type === 'ready') {
       await patchState('lan', { status: 'on', urls: (m.urls || []).slice(0, 8), addrs: (m.addrs || []).slice(0, 8), port: m.port, version: m.version || '', error: '' });
       await mirrorLan().catch((e) => console.warn('NeuroTab: rede local', e));
+      await mirrorLanMedia();
     }
     if (m?.type === 'incoming') { const id = m.payload?.id; if (id) lanSent.add(String(id)); }
+    if (m?.type === 'incoming' && m.payload?.kind === 'media') {
+      // foto ou vídeo do celular: a Ponte já gravou em Downloads/NeuroTab/Do celular
+      if (canReceive(shareConfig(await clipConfig()))) await receiveMedia(m.payload, 'Rede local', { path: String(m.path || '') });
+      return;
+    }
     if (m?.type === 'incoming' && canReceive(shareConfig(await clipConfig()))) await receivePayload(cleanPayload(m.payload), 'Rede local');
     if (m?.type === 'error') await patchState('lan', { error: String(m.message || '') });
   });
@@ -843,9 +873,10 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     const before = changes[CLIP_CFG_KEY].oldValue || {};
     const after = changes[CLIP_CFG_KEY].newValue || {};
     syncClipboard({ injectOpenTabs: after.sites && !before.sites }).catch(() => {});
-    if (JSON.stringify(before.share || {}) !== JSON.stringify(after.share || {})) { syncPonte().then(() => mirrorLan()).catch(() => {}); syncShareAlarm().catch(() => {}); }
+    if (JSON.stringify(before.share || {}) !== JSON.stringify(after.share || {})) { syncPonte().then(() => mirrorLan()).then(() => mirrorLanMedia()).catch(() => {}); syncShareAlarm().catch(() => {}); }
   }
   if (changes[CLIP_KEY]) scheduleDispatch();
+  if (changes[BRAIN_KEY] && ponte) scheduleMediaMirror();
 });
 chrome.permissions.onAdded?.addListener(() => { syncClipboard().catch(() => {}); syncMailAlarm().catch(() => {}); syncNetAlarm().catch(() => {}); });
 chrome.permissions.onRemoved?.addListener(() => { syncClipboard().catch(() => {}); syncMailAlarm().catch(() => {}); syncNetAlarm().catch(() => {}); });
@@ -890,6 +921,29 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   }
   if (msg?.type === 'media:download' && typeof msg.id === 'string') {
     downloadMedia(msg.id, { via: msg.via === 'ponte' ? 'ponte' : null, tabId: Number.isInteger(msg.tabId) ? msg.tabId : null, what: ['audio', 'photos'].includes(msg.what) ? msg.what : 'video' }).then(reply, (e) => reply({ error: e.message }));
+    return true;
+  }
+  // 📤 Mandar para o celular (0.9.3.2)
+  if (msg?.type === 'media:share' && ['post', 'image'].includes(msg.kind) && typeof msg.id === 'string') {
+    shareMedia(msg.kind, msg.id, { lan: ponte ? mirrorLanMedia : null }).then(reply, (e) => reply({ error: e.message }));
+    return true;
+  }
+  // 📥 Do celular: salvar no computador (nuvem/ntfy), mostrar na pasta, tirar da lista
+  if (msg?.type === 'media:inbox-bytes' && typeof msg.id === 'string') {
+    mediaInbox().then(async (list) => {
+      const x = list.find((y) => y.id === msg.id);
+      if (!x) throw new Error('Não encontrei este arquivo.');
+      const bytes = await inboxBytes(x);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      return { data: btoa(bin), mime: x.mime, name: x.name };
+    }).then(reply, (e) => reply({ error: e.message }));
+    return true;
+  }
+  if (msg?.type === 'media:inbox-saved' && typeof msg.id === 'string') { patchInbox(msg.id, { savedAt: Date.now(), path: String(msg.path || ''), error: '' }).then(() => reply({ ok: true })); return true; }
+  if (msg?.type === 'media:inbox-remove' && typeof msg.id === 'string') { removeInbox(msg.id).then(() => reply({ ok: true })); return true; }
+  if (msg?.type === 'media:reveal-path' && typeof msg.path === 'string') {
+    ponteDl('reveal', { path: msg.path, open: !!msg.open }).then(() => reply({ ok: true }), (e) => reply({ error: e.message }));
     return true;
   }
   if (msg?.type === 'media:download-cancel') { reply({ ok: cancelDownload(String(msg.key || msg.id || '')) }); return; }

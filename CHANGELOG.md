@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.9.3.2
+**Mídias nos seus aparelhos: fotos, vídeos e áudios entre o computador e o celular, como a área de transferência.**
+
+- 📎 **Aba Mídias na página do celular** (rede local): o celular vê sozinho as **20 mídias mais recentes** da Biblioteca de mídias, com miniatura, título, resumo e origem. Abra a imagem, ouça o áudio e assista ao vídeo **sem baixar tudo antes**, ou baixe com ⬇️
+- 📤 **Mandar para o celular:** botão em cada imagem e post da Biblioteca de mídias e na janela do item Mídia. Pela internet vai só o que você manda:
+  - ☁️ **Nuvem** (Google Drive, pasta oculta): cifrado com a senha da sincronização, até **25 MB** e apagado depois de **7 dias** (os dois você muda em Área de transferência → 📤)
+  - 🔔 **ntfy:** anexo cifrado com a chave do QR, até 15 MB (o ntfy.sh guarda por 3 horas)
+  - ✈️ **Telegram:** até 50 MB (o Telegram lê o conteúdo)
+  - Maior que o limite: vai só o **link e o resumo**
+- 📥 **Do celular para o computador:** foto, vídeo ou áudio da galeria ou da câmera. Pela rede local vai **inteiro** (até 500 MB) para **Downloads/NeuroTab/Do celular**, sem nunca sobrescrever; pela nuvem ou ntfy também funciona. As **fotos entram na biblioteca** de imagens, e tudo aparece na nova aba **📥 Do celular** da Biblioteca de mídias
+- 🔒 **Segurança:** a Ponte só entrega arquivos que a extensão indicou, só dentro de Downloads, nunca lista pastas, recusa `..` e exige o código de acesso. A cifra é a mesma da área de transferência
+- 📱 Páginas do celular com a versão antiga mostram as mídias como texto com o link: nada quebra
+- 📄 Política de privacidade e site atualizados; detalhes técnicos em `docs/dev/AREA-DE-TRANSFERENCIA.md`
+- 🔌 **Atualize a NeuroTab Ponte** para ter a aba Mídias e o envio do celular pela rede local
+
 ## v0.9.3.1
 **Biblioteca de mídias: imagens, posts e vídeos numa tela só, com mais sites, fotos e só o áudio.**
 

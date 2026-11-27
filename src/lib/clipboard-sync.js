@@ -18,7 +18,7 @@ export async function me(share) {
 }
 
 /** Caminhos de consulta ligados (a rede local é por conexão e chega pelo parâmetro lan). */
-async function transports(share, { fetchFn, who }) {
+export async function transports(share, { fetchFn = fetch, who }) {
   const out = {};
   if (share.cloud.on) {
     try { const c = await cloudReady(); out.cloud = cloudTransport({ ...c, fetchFn }); } catch (e) { await patchState('cloud', { error: e.message }); }
@@ -65,11 +65,19 @@ async function doDispatch({ fetchFn = fetch, lan = null } = {}) {
   return done;
 }
 
+let mediaReceiver = null;
+/** Quem cuida das mídias que chegam (0.9.3.2): o background liga (media-share-run.js). */
+export function setMediaReceiver(fn) { mediaReceiver = fn; }
+
 /** Recebe um item de outro aparelho (qualquer caminho). */
 export async function receivePayload(p, viaName) {
   if (!p) return null;
   const myId = await deviceId();
   if (p.from?.id && p.from.id === myId) return null; // eco do que eu mesmo mandei
+  if (p.kind === 'media') {
+    if (mediaReceiver) return mediaReceiver(p, viaName);
+    if (!p.text) return null; // sem quem cuide: vira texto (título e link)
+  }
   const r = await addClip({ text: p.text, image: p.image, via: 'remote', from: p.from, source: { url: '', title: `${p.from?.name || viaName}` } });
   return r.item || null;
 }

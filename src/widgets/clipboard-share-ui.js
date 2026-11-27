@@ -4,6 +4,7 @@ import { t } from '../lib/i18n.js';
 import { qrSvg } from '../lib/pix.js';
 import { requestAccess } from '../lib/permissions.js';
 import { clipConfig, setClipConfig } from '../lib/clipboard.js';
+import { mediaShareConfig } from '../lib/media-share.js';
 import { shareConfig, newTopic, newShareKey, newToken, ntfyPairLink, lanTargets, SHARE_STATE_KEY } from '../lib/clipboard-share.js';
 import { telegramTransport } from '../lib/clipboard-transports.js';
 import { syncConfig } from '../lib/sync.js';
@@ -132,6 +133,10 @@ export async function openShareDialog(ctx) {
   const lanPort = h('input', { type: 'number', min: 1024, max: 65535, value: sh.lan.port });
   const lanMirror = h('input', { type: 'checkbox', checked: sh.lan.mirror !== false });
   let lanToken = sh.lan.token || newToken();
+  // 🎞️ mídias (0.9.3.2)
+  const mcfg = mediaShareConfig(sh);
+  const cloudMax = h('input', { type: 'number', min: 1, max: 200, value: mcfg.cloudMaxMB, style: 'width:90px' });
+  const cloudDays = h('input', { type: 'number', min: 1, max: 90, value: mcfg.cloudDays, style: 'width:90px' });
 
   const pairNtfy = () => {
     if (!ntfyTopic) { ntfyTopic = newTopic(); ntfyKey = newShareKey(); }
@@ -221,12 +226,15 @@ export async function openShareDialog(ctx) {
         h('p', {}, h('b', {}, 'macOS: '), 'no Terminal: ', h('code', {}, 'chmod +x ~/Downloads/neurotab-ponte-macos-* && xattr -d com.apple.quarantine ~/Downloads/neurotab-ponte-macos-*; ~/Downloads/neurotab-ponte-macos-*')),
         h('p', {}, h('b', {}, 'Linux: '), h('code', {}, 'chmod +x neurotab-ponte-linux-* && ./neurotab-ponte-linux-*')),
         h('p', { class: 'muted' }, 'Depois de instalar, ligue esta opção e salve. O navegador abre a Ponte sozinho quando precisar.')),
-      h('label', { class: 'clip-opt' }, lanMirror, h('span', {}, h('small', {}, 'O celular vê a área de transferência deste computador (os 30 itens mais recentes; o que parece senha nunca é guardado)'))),
+      h('label', { class: 'clip-opt' }, lanMirror, h('span', {}, h('small', {}, 'O celular vê a área de transferência deste computador (os 30 itens mais recentes; o que parece senha nunca é guardado) e as 20 mídias mais recentes da Biblioteca de mídias'))),
       h('label', {}, 'Porta', lanPort),
       lanList.length
         ? h('button', { class: 'btn primary', type: 'button', onclick: () => lanQrDialog(lanList, { onUseNtfy: useNtfy }) }, '📱 Abrir no celular')
         : null,
     ], lanSt.status === 'on' ? `✓ ${t('Ponte ligada')}${lanSt.version ? ' · v' + lanSt.version : ''}` : statusLine(lanSt)),
+    h('h3', {}, '🎞️ ' + t('Mídias (fotos, vídeos e áudios)')),
+    h('small', { class: 'muted' }, t('Na rede local, o celular vê sozinho as 20 mídias mais recentes. Pela internet, só vai o que você manda com 📤 na Biblioteca de mídias. Limites: nuvem o valor abaixo, ntfy 15 MB (o servidor apaga em 3 horas), Telegram 50 MB (o Telegram lê o conteúdo). Maior que isso: vai só o link e o resumo. O que chega do celular vai para Downloads/NeuroTab/Do celular.')),
+    h('div', { class: 'share-row' }, h('label', {}, t('Nuvem: até (MB)'), cloudMax), h('label', {}, t('Apagar da nuvem depois de (dias)'), cloudDays)),
     say,
     h('div', { class: 'actions' },
       h('button', { class: 'btn', type: 'button', onclick: async () => {
@@ -244,6 +252,7 @@ export async function openShareDialog(ctx) {
           ntfy: { on: ntfy.checked, server: (ntfyServer.value || 'https://ntfy.sh').trim(), topic: ntfyTopic, key: ntfyKey, plain: ntfyPlain.checked },
           telegram: { on: tg.checked && !!tgChat, token: tgToken.value.trim(), chatId: tgChat, bot: tgBot },
           lan: { on: lan.checked, port: Math.min(65535, Math.max(1024, +lanPort.value || 41414)), token: lanToken, mirror: lanMirror.checked },
+          media: mediaShareConfig({ media: { cloudMaxMB: cloudMax.value, cloudDays: cloudDays.value } }),
         };
         if (tg.checked && !tgChat) say.textContent = t('Telegram: falta conectar o bot (botão Conectar).');
         await setClipConfig({ share });

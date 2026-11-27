@@ -114,3 +114,35 @@ Na primeira leitura de um caminho, só entram itens dos últimos 10 minutos (um 
 > Used only when the user turns on "Local network" sharing in the optional Clipboard widget and installs the companion app NeuroTab Ponte, to send clipboard items to the user's own phone on the same Wi-Fi. No data goes to any server.
 
 **https://\*/\* (opcional, já existente):** também usado pela opção "When copying on websites" do mesmo widget, para guardar localmente o texto copiado e o site de origem.
+
+## Mídias nos seus aparelhos (0.9.3.2, #80)
+
+Fotos, vídeos e áudios usam os mesmos caminhos, as mesmas chaves e as mesmas regras (sentido, nome do aparelho).
+
+**Formato:** o envelope v1 ganha `kind: 'media'`, `media: { title, url, platform, summary, category, author }` e
+`files: [{ id, name, mime, size, drive?, ntfy?, enc? }]`. O `text` leva "📎 título + link": aparelho com versão antiga
+mostra como texto e nada quebra. Regras e validação em `src/lib/media-share.js` (`cleanMediaPayload` nunca confia no formato);
+a parte que age em `src/lib/media-share-run.js`.
+
+| Caminho | O que vai | Limite | Cifra |
+|---|---|---|---|
+| 🏠 Rede local | sozinho: as 20 mais recentes da Biblioteca de mídias + as mandadas com 📤 | 500 MB do celular para o PC | rede local, código de acesso |
+| ☁️ Nuvem | só com 📤; um arquivo `nt-media-<uuid>` na pasta oculta do Drive | 25 MB (configurável), apagado em 7 dias (configurável) | AES-GCM com a chave da sincronização (`NTB1` + iv + dados); sem senha de sincronização, sem cifra |
+| 🔔 ntfy | só com 📤; anexo (`PUT`, tag `nt-file`) + mensagem NT1 com o link do anexo | 15 MB (o ntfy.sh apaga em 3 h) | AES-GCM com a chave do QR |
+| ✈️ Telegram | só com 📤; `sendPhoto/sendVideo/sendAudio/sendDocument` | 50 MB | nenhuma (o Telegram lê; avisado na tela) |
+
+Maior que o limite do caminho: vai só o link e o resumo (com aviso no texto). `src/lib/bytes-crypto.js` é copiado igual
+em `docs/cola/bytes-crypto.js` (um teste confere).
+
+**Ponte (`ponte/media.go`):** a extensão registra cada arquivo (`{type:'file', payload:{id,name,mime,path|data}}`) antes
+do envelope. `GET /api/file/<id>` serve só o que foi registrado, só dentro de Downloads, com `Range` (o vídeo toca sem
+baixar tudo), `nosniff`, CSP `sandbox` e `?dl=1` para baixar. Nunca lista pastas; id desconhecido ou `..` = 404.
+`POST /api/upload` grava em `Downloads/NeuroTab/Do celular` (arquivo temporário, depois renomeia; nome repetido ganha
+" (1)"; até 500 MB) e manda `{type:'incoming', payload, path}` para a extensão. A operação `read` do `dl` lê um arquivo
+de Downloads em pedaços de 600 KB (a mensagem da Ponte para a extensão tem até 1 MB) — usada pelo 📤 e para levar as
+fotos do celular para a biblioteca.
+
+**Do celular:** cada arquivo vira uma entrada em `nt_media_inbox` (só neste computador; aba 📥 Do celular da Biblioteca).
+Pela rede local o arquivo já está na pasta; pela nuvem/ntfy, as imagens (até 12 MB) entram sozinhas na biblioteca e o
+resto é salvo pelo botão ⬇ Salvar no computador (a página baixa, decifra e grava em `NeuroTab/Do celular`).
+A limpeza da nuvem roda no alarme `clipshare`, no máximo uma vez por hora.

@@ -49,6 +49,7 @@ type dlReq struct {
 	Paths   []string `json:"paths"`
 	Audio   bool     `json:"audio"`  // só o áudio (0.9.3.1)
 	Format  string   `json:"format"` // mp3 | m4a | original (converter precisa do ffmpeg)
+	Max     int64    `json:"max"`    // "read": recusa arquivos maiores (0.9.3.2)
 }
 
 type dlTool struct {
@@ -727,6 +728,11 @@ func runDL(first Msg, r io.Reader, w *writer) error {
 			return send(dlEvent{Stage: "error", Code: "failed", Error: err.Error()}, err.Error())
 		}
 		return send(dlEvent{Stage: "done"}, "")
+	case "read": // 0.9.3.2: a extensão lê um arquivo de Downloads para mandar pela nuvem/ntfy/Telegram
+		if err := readForExt(q, func(v any) error { return send(v, "") }); err != nil {
+			return send(dlEvent{Stage: "error", Code: "failed", Error: err.Error()}, err.Error())
+		}
+		return nil
 	case "reveal":
 		if err := reveal(q); err != nil {
 			return send(dlEvent{Stage: "error", Code: "failed", Error: err.Error()}, err.Error())

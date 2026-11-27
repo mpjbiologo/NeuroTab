@@ -206,7 +206,7 @@ export function driveStore(accountId, { fetchFn = fetch, interactive = false } =
   };
   return {
     async list() {
-      const res = await call(`${DRIVE}/files?spaces=appDataFolder&pageSize=100&fields=files(id,name,version,modifiedTime)`);
+      const res = await call(`${DRIVE}/files?spaces=appDataFolder&pageSize=1000&fields=files(id,name,version,modifiedTime,size)`);
       return (await res.json()).files || [];
     },
     async read(id) {
@@ -229,6 +229,19 @@ export function driveStore(accountId, { fetchFn = fetch, interactive = false } =
       return res.json();
     },
     async remove(id) { await call(`${DRIVE}/files/${id}`, { method: 'DELETE' }); },
+    /** Arquivo binário (mídias, 0.9.3.2): bytes já cifrados quando há chave. */
+    async createBytes(name, bytes) {
+      const boundary = 'nt' + Math.random().toString(36).slice(2);
+      const head = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name, parents: ['appDataFolder'] })}\r\n--${boundary}\r\nContent-Type: application/octet-stream\r\n\r\n`;
+      const body = new Blob([head, bytes, `\r\n--${boundary}--`]);
+      const res = await call(`${UPLOAD}/files?uploadType=multipart&fields=id,version`, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body });
+      return res.json();
+    },
+    async readBytes(id) {
+      const res = await call(`${DRIVE}/files/${id}?alt=media`);
+      if (res.status === 404) return null;
+      return new Uint8Array(await res.arrayBuffer());
+    },
   };
 }
 
