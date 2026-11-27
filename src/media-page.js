@@ -12,6 +12,7 @@ import { sanitizeMediaDl, canDownload, canDownloadAudio, canDownloadPhotos, dlKe
 import { dlSiteOf, safeFileName } from './lib/media-sites.js';
 import { requestAccess } from './lib/permissions.js';
 import { startMediaDownload, revealMedia, cancelMedia } from './lib/media-dl-client.js';
+import { INBOX_KEY, RECEIVED_DIR } from './lib/media-share.js';
 
 const $ = (s) => document.querySelector(s);
 const OPTIONS_MEDIA = () => chrome.runtime.getURL('src/options.html#salvar-midia');
@@ -21,12 +22,13 @@ const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); 
 const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif', 'image/bmp': 'bmp', 'image/svg+xml': 'svg' };
 
 let data;
-let tab = ['tudo', 'imagens', 'posts', 'arquivos'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'tudo';
+let tab = ['tudo', 'imagens', 'posts', 'arquivos', 'celular'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'tudo';
 let q = '';
 let cat = '';
 let images = [];
 let posts = [];
 let urls = [];
+let inbox = [];
 const selected = new Set();
 const progress = new Map(); // chave do download → estado
 
@@ -37,7 +39,8 @@ async function load() {
   urls.forEach((u) => URL.revokeObjectURL(u));
   urls = [];
   data = await loadData();
-  const [caps, items] = await Promise.all([listCaptures().catch(() => []), loadItems()]);
+  const [caps, items, ib] = await Promise.all([listCaptures().catch(() => []), loadItems(), chrome.storage.local.get(INBOX_KEY).catch(() => ({}))]);
+  inbox = (ib[INBOX_KEY] || []).map((x) => ({ kind: 'inbox', id: x.id, at: x.at || 0, x, title: x.name, hay: fold([x.name, x.title, x.from, x.via].join(' ')) }));
   images = caps.map((rec) => ({ kind: 'image', id: rec.id, at: rec.capturedAt || 0, rec, title: rec.pageTitle || rec.fileName || t('Imagem'), hay: fold([rec.fileName, rec.pageTitle, rec.url, rec.pageUrl, rec.text, rec.description].join(' ')) }));
   posts = items.filter((it) => it.type === 'media').map((it) => ({ kind: 'post', id: it.id, at: it.createdAt || 0, it, title: displayTitle(it), hay: fold([it.title, it.pageTitle, it.url, it.summary, it.media?.caption, it.media?.category, it.media?.author, (it.tags || []).join(' ')].join(' ')) }));
   paintCats();
@@ -61,6 +64,7 @@ function entries() {
   if (tab === 'tudo' || tab === 'imagens') list.push(...images);
   if (tab === 'tudo' || tab === 'posts') list.push(...posts);
   if (tab === 'arquivos') list = posts.filter((p) => hasFiles(p.it));
+  if (tab === 'celular') list = [...inbox];
   if (cat) list = list.filter((e) => e.kind === 'post' && e.it.media?.category === cat);
   return list.filter(match).sort((a, b) => b.at - a.at);
 }
@@ -80,11 +84,12 @@ function render() {
   $('#selAll').hidden = !imgsShown.length;
   if (!list.length) {
     $('#grid').replaceChildren(h('div', { class: 'empty' }, q || cat ? t('Nada encontrado com esse filtro.')
+      : tab === 'celular' ? t('Nada chegou do celular ainda. Na página do celular, use 📎 Mídias → 📤 Enviar foto, vídeo ou áudio.')
       : tab === 'arquivos' ? t('Nada baixado ainda. Nos posts e vídeos salvos, use ⬇ Vídeo, 🎧 Áudio ou 🖼 Fotos.')
         : t('Sua biblioteca está vazia. Salve imagens pelo botão direito (NeuroTab → Salvar imagem na biblioteca) e posts ou vídeos com "Salvar no cérebro com resumo".')));
     return;
   }
-  $('#grid').replaceChildren(...list.slice(0, 400).map((e) => (e.kind === 'image' ? imageCard(e) : postCard(e))));
+  $('#grid').replaceChildren(...list.slice(0, 400).map((e) => (e.kind === 'image' ? imageCard(e) : e.kind === 'inbox' ? inboxCard(e) : postCard(e))));
 }
 
 // ---------- imagens ----------
@@ -101,6 +106,7 @@ function imageCard(e) {
     h('div', { class: 'acts' },
       h('button', { class: 'btn sm', type: 'button', title: t('Ler o texto, descrever e perguntar sobre a imagem'), onclick: () => chrome.windows.create({ url: chrome.runtime.getURL('src/analyze.html?id=' + encodeURIComponent(rec.id)), type: 'popup', width: 560, height: 760 }) }, '🔍 ', t('Analisar')),
       h('button', { class: 'btn sm', type: 'button', title: t('Salvar na pasta de imagens do computador'), onclick: () => saveImages([rec]) }, '⬇ ', t('Salvar')),
+      shareBtn('image', rec.id),
       h('button', { class: 'btn sm danger', type: 'button', title: t('Excluir imagem'), onclick: async () => {
         if (!confirm(t('Excluir esta imagem da biblioteca? O que o cérebro leu dela também sai.'))) return;
         await deleteCapture(rec.id);
@@ -169,6 +175,7 @@ function postCard(e) {
         st.textContent = site.code === 'youtube' ? t('O YouTube não permite baixar vídeos por extensões.') : site.code === 'drm' ? t(DL_ERRORS.drm) : '';
       }
     }
+    btns.push(shareBtn('post', it.id));
     btns.push(h('button', { class: 'btn sm danger', type: 'button', title: t('Mandar para a lixeira do cérebro (30 dias)'), onclick: async () => {
       if (!confirm(t('Mandar este item para a lixeira? Os arquivos já baixados continuam na pasta.'))) return;
       await trashItems([it.id]);
@@ -209,6 +216,62 @@ function postCard(e) {
   return card;
 }
 
+// ---------- 📤 para o celular e 📥 do celular (0.9.3.2) ----------
+const viaLabel = (v) => ({ cloud: '☁️ ' + t('nuvem'), ntfy: '🔔 ntfy', telegram: '✈️ Telegram', lan: '🏠 ' + t('rede local'), 'Rede local': '🏠 ' + t('rede local') }[v] || v || '');
+function shareBtn(kind, id) {
+  const b = h('button', { class: 'btn sm', type: 'button', title: t('Mandar para o celular (caminhos ligados na Área de transferência)'), onclick: async () => {
+    b.disabled = true;
+    toast(t('Mandando…'));
+    const r = await chrome.runtime.sendMessage({ type: 'media:share', kind, id }).catch((e) => ({ error: e.message }));
+    b.disabled = false;
+    if (r?.error) { toast(`${t('Não deu para mandar')}: ${t(r.error)}`); return; }
+    const where = r.via.map(viaLabel).join(', ');
+    toast(`📤 ${t('Mandado por')}: ${where}${r.skipped?.length ? ` · ${t('grande demais para alguns caminhos: foi só o link e o resumo')}` : ''}${r.noPonte ? ` · ${t('sem a NeuroTab Ponte, os arquivos do disco não vão')}` : ''}${r.errors?.length ? ` · ⚠️ ${r.errors[0]}` : ''}`);
+  } }, '📤');
+  return b;
+}
+
+function inboxCard(e) {
+  const x = e.x;
+  const st = h('div', { class: 'st' + (x.error ? ' err' : '') }, x.error ? t(x.error) : '');
+  const icon = /^image\//.test(x.mime) ? '🖼' : /^video\//.test(x.mime) ? '🎬' : /^audio\//.test(x.mime) ? '🎧' : '📄';
+  const acts = [];
+  if (x.path) {
+    acts.push(h('button', { class: 'btn sm', type: 'button', onclick: async () => { const r = await chrome.runtime.sendMessage({ type: 'media:reveal-path', path: x.path, open: true }).catch(() => null); if (r?.error) toast(t(r.error)); } }, '▶ ', t('Abrir')));
+    acts.push(h('button', { class: 'btn sm', type: 'button', onclick: async () => { const r = await chrome.runtime.sendMessage({ type: 'media:reveal-path', path: x.path }).catch(() => null); if (r?.error) toast(t(r.error)); } }, '📂 ', t('Mostrar na pasta')));
+  } else if (!x.savedAt) {
+    acts.push(h('button', { class: 'btn sm', type: 'button', title: `Downloads/${RECEIVED_DIR}`, onclick: () => saveInbox(x, st) }, '⬇ ', t('Salvar no computador')));
+  }
+  acts.push(h('button', { class: 'btn sm danger', type: 'button', title: t('Tirar da lista (o arquivo no computador continua)'), onclick: async () => { await chrome.runtime.sendMessage({ type: 'media:inbox-remove', id: x.id }).catch(() => {}); await load(); } }, '🗑'));
+  return h('article', { class: 'card', 'data-id': x.id },
+    h('div', { class: 'thumb icon' }, h('span', { class: 'big' }, icon), h('span', { class: 'kind' }, '📥 ' + (x.from || ''))),
+    h('div', { class: 'body' },
+      h('b', { title: x.name }, x.name),
+      h('div', { class: 'meta' }, h('span', {}, fmtDate(x.at)), h('span', {}, fmtMB(x.size)), h('span', {}, '· ' + viaLabel(x.via))),
+      x.savedAt || x.path ? h('div', { class: 'files' }, h('span', {}, `✓ Downloads/${RECEIVED_DIR}`)) : null,
+      x.imported ? h('div', { class: 'files' }, h('span', {}, '✓ ' + t('Também na biblioteca de imagens'))) : null,
+      st),
+    h('div', { class: 'acts' }, ...acts));
+}
+
+async function saveInbox(x, st) {
+  if (!(await requestAccess({ permissions: ['downloads'] }))) { toast(t('Sem a permissão de downloads, não dá para salvar no computador.')); return; }
+  st.className = 'st';
+  st.textContent = t('Baixando…');
+  const r = await chrome.runtime.sendMessage({ type: 'media:inbox-bytes', id: x.id }).catch((e) => ({ error: e.message }));
+  if (r?.error) { st.className = 'st err'; st.textContent = t(r.error); return; }
+  const bytes = Uint8Array.from(atob(r.data), (c) => c.charCodeAt(0));
+  const url = URL.createObjectURL(new Blob([bytes], { type: r.mime }));
+  try {
+    const name = safeFileName(r.name.replace(/\.[a-z0-9]{2,5}$/i, ''), 80) + (r.name.match(/\.[a-z0-9]{2,5}$/i)?.[0] || '');
+    const dlId = await chrome.downloads.download({ url, filename: `${RECEIVED_DIR}/${name}`, conflictAction: 'uniquify' });
+    await chrome.runtime.sendMessage({ type: 'media:inbox-saved', id: x.id, downloadId: dlId }).catch(() => {});
+    toast(`⬇ ${t('Salvo em')} Downloads/${RECEIVED_DIR}`);
+    await load();
+  } catch (e) { st.className = 'st err'; st.textContent = e.message; }
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
 // Andamento dos downloads (mesmo quando começou em outra aba)
 chrome.storage.onChanged.addListener((ch, area) => {
   if (area === 'session' && ch[DL_STATE_KEY]) {
@@ -216,7 +279,7 @@ chrome.storage.onChanged.addListener((ch, area) => {
     for (const [k, v] of Object.entries(ch[DL_STATE_KEY].newValue || {})) progress.set(k, v);
     for (const c of document.querySelectorAll('.card[data-id]')) c._paint?.();
   }
-  if (area === 'local' && (ch.nt_brain || ch.nt_data)) { clearTimeout(load.t); load.t = setTimeout(load, 500); }
+  if (area === 'local' && (ch.nt_brain || ch.nt_data || ch[INBOX_KEY])) { clearTimeout(load.t); load.t = setTimeout(load, 500); }
 });
 chrome.runtime.onMessage.addListener((m) => { if (['imageCaptured', 'imageDeleted'].includes(m?.type)) { clearTimeout(load.t); load.t = setTimeout(load, 400); } });
 

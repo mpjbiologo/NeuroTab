@@ -39,6 +39,8 @@ type Hub struct {
 	items    []json.RawMessage // mais novo primeiro
 	subs     map[chan json.RawMessage]bool
 	incoming func(json.RawMessage) // vai para a extensão
+	files    map[string]*hubFile   // mídias que o celular pode pedir (0.9.3.2)
+	uploaded func(p json.RawMessage, path string)
 }
 
 func newHub(token, name string, incoming func(json.RawMessage)) *Hub {
@@ -132,6 +134,8 @@ func (h *Hub) routes() http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"ok":true}`))
 	})
+	mux.HandleFunc("/api/file/", h.serveFile)
+	mux.HandleFunc("/api/upload", h.upload)
 	mux.HandleFunc("/api/events", func(w http.ResponseWriter, r *http.Request) {
 		if !h.ok(r) {
 			http.Error(w, "token", http.StatusUnauthorized)

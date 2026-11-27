@@ -3,7 +3,9 @@
 // porque é uma conexão aberta (native messaging), não uma consulta.
 import { driveStore, syncConfig, SYNC_SECRET_KEY } from './sync.js';
 import { seal, open } from './sync-crypto.js';
-import { CLOUD_FILE, CLOUD_KEEP, cleanPayload, sealNtfy, openNtfy } from './clipboard-share.js';
+import { CLOUD_FILE, CLOUD_KEEP, cleanPayload, sealNtfy, openNtfy, keyB64 } from './clipboard-share.js';
+import { sealBytes, openBytes } from './bytes-crypto.js';
+import { cleanMediaPayload, CLOUD_MEDIA_PREFIX } from './media-share.js';
 import { dataUrlToBlob } from './clipboard.js';
 
 const RECENT = 10 * 60e3; // na primeira leitura de um caminho, só entram os itens dos últimos 10 min
@@ -28,6 +30,14 @@ export function cloudTransport({ accountId, key, fetchFn }) {
     return Array.isArray(data?.items) ? data.items : [];
   };
   return {
+    /** Mídias (0.9.3.2): um arquivo por mídia na pasta oculta, cifrado com a chave da sincronização. */
+    async putFile(bytes) {
+      const f = await drive.createBytes(CLOUD_MEDIA_PREFIX + crypto.randomUUID(), await sealBytes(bytes, key));
+      return { drive: f.id, enc: !!key };
+    },
+    async getFile(f) { const b = await drive.readBytes(f.drive); if (!b) throw new Error('O arquivo já saiu da nuvem.'); return openBytes(b, key); },
+    async cleanup(expired) { for (const f of expired) await drive.remove(f.id).catch(() => {}); return expired.length; },
+    list: () => drive.list(),
     async send(payload) {
       for (let attempt = 0; attempt < 3; attempt++) {
         const f = await find();
@@ -56,6 +66,20 @@ export function ntfyTransport(cfg, { fetchFn = fetch, me } = {}) {
   const base = `${String(cfg.server || 'https://ntfy.sh').replace(/\/+$/, '')}/${encodeURIComponent(cfg.topic)}`;
   return {
     images: false,
+    /** Mídias (0.9.3.2): anexo cifrado com a chave do canal (o ntfy.sh guarda por 3 horas, até 15 MB). */
+    async putFile(bytes) {
+      const k = cfg.plain ? '' : keyB64(cfg.key);
+      const res = await fetchFn(base, { method: 'PUT', headers: { Filename: 'neurotab.bin', Title: 'NeuroTab', Tags: 'nt-file' }, body: await sealBytes(bytes, k) });
+      if (!res.ok) throw new Error(res.status === 413 ? 'ntfy: arquivo grande demais para o servidor.' : `ntfy: erro ${res.status}.`);
+      const j = await res.json().catch(() => ({}));
+      if (!j.attachment?.url) throw new Error('ntfy: o servidor não aceita anexos.');
+      return { ntfy: j.attachment.url, enc: !!k, sentId: j.id || '' };
+    },
+    async getFile(f) {
+      const res = await fetchFn(f.ntfy);
+      if (!res.ok) throw new Error(res.status === 404 ? 'O anexo já expirou no ntfy (fica 3 horas).' : `ntfy: erro ${res.status}.`);
+      return openBytes(new Uint8Array(await res.arrayBuffer()), cfg.plain ? '' : keyB64(cfg.key));
+    },
     async send(payload) {
       if (payload.image) return { skipped: 'image' }; // o ntfy leva só texto
       const body = cfg.plain ? payload.text : await sealNtfy(payload, cfg.key);
@@ -78,10 +102,12 @@ export function ntfyTransport(cfg, { fetchFn = fetch, me } = {}) {
         if (ev.event !== 'message') continue;
         since = ev.id || since;
         if (sent.has(ev.id)) continue; // fui eu que mandei
+        if ((ev.tags || []).includes('nt-file')) continue; // anexo de uma mídia: vem junto da mensagem dela
         let p = null;
         try {
-          p = String(ev.message || '').startsWith('NT1:')
-            ? cleanPayload(await openNtfy(ev.message, cfg.key))
+          const raw = String(ev.message || '').startsWith('NT1:') ? await openNtfy(ev.message, cfg.key) : null;
+          p = raw
+            ? (raw.kind === 'media' ? cleanMediaPayload(raw) : cleanPayload(raw))
             : cleanPayload({ id: ev.id, at: (ev.time || 0) * 1000 || now, from: { id: 'ntfy', name: ev.title && !/neurotab/i.test(ev.title) ? ev.title : 'ntfy' }, text: ev.message });
         } catch { continue; } // chave diferente: não é para nós
         if (p && p.from.id !== me?.id) items.push(p);
@@ -108,6 +134,20 @@ export function telegramTransport(cfg, { fetchFn = fetch, me } = {}) {
       const ups = await call('getUpdates?timeout=0&allowed_updates=%5B%22message%22%5D');
       const m = [...ups].reverse().find((u) => u.message?.chat?.type === 'private')?.message;
       return m ? { chatId: String(m.chat.id), name: [m.chat.first_name, m.chat.last_name].filter(Boolean).join(' ') || m.chat.username || '', offset: ups.at(-1).update_id + 1 } : null;
+    },
+    /** Mídias (0.9.3.2): manda o arquivo pelo bot (até 50 MB; o Telegram lê o conteúdo). */
+    async sendFiles(payload, files) {
+      const caption = payload.text.slice(0, 1024);
+      if (!files.length) return call('sendMessage', { chat_id: cfg.chatId, text: payload.text.slice(0, 4096) });
+      for (const [i, f] of files.entries()) {
+        const fd = new FormData();
+        fd.append('chat_id', cfg.chatId);
+        if (i === 0) fd.append('caption', caption);
+        const kind = /^image\/(jpeg|png|webp)$/.test(f.mime) && f.bytes.length <= 10 * 1024 * 1024 ? 'photo' : /^video\//.test(f.mime) ? 'video' : /^audio\//.test(f.mime) ? 'audio' : 'document';
+        fd.append(kind, new Blob([f.bytes], { type: f.mime }), f.name);
+        await call({ photo: 'sendPhoto', video: 'sendVideo', audio: 'sendAudio', document: 'sendDocument' }[kind], fd);
+      }
+      return {};
     },
     async send(payload) {
       if (payload.image) {

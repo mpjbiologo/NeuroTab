@@ -59,11 +59,23 @@ export function mediaPanel(box, it, close) {
     m.points?.length ? h('div', {}, h('b', {}, t('Pontos-chave')), h('ul', { class: 'im-points' }, ...m.points.map((p) => h('li', {}, p)))) : null,
     m.caption ? h('details', {}, h('summary', {}, t('Legenda original')), h('p', { class: 'im-text' }, m.caption)) : null,
     m.content ? h('details', {}, h('summary', {}, t(CONTENT_LABEL[m.contentType] || 'Conteúdo')), h('p', { class: 'im-text' }, m.content)) : null,
-    h('div', { class: 'toolbar' }, btn, chip.el, h('a', { class: 'chip', href: it.url, target: '_blank', rel: 'noopener' }, '↗ ', t('Abrir original')), exp),
+    h('div', { class: 'toolbar' }, btn, chip.el, h('a', { class: 'chip', href: it.url, target: '_blank', rel: 'noopener' }, '↗ ', t('Abrir original')), exp, shareChip(it)),
     canDownload(it) ? downloadBox(it) : m.platform === 'youtube' ? h('small', { class: 'muted' }, '⬇ ', t('O YouTube não permite baixar vídeos por extensões.')) : dlSiteOf(it.url || '').code === 'drm' ? h('small', { class: 'muted' }, '⬇ ', t(DL_ERRORS.drm)) : null,
     canDownloadAudio(it) || canDownloadPhotos(it) ? extraBox(it) : null,
     h('a', { class: 'chip im-lib', href: chrome.runtime.getURL('src/media.html#posts'), target: '_blank' }, '🎞️ ', t('Biblioteca de mídias'))].filter(Boolean));
   box.hidden = false;
+}
+
+// ---------- 📤 Mandar para o celular (0.9.3.2) ----------
+function shareChip(it) {
+  const b = h('button', { type: 'button', class: 'chip', title: t('Mandar para o celular (caminhos ligados na Área de transferência)'), onclick: async () => {
+    b.disabled = true;
+    const r = await chrome.runtime.sendMessage({ type: 'media:share', kind: 'post', id: it.id }).catch((e) => ({ error: e.message }));
+    b.disabled = false;
+    if (r?.error) toast(`${t('Não deu para mandar')}: ${t(r.error)}`);
+    else toast(`📤 ${t('Mandado para o celular')}${r.skipped?.length ? ` · ${t('grande demais para alguns caminhos: foi só o link e o resumo')}` : ''}`);
+  } }, '📤 ', t('Celular'));
+  return b;
 }
 
 // ---------- Baixar o vídeo (0.7.11) ----------

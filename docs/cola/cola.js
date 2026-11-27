@@ -2,6 +2,9 @@
 //   #nuvem → entra com a conta Google (pasta oculta do Drive) e a senha da sincronização
 //   #ntfy&s=…&t=…&k=…&n=… → canal ntfy pareado pelo QR (a chave fica só aqui, no "#")
 import { seal, open, deriveKey, WrongKeyError } from './sync-crypto.js';
+import { sealBytes, openBytes } from './bytes-crypto.js';
+
+const MB = 1024 * 1024;
 
 const CLIENT_ID = '913281965961-kon02e6bh3tnfugcci53c65oiqvdpo12.apps.googleusercontent.com';
 const HERE = location.origin + location.pathname;
@@ -26,6 +29,8 @@ const T = {
     'A sincronização não está ligada nesta conta. Ligue em Configurações → Contas, no computador.': "Sync isn't turned on for this account. Turn it on in Settings → Accounts, on your computer.",
     'O login expirou.': 'Sign-in expired.', 'Entrar de novo': 'Sign in again', 'Sem conexão. Tentando de novo…': 'No connection. Retrying…',
     'Dica: adicione esta página à tela inicial para abrir como um app.': 'Tip: add this page to your home screen to open it like an app.',
+    '📎 Enviar foto, vídeo ou áudio': '📎 Send photo, video or audio', 'Abrir arquivo': 'Open file', 'Baixando…': 'Downloading…', 'Original': 'Original',
+    'Grande demais para este caminho (até': 'Too big for this path (up to', 'Pela rede local (NeuroTab Ponte) vai inteiro.': 'Over the local network (NeuroTab Ponte) it goes whole.',
   },
   es: {
     'Área de transferência': 'Portapapeles', 'Escolha como conectar': 'Elige cómo conectar',
@@ -37,6 +42,8 @@ const T = {
     'A sincronização não está ligada nesta conta. Ligue em Configurações → Contas, no computador.': 'La sincronización no está activada en esta cuenta. Actívala en Configuración → Cuentas, en la computadora.',
     'O login expirou.': 'El inicio de sesión expiró.', 'Entrar de novo': 'Entrar de nuevo', 'Sem conexão. Tentando de novo…': 'Sin conexión. Reintentando…',
     'Dica: adicione esta página à tela inicial para abrir como um app.': 'Consejo: agrega esta página a la pantalla de inicio para abrirla como una app.',
+    '📎 Enviar foto, vídeo ou áudio': '📎 Enviar foto, video o audio', 'Abrir arquivo': 'Abrir archivo', 'Baixando…': 'Descargando…', 'Original': 'Original',
+    'Grande demais para este caminho (até': 'Demasiado grande para este camino (hasta', 'Pela rede local (NeuroTab Ponte) vai inteiro.': 'Por la red local (NeuroTab Ponte) va entero.',
   },
 };
 const t = (s) => T[lang]?.[s] || s;
@@ -92,6 +99,8 @@ async function shrink(file) {
 }
 
 // ---------- tela comum: lista + enviar ----------
+let media = null; // { fetchFile(f) → bytes, upload(file), max } do caminho atual (0.9.3.2)
+const sizeTxt = (n) => (n > MB ? (n / MB).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
 function screen({ title, list, send, images, logout }) {
   const box = h('textarea', { placeholder: t('Escreva ou cole aqui…'), 'aria-label': t('Escreva ou cole aqui…') });
   const nameIn = h('input', { value: myName(), maxlength: 30, onchange: () => localStorage.setItem(LS.name, nameIn.value.trim() || 'Celular') });
@@ -103,6 +112,14 @@ function screen({ title, list, send, images, logout }) {
     fileIn.value = '';
     say(t('Enviado ✓'));
     refresh();
+  } });
+  const mediaIn = h('input', { type: 'file', accept: 'image/*,video/*,audio/*', hidden: true, onchange: async () => {
+    const f = mediaIn.files[0];
+    mediaIn.value = '';
+    if (!f) return;
+    if (f.size > media.max) { say(`⚠️ ${t('Grande demais para este caminho (até')} ${media.max / MB} MB). ${t('Pela rede local (NeuroTab Ponte) vai inteiro.')}`, 7000); return; }
+    say(t('Atualizando…'), 0);
+    try { await media.upload(f); say(t('Enviado ✓')); refresh(); } catch (e) { say('⚠️ ' + e.message, 6000); }
   } });
   const listEl = h('div', { class: 'list', style: 'display:grid;gap:10px' });
   app.replaceChildren(
@@ -117,7 +134,8 @@ function screen({ title, list, send, images, logout }) {
           say(t('Atualizando…'), 0);
           try { await send({ text }); box.value = ''; say(t('Enviado ✓')); refresh(); } catch (e) { say('⚠️ ' + e.message, 5000); }
         } }, '📤 ' + t('Enviar para o computador')),
-        images ? h('button', { class: 'btn', onclick: () => fileIn.click() }, t('🖼️ Enviar imagem')) : null, fileIn),
+        images ? h('button', { class: 'btn', onclick: () => fileIn.click() }, t('🖼️ Enviar imagem')) : null, fileIn,
+        media ? h('button', { class: 'btn', onclick: () => mediaIn.click() }, t('📎 Enviar foto, vídeo ou áudio')) : null, mediaIn),
       h('details', { style: 'margin-top:8px' }, h('summary', { class: 'muted' }, t('Nome deste celular')), nameIn)),
     listEl,
     h('p', { class: 'muted', style: 'text-align:center' }, t('Dica: adicione esta página à tela inicial para abrir como um app.')));
@@ -129,8 +147,37 @@ function screen({ title, list, send, images, logout }) {
   }
   return refresh;
 }
+function mediaCard(p, mine) {
+  const m = p.media || {};
+  const files = (Array.isArray(p.files) ? p.files : []).filter((f) => f && (f.drive || f.ntfy));
+  return h('article', { class: 'card item' + (mine ? ' mine' : '') },
+    h('b', {}, '📎 ' + (m.title || 'Mídia')),
+    m.summary ? h('div', { class: 'txt muted' }, m.summary) : null,
+    ...files.map((f) => {
+      const box = h('div', { class: 'row' });
+      const go = h('button', { class: 'btn', onclick: async () => {
+        go.disabled = true;
+        say(t('Baixando…'), 0);
+        try {
+          const bytes = await media.fetchFile(f);
+          const url = URL.createObjectURL(new Blob([bytes], { type: f.mime || 'application/octet-stream' }));
+          const mt = String(f.mime || '');
+          const view = /^image\//.test(mt) ? h('img', { src: url, alt: '' }) : /^video\//.test(mt) ? h('video', { src: url, controls: true, playsinline: true, style: 'width:100%' }) : /^audio\//.test(mt) ? h('audio', { src: url, controls: true, style: 'width:100%' }) : null;
+          box.replaceChildren(...[view, h('a', { class: 'btn', href: url, download: f.name || 'arquivo' }, '⬇️ ' + (f.name || ''))].filter(Boolean));
+          say('✓', 800);
+        } catch (e) { go.disabled = false; say('⚠️ ' + e.message, 6000); }
+      } }, `${/^image/.test(f.mime) ? '🖼️' : /^video/.test(f.mime) ? '🎬' : /^audio/.test(f.mime) ? '🎧' : '📄'} ${t('Abrir arquivo')} · ${sizeTxt(f.size || 0)}`);
+      box.append(go);
+      return box;
+    }),
+    !files.length && p.text ? h('div', { class: 'txt' }, p.text) : null,
+    h('div', { class: 'meta' },
+      h('small', { class: 'muted' }, `${mine ? t('este celular') : p.from?.name || ''} · ${when(p.at)}`),
+      /^https?:\/\//.test(m.url || '') ? h('a', { class: 'btn', href: m.url, target: '_blank', rel: 'noopener noreferrer' }, '🔗 ' + t('Original')) : null));
+}
 function card(p) {
   const mine = p.from?.id === myId();
+  if (p.kind === 'media' && media) return mediaCard(p, mine);
   return h('article', { class: 'card item' + (mine ? ' mine' : '') },
     p.image ? h('img', { src: p.image.data, alt: '' }) : null,
     p.text ? h('div', { class: 'txt' }, p.text) : null,
@@ -139,6 +186,8 @@ function card(p) {
       p.text ? h('button', { class: 'btn', onclick: () => copy(p.text) }, t('Copiar')) : h('a', { class: 'btn', href: p.image.data, download: 'imagem.webp' }, '⬇️')));
 }
 const payload = ({ text = '', image = null }) => ({ v: 1, id: crypto.randomUUID(), at: Date.now(), from: { id: myId(), name: myName() }, kind: image ? 'image' : 'text', text, image });
+/** Envelope de uma mídia que sai do celular (mesmo formato do computador). */
+const mediaPayloadOf = (file, ref) => ({ v: 1, id: crypto.randomUUID(), at: Date.now(), from: { id: myId(), name: myName() }, kind: 'media', text: '📎 ' + (file.name || 'arquivo'), media: { title: file.name || 'arquivo', url: '', platform: 'phone', summary: '' }, files: [{ id: '0', name: file.name || 'arquivo', mime: file.type || 'application/octet-stream', size: file.size, ...ref }] });
 
 // ---------- ☁️ nuvem (Google Drive) ----------
 function googleLogin(prompt = 'select_account') {
@@ -172,7 +221,7 @@ function cloud() {
     if (!r.ok) throw new Error(`Google Drive: ${r.status}`);
     return r;
   };
-  const files = async () => (await (await call(`${DRIVE}/files?spaces=appDataFolder&pageSize=100&fields=files(id,name,version)`)).json()).files || [];
+  const files = async () => (await (await call(`${DRIVE}/files?spaces=appDataFolder&pageSize=1000&fields=files(id,name,version)`)).json()).files || [];
   const read = async (id) => (await call(`${DRIVE}/files/${id}?alt=media`)).json();
   let key = localStorage.getItem(LS.key) || '';
   async function unlock() {
@@ -206,23 +255,35 @@ function cloud() {
     const data = await open(await read(f.id), key);
     return { f, items: Array.isArray(data?.items) ? data.items : [] };
   }
+  async function addEnvelope(p) {
+    const { f, items } = await load();
+    const env = await seal({ items: [p, ...items].slice(0, KEEP), updatedAt: Date.now() }, key);
+    if (f) await call(`${UPLOAD}/files/${f.id}?uploadType=media`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(env) });
+    else {
+      const bnd = 'nt' + Math.random().toString(36).slice(2);
+      const body = `--${bnd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: CLOUD_FILE, parents: ['appDataFolder'] })}\r\n--${bnd}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(env)}\r\n--${bnd}--`;
+      await call(`${UPLOAD}/files?uploadType=multipart`, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${bnd}` }, body });
+    }
+  }
   unlock().then((ok) => {
     if (!ok) return;
+    media = {
+      max: 25 * MB,
+      fetchFile: async (f) => openBytes(new Uint8Array(await (await call(`${DRIVE}/files/${encodeURIComponent(f.drive)}?alt=media`)).arrayBuffer()), key),
+      upload: async (file) => {
+        const bnd = 'nt' + Math.random().toString(36).slice(2);
+        const head = `--${bnd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: 'nt-media-' + crypto.randomUUID(), parents: ['appDataFolder'] })}\r\n--${bnd}\r\nContent-Type: application/octet-stream\r\n\r\n`;
+        const body = new Blob([head, await sealBytes(new Uint8Array(await file.arrayBuffer()), key), `\r\n--${bnd}--`]);
+        const r = await (await call(`${UPLOAD}/files?uploadType=multipart&fields=id`, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${bnd}` }, body })).json();
+        await addEnvelope(mediaPayloadOf(file, { drive: r.id, enc: !!key }));
+      },
+    };
     const refresh = screen({
       title: '☁️ Google Drive',
       images: true,
       logout: () => { sessionStorage.removeItem(LS.tok); localStorage.removeItem(LS.key); location.hash = 'nuvem'; location.reload(); },
       list: async () => (await load()).items,
-      send: async (part) => {
-        const { f, items } = await load();
-        const env = await seal({ items: [payload(part), ...items].slice(0, KEEP), updatedAt: Date.now() }, key);
-        if (f) await call(`${UPLOAD}/files/${f.id}?uploadType=media`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(env) });
-        else {
-          const bnd = 'nt' + Math.random().toString(36).slice(2);
-          const body = `--${bnd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: CLOUD_FILE, parents: ['appDataFolder'] })}\r\n--${bnd}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(env)}\r\n--${bnd}--`;
-          await call(`${UPLOAD}/files?uploadType=multipart`, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${bnd}` }, body });
-        }
-      },
+      send: async (part) => addEnvelope(payload(part)),
     });
     refresh();
     setInterval(() => { if (document.visibilityState === 'visible') refresh(); }, 15_000);
@@ -244,10 +305,30 @@ function ntfy() {
   const seen = new Map();
   async function decode(ev) {
     if (ev.event !== 'message') return null;
+    if ((ev.tags || []).includes('nt-file')) return null; // anexo de uma mídia (vem junto da mensagem dela)
     const m = String(ev.message || '');
     if (m.startsWith('NT1:')) { try { return await open(JSON.parse(unb64(m.slice(4))), key); } catch { return null; } }
     return { id: ev.id, at: (ev.time || 0) * 1000, from: { name: 'ntfy' }, text: m };
   }
+  const publish = async (p) => {
+    const r = await fetch(base, { method: 'POST', headers: { Title: 'NeuroTab', Tags: 'lock' }, body: 'NT1:' + b64(JSON.stringify(await seal(p, key))) });
+    if (!r.ok) throw new Error(`ntfy: ${r.status}`);
+  };
+  media = {
+    max: 15 * MB,
+    fetchFile: async (f) => {
+      const r = await fetch(f.ntfy);
+      if (!r.ok) throw new Error(r.status === 404 ? 'O anexo já expirou (o ntfy guarda por 3 horas).' : `ntfy: ${r.status}`);
+      return openBytes(new Uint8Array(await r.arrayBuffer()), key);
+    },
+    upload: async (file) => {
+      const r = await fetch(base, { method: 'PUT', headers: { Filename: 'neurotab.bin', Title: 'NeuroTab', Tags: 'nt-file' }, body: await sealBytes(new Uint8Array(await file.arrayBuffer()), key) });
+      if (!r.ok) throw new Error(`ntfy: ${r.status}`);
+      const j = await r.json();
+      if (!j.attachment?.url) throw new Error('ntfy: o servidor não aceita anexos.');
+      await publish(mediaPayloadOf(file, { ntfy: j.attachment.url, enc: true }));
+    },
+  };
   const refresh = screen({
     title: `🔔 ntfy${c.n ? ' · ' + c.n : ''}`,
     images: false,
@@ -262,11 +343,7 @@ function ntfy() {
       }
       return [...seen.values()].sort((a, b) => b.at - a.at).slice(0, KEEP);
     },
-    send: async ({ text }) => {
-      const body = 'NT1:' + b64(JSON.stringify(await seal(payload({ text }), key)));
-      const r = await fetch(base, { method: 'POST', headers: { Title: 'NeuroTab', Tags: 'lock' }, body });
-      if (!r.ok) throw new Error(`ntfy: ${r.status}`);
-    },
+    send: async ({ text }) => publish(payload({ text })),
   });
   refresh();
   try { const es = new EventSource(`${base}/sse`); es.onmessage = () => refresh(); } catch { setInterval(refresh, 10_000); }

@@ -25,6 +25,7 @@ type Msg struct {
 	Addrs    []LanAddr       `json:"addrs,omitempty"`
 	Version  string          `json:"version,omitempty"`
 	Message  string          `json:"message,omitempty"`
+	Path     string          `json:"path,omitempty"` // "incoming" de um arquivo enviado pelo celular (0.9.3.2)
 }
 
 func readMsg(r io.Reader) (*Msg, error) {

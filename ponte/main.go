@@ -76,6 +76,7 @@ func runNative(in *os.File, out *os.File) error {
 		port = 41414
 	}
 	hub := newHub(first.Token, first.Name, func(p json.RawMessage) { _ = w.send(Msg{Type: "incoming", Payload: p}) })
+	hub.uploaded = func(p json.RawMessage, path string) { _ = w.send(Msg{Type: "incoming", Payload: p, Path: path}) }
 	l, real, err := listen(port)
 	if err != nil {
 		_ = w.send(Msg{Type: "error", Message: "não consegui abrir a porta " + fmt.Sprint(port) + ": " + err.Error()})
@@ -99,6 +100,10 @@ func runNative(in *os.File, out *os.File) error {
 		case "item":
 			if len(m.Payload) > 0 {
 				hub.add(m.Payload)
+			}
+		case "file": // 0.9.3.2: arquivo que o celular pode pedir em /api/file/<id>
+			if err := hub.registerFromMsg(m.Payload); err != nil {
+				_ = w.send(Msg{Type: "file-error", Message: err.Error()})
 			}
 		case "bye":
 			_ = srv.Close()
